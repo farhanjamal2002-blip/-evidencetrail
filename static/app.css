@@ -81,6 +81,11 @@ textarea:focus { border-color: #63a99a; box-shadow: 0 0 0 3px rgba(19,123,107,.0
 .supported-dot { background: #159578; }.missing-dot { background: #d69d32; }.conflict-dot { background: #d66a61; }
 .sample-tip { margin-top: 19px; padding-top: 12px; border-top: 1px solid #edf1ef; color: #94a09b; font-size: 9px; line-height: 1.5; }
 .error-box { margin-bottom: 12px; padding: 10px 12px; border: 1px solid #f0c9c5; border-radius: 8px; color: #9b3933; background: #fff6f5; font-size: 11px; line-height: 1.55; }
+.analysis-status { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; padding: 11px 12px; border: 1px solid #cfe0da; border-radius: 8px; color: #53645e; background: #f7faf8; font-size: 10px; }
+.analysis-status[hidden] { display: none; }
+.status-spinner { width: 13px; height: 13px; flex: 0 0 13px; border: 2px solid #c9d9d3; border-top-color: var(--teal); border-radius: 50%; animation: status-spin .9s linear infinite; }
+@keyframes status-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .status-spinner { animation: none; border-color: var(--teal); } }
 .results { margin-top: 34px; }
 .results-top { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
 .results-top h2 { margin: 7px 0; font-size: 24px; }

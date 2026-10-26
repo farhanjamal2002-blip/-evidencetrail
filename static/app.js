@@ -5,10 +5,13 @@ const fileName = document.getElementById("file-name");
 const charCount = document.getElementById("char-count");
 const analyzeButton = document.getElementById("analyze-button");
 const errorBox = document.getElementById("error-box");
+const analysisStatus = document.getElementById("analysis-status");
+const analysisStatusText = document.getElementById("analysis-status-text");
 const results = document.getElementById("results");
 const uploadZone = document.querySelector(".upload-zone");
 let currentReport = "";
 let reviewEntries = Object.create(null);
+let analysisTimer = null;
 
 const demoJob = [
   "Role: Procurement Automation Lead",
@@ -92,6 +95,15 @@ form.addEventListener("submit", async function (event) {
 
   analyzeButton.disabled = true;
   analyzeButton.querySelector("span:first-child").textContent = "Muse is reading the CV and job requirements…";
+  const analysisStartedAt = Date.now();
+  function updateAnalysisStatus() {
+    const elapsedSeconds = Math.floor((Date.now() - analysisStartedAt) / 1000);
+    analysisStatusText.textContent = "One real Muse Spark analysis is in progress · " +
+      elapsedSeconds + " seconds elapsed.";
+  }
+  analysisStatus.hidden = false;
+  updateAnalysisStatus();
+  analysisTimer = window.setInterval(updateAnalysisStatus, 5000);
   const formData = new FormData(form);
 
   try {
@@ -104,6 +116,9 @@ form.addEventListener("submit", async function (event) {
   } catch (error) {
     showError(error.message || "Analysis failed. No result was generated.");
   } finally {
+    if (analysisTimer) window.clearInterval(analysisTimer);
+    analysisTimer = null;
+    analysisStatus.hidden = true;
     analyzeButton.disabled = false;
     analyzeButton.querySelector("span:first-child").textContent = "Analyze with Muse Spark";
   }
