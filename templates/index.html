@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f6f4">
+    <title>EvidenceTrail — Hiring evidence, in view</title>
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="EvidenceTrail home">
+          <span class="brand-mark">ET</span>
+          <span>EvidenceTrail</span>
+        </a>
+        <div class="model-pill"><span class="live-dot"></span> Muse Spark · document analysis</div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow">SOURCE-VERIFIED HIRING REVIEW</div>
+            <h1>Show the evidence.<br><em>Keep the decision human.</em></h1>
+            <p>Map each job requirement to the exact passage in a CV. Inspect the page. Share the proof.</p>
+          </div>
+          <div class="hero-stamp">
+            <span class="stamp-line"></span>
+            <span>Every finding<br>points to its source.</span>
+          </div>
+        </section>
+
+        <section class="workbench">
+          <form id="analysis-form" class="input-panel">
+            <div class="panel-heading">
+              <div>
+                <div class="step-label">01 / ADD YOUR DOCUMENTS</div>
+                <h2>Start an evidence review</h2>
+              </div>
+              <span class="private-note">Files are not stored by this app</span>
+            </div>
+
+            <label class="field-label" for="cv">Candidate CV</label>
+            <label class="upload-zone" for="cv">
+              <input id="cv" name="cv" type="file" accept="application/pdf,.pdf" required>
+              <span class="upload-icon">↑</span>
+              <span class="upload-copy">
+                <strong id="file-name">Choose a PDF or drop it here</strong>
+                <small>Searchable and scanned PDFs · up to 12 MB · max 20 pages</small>
+              </span>
+              <span class="browse-link">Browse</span>
+            </label>
+
+            <div class="field-row">
+              <label class="field-label" for="job-description">Job description</label>
+              <span class="char-count"><span id="char-count">0</span> / 18,000</span>
+            </div>
+            <textarea id="job-description" name="job_description" maxlength="18000" required
+              placeholder="Paste the role description. EvidenceTrail will split it into specific requirements and trace each one to the CV."></textarea>
+
+            <label class="consent-row">
+              <input id="consent" name="consent" type="checkbox" value="true" required>
+              <span>I understand the CV and job description are sent to Meta Model API for this analysis.</span>
+            </label>
+
+            <div id="error-box" class="error-box" role="alert" hidden></div>
+            <button id="analyze-button" class="primary-button" type="submit">
+              <span>Analyze with Muse Spark</span><span class="button-arrow">↗</span>
+            </button>
+            <div class="privacy-footnote">One real Muse analysis per run. No candidate score. No stored CV.</div>
+          </form>
+
+          <aside class="demo-panel">
+            <div class="step-label">02 / SEE THE IDEA</div>
+            <h2>Try the prepared case</h2>
+            <p>A fictional CV contains one supported requirement, one missing qualification, and one internal discrepancy.</p>
+            <a class="text-link" href="/demo/cv.pdf" download>Download the synthetic CV <span>↓</span></a>
+            <button id="load-demo-job" class="secondary-button" type="button">Load its sample job description</button>
+            <div class="demo-divider"></div>
+            <div class="demo-state-list">
+              <div><span class="state-dot supported-dot"></span><span>Direct evidence</span><b>Supported</b></div>
+              <div><span class="state-dot missing-dot"></span><span>No passage located</span><b>Not found</b></div>
+              <div><span class="state-dot conflict-dot"></span><span>Incompatible CV claims</span><b>Conflicting</b></div>
+            </div>
+            <div class="sample-tip">The sample is fictional and clearly labeled for demonstration.</div>
+          </aside>
+        </section>
+
+        <section id="results" class="results" hidden>
+          <div class="results-top">
+            <div>
+              <div class="step-label">03 / REVIEW VERIFIED EVIDENCE</div>
+              <h2>Your evidence map</h2>
+              <p id="result-caption" class="result-caption"></p>
+            </div>
+            <button id="download-report" class="secondary-button download-button" type="button">
+              Download evidence pack <span>↓</span>
+            </button>
+          </div>
+          <p class="report-note">The exported pack embeds full CV page images. Review it before sharing.</p>
+          <div class="run-meta" id="run-meta"></div>
+          <div id="summary-counts" class="summary-counts"></div>
+          <div id="findings-list" class="findings-list"></div>
+          <div id="source-pages" class="source-pages"></div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>EvidenceTrail</span>
+        <span>Reports what the supplied files say. It does not assess a person’s worth or make a hiring decision.</span>
+      </footer>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
