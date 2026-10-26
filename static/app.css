@@ -125,6 +125,10 @@ textarea:focus { border-color: #63a99a; box-shadow: 0 0 0 3px rgba(19,123,107,.0
 .review-note-input::placeholder { color: #a0aaa6; }
 .source-pages { margin-top: 22px; }
 .source-pages h3 { margin: 0 0 12px; font: 700 16px "Manrope", sans-serif; }
+.source-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0 0 12px; color: #6f7e78; font-size: 10px; }
+.source-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.source-swatch { width: 10px; height: 10px; border-radius: 3px; background: #1ba085; }
+.source-swatch.conflicting { background: #de4d48; }
 .source-page { margin: 12px 0; padding: 12px; border: 1px solid #dfe7e3; border-radius: 12px; background: white; scroll-margin-top: 18px; }
 .source-page-head { margin-bottom: 9px; color: #586761; font-size: 10px; font-weight: 700; }
 .source-page img { display: block; width: 100%; height: auto; border: 1px solid #edf0ee; border-radius: 6px; }

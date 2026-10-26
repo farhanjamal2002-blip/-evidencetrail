@@ -145,6 +145,21 @@ function renderResults(payload) {
     const heading = document.createElement("h3");
     heading.textContent = "Verified source pages";
     sourcePages.appendChild(heading);
+    const legend = document.createElement("p");
+    legend.className = "source-legend";
+    [
+      ["supporting", "Teal highlight: supporting passage"],
+      ["conflicting", "Red highlight: conflicting statement"],
+    ].forEach(function (item) {
+      const legendItem = document.createElement("span");
+      legendItem.className = "source-legend-item";
+      const swatch = document.createElement("span");
+      swatch.className = "source-swatch " + item[0];
+      swatch.setAttribute("aria-hidden", "true");
+      legendItem.append(swatch, document.createTextNode(item[1]));
+      legend.appendChild(legendItem);
+    });
+    sourcePages.appendChild(legend);
     pageNumbers.forEach(function (number) {
       const page = document.createElement("section");
       page.className = "source-page";
@@ -171,8 +186,7 @@ function renderResults(payload) {
     (usage.output_tokens || 0).toLocaleString() + " output tokens" + ocrText +
     (rejectedCount ? " · " + rejectedCount + " unverified requirement(s) omitted" : "");
   document.getElementById("result-caption").textContent =
-    "Every displayed passage below was checked against the uploaded PDF. " +
-    "Requirements are shown only when their wording appears in the supplied job description.";
+    "Every displayed quote was checked against the uploaded PDF. Muse's interpretation is shown for human review; the app verifies source text, not qualification truth.";
 
   const provenance = document.getElementById("provenance-details");
   provenance.replaceChildren();

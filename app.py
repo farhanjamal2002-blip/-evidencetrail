@@ -396,18 +396,21 @@ def ground_results(
             status = "conflicting"
             if has_support:
                 note = (
-                    "The CV contains both supporting and conflicting statements. "
-                    "Review every highlighted passage."
+                    "Muse identified both supporting and conflicting passages. "
+                    "Their exact text was found in the CV; review the context."
                 )
             else:
                 note = (
-                    "An explicit CV statement conflicts with this requirement. "
-                    "Review the highlighted passage."
+                    "Muse identified a statement that conflicts with this requirement. "
+                    "Its exact text was found in the CV; review the context."
                 )
             visible_evidence = verified
         elif has_support:
             status = "supported"
-            note = "Direct supporting text was located and verified in the uploaded CV."
+            note = (
+                "Muse identified a supporting passage. Its exact text was found in the "
+                "uploaded CV; review whether it supports the requirement."
+            )
             visible_evidence = [item for item in verified if item["role"] == "supports"]
         else:
             status = "not_found"
@@ -533,6 +536,8 @@ def build_report(
     for number, data_url in sorted(previews.items()):
         page_blocks.append(
             f"<figure id='page-{number}'><figcaption>CV page {number}</figcaption>"
+            "<p class='source-legend'><span><i class='swatch'></i>Teal highlight: supporting passage</span> "
+            "<span><i class='swatch conflict'></i>Red highlight: conflicting statement</span></p>"
             f"<img src='{data_url}' alt='CV page {number} with verified evidence highlights'></figure>"
         )
 
@@ -550,6 +555,8 @@ def build_report(
       blockquote{margin:8px 0 0;padding:12px 14px;background:#f5f8f6;border-left:3px solid var(--teal)}
       .human-review-record{border-top:1px solid var(--line);margin-top:18px;padding-top:12px;color:var(--muted);font-size:13px}
       .human-review-record h3{font-size:14px;color:var(--ink);margin:0 0 6px}.human-review-record p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+      .source-legend{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:12px}
+      .source-legend span{display:inline-flex;align-items:center;gap:6px}.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;background:#1ba085}.swatch.conflict{background:#de4d48}
       figure{margin:20px 0;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}
       figcaption{font-weight:700;margin:4px 0 12px}img{display:block;width:100%;height:auto;border-radius:6px}
       footer{border-top:1px solid var(--line);margin-top:34px;padding-top:16px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
@@ -563,7 +570,7 @@ def build_report(
         + "</style></head><body><main>"
         "<div class='brand'>EVIDENCETRAIL · SOURCE-VERIFIED REVIEW</div>"
         "<h1>Requirement evidence pack</h1>"
-        "<p class='sub'>A document review. Not a candidate score or hiring decision.</p>"
+        "<p class='sub'>Exact quote locations are checked against the supplied file. Muse's interpretation needs human review; this is not a hiring decision.</p>"
         + (
             f"<p class='sub'>{rejected_requirements} model-produced requirement(s) were omitted "
             "because their wording did not appear in the supplied job description.</p>"
