@@ -230,7 +230,8 @@ function renderResults(payload) {
 
   currentReport = payload.report_html || "";
   results.hidden = false;
-  results.scrollIntoView({ behavior: "smooth", block: "start" });
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  results.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
 }
 
 function addCount(parent, value, label, status) {

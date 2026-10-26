@@ -4,6 +4,12 @@ EvidenceTrail maps job requirements to exact CV passages. Muse Spark proposes th
 
 The report describes supplied documents. It does not score or rank a candidate and it does not make a hiring decision.
 
+## Model and open-source stack
+
+The app is built with open-source Python packages, including FastAPI, PyMuPDF, Pillow, pytesseract, and the OpenAI-compatible Python SDK. Muse Spark is called through Meta's hosted Model API; it is not a locally hosted open-weight model. EvidenceTrail sends one structured request per analysis and keeps the API key server-side.
+
+Meta's current model and input-mode reference: https://dev.meta.ai/docs/models
+
 ## Run locally
 
 Requirements: Python 3.11 or newer, Tesseract OCR, and a Meta Model API key.
@@ -17,6 +23,7 @@ On any OS:
 5. Open the local address http://127.0.0.1:8000.
 
 The key stays on the server and must never be committed to the repository.
+The app header reports whether MODEL_API_KEY is set; it does not validate the key or test API connectivity. If the key is missing, analysis stops before the app extracts or forwards the CV and no Meta call is made.
 Each click on “Analyze with Muse Spark” makes one real model request. Editing the app and loading the synthetic CV do not call the API. The sample analysis does use the API.
 
 The app uses the standard `muse-spark-1.3` model ID. Keep this standard mode for real CVs; Meta’s discounted contributor mode allows submitted content to be used to train future models.

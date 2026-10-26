@@ -552,17 +552,17 @@ def build_report(
         )
 
     report_css = """
-      :root{color-scheme:light;--ink:#14211f;--muted:#62716d;--line:#dfe7e4;--paper:#f4f7f5;--teal:#0e806e}
+      :root{color-scheme:light;--ink:#18212f;--muted:#627084;--line:#dce3ed;--paper:#f3f6fb;--blue:#0866ff}
       *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 Arial,sans-serif}
-      main{max-width:980px;margin:0 auto;padding:42px 22px 70px}.brand{font-size:12px;letter-spacing:.16em;font-weight:800;color:var(--teal)}
+      main{max-width:980px;margin:0 auto;padding:42px 22px 70px}.brand{font-size:12px;letter-spacing:.16em;font-weight:800;color:var(--blue)}
       h1{font-size:34px;line-height:1.12;margin:16px 0 10px}.sub{color:var(--muted);margin:0 0 28px}
       .finding{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin:14px 0}
       .finding-head{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
       .status{border-radius:999px;padding:4px 10px;background:#eef4f1}.status.supported{color:#096c5d;background:#e8f5f1}
       .status.not_found{color:#8c641b;background:#fbf3df}.status.conflicting{color:#a33e38;background:#fbe9e7}
       h2{font-size:19px;margin:14px 0 6px}.finding p,.empty{color:var(--muted)}
-      .evidence{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.evidence-meta{font-size:12px;color:var(--teal);font-weight:700}
-      blockquote{margin:8px 0 0;padding:12px 14px;background:#f5f8f6;border-left:3px solid var(--teal)}
+      .evidence{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.evidence-meta{font-size:12px;color:var(--blue);font-weight:700}
+      blockquote{margin:8px 0 0;padding:12px 14px;background:#f2f6fc;border-left:3px solid var(--blue)}
       .audit-summary{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--muted);font-size:13px}
       .human-review-record{border-top:1px solid var(--line);margin-top:18px;padding-top:12px;color:var(--muted);font-size:13px}
       .human-review-record h3{font-size:14px;color:var(--ink);margin:0 0 6px}.human-review-record p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -672,7 +672,14 @@ def make_demo_pdf() -> bytes:
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "model_id": MODEL_ID,
+            "model_ready": bool(os.getenv("MODEL_API_KEY", "").strip()),
+        },
+    )
 
 
 @app.get("/health")
@@ -700,6 +707,14 @@ async def analyze(
         raise HTTPException(
             status_code=400,
             detail="Confirm that the CV and job description may be sent to Meta Model API.",
+        )
+    if not os.getenv("MODEL_API_KEY", "").strip():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Muse is not configured yet. Set MODEL_API_KEY on the server. "
+                "No analysis was started and no Meta API call was made."
+            ),
         )
     if cv.content_type not in ("application/pdf", "application/octet-stream"):
         raise HTTPException(status_code=400, detail="Upload the CV as a PDF.")
