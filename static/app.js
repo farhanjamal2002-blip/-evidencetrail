@@ -15,9 +15,7 @@ const demoJob = [
   "Requirements:",
   "1. At least five years of Python experience.",
   "2. Current AWS Solutions Architect Professional certification.",
-  "3. At least seven years of procurement experience.",
-  "",
-  "The role also requires clear communication and experience coordinating vendors."
+  "3. At least seven years of procurement experience."
 ].join("\n");
 
 cvInput.addEventListener("change", function () {

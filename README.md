@@ -21,6 +21,8 @@ Each click on “Analyze with Muse Spark” makes one real model request. Editin
 
 The app uses the standard `muse-spark-1.3` model ID. Keep this standard mode for real CVs; Meta’s discounted contributor mode allows submitted content to be used to train future models.
 
+`conflicting` means the CV contains an explicit statement that conflicts with the requirement or contains incompatible claims. Missing evidence remains `not_found`; it is not treated as proof that a candidate lacks a qualification.
+
 The default demo guard allows up to 5 analyses per IP per hour and 20 analyses per running app process. Failed model attempts count toward these limits. The in-memory limits reset when the process restarts; use persistent rate limiting before running this as a public service.
 
 Docker installs English and Arabic Tesseract language data. The app uses OCR only for pages where local PDF text extraction finds no readable text.

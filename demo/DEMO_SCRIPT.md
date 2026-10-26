@@ -2,6 +2,7 @@
 
 ## Recording setup
 
+- The prepared case uses a synthetic two-page CV and three focused requirements: one supported, one not found, and one conflicting.
 - Select “Load the complete sample case.” The fictional CV and matching job description are prepared locally.
 - Confirm the Meta data-sharing checkbox and run one live analysis. Loading the sample does not use API credits.
 - Keep the API key out of the browser, screen recording, repository, and submission video.
