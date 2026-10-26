@@ -521,7 +521,7 @@ def build_report(
         if not evidence_blocks:
             evidence_blocks.append("<div class='empty'>No verified supporting passage.</div>")
         cards.append(
-            "<article class='finding'>"
+            f"<article class='finding' data-finding-id='{html.escape(finding['id'])}'>"
             f"<div class='finding-head'><span>{finding['id']}</span>"
             f"<span class='status {status}'>{status.replace('_', ' ')}</span></div>"
             f"<h2>{requirement}</h2><p>{note}</p>"
@@ -548,6 +548,8 @@ def build_report(
       h2{font-size:19px;margin:14px 0 6px}.finding p,.empty{color:var(--muted)}
       .evidence{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.evidence-meta{font-size:12px;color:var(--teal);font-weight:700}
       blockquote{margin:8px 0 0;padding:12px 14px;background:#f5f8f6;border-left:3px solid var(--teal)}
+      .human-review-record{border-top:1px solid var(--line);margin-top:18px;padding-top:12px;color:var(--muted);font-size:13px}
+      .human-review-record h3{font-size:14px;color:var(--ink);margin:0 0 6px}.human-review-record p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
       figure{margin:20px 0;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}
       figcaption{font-weight:700;margin:4px 0 12px}img{display:block;width:100%;height:auto;border-radius:6px}
       footer{border-top:1px solid var(--line);margin-top:34px;padding-top:16px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}

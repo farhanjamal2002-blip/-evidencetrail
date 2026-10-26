@@ -28,17 +28,17 @@
 
 **Say:** “Muse Spark reads the original CV alongside the job description. It breaks the role into requirements and proposes exact passages that support or conflict with each one. This is the core analysis the product is built around.”
 
-### 1:20–2:15 — Inspect the evidence
+### 1:20–2:15 — Inspect and review the evidence
 
-**Show:** One supported result, the not-found certification, and the conflicting procurement-years result. Open the highlighted source page for each relevant quote.
+**Show:** One supported result, the not-found certification, and the conflicting procurement-years result. Open the highlighted source page for each relevant quote. Mark the certification as “Needs follow-up” and add a note such as “Ask for the requested credential evidence.”
 
 **Say:** “A passage only appears if the app can find it in the uploaded PDF. The source page and highlight are produced from the PDF itself; the model’s page number is only a hint. ‘Not found’ means this document did not provide verified support. It does not mean the person lacks the skill.”
 
 ### 2:15–2:45 — Export the evidence pack
 
-**Show:** Download the standalone HTML report. Scroll through the quote, highlighted page, and CV and job-description fingerprints.
+**Show:** Download the standalone HTML report. Scroll through the quote, highlighted page, reviewer note, and CV and job-description fingerprints.
 
-**Say:** “The exported pack keeps the finding connected to its source, so a reviewer can audit the claim and share the same evidence with a colleague. It also records which model produced the analysis.”
+**Say:** “The pack keeps each finding connected to its source and records the human follow-up separately from Muse’s analysis. A reviewer can share the same evidence trail with a colleague.”
 
 ### 2:45–3:00 — Close
 

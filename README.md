@@ -40,6 +40,10 @@ Use the synthetic CV at /demo/cv.pdf and load the sample job description in the 
 5. The app checks that each returned requirement appears as a complete sequence of words in the supplied job description. It drops requirements that do not and removes duplicate requirements; the report records how many unverified requirements were omitted.
 6. The report includes verified quotes, page highlights, CV and job-description SHA-256 fingerprints, and the model identifier.
 
+## Human review record
+
+Reviewers can mark each evidence trail as not reviewed, evidence reviewed, or needing follow-up, then add a short note. These annotations stay in the current browser tab and are added to the downloaded pack; they are not sent to Muse or saved by the app. They record review of the documents, not a hiring decision.
+
 The PDF is sent inline to Meta Model API for the analysis with API-side output storage explicitly disabled. The app does not save uploaded files to disk or retain them after the request. The PDF and job description leave the app for the Meta analysis, as disclosed in the interface.
 
 ## Hosting

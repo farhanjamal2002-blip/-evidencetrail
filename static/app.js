@@ -8,6 +8,7 @@ const errorBox = document.getElementById("error-box");
 const results = document.getElementById("results");
 const uploadZone = document.querySelector(".upload-zone");
 let currentReport = "";
+let reviewEntries = Object.create(null);
 
 const demoJob = [
   "Role: Procurement Automation Lead",
@@ -121,12 +122,14 @@ function hideError() {
 function renderResults(payload) {
   const findingsList = document.getElementById("findings-list");
   const counts = { supported: 0, not_found: 0, conflicting: 0 };
+  reviewEntries = Object.create(null);
   findingsList.replaceChildren();
   document.getElementById("source-pages").replaceChildren();
   payload.requirements.forEach(function (finding) {
     counts[finding.status] = (counts[finding.status] || 0) + 1;
     findingsList.appendChild(buildFindingCard(finding));
   });
+  updateReviewSummary();
 
   const countsNode = document.getElementById("summary-counts");
   countsNode.replaceChildren();
@@ -244,13 +247,110 @@ function buildFindingCard(finding) {
     });
     body.appendChild(quoteList);
   }
-  card.appendChild(body);
+  card.dataset.findingId = finding.id;
+  card.append(body, buildReviewControls(finding.id));
   return card;
+}
+
+function buildReviewControls(findingId) {
+  const section = document.createElement("section");
+  section.className = "human-review-controls";
+  const heading = document.createElement("h4");
+  heading.textContent = "Human review";
+  const explanation = document.createElement("p");
+  explanation.className = "review-explanation";
+  explanation.textContent = "Record whether this evidence trail was reviewed. This is not a candidate decision.";
+
+  const statusLabel = document.createElement("label");
+  statusLabel.className = "review-label";
+  statusLabel.htmlFor = "review-status-" + findingId;
+  statusLabel.textContent = "Review status";
+  const status = document.createElement("select");
+  status.id = "review-status-" + findingId;
+  status.className = "review-input review-select";
+  [
+    ["not_reviewed", "Not reviewed"],
+    ["reviewed", "Evidence reviewed"],
+    ["follow_up", "Needs follow-up"],
+  ].forEach(function (choice) {
+    const option = document.createElement("option");
+    option.value = choice[0];
+    option.textContent = choice[1];
+    status.appendChild(option);
+  });
+
+  const noteLabel = document.createElement("label");
+  noteLabel.className = "review-label";
+  noteLabel.htmlFor = "review-note-" + findingId;
+  noteLabel.textContent = "Reviewer note (optional)";
+  const note = document.createElement("textarea");
+  note.id = "review-note-" + findingId;
+  note.className = "review-input review-note-input";
+  note.maxLength = 600;
+  note.placeholder = "What should be checked next? Keep notes focused on the document evidence.";
+
+  function saveReview() {
+    reviewEntries[findingId] = { status: status.value, note: note.value.trim() };
+  }
+
+  status.addEventListener("change", function () {
+    saveReview();
+    updateReviewSummary();
+  });
+  note.addEventListener("input", saveReview);
+  reviewEntries[findingId] = { status: "not_reviewed", note: "" };
+  section.append(heading, explanation, statusLabel, status, noteLabel, note);
+  return section;
+}
+
+function updateReviewSummary() {
+  const summary = document.getElementById("review-summary");
+  if (!summary) return;
+  const entries = Object.values(reviewEntries);
+  const reviewed = entries.filter(function (entry) { return entry.status === "reviewed"; }).length;
+  const followUp = entries.filter(function (entry) { return entry.status === "follow_up"; }).length;
+  const pending = entries.length - reviewed - followUp;
+  summary.textContent = reviewed + " reviewed · " + followUp + " need follow-up · " +
+    pending + " not reviewed. Notes stay in this tab until you download the pack.";
+}
+
+function buildReviewedReport(reportHtml) {
+  const reportDocument = new DOMParser().parseFromString(reportHtml, "text/html");
+  const labels = {
+    not_reviewed: "Not reviewed",
+    reviewed: "Evidence reviewed",
+    follow_up: "Needs follow-up",
+  };
+
+  reportDocument.querySelectorAll(".finding[data-finding-id]").forEach(function (finding) {
+    const findingId = finding.dataset.findingId;
+    const entry = reviewEntries[findingId] || { status: "not_reviewed", note: "" };
+    const record = reportDocument.createElement("section");
+    record.className = "human-review-record";
+    const title = reportDocument.createElement("h3");
+    title.textContent = "Human review record";
+    const status = reportDocument.createElement("p");
+    status.textContent = "Review status: " + (labels[entry.status] || labels.not_reviewed);
+    record.append(title, status);
+    if (entry.note) {
+      const note = reportDocument.createElement("p");
+      note.textContent = "Reviewer note: " + entry.note;
+      record.appendChild(note);
+    }
+    finding.appendChild(record);
+  });
+
+  const disclosure = reportDocument.createElement("p");
+  disclosure.className = "sub review-disclosure";
+  disclosure.textContent = "Human review records were entered by the reviewer and are separate from Muse output. They do not represent a hiring decision.";
+  const intro = reportDocument.querySelector("main .sub");
+  if (intro) intro.insertAdjacentElement("afterend", disclosure);
+  return "<!doctype html>\n" + reportDocument.documentElement.outerHTML;
 }
 
 document.getElementById("download-report").addEventListener("click", function () {
   if (!currentReport) return;
-  const blob = new Blob([currentReport], { type: "text/html;charset=utf-8" });
+  const blob = new Blob([buildReviewedReport(currentReport)], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
