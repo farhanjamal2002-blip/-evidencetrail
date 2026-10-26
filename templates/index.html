@@ -74,15 +74,15 @@
             <div class="step-label">02 / SEE THE IDEA</div>
             <h2>Try the prepared case</h2>
             <p>A fictional CV contains one supported requirement, one missing qualification, and one internal discrepancy.</p>
-            <a class="text-link" href="/demo/cv.pdf" download>Download the synthetic CV <span>↓</span></a>
-            <button id="load-demo-job" class="secondary-button" type="button">Load its sample job description</button>
+            <button id="load-demo-case" class="secondary-button" type="button">Load the complete sample case</button>
+            <a class="text-link demo-download" href="/demo/cv.pdf" download>Download the synthetic CV separately <span>↓</span></a>
             <div class="demo-divider"></div>
             <div class="demo-state-list">
               <div><span class="state-dot supported-dot"></span><span>Direct evidence</span><b>Supported</b></div>
               <div><span class="state-dot missing-dot"></span><span>No passage located</span><b>Not found</b></div>
               <div><span class="state-dot conflict-dot"></span><span>Incompatible CV claims</span><b>Conflicting</b></div>
             </div>
-            <div class="sample-tip">The sample is fictional and clearly labeled for demonstration.</div>
+            <div class="sample-tip">Loading the sample fills the CV and job description locally. It does not contact Meta; Analyze makes one real Muse call.</div>
           </aside>
         </section>
 
@@ -99,6 +99,10 @@
           </div>
           <p class="report-note">The exported pack embeds full CV page images. Review it before sharing.</p>
           <div class="run-meta" id="run-meta"></div>
+          <details class="provenance-panel">
+            <summary>Source fingerprints and run record</summary>
+            <dl id="provenance-details" class="provenance-details"></dl>
+          </details>
           <div id="summary-counts" class="summary-counts"></div>
           <div id="findings-list" class="findings-list"></div>
           <div id="source-pages" class="source-pages"></div>

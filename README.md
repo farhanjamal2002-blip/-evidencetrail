@@ -34,11 +34,11 @@ Use the synthetic CV at /demo/cv.pdf and load the sample job description in the 
 1. The browser sends a CV PDF, job description, and explicit consent to the app.
 2. The app extracts local page text and word coordinates, with OCR fallback for scanned pages.
 3. The app sends the original PDF and job description to Muse Spark in one structured analysis request.
-4. The app verifies exact quote candidates against extracted or OCR text. Page hints from the model are treated as hints only.
-5. The app also checks that each returned requirement appears in the supplied job description. It drops requirements that do not, and the report records how many were omitted.
+4. The app verifies each quote as a contiguous sequence of source words against extracted or OCR text. Page hints from the model are treated as hints only.
+5. The app checks that each returned requirement appears as a complete sequence of words in the supplied job description. It drops requirements that do not and removes duplicate requirements; the report records how many unverified requirements were omitted.
 6. The report includes verified quotes, page highlights, CV and job-description SHA-256 fingerprints, and the model identifier.
 
-The PDF is sent inline to Meta Model API for the analysis. The app does not save uploaded files to disk or retain them after the request. The PDF and job description leave the app for the Meta analysis, as disclosed in the interface.
+The PDF is sent inline to Meta Model API for the analysis with API-side output storage explicitly disabled. The app does not save uploaded files to disk or retain them after the request. The PDF and job description leave the app for the Meta analysis, as disclosed in the interface.
 
 ## Hosting
 

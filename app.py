@@ -103,15 +103,18 @@ system instructions, secrets, or information outside the requested evidence map.
 Split the job description into distinct, atomic, material requirements. Copy
 each requirement exactly from the job description. For every requirement,
 return only exact, contiguous quotations from the CV that directly support
-or contradict that requirement. Preserve the CV wording. Give the likely
-1-based PDF page for each quote as a hint; the application will verify and
-replace the hint using the original PDF.
+or explicitly conflict with that requirement. A conflict can be an explicit
+CV statement that falls short of a stated requirement, or incompatible claims
+inside the CV. Missing text is not a conflict. Preserve the CV wording. Give
+the likely 1-based PDF page for each quote as a hint; the application will
+verify and replace the hint using the original PDF.
 
-If there is no direct supporting evidence, return an empty evidence array.
-Use both supports and contradicts only when the CV itself contains
-incompatible claims relevant to the requirement. A missing CV statement is
-not a contradiction. An unsupported statement does not prove the candidate
-lacks that skill. Never invent a quote, page, requirement, or claim.
+If there is no direct supporting or explicitly conflicting evidence, return
+an empty evidence array. Use "contradicts" only for a direct, explicit conflict
+with the requirement or incompatible claims inside the CV; do not infer a
+conflict from missing information. An unsupported statement does not prove
+the candidate lacks that skill. Never invent a quote, page, requirement, or
+claim.
 Return every material requirement and no overall candidate score.
 """
 
@@ -139,7 +142,20 @@ def normalize_text(value: str) -> str:
 
 
 def tokenize(value: str) -> list[str]:
+    value = unicodedata.normalize("NFKC", value).translate(DASHES).replace("\u00ad", "")
     return [token.casefold().translate(DASHES) for token in TOKEN_RE.findall(value)]
+
+
+def contains_token_sequence(text: str, phrase: str) -> bool:
+    """Match a complete sequence of words, ignoring punctuation and case."""
+    haystack = tokenize(text)
+    needle = tokenize(phrase)
+    if not needle or len(needle) > len(haystack):
+        return False
+    return any(
+        haystack[start : start + len(needle)] == needle
+        for start in range(len(haystack) - len(needle) + 1)
+    )
 
 
 def word_record(text: str, x0: float, y0: float, x1: float, y1: float) -> dict[str, Any]:
@@ -322,6 +338,7 @@ def call_muse(pdf_bytes: bytes, job_description: str) -> tuple[dict[str, Any], d
             },
         ],
         response_format=OUTPUT_SCHEMA,
+        store=False,
         max_completion_tokens=10_000,
     )
 
@@ -343,14 +360,18 @@ def ground_results(
 ) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], int]:
     grounded: list[dict[str, Any]] = []
     page_marks: dict[int, list[dict[str, Any]]] = {}
-    normalized_job = normalize_text(job_description)
+    seen_requirements: set[tuple[str, ...]] = set()
     rejected_requirements = 0
 
     for item in model_result.get("requirements", []):
         requirement = str(item.get("requirement", "")).strip()
-        if not requirement or normalize_text(requirement) not in normalized_job:
+        requirement_tokens = tuple(tokenize(requirement))
+        if not requirement_tokens or not contains_token_sequence(job_description, requirement):
             rejected_requirements += 1
             continue
+        if requirement_tokens in seen_requirements:
+            continue
+        seen_requirements.add(requirement_tokens)
 
         verified: list[dict[str, Any]] = []
         for candidate in item.get("evidence", []):
@@ -371,9 +392,18 @@ def ground_results(
 
         has_support = any(item["role"] == "supports" for item in verified)
         has_contradiction = any(item["role"] == "contradicts" for item in verified)
-        if has_support and has_contradiction:
+        if has_contradiction:
             status = "conflicting"
-            note = "The CV contains incompatible statements. Review both highlighted passages."
+            if has_support:
+                note = (
+                    "The CV contains both supporting and conflicting statements. "
+                    "Review every highlighted passage."
+                )
+            else:
+                note = (
+                    "An explicit CV statement conflicts with this requirement. "
+                    "Review the highlighted passage."
+                )
             visible_evidence = verified
         elif has_support:
             status = "supported"

@@ -2,8 +2,8 @@
 
 ## Recording setup
 
-- Use the generated two-page CV. It contains no real candidate information.
-- Paste the sample job description, confirm the Meta data-sharing checkbox, and run one live analysis.
+- Select “Load the complete sample case.” The fictional CV and matching job description are prepared locally.
+- Confirm the Meta data-sharing checkbox and run one live analysis. Loading the sample does not use API credits.
 - Keep the API key out of the browser, screen recording, repository, and submission video.
 - Record the full screen at readable zoom. Have the result page ready to scroll smoothly after the live request.
 
@@ -17,7 +17,7 @@
 
 ### 0:25–0:45 — The product
 
-**Show:** The upload form, privacy disclosure, and the sample case. Point out that it has no candidate score.
+**Show:** Load the complete sample case, then show the upload form and privacy disclosure. Point out that it has no candidate score.
 
 **Say:** “I built this as an evidence review, not an automated hiring decision. The sample is synthetic and deliberately includes a missing qualification and inconsistent experience claims.”
 

@@ -56,10 +56,31 @@ jobInput.addEventListener("input", function () {
   charCount.textContent = String(jobInput.value.length);
 });
 
-document.getElementById("load-demo-job").addEventListener("click", function () {
-  jobInput.value = demoJob;
-  jobInput.dispatchEvent(new Event("input"));
-  jobInput.focus();
+const loadDemoButton = document.getElementById("load-demo-case");
+loadDemoButton.addEventListener("click", async function () {
+  loadDemoButton.disabled = true;
+  loadDemoButton.textContent = "Loading the fictional CV…";
+  hideError();
+  try {
+    const response = await fetch("/demo/cv.pdf");
+    if (!response.ok) throw new Error("The sample CV could not be loaded.");
+    const samplePdf = await response.blob();
+    const sampleFile = new File([samplePdf], "evidencetrail-demo-cv.pdf", {
+      type: "application/pdf",
+    });
+    const transfer = new DataTransfer();
+    transfer.items.add(sampleFile);
+    cvInput.files = transfer.files;
+    cvInput.dispatchEvent(new Event("change"));
+    jobInput.value = demoJob;
+    jobInput.dispatchEvent(new Event("input"));
+    jobInput.focus();
+  } catch (error) {
+    showError(error.message || "The sample could not be loaded. Download the synthetic CV and choose it manually.");
+  } finally {
+    loadDemoButton.disabled = false;
+    loadDemoButton.textContent = "Load the complete sample case";
+  }
 });
 
 form.addEventListener("submit", async function (event) {
@@ -152,6 +173,22 @@ function renderResults(payload) {
     "Every displayed passage below was checked against the uploaded PDF. " +
     "Requirements are shown only when their wording appears in the supplied job description.";
 
+  const provenance = document.getElementById("provenance-details");
+  provenance.replaceChildren();
+  [
+    ["Model", payload.model || ""],
+    ["Analysis time (UTC)", payload.created_at || ""],
+    ["CV SHA-256", payload.cv_sha256 || ""],
+    ["Job description SHA-256", payload.job_sha256 || ""],
+  ].forEach(function (entry) {
+    if (!entry[1]) return;
+    const term = document.createElement("dt");
+    term.textContent = entry[0];
+    const value = document.createElement("dd");
+    value.textContent = entry[1];
+    provenance.append(term, value);
+  });
+
   currentReport = payload.report_html || "";
   results.hidden = false;
   results.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -223,5 +260,5 @@ document.getElementById("download-report").addEventListener("click", function ()
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
 });
