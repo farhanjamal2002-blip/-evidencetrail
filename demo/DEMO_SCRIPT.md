@@ -24,9 +24,9 @@
 
 ### 0:45–1:20 — The real Muse analysis
 
-**Show:** Click “Analyze with Muse Spark.” Keep the loading state visible briefly, then show the model name, one real analysis call, and token usage.
+**Show:** Click “Analyze with Muse Spark.” Keep the loading state visible briefly, then show the model name, one real analysis call, token usage, and the source-check count showing matched versus excluded quote candidates.
 
-**Say:** “Muse Spark reads the original CV alongside the job description. It breaks the role into requirements and proposes exact passages that support or conflict with each one. This is the core analysis the product is built around.”
+**Say:** “Muse Spark reads the original CV alongside the job description. It breaks the role into requirements and proposes exact passages that support or conflict with each one. EvidenceTrail checks whether each quote actually occurs in the CV and suppresses any that do not.”
 
 ### 1:20–2:15 — Inspect and review the evidence
 

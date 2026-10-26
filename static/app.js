@@ -185,6 +185,15 @@ function renderResults(payload) {
     (usage.input_tokens || 0).toLocaleString() + " input tokens · " +
     (usage.output_tokens || 0).toLocaleString() + " output tokens" + ocrText +
     (rejectedCount ? " · " + rejectedCount + " unverified requirement(s) omitted" : "");
+  const quoteAudit = payload.quote_audit || {};
+  const proposedQuotes = Number(quoteAudit.proposed || 0);
+  const verifiedQuotes = Number(quoteAudit.verified || 0);
+  const excludedQuotes = Number(quoteAudit.excluded || 0);
+  document.getElementById("quote-audit").textContent = proposedQuotes
+    ? "Source check: " + verifiedQuotes + " of " + proposedQuotes +
+      " Muse-proposed quote(s) matched the CV exactly; " + excludedQuotes +
+      " unverified quote(s) were excluded. Exact presence does not prove the claim."
+    : "Source check: Muse returned no quote candidates; no unsupported passages were shown.";
   document.getElementById("result-caption").textContent =
     "Every displayed quote was checked against the uploaded PDF. Muse's interpretation is shown for human review; the app verifies source text, not qualification truth.";
 

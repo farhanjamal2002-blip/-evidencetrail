@@ -89,6 +89,7 @@ textarea:focus { border-color: #63a99a; box-shadow: 0 0 0 3px rgba(19,123,107,.0
 .download-button { white-space: nowrap; }
 .download-button span { padding-left: 7px; color: var(--teal); font-size: 15px; }
 .run-meta { margin: 18px 0 12px; color: #85928d; font-size: 10px; }
+.quote-audit { margin: 0 0 12px; padding: 11px 13px; border: 1px solid #dfe7e3; border-radius: 9px; color: #53645e; background: #fff; font-size: 10px; line-height: 1.55; }
 .provenance-panel { margin: 12px 0 15px; border: 1px solid #dfe7e3; border-radius: 10px; background: #fff; }
 .provenance-panel summary { padding: 12px 14px; color: #53645e; font-size: 11px; font-weight: 700; cursor: pointer; }
 .provenance-details { display: grid; grid-template-columns: minmax(130px, .3fr) minmax(0, 1fr); gap: 8px 14px; margin: 0; padding: 0 14px 14px; font-size: 10px; }

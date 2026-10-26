@@ -357,30 +357,38 @@ def call_muse(pdf_bytes: bytes, job_description: str) -> tuple[dict[str, Any], d
 
 def ground_results(
     model_result: dict[str, Any], pages: list[dict[str, Any]], job_description: str
-) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], int]:
+) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], int, int, int]:
     grounded: list[dict[str, Any]] = []
     page_marks: dict[int, list[dict[str, Any]]] = {}
     seen_requirements: set[tuple[str, ...]] = set()
     rejected_requirements = 0
+    proposed_quotes = 0
+    excluded_quotes = 0
 
     for item in model_result.get("requirements", []):
+        evidence_candidates = item.get("evidence", [])
+        proposed_quotes += len(evidence_candidates)
         requirement = str(item.get("requirement", "")).strip()
         requirement_tokens = tuple(tokenize(requirement))
         if not requirement_tokens or not contains_token_sequence(job_description, requirement):
             rejected_requirements += 1
+            excluded_quotes += len(evidence_candidates)
             continue
         if requirement_tokens in seen_requirements:
+            excluded_quotes += len(evidence_candidates)
             continue
         seen_requirements.add(requirement_tokens)
 
         verified: list[dict[str, Any]] = []
-        for candidate in item.get("evidence", []):
+        for candidate in evidence_candidates:
             quote = str(candidate.get("quote", "")).strip()
-            match = locate_quote(quote, pages, candidate.get("page_hint"))
-            if not match:
-                continue
             role = candidate.get("role")
             if role not in ("supports", "contradicts"):
+                excluded_quotes += 1
+                continue
+            match = locate_quote(quote, pages, candidate.get("page_hint"))
+            if not match:
+                excluded_quotes += 1
                 continue
             evidence = {
                 "quote": quote,
@@ -434,7 +442,7 @@ def ground_results(
                 {"boxes": evidence["boxes"], "role": evidence["role"]}
             )
 
-    return grounded, page_marks, rejected_requirements
+    return grounded, page_marks, rejected_requirements, proposed_quotes, excluded_quotes
 
 
 def reserve_analysis_slot(client_ip: str) -> None:
@@ -500,6 +508,8 @@ def build_report(
     cv_hash: str,
     job_hash: str,
     rejected_requirements: int,
+    proposed_quotes: int,
+    excluded_quotes: int,
     created_at: str,
 ) -> str:
     cards: list[str] = []
@@ -553,6 +563,7 @@ def build_report(
       h2{font-size:19px;margin:14px 0 6px}.finding p,.empty{color:var(--muted)}
       .evidence{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.evidence-meta{font-size:12px;color:var(--teal);font-weight:700}
       blockquote{margin:8px 0 0;padding:12px 14px;background:#f5f8f6;border-left:3px solid var(--teal)}
+      .audit-summary{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--muted);font-size:13px}
       .human-review-record{border-top:1px solid var(--line);margin-top:18px;padding-top:12px;color:var(--muted);font-size:13px}
       .human-review-record h3{font-size:14px;color:var(--ink);margin:0 0 6px}.human-review-record p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
       .source-legend{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:12px}
@@ -571,6 +582,13 @@ def build_report(
         "<div class='brand'>EVIDENCETRAIL · SOURCE-VERIFIED REVIEW</div>"
         "<h1>Requirement evidence pack</h1>"
         "<p class='sub'>Exact quote locations are checked against the supplied file. Muse's interpretation needs human review; this is not a hiring decision.</p>"
+        + (
+            f"<p class='audit-summary'>Source check: {proposed_quotes - excluded_quotes} of "
+            f"{proposed_quotes} Muse-proposed quote(s) matched the CV exactly; "
+            f"{excluded_quotes} unverified quote(s) were excluded.</p>"
+            if proposed_quotes
+            else "<p class='audit-summary'>Muse returned no quote candidates. No unsupported passages were shown.</p>"
+        )
         + (
             f"<p class='sub'>{rejected_requirements} model-produced requirement(s) were omitted "
             "because their wording did not appear in the supplied job description.</p>"
@@ -722,7 +740,13 @@ async def analyze(
             detail="Muse analysis failed. No result was generated; check the API key and retry.",
         ) from exc
 
-    findings, page_marks, rejected_requirements = ground_results(
+    (
+        findings,
+        page_marks,
+        rejected_requirements,
+        proposed_quotes,
+        excluded_quotes,
+    ) = ground_results(
         model_result, pages, job_description.strip()
     )
     if not findings:
@@ -741,12 +765,24 @@ async def analyze(
     cv_hash = hashlib.sha256(pdf_bytes).hexdigest()
     job_hash = hashlib.sha256(job_description.strip().encode("utf-8")).hexdigest()
     report_html = build_report(
-        findings, previews, cv_hash, job_hash, rejected_requirements, created_at
+        findings,
+        previews,
+        cv_hash,
+        job_hash,
+        rejected_requirements,
+        proposed_quotes,
+        excluded_quotes,
+        created_at,
     )
 
     return {
         "requirements": findings,
         "excluded_unverified_requirements": rejected_requirements,
+        "quote_audit": {
+            "proposed": proposed_quotes,
+            "verified": proposed_quotes - excluded_quotes,
+            "excluded": excluded_quotes,
+        },
         "pages": {str(number): image for number, image in previews.items()},
         "report_html": report_html,
         "model": MODEL_ID,
