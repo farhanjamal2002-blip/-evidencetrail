@@ -33,6 +33,7 @@ const sourceViewerStage = document.getElementById("source-viewer-stage");
 const sourcePdfPage = document.getElementById("source-pdf-page");
 const sourcePdfCanvas = document.getElementById("source-pdf-canvas");
 const sourcePdfHighlights = document.getElementById("source-pdf-highlights");
+const PDFJS_ASSET_VERSION = "20261027-2";
 
 const demoJob = [
   "Role: Procurement Automation Lead",
@@ -726,9 +727,13 @@ window.addEventListener("resize", function () {
 });
 
 async function loadPdfJs() {
-  const pdfjs = await import(PDFJS_BASE_URL + "pdf.min.js");
+  const pdfjs = await import(
+    PDFJS_BASE_URL + "pdf.min.js?v=" + PDFJS_ASSET_VERSION
+  );
   if (!pdfWorkerBlobUrl) {
-    const response = await fetch(PDFJS_BASE_URL + "pdf-engine.min.js");
+    const response = await fetch(
+      PDFJS_BASE_URL + "pdf-engine.min.js?v=" + PDFJS_ASSET_VERSION
+    );
     if (!response.ok) throw new Error("The local PDF worker could not be loaded.");
     const workerSource = await response.text();
     pdfWorkerBlobUrl = URL.createObjectURL(
