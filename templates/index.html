@@ -30,7 +30,7 @@
           <div class="hero-copy">
             <div class="eyebrow">MUSE SPARK · SOURCE-VERIFIED HIRING REVIEW</div>
             <h1>Show the evidence.<br><em>Keep the decision human.</em></h1>
-            <p>Muse Spark maps each job requirement to CV evidence. EvidenceTrail verifies every displayed quote against the source PDF and points reviewers to the original page.</p>
+            <p>Muse Spark extracts and adjudicates requirement-level evidence. EvidenceTrail retrieves source passages, checks quote and page provenance, and shows each requirement’s path back to the PDF.</p>
           </div>
           <div class="hero-stamp">
             <span class="stamp-line"></span>
@@ -79,7 +79,7 @@
             <button id="analyze-button" class="primary-button" type="submit">
               <span>Analyze with Muse Spark</span><span class="button-arrow">↗</span>
             </button>
-            <div class="privacy-footnote">One real Muse analysis per run. No candidate score. No persistent CV storage in EvidenceTrail.</div>
+            <div class="privacy-footnote">Two Muse Spark passes per run: requirement mapping, then source-span adjudication. No candidate score or persistent CV storage.</div>
           </form>
 
           <aside class="demo-panel">
@@ -94,7 +94,7 @@
               <div><span class="state-dot missing-dot"></span><span>No passage located</span><b>Not found</b></div>
               <div><span class="state-dot conflict-dot"></span><span>Incompatible CV claims</span><b>Conflicting</b></div>
             </div>
-            <div class="sample-tip">Loading the sample fills the CV and job description locally. It does not contact Meta; Analyze makes one real Muse call.</div>
+            <div class="sample-tip">Loading the sample fills the CV and job description locally. It does not contact Meta; Analyze makes two real Muse Spark passes.</div>
           </aside>
         </section>
 
@@ -117,6 +117,12 @@
             <dl id="provenance-details" class="provenance-details"></dl>
           </details>
           <div id="summary-counts" class="summary-counts"></div>
+          <section class="evidence-graph-panel" aria-labelledby="evidence-graph-title">
+            <div class="step-label">REQUIREMENTS → SOURCE SPANS</div>
+            <h3 id="evidence-graph-title">Evidence graph</h3>
+            <p class="graph-intro">Each edge points to a source quote that passed the local text and page checks. Open a source to inspect its original PDF location.</p>
+            <div id="evidence-graph" class="evidence-graph"></div>
+          </section>
           <p id="review-summary" class="review-summary" role="status" aria-live="polite"></p>
           <div id="findings-list" class="findings-list"></div>
           <div id="source-viewer-launch" class="source-viewer-launch" hidden>

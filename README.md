@@ -1,6 +1,6 @@
 # EvidenceTrail
 
-Muse Spark maps job requirements to candidate-CV evidence. EvidenceTrail verifies each proposed quote against the uploaded PDF, locates it on the source page, and builds a standalone HTML evidence pack.
+Muse Spark maps job requirements to candidate-CV evidence, then adjudicates candidate passages retrieved from locally extracted source blocks. EvidenceTrail checks every displayed quote against the PDF, locates it on the source page, and builds a standalone HTML evidence pack.
 
 The report describes supplied documents. It does not score or rank a candidate and it does not make a hiring decision.
 
@@ -8,7 +8,7 @@ See [HACKATHON_COMPLIANCE.md](HACKATHON_COMPLIANCE.md) for the rule-focused subm
 
 ## Muse Spark integration and open-source stack
 
-The app is built with open-source Python packages, including FastAPI, PyMuPDF, Pillow, pytesseract, and a Python API client. Muse Spark 1.3 is the semantic analyst, called through Meta's hosted Model API in one structured request per analysis. EvidenceTrail keeps the API key server-side, checks proposed evidence against the source documents, and records the model identifier in the exported report.
+The app is built with open-source Python packages, including FastAPI, PyMuPDF, Pillow, pytesseract, and a Python API client. Muse Spark 1.3 is the reasoning layer in a two-pass pipeline through Meta's hosted Model API: a structured requirement-mapping request followed by a structured source-span adjudication request. Between the calls, EvidenceTrail builds a provenance-bearing block catalog and locally ranks relevant spans with BM25-style term retrieval. Deterministic code checks cited text and page locations against the original PDF, derives the displayed status from citations that pass those checks, and renders a requirement-to-source graph. The API key stays server-side, and the report records the model identifier, source fingerprints, and both verification audits.
 
 The optional interactive source viewer uses [Mozilla PDF.js](https://github.com/mozilla/pdf.js) 6.4.299 ([Apache-2.0](https://github.com/mozilla/pdf.js/blob/master/LICENSE)), loaded on demand from jsDelivr when a reviewer opens the viewer. The original CV is read from the browser's selected file; it is not sent to the PDF.js CDN. The regular analysis still sends the CV to the app and Meta Model API after consent. If the library cannot load, the existing highlighted page images and standalone HTML evidence pack remain available.
 
@@ -28,7 +28,7 @@ On any OS:
 
 The key stays on the server and must never be committed to the repository.
 The app header reports whether MODEL_API_KEY is set; it does not validate the key or test API connectivity. If the key is missing, analysis stops before the app extracts or forwards the CV and no Meta call is made.
-Each click on “Analyze with Muse Spark” makes one real model request. Editing the app and loading the synthetic CV do not call the API. The sample analysis does use the API.
+Each click on “Analyze with Muse Spark” makes two real model requests: the first maps job requirements to candidate CV evidence, and the second adjudicates locally retrieved source spans. Editing the app and loading the synthetic CV do not call the API. The sample analysis uses both requests. Token usage is shown in aggregate and by pass; actual usage depends on the documents and model responses.
 
 The app uses the standard `muse-spark-1.3` model ID. Keep this standard mode for real CVs; Meta’s discounted contributor mode allows submitted content to be used to train future models.
 
@@ -46,12 +46,13 @@ Use the synthetic CV at /demo/cv.pdf and load the sample job description in the 
 
 ## Analysis flow
 
-1. The browser sends a CV PDF, job description, and explicit consent to the app.
-2. The app extracts local page text and word coordinates, with OCR fallback for scanned pages.
-3. The app sends the original PDF and job description to Muse Spark 1.3 through Meta Model API in one structured analysis request.
-4. The app verifies each quote as a contiguous sequence of source words against extracted or OCR text. Page hints from the model are treated as hints only. Quote candidates tied to rejected or duplicate requirements, or lacking an exact source match, are excluded; the run record reports proposed, matched, and excluded counts.
-5. The app checks that each returned requirement appears as a complete sequence of words in the supplied job description. It drops requirements that do not and removes duplicate requirements; the report records how many unverified requirements were omitted.
-6. The report includes verified quotes, page highlights, CV and job-description SHA-256 fingerprints, and the model identifier.
+1. The browser sends the CV PDF, job description, and explicit consent to the app.
+2. PyMuPDF extracts page text, text blocks, word coordinates, and page dimensions. Tesseract supplies OCR text and word boxes for scanned pages.
+3. The first structured Muse Spark request receives the original PDF and job description. It returns atomic job requirements and candidate quotes.
+4. Local grounding drops requirements not found verbatim in the job description, removes duplicates, and matches first-pass quotes against the source words. Page hints do not decide where a quote is located.
+5. EvidenceTrail builds compact source spans from document blocks, keeps page and bounding-box provenance, and ranks candidate spans for each requirement with a lightweight BM25-style lexical retriever. The second structured Muse Spark request receives the requirements and only their allowed candidate source spans, including source IDs, page, bounding box, text, and nearby context.
+6. Muse returns a source-linked review. Local checks reject unknown source IDs, quotes absent from their cited span or context, quotes that cannot be located on the cited PDF page, and duplicate citations. The final status is derived from the citations that survive these checks; conflicting claims require explicit incompatible text, while no support remains not found. Uncertain or mismatched results are marked ambiguous for human review.
+7. The app builds a requirement-to-source graph. Each graph edge can open the original PDF at the cited page and highlight. The report includes both-pass audit counts, verified quotes, page highlights, CV and job-description SHA-256 fingerprints, and the model identifier.
 
 ## Human review record
 

@@ -113,11 +113,11 @@ form.addEventListener("submit", async function (event) {
 
   const submittedPdfFile = cvInput.files[0];
   analyzeButton.disabled = true;
-  analyzeButton.querySelector("span:first-child").textContent = "Muse is reading the CV and job requirements…";
+  analyzeButton.querySelector("span:first-child").textContent = "Muse is mapping and checking source evidence…";
   const analysisStartedAt = Date.now();
   function updateAnalysisStatus() {
     const elapsedSeconds = Math.floor((Date.now() - analysisStartedAt) / 1000);
-    analysisStatusText.textContent = "One real Muse Spark analysis is in progress · " +
+    analysisStatusText.textContent = "Two-pass Muse Spark analysis in progress · " +
       elapsedSeconds + " seconds elapsed.";
   }
   analysisStatus.hidden = false;
@@ -181,6 +181,7 @@ function renderResults(payload, analyzedFile) {
     findingsList.appendChild(buildFindingCard(finding));
   });
   updateReviewSummary();
+  renderEvidenceGraph(payload.evidence_graph || { requirements: [] });
 
   const countsNode = document.getElementById("summary-counts");
   countsNode.replaceChildren();
@@ -231,22 +232,30 @@ function renderResults(payload, analyzedFile) {
     ? " · OCR used on page(s) " + payload.ocr_pages.join(", ")
     : "";
   const rejectedCount = Number(payload.excluded_unverified_requirements || 0);
+  const callLabel = Number(payload.analysis_calls || 0) === 2
+    ? "2 real Muse Spark passes · requirement mapping + source adjudication"
+    : payload.analysis_calls + " real Muse Spark pass(es)";
   document.getElementById("run-meta").textContent =
-    payload.model + " · " + payload.analysis_calls + " real analysis call · " +
-    (usage.input_tokens || 0).toLocaleString() + " input tokens · " +
-    (usage.output_tokens || 0).toLocaleString() + " output tokens" + ocrText +
+    payload.model + " · " + callLabel + " · " +
+    (usage.input_tokens || 0).toLocaleString() + " total input tokens · " +
+    (usage.output_tokens || 0).toLocaleString() + " total output tokens" + ocrText +
     (rejectedCount ? " · " + rejectedCount + " unverified requirement(s) omitted" : "");
   const quoteAudit = payload.quote_audit || {};
   const proposedQuotes = Number(quoteAudit.proposed || 0);
   const verifiedQuotes = Number(quoteAudit.verified || 0);
   const excludedQuotes = Number(quoteAudit.excluded || 0);
-  document.getElementById("quote-audit").textContent = proposedQuotes
-    ? "Source check: " + verifiedQuotes + " of " + proposedQuotes +
-      " Muse-proposed quote(s) matched the CV exactly; " + excludedQuotes +
-      " unverified quote(s) were excluded. Exact presence does not prove the claim."
-    : "Source check: Muse returned no quote candidates; no unsupported passages were shown.";
+  const secondProposed = Number(quoteAudit.verification_proposed || 0);
+  const secondVerified = Number(quoteAudit.verification_verified || 0);
+  const secondExcluded = Number(quoteAudit.verification_excluded || 0);
+  const ambiguous = Number(quoteAudit.ambiguous_requirements || 0);
+  document.getElementById("quote-audit").textContent =
+    "Pass 1 exact quote check: " + verifiedQuotes + "/" + proposedQuotes +
+    " matched the PDF (" + excludedQuotes + " excluded). Pass 2 source adjudication: " +
+    secondVerified + "/" + secondProposed + " citations matched an allowed retrieved span and PDF page (" +
+    secondExcluded + " excluded). " + ambiguous + " requirement(s) marked ambiguous. " +
+    "A matching quote proves text presence, not qualification truth.";
   document.getElementById("result-caption").textContent =
-    "Every displayed quote was checked against the uploaded PDF. Muse's interpretation is shown for human review; the app verifies source text, not qualification truth.";
+    "Muse maps requirements, then reviews locally retrieved source spans. EvidenceTrail verifies each displayed citation against the PDF and shows the source trail for human review; it does not verify real-world qualifications.";
 
   const provenance = document.getElementById("provenance-details");
   provenance.replaceChildren();
@@ -268,6 +277,72 @@ function renderResults(payload, analyzedFile) {
   results.hidden = false;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   results.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+}
+
+function renderEvidenceGraph(graph) {
+  const root = document.getElementById("evidence-graph");
+  root.replaceChildren();
+  const requirements = Array.isArray(graph.requirements) ? graph.requirements : [];
+  if (!requirements.length) {
+    const empty = document.createElement("p");
+    empty.className = "graph-empty";
+    empty.textContent = "No requirement-to-source links were returned.";
+    root.appendChild(empty);
+    return;
+  }
+
+  requirements.forEach(function (row) {
+    const item = document.createElement("article");
+    item.className = "graph-row";
+
+    const requirement = document.createElement("div");
+    requirement.className = "graph-requirement";
+    const meta = document.createElement("span");
+    meta.className = "graph-meta status-" + String(row.status || "not_found");
+    meta.textContent = String(row.id || "") + " · " +
+      String(row.status || "not_found").replaceAll("_", " ") +
+      (row.certainty === "ambiguous" ? " · ambiguous" : "");
+    const title = document.createElement("strong");
+    title.textContent = String(row.requirement || "");
+    requirement.append(meta, title);
+
+    const links = document.createElement("div");
+    links.className = "graph-links";
+    const arrow = document.createElement("span");
+    arrow.className = "graph-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = "→";
+    links.appendChild(arrow);
+
+    const sources = Array.isArray(row.sources) ? row.sources : [];
+    if (!sources.length) {
+      const empty = document.createElement("span");
+      empty.className = "graph-empty";
+      empty.textContent = "No locally verified source link";
+      links.appendChild(empty);
+    } else {
+      sources.forEach(function (source) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "graph-source " +
+          (source.role === "contradicts" ? "is-conflict" : "is-support");
+        button.dataset.page = String(source.page);
+        button.dataset.quote = String(source.quote || "");
+        button.setAttribute("aria-label",
+          (source.role === "contradicts" ? "Open conflicting passage" : "Open supporting passage") +
+          " on page " + source.page);
+        const label = document.createElement("span");
+        label.textContent = "Page " + source.page + " · " + String(source.source_id || "");
+        const quote = document.createElement("q");
+        quote.textContent = String(source.quote || "");
+        button.append(label, quote);
+        links.appendChild(button);
+      });
+    }
+
+    item.append(requirement, links);
+    root.appendChild(item);
+  });
 }
 
 function addCount(parent, value, label, status) {
@@ -299,7 +374,14 @@ function buildFindingCard(finding) {
   const note = document.createElement("p");
   note.className = "finding-note";
   note.textContent = finding.note;
-  body.append(header, title, note);
+  body.append(header, title);
+  if (finding.certainty === "ambiguous") {
+    const ambiguity = document.createElement("p");
+    ambiguity.className = "ambiguity-flag";
+    ambiguity.textContent = "Ambiguous result · inspect the source context before relying on this interpretation.";
+    body.appendChild(ambiguity);
+  }
+  body.appendChild(note);
 
   if (finding.evidence && finding.evidence.length) {
     const quoteList = document.createElement("div");
@@ -309,7 +391,8 @@ function buildFindingCard(finding) {
       quote.className = "quote-item" + (evidence.role === "contradicts" ? " contradicts" : "");
       const role = document.createElement("span");
       role.className = "quote-role";
-      role.textContent = evidence.role === "contradicts" ? "Conflicting statement" : "Supporting passage";
+      role.textContent = (evidence.role === "contradicts" ? "Conflicting statement" : "Supporting passage") +
+        (evidence.source_id ? " · " + evidence.source_id : "");
       const text = document.createElement("div");
       text.className = "quote-text";
       text.textContent = "“" + evidence.quote + "”";
@@ -429,6 +512,12 @@ document.getElementById("findings-list").addEventListener("click", function (eve
   const target = event.target instanceof Element ? event.target.closest(".page-anchor") : null;
   if (!target || !sourcePdfFile || !sourcePdfPayload) return;
   event.preventDefault();
+  void openInteractivePdf(Number(target.dataset.page), target.dataset.quote || "");
+});
+
+document.getElementById("evidence-graph").addEventListener("click", function (event) {
+  const target = event.target instanceof Element ? event.target.closest(".graph-source") : null;
+  if (!target || !sourcePdfFile || !sourcePdfPayload) return;
   void openInteractivePdf(Number(target.dataset.page), target.dataset.quote || "");
 });
 
