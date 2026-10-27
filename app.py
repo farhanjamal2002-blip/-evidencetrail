@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from PIL import Image, ImageDraw
 from starlette.concurrency import run_in_threadpool
+from role_audit import audit_role_description
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -33,6 +34,10 @@ load_dotenv(BASE_DIR / ".env")
 MAX_PDF_MB = int(os.getenv("MAX_PDF_MB", "12"))
 MAX_PDF_BYTES = MAX_PDF_MB * 1024 * 1024
 MAX_PDF_PAGES = int(os.getenv("MAX_PDF_PAGES", "20"))
+MAX_PAGE_SIDE_POINTS = 14_400
+MAX_OCR_PIXELS = 12_000_000
+OCR_SPARSE_NATIVE_TEXT_CHARS = 180
+OCR_LARGE_IMAGE_FRACTION = 0.28
 MAX_JOB_CHARS = 18_000
 MAX_ANALYSES_PER_PROCESS = int(os.getenv("MAX_ANALYSES_PER_PROCESS", "20"))
 MAX_ANALYSES_PER_HOUR_PER_IP = int(os.getenv("MAX_ANALYSES_PER_HOUR_PER_IP", "5"))
@@ -205,7 +210,7 @@ Return one review for every supplied requirement.
 """
 
 
-TOKEN_RE = re.compile(r"[^\W_]+(?:['’.-][^\W_]+)*", re.UNICODE)
+TOKEN_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)*", re.UNICODE)
 DASHES = str.maketrans(
     {
         "\u2010": "-",
@@ -244,10 +249,136 @@ def contains_token_sequence(text: str, phrase: str) -> bool:
     )
 
 
-def word_record(text: str, x0: float, y0: float, x1: float, y1: float) -> dict[str, Any]:
+def reading_order_streams(
+    words: list[dict[str, Any]], *, ocr_used: bool = False
+) -> list[list[dict[str, Any]]]:
+    """Keep visual columns separate while joining nearby lines within a column."""
+    if not words:
+        return []
+
+    ordered = sorted(
+        words,
+        key=lambda word: (
+            (float(word["bbox"][1]) + float(word["bbox"][3])) / 2,
+            float(word["bbox"][0]),
+        ),
+    )
+    heights = [
+        max(1.0, float(word["bbox"][3]) - float(word["bbox"][1]))
+        for word in ordered
+    ]
+    typical_height = sorted(heights)[len(heights) // 2]
+    row_tolerance = max(3.0, typical_height * 0.35)
+    rows: list[dict[str, Any]] = []
+
+    for word in ordered:
+        bbox = word["bbox"]
+        center_y = (float(bbox[1]) + float(bbox[3])) / 2
+        row = next(
+            (
+                candidate
+                for candidate in reversed(rows)
+                if abs(center_y - candidate["center_y"]) <= row_tolerance
+            ),
+            None,
+        )
+        if row is None:
+            row = {"center_y": center_y, "words": []}
+            rows.append(row)
+        row["words"].append(word)
+        row["center_y"] = sum(
+            (float(item["bbox"][1]) + float(item["bbox"][3])) / 2
+            for item in row["words"]
+        ) / len(row["words"])
+
+    line_segments: list[dict[str, Any]] = []
+    for row in rows:
+        row_words = sorted(row["words"], key=lambda word: float(word["bbox"][0]))
+        segments: list[list[dict[str, Any]]] = []
+        for word in row_words:
+            if segments:
+                previous = segments[-1][-1]["bbox"]
+                current = word["bbox"]
+                previous_line_id = segments[-1][-1].get("line_id")
+                current_line_id = word.get("line_id")
+                distinct_source_lines = (
+                    previous_line_id is not None
+                    and current_line_id is not None
+                    and previous_line_id != current_line_id
+                )
+                gap = float(current[0]) - float(previous[2])
+                threshold = max(
+                    18.0 if ocr_used else 4.5,
+                    max(
+                        float(previous[3]) - float(previous[1]),
+                        float(current[3]) - float(current[1]),
+                    )
+                    * (1.8 if ocr_used else 0.42),
+                )
+                if distinct_source_lines or gap > threshold:
+                    segments.append([])
+            else:
+                segments.append([])
+            segments[-1].append(word)
+
+        for segment in segments:
+            boxes = [word["bbox"] for word in segment]
+            line_segments.append(
+                {
+                    "words": segment,
+                    "x0": min(float(box[0]) for box in boxes),
+                    "y": sum((float(box[1]) + float(box[3])) / 2 for box in boxes)
+                    / len(boxes),
+                    "height": max(float(box[3]) - float(box[1]) for box in boxes),
+                }
+            )
+
+    line_segments.sort(key=lambda segment: (segment["y"], segment["x0"]))
+    streams: list[list[dict[str, Any]]] = []
+    for segment in line_segments:
+        candidates: list[tuple[float, float, int]] = []
+        for index, stream in enumerate(streams):
+            previous = stream[-1]
+            vertical_gap = segment["y"] - previous["y"]
+            max_vertical_gap = max(
+                32.0, max(segment["height"], previous["height"]) * 2.2
+            )
+            max_horizontal_shift = max(
+                18.0, max(segment["height"], previous["height"]) * 1.5
+            )
+            horizontal_shift = abs(segment["x0"] - previous["x0"])
+            if (
+                0 < vertical_gap <= max_vertical_gap
+                and horizontal_shift <= max_horizontal_shift
+            ):
+                candidates.append((horizontal_shift, vertical_gap, index))
+        if candidates:
+            _x_shift, _y_gap, stream_index = min(candidates)
+            streams[stream_index].append(segment)
+        else:
+            streams.append([segment])
+
+    return [
+        [word for segment in sorted(stream, key=lambda item: item["y"]) for word in segment["words"]]
+        for stream in streams
+    ]
+
+
+def word_record(
+    text: str,
+    x0: float,
+    y0: float,
+    x1: float,
+    y1: float,
+    *,
+    block_id: str | int | None = None,
+    line_id: str | int | None = None,
+) -> dict[str, Any]:
     return {
         "text": text,
         "bbox": [float(x0), float(y0), float(x1), float(y1)],
+        "block_id": block_id,
+        "line_id": line_id,
     }
 
 
@@ -298,7 +429,10 @@ def merge_line_boxes(boxes: list[list[float]]) -> list[list[float]]:
 
 
 def extract_ocr(page: fitz.Page) -> tuple[str, list[dict[str, Any]]]:
-    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
+    page_width = float(page.rect.width)
+    page_height = float(page.rect.height)
+    scale = ocr_render_scale(page_width, page_height)
+    pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
     image = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
 
     installed = set(pytesseract.get_languages(config=""))
@@ -328,11 +462,21 @@ def extract_ocr(page: fitz.Page) -> tuple[str, list[dict[str, Any]]]:
         y0 = float(data["top"][index]) * sy
         x1 = x0 + float(data["width"][index]) * sx
         y1 = y0 + float(data["height"][index]) * sy
-        words.append(word_record(text, x0, y0, x1, y1))
         line_key = (
             int(data["block_num"][index]),
             int(data["par_num"][index]),
             int(data["line_num"][index]),
+        )
+        words.append(
+            word_record(
+                text,
+                x0,
+                y0,
+                x1,
+                y1,
+                block_id=f"ocr:{line_key[0]}:{line_key[1]}",
+                line_id=f"ocr:{line_key[0]}:{line_key[1]}:{line_key[2]}",
+            )
         )
         lines.setdefault(line_key, []).append(text)
 
@@ -343,6 +487,42 @@ def extract_ocr(page: fitz.Page) -> tuple[str, list[dict[str, Any]]]:
     return extracted, words
 
 
+def should_ocr_page(
+    page: fitz.Page, extracted_text: str, native_words: list[Any]
+) -> bool:
+    """Detect scanned pages that have only a small native-text layer.
+
+    A footer or watermark can otherwise make a mostly scanned page look like it
+    contains enough searchable text to skip OCR.
+    """
+    normalized_length = len(normalize_text(extracted_text))
+    if normalized_length < 24:
+        return True
+    if normalized_length >= OCR_SPARSE_NATIVE_TEXT_CHARS or len(native_words) >= 32:
+        return False
+
+    page_area = float(page.rect.width) * float(page.rect.height)
+    if page_area <= 0:
+        return False
+    try:
+        for image_info in page.get_image_info():
+            bounds = fitz.Rect(image_info.get("bbox", (0, 0, 0, 0))) & page.rect
+            if bounds.get_area() / page_area >= OCR_LARGE_IMAGE_FRACTION:
+                return True
+    except Exception:
+        return False
+    return False
+
+
+
+
+def ocr_render_scale(page_width: float, page_height: float) -> float:
+    if page_width <= 0 or page_height <= 0:
+        raise ValueError("This PDF page has invalid dimensions.")
+    scale = min(2.0, math.sqrt(MAX_OCR_PIXELS / (page_width * page_height)))
+    while math.ceil(page_width * scale) * math.ceil(page_height * scale) > MAX_OCR_PIXELS:
+        scale *= 0.99
+    return scale
 
 
 def extract_pdf(pdf_bytes: bytes) -> list[dict[str, Any]]:
@@ -362,6 +542,14 @@ def extract_pdf(pdf_bytes: bytes) -> list[dict[str, Any]]:
 
     pages: list[dict[str, Any]] = []
     for page_index, page in enumerate(document):
+        if (
+            page.rect.width <= 0
+            or page.rect.height <= 0
+            or max(page.rect.width, page.rect.height) > MAX_PAGE_SIDE_POINTS
+        ):
+            raise ValueError(
+                f"Page {page_index + 1} has dimensions outside the supported CV page size."
+            )
         extracted = page.get_text("text", sort=True).strip()
         raw_words = page.get_text("words", sort=True)
         words = []
@@ -371,7 +559,15 @@ def extract_pdf(pdf_bytes: bytes) -> list[dict[str, Any]]:
                 continue
             bounds = fitz.Rect(item[0], item[1], item[2], item[3]) * rotation
             words.append(
-                word_record(str(item[4]), bounds.x0, bounds.y0, bounds.x1, bounds.y1)
+                word_record(
+                    str(item[4]),
+                    bounds.x0,
+                    bounds.y0,
+                    bounds.x1,
+                    bounds.y1,
+                    block_id=f"pdf:{item[5]}" if len(item) > 5 else None,
+                    line_id=f"pdf:{item[5]}:{item[6]}" if len(item) > 6 else None,
+                )
             )
         ocr_used = False
         blocks = [
@@ -380,7 +576,7 @@ def extract_pdf(pdf_bytes: bytes) -> list[dict[str, Any]]:
             if len(item) > 4 and str(item[4]).strip()
         ]
 
-        if len(normalize_text(extracted)) < 24:
+        if should_ocr_page(page, extracted, raw_words):
             try:
                 extracted, words = extract_ocr(page)
                 ocr_used = True
@@ -424,24 +620,28 @@ def locate_quote(
         # Page-level text can concatenate adjacent PDF columns (for example,
         # ``work.Vendor``). Use the word stream as the source of truth so the
         # exact token sequence can still be located and highlighted.
-        flattened: list[tuple[str, list[float]]] = []
-        for word in page["words"]:
-            for token in tokenize(word["text"]):
-                flattened.append((token, word["bbox"]))
-
-        haystack = [token for token, _ in flattened]
         box: list[list[float]] | None = None
-        for start in range(0, len(haystack) - len(needle) + 1):
-            if haystack[start : start + len(needle)] == needle:
-                matched = flattened[start : start + len(needle)]
-                box = []
-                seen: set[tuple[float, float, float, float]] = set()
-                for _, bbox in matched:
-                    key = tuple(round(value, 1) for value in bbox)
-                    if key not in seen:
-                        seen.add(key)
-                        box.append(list(key))
-                box = merge_line_boxes(box)
+        for stream in reading_order_streams(
+            page["words"], ocr_used=bool(page.get("ocr_used", False))
+        ):
+            flattened: list[tuple[str, list[float]]] = []
+            for word in stream:
+                for token in tokenize(str(word["text"])):
+                    flattened.append((token, word["bbox"]))
+            haystack = [token for token, _ in flattened]
+            for start in range(0, len(haystack) - len(needle) + 1):
+                if haystack[start : start + len(needle)] == needle:
+                    matched = flattened[start : start + len(needle)]
+                    box = []
+                    seen: set[tuple[float, float, float, float]] = set()
+                    for _, bbox in matched:
+                        key = tuple(round(value, 1) for value in bbox)
+                        if key not in seen:
+                            seen.add(key)
+                            box.append(list(key))
+                    box = merge_line_boxes(box)
+                    break
+            if box:
                 break
 
         if box:
@@ -526,10 +726,72 @@ RETRIEVAL_STOP_WORDS = {
 
 def retrieval_tokens(text: str) -> list[str]:
     return [
-        token.casefold()
+        str(MOCK_NUMBER_WORDS.get(token.casefold(), token.casefold()))
         for token in tokenize(text)
         if token.casefold() not in RETRIEVAL_STOP_WORDS
     ]
+
+
+def audit_listed_job_items(
+    job_description: str, findings: list[dict[str, Any]], limit: int = 40
+) -> dict[str, Any]:
+    """Flag explicit JD list items that have no strong wording match in the analysis.
+
+    This is a conservative lexical coverage warning, not semantic validation. It
+    helps a reviewer notice possible omissions without claiming that a wording
+    match means a requirement was understood correctly.
+    """
+    item_pattern = re.compile(r"^\s*(?:\d+[.)]\s+|[-*•‣]\s+)(.+?)\s*$")
+    seen: set[tuple[str, ...]] = set()
+    listed: list[str] = []
+    for line in job_description.splitlines():
+        match = item_pattern.match(line)
+        if not match:
+            continue
+        text = match.group(1).strip()
+        tokens = tuple(dict.fromkeys(retrieval_tokens(text)))
+        if not tokens or tokens in seen:
+            continue
+        seen.add(tokens)
+        listed.append(text[:700])
+
+    visible = listed[:limit]
+    analyzed = [
+        (
+            str(finding.get("id", "")),
+            set(retrieval_tokens(str(finding.get("requirement", "")))),
+        )
+        for finding in findings
+    ]
+    items: list[dict[str, Any]] = []
+    for index, text in enumerate(visible, start=1):
+        tokens = set(retrieval_tokens(text))
+        best_id = ""
+        best_overlap = 0.0
+        for requirement_id, requirement_tokens in analyzed:
+            overlap = len(tokens & requirement_tokens) / max(1, len(tokens))
+            if overlap > best_overlap:
+                best_id = requirement_id
+                best_overlap = overlap
+        matched = best_overlap >= 0.75
+        items.append(
+            {
+                "id": f"JD{index}",
+                "text": text,
+                "status": "matched" if matched else "needs_review",
+                "requirement_id": best_id if matched else "",
+                "wording_overlap": round(best_overlap, 2),
+            }
+        )
+
+    matched_count = sum(item["status"] == "matched" for item in items)
+    return {
+        "items": items,
+        "matched": matched_count,
+        "needs_review": len(items) - matched_count,
+        "truncated": max(0, len(listed) - limit),
+        "method": "conservative lexical overlap; not semantic validation",
+    }
 
 
 def compact_bbox(boxes: list[list[float]]) -> list[float]:
@@ -619,6 +881,41 @@ def rank_source_spans(
 
     ranked.sort(key=lambda item: (-item[0], catalog[item[1]]["id"]))
     return [catalog[index] for _, index in ranked[:limit]]
+
+
+def rank_comparable_duration_spans(
+    requirement: str, catalog: list[dict[str, Any]], limit: int = 3
+) -> list[dict[str, Any]]:
+    """Retrieve other duration claims about the same subject for conflict review.
+
+    Lexical top-k retrieval can rank a heading or a single matching statement above
+    a second, contradictory claim. For duration requirements, add a small number of
+    source blocks that mention both a duration and at least one role-specific term.
+    The model still interprets the passages; this only broadens its evidence set.
+    """
+    requirement_terms = set(retrieval_tokens(requirement))
+    requirement_terms -= set(MOCK_NUMBER_WORDS)
+    requirement_terms = {term for term in requirement_terms if not term.isdigit()}
+    requirement_terms -= {
+        "least", "minimum", "more", "over", "than", "plus", "at", "years", "year"
+    }
+    if not requirement_terms or not re.search(r"\byears?\b", requirement, re.IGNORECASE):
+        return []
+
+    number_pattern = (
+        r"\b(?:\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|"
+        r"eleven|twelve|fifteen|twenty)(?:\+|\s+plus)?\s+years?\b"
+    )
+    comparable: list[dict[str, Any]] = []
+    for span in catalog:
+        text = str(span.get("text", ""))
+        if not re.search(number_pattern, text, re.IGNORECASE):
+            continue
+        source_terms = set(retrieval_tokens(text))
+        if requirement_terms & source_terms:
+            comparable.append(span)
+
+    return rank_source_spans(requirement, comparable, limit=limit)
 
 
 def parse_mock_requirements(job_description: str) -> list[str]:
@@ -835,7 +1132,15 @@ def prepare_verification_request(
             }
             allowed.add(source_id)
 
-        for span in rank_source_spans(str(finding["requirement"]), catalog):
+        requirement = str(finding["requirement"])
+        candidate_spans = rank_source_spans(requirement, catalog)
+        ranked_ids = {str(span["id"]) for span in candidate_spans}
+        for span in rank_comparable_duration_spans(requirement, catalog):
+            if str(span["id"]) not in ranked_ids:
+                candidate_spans.append(span)
+                ranked_ids.add(str(span["id"]))
+
+        for span in candidate_spans:
             source_by_id.setdefault(span["id"], span)
             allowed.add(span["id"])
 
@@ -1028,17 +1333,33 @@ def apply_verification_reviews(
         reason = str(review.get("reason", "")).strip()[:600]
         base_note = {
             "supported": (
-                "The second Muse pass selected a supporting passage. Its exact text "
-                "was checked against the cited PDF page; review whether it supports "
-                "the requirement."
+                (
+                    "The local mock selected a candidate supporting passage. Its exact "
+                    "text was checked against the cited PDF page; inspect the source "
+                    "yourself."
+                )
+                if MOCK_PROVIDER_ENABLED
+                else (
+                    "The second Muse pass selected a supporting passage. Its exact text "
+                    "was checked against the cited PDF page; review whether it supports "
+                    "the requirement."
+                )
             ),
             "not_found": (
                 "No directly supporting or explicitly conflicting passage survived "
                 "the source checks. This does not prove the candidate lacks the skill."
             ),
             "conflicting": (
-                "The second Muse pass selected a conflicting statement. Its exact "
-                "text was checked against the cited PDF page; review the context."
+                (
+                    "The local mock selected a candidate conflicting statement. Its "
+                    "exact text was checked against the cited PDF page; inspect the "
+                    "source yourself."
+                )
+                if MOCK_PROVIDER_ENABLED
+                else (
+                    "The second Muse pass selected a conflicting statement. Its exact "
+                    "text was checked against the cited PDF page; review the context."
+                )
             ),
         }[status]
         note_parts = [reason] if reason else []
@@ -1121,6 +1442,162 @@ def build_evidence_graph(findings: list[dict[str, Any]]) -> dict[str, Any]:
             }
         )
     return {"nodes": nodes, "edges": edges, "requirements": requirement_rows}
+
+
+def build_clarification_brief(findings: list[dict[str, Any]]) -> dict[str, Any]:
+    """Create reviewer-ready, neutral follow-up prompts from unresolved findings."""
+    items: list[dict[str, Any]] = []
+    for finding in findings:
+        status = str(finding.get("status", ""))
+        certainty = str(finding.get("certainty", "clear"))
+        if status == "supported" and certainty != "ambiguous":
+            continue
+        if status not in {"not_found", "conflicting", "supported"}:
+            continue
+
+        requirement = str(finding.get("requirement", "")).strip()[:500]
+        if not requirement:
+            continue
+
+        evidence: list[dict[str, Any]] = []
+        seen_sources: set[tuple[int, str, str]] = set()
+        for citation in finding.get("evidence", []):
+            try:
+                page = int(citation.get("page", 0))
+            except (TypeError, ValueError):
+                continue
+            quote = str(citation.get("quote", "")).strip()[:1000]
+            role = str(citation.get("role", ""))
+            if page < 1 or not quote or role not in {"supports", "contradicts"}:
+                continue
+            identity = (page, quote, role)
+            if identity in seen_sources:
+                continue
+            seen_sources.add(identity)
+            evidence.append({"page": page, "quote": quote, "role": role})
+            if len(evidence) == 4:
+                break
+
+        if status == "conflicting":
+            question = (
+                f"The CV contains statements that may not align about “{requirement}”. "
+                "Could you clarify the relevant dates, scope, or details so the reviewer "
+                "can understand how they fit together?"
+            )
+            reason = (
+                "The cited CV passage(s) were located in the source; a reviewer should "
+                "inspect their context before relying on this interpretation."
+            )
+        elif status == "not_found":
+            question = (
+                f"If relevant to your background, could you describe your experience "
+                f"related to “{requirement}”, including your role and timeframe?"
+            )
+            reason = (
+                "No direct passage was located in the supplied CV. That does not establish "
+                "whether the person has this experience."
+            )
+        else:
+            question = (
+                f"Could you clarify the context, scope, and timeframe of the experience "
+                f"connected to “{requirement}”?"
+            )
+            reason = (
+                "The source interpretation is ambiguous and needs human review before "
+                "any conclusion is drawn."
+            )
+
+        items.append(
+            {
+                "requirement_id": str(finding.get("id", "")),
+                "requirement": requirement,
+                "status": status,
+                "question": question,
+                "reason": reason,
+                "evidence": evidence,
+            }
+        )
+
+    return {
+        "items": items,
+        "count": len(items),
+        "disclosure": (
+            "Draft prompts for consistent, job-related follow-up. Review before use. "
+            "They are generated from the supplied documents, are not sent to anyone, "
+            "and do not make a hiring decision."
+        ),
+    }
+
+
+def build_application_prep(findings: list[dict[str, Any]]) -> dict[str, Any]:
+    """Turn uncertain document findings into a candidate-owned pre-application checklist."""
+    items: list[dict[str, Any]] = []
+    for finding in findings:
+        status = str(finding.get("status", ""))
+        certainty = str(finding.get("certainty", "clear"))
+        if status == "supported" and certainty != "ambiguous":
+            continue
+        if status not in {"not_found", "conflicting", "supported"}:
+            continue
+
+        requirement = str(finding.get("requirement", "")).strip()[:500]
+        if not requirement:
+            continue
+        if status == "not_found":
+            action = (
+                "The CV review did not locate direct evidence for this item. If it accurately "
+                "reflects your experience, add a concise example with your role and timeframe. "
+                "Otherwise, leave it unclaimed."
+            )
+        elif status == "conflicting":
+            action = (
+                "Check the cited statements against your records. Reconcile dates, scope, or "
+                "totals only when you can confirm the correction."
+            )
+        else:
+            action = (
+                "Clarify your role, scope, and timeframe so a reader can interpret this "
+                "passage accurately."
+            )
+
+        sources: list[dict[str, Any]] = []
+        seen: set[tuple[int, str, str]] = set()
+        for citation in finding.get("evidence", []):
+            try:
+                page = int(citation.get("page", 0))
+            except (TypeError, ValueError):
+                continue
+            quote = str(citation.get("quote", "")).strip()[:1000]
+            role = str(citation.get("role", ""))
+            if page < 1 or not quote or role not in {"supports", "contradicts"}:
+                continue
+            identity = (page, quote, role)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            sources.append({"page": page, "quote": quote, "role": role})
+            if len(sources) == 4:
+                break
+
+        items.append(
+            {
+                "requirement_id": str(finding.get("id", "")),
+                "requirement": requirement,
+                "status": status,
+                "action": action,
+                "evidence": sources,
+            }
+        )
+
+    return {
+        "items": items,
+        "count": len(items),
+        "disclosure": (
+            "For candidates checking their own application. These steps describe the supplied "
+            "CV only; they do not establish whether you have a qualification. Add or correct "
+            "details only when they accurately reflect your experience."
+        ),
+    }
 
 
 def verify_findings_with_muse(
@@ -1312,9 +1789,22 @@ def build_report(
     verification_audit: dict[str, Any],
     evidence_graph: dict[str, Any],
     created_at: str,
+    job_item_coverage: dict[str, Any] | None = None,
+    ocr_pages: list[int] | None = None,
     preview_mode: bool = False,
     provider_mode: str = "muse",
+    clarification_brief: dict[str, Any] | None = None,
+    role_clarity_audit: dict[str, Any] | None = None,
 ) -> str:
+    job_item_coverage = job_item_coverage or {
+        "items": [],
+        "matched": 0,
+        "needs_review": 0,
+        "truncated": 0,
+    }
+    ocr_pages = sorted({int(page) for page in (ocr_pages or [])})
+    clarification_brief = clarification_brief or build_clarification_brief(findings)
+    role_clarity_audit = role_clarity_audit or audit_role_description("")
     cards: list[str] = []
     for finding in findings:
         status = html.escape(str(finding["status"]))
@@ -1394,8 +1884,15 @@ def build_report(
     verification_excluded = int(verification_audit.get("excluded", 0))
     ambiguous = int(verification_audit.get("ambiguous_requirements", 0))
     retrieved_spans = int(verification_audit.get("retrieved_source_spans", 0))
+    proposer_label = (
+        "Synthetic preview"
+        if preview_mode
+        else "Local mock"
+        if provider_mode == "mock"
+        else "Muse"
+    )
     omission_reason_labels = {
-        "empty_requirement": "Muse returned an empty requirement.",
+        "empty_requirement": f"{proposer_label} returned an empty requirement.",
         "not_in_job_description": "The wording was not found in the supplied job description.",
         "duplicate_requirement": "A duplicate requirement was omitted.",
     }
@@ -1411,6 +1908,165 @@ def build_report(
         )
         + "</span></li>"
         for record in omitted_requirement_audit
+    )
+    coverage_items = job_item_coverage.get("items", [])
+    coverage_rows = "".join(
+        "<li><strong>"
+        + html.escape(str(item.get("id", "JD")))
+        + " · "
+        + html.escape(str(item.get("status", "needs_review")).replace("_", " "))
+        + "</strong><span>"
+        + html.escape(str(item.get("text", "")))
+        + (
+            " · wording match: "
+            + html.escape(str(item.get("requirement_id", "")))
+            if item.get("requirement_id")
+            else " · no strong wording match"
+        )
+        + "</span></li>"
+        for item in coverage_items
+    )
+    coverage_html = (
+        "<details class='coverage-audit'><summary>"
+        + (
+            f"Job-description list audit · "
+            f"{int(job_item_coverage.get('matched', 0))} wording match(es) · "
+            f"{int(job_item_coverage.get('needs_review', 0))} need review</summary>"
+        )
+        + "<p>This conservative text-overlap check flags explicit bullets that may have been omitted or paraphrased. It does not establish semantic completeness; review every item.</p>"
+        + f"<ol>{coverage_rows}</ol>"
+        + (
+            f"<p>{int(job_item_coverage.get('truncated', 0))} additional list item(s) "
+            "were not displayed because of the audit limit.</p>"
+            if job_item_coverage.get("truncated")
+            else ""
+        )
+        + "</details>"
+        if coverage_items
+        else ""
+    )
+    role_audit_items = role_clarity_audit.get("items", [])
+    role_audit_criteria = role_clarity_audit.get("criteria", [])
+    role_audit_criteria_rows = "".join(
+        "<li><strong>JD line "
+        + str(int(item.get("line", 0)))
+        + " · "
+        + html.escape(str(item.get("kind", "Requirement")))
+        + " · Priority: "
+        + html.escape(str(item.get("priority", "Not stated")))
+        + "</strong><blockquote>"
+        + html.escape(str(item.get("text", "")))
+        + "</blockquote><span>Priority wording: "
+        + html.escape(str(item.get("priority_basis", "No explicit priority wording found")))
+        + "</span><span>Reviewer prompt: "
+        + html.escape(str(item.get("reviewer_prompt", "")))
+        + "</span><span>Draft interview question: "
+        + html.escape(str(item.get("interview_question", "")))
+        + "</span><span>Candidate prompt: "
+        + html.escape(str(item.get("candidate_prompt", "")))
+        + "</span><span>Possible tightening: "
+        + html.escape(str(item.get("rewrite_prompt", "")))
+        + "</span>"
+        + (
+            "<span>Exact duplicate of "
+            + html.escape(str(item.get("possible_exact_duplicate_of", "")))
+            + " · check whether both lines are needed.</span>"
+            if item.get("possible_exact_duplicate_of")
+            else ""
+        )
+        + "</li>"
+        for item in role_audit_criteria
+    )
+    role_audit_cue_rows = "".join(
+        "<li><strong>"
+        + html.escape(str(item.get("category", "Wording cue")))
+        + " · “"
+        + html.escape(str(item.get("cue", "")))
+        + "”</strong><blockquote>"
+        + html.escape(str(item.get("excerpt", "")))
+        + "</blockquote><span>Reviewer prompt: "
+        + html.escape(str(item.get("review_question", "")))
+        + "</span><span>Rewrite prompt: "
+        + html.escape(str(item.get("rewrite_prompt", "")))
+        + "</span></li>"
+        for item in role_audit_items
+    )
+    role_audit_language_html = (
+        "<details><summary>Optional wording cues · exploratory only</summary><ol>"
+        + role_audit_cue_rows
+        + "</ol><p>Optional language list source: "
+        + "<a href='https://github.com/lovedaybrooke/gender-decoder'>Gender Decoder (MIT)</a>. "
+        + "Phrase matches are context-dependent prompts, not a bias score, discrimination finding, or legal conclusion.</p></details>"
+        if role_audit_items
+        else ""
+    )
+    role_audit_criteria_limit = int(role_clarity_audit.get("criteria_truncated", 0))
+    role_audit_html = (
+        "<details class='role-audit' open><summary>Free role preflight · "
+        + str(int(role_clarity_audit.get("criteria_count", len(role_audit_criteria))))
+        + " criteria · "
+        + str(int(role_clarity_audit.get("count", len(role_audit_items))))
+        + " optional wording cue(s)</summary><p>"
+        + html.escape(str(role_clarity_audit.get("disclosure", "")))
+        + "</p><h3>Role criteria evidence plan</h3><ol>"
+        + role_audit_criteria_rows
+        + "</ol>"
+        + (
+            f"<p>{role_audit_criteria_limit} additional listed requirement(s) were omitted from this view; check the original posting for the rest.</p>"
+            if role_audit_criteria_limit
+            else ""
+        )
+        + role_audit_language_html
+        + "</details>"
+        if role_audit_items or role_audit_criteria
+        else ""
+    )
+    clarification_items = clarification_brief.get("items", [])
+    clarification_rows: list[str] = []
+    for item in clarification_items:
+        source_rows = "".join(
+            "<li>CV page "
+            + str(int(source["page"]))
+            + " · "
+            + html.escape(str(source.get("role", "source")).replace("_", " "))
+            + "<blockquote>"
+            + html.escape(str(source.get("quote", "")))
+            + "</blockquote></li>"
+            for source in item.get("evidence", [])
+        )
+        clarification_rows.append(
+            "<article class='clarification-item' data-requirement-id='"
+            + html.escape(str(item.get("requirement_id", "")))
+            + "'><div class='clarification-meta'>"
+            + html.escape(str(item.get("requirement_id", "")))
+            + " · "
+            + html.escape(str(item.get("status", "needs review")).replace("_", " "))
+            + "</div><h3>"
+            + html.escape(str(item.get("requirement", "")))
+            + "</h3><p class='clarification-question'>"
+            + html.escape(str(item.get("question", "")))
+            + "</p><p class='clarification-reason'>"
+            + html.escape(str(item.get("reason", "")))
+            + "</p>"
+            + (f"<ul>{source_rows}</ul>" if source_rows else "")
+            + "</article>"
+        )
+    clarification_brief_html = (
+        "<section class='clarification-brief'><h2>Neutral follow-up prompts</h2>"
+        "<p class='clarification-disclosure'>"
+        + html.escape(str(clarification_brief.get("disclosure", "")))
+        + "</p>"
+        + "".join(clarification_rows)
+        + "</section>"
+        if clarification_rows
+        else ""
+    )
+    ocr_warning_html = (
+        "<aside class='ocr-warning'><strong>OCR text needs visual review · page(s) "
+        + html.escape(", ".join(str(page) for page in ocr_pages))
+        + "</strong><p>OCR can misread scanned text. Confirm every highlighted quote in the original CV; a missing OCR match does not prove the qualification is absent.</p></aside>"
+        if ocr_pages
+        else ""
     )
     rejection_reason_labels = {
         "source_not_allowed": "Source ID was not allowed for this requirement",
@@ -1546,6 +2202,16 @@ def build_report(
       .omitted-audit{margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}
       .omitted-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}
       .omitted-audit ul{margin:10px 0 0;padding-left:20px}.omitted-audit li{margin:8px 0}
+      .coverage-audit{margin:14px 0;padding:12px 14px;border:1px solid #c8d9f4;border-radius:10px;background:#f8fbff}
+      .coverage-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}.coverage-audit>p{color:var(--muted);font-size:13px}
+      .coverage-audit ol{margin:10px 0 0;padding-left:22px}.coverage-audit li{margin:9px 0}.coverage-audit li strong,.coverage-audit li span{display:block}.coverage-audit li span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+      .role-audit{margin:14px 0;padding:12px 14px;border:1px solid #dfd2b0;border-radius:10px;background:#fffaf0}
+      .role-audit summary{cursor:pointer;font-weight:700;color:#644f20}.role-audit>p{color:var(--muted);font-size:13px}
+      .role-audit h3{font-size:15px;margin:18px 0 8px}
+      .role-audit ol{margin:10px 0 0;padding-left:22px}.role-audit li{margin:12px 0}.role-audit li strong,.role-audit li span{display:block}
+      .role-audit li span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}.role-audit blockquote{margin:7px 0;padding:9px 11px;background:#fff;border-left:3px solid #c6a555}
+      .ocr-warning{margin:14px 0;padding:13px 15px;border:1px solid #e6c783;border-radius:10px;background:#fff8e8;color:#775415}
+      .ocr-warning strong{font-size:13px}.ocr-warning p{margin:5px 0 0;color:#746343;font-size:13px}
       .omitted-audit li span{display:block;color:var(--muted);font-size:13px}
       .rejected-audit{margin:14px 0;padding:12px 14px;border:1px solid #f0c9c5;border-radius:10px;background:#fffafa}
       .rejected-audit summary{cursor:pointer;font-weight:700;color:#9b3f38}
@@ -1563,6 +2229,16 @@ def build_report(
       .graph-source blockquote{font-size:13px;padding:8px 10px}.graph-empty{color:var(--muted);font-style:italic;padding:10px}
       .human-review-record{border-top:1px solid var(--line);margin-top:18px;padding-top:12px;color:var(--muted);font-size:13px}
       .human-review-record h3{font-size:14px;color:var(--ink);margin:0 0 6px}.human-review-record p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+      .clarification-brief{margin:22px 0;padding:18px;border:1px solid #c8d9f4;border-radius:14px;background:#f8fbff}
+      .clarification-brief>h2{margin:0 0 5px}.clarification-disclosure,.clarification-reason{color:var(--muted);font-size:13px}
+      .clarification-item{margin-top:14px;padding:15px;border:1px solid var(--line);border-radius:10px;background:#fff}
+      .clarification-meta{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+      .clarification-item h3{margin:6px 0;font-size:15px}.clarification-question{font-weight:700}
+      .clarification-item ul{padding-left:20px}.clarification-item li{margin:8px 0;font-size:12px;color:var(--muted)}
+      .clarification-item blockquote{margin-top:5px;font-weight:400;overflow-wrap:anywhere}
+      .candidate-response-record{margin-top:14px;padding:13px 15px;border:1px solid #c9d9f1;border-radius:9px;background:#f8fbff}
+      .candidate-response-record h4{margin:0 0 8px;font-size:14px}.candidate-response-record p{font-size:12px;color:var(--muted)}
+      .candidate-response-record blockquote{white-space:pre-wrap;overflow-wrap:anywhere;border-left-color:#6d7e96}
       .source-legend{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:12px}
       .source-legend span{display:inline-flex;align-items:center;gap:6px}.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;background:#1ba085}.swatch.conflict{background:#de4d48}
       figure{margin:20px 0;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}
@@ -1581,9 +2257,12 @@ def build_report(
         "<h1>Grounded requirement evidence pack</h1>"
         f"<p class='sub'>{report_intro}</p>"
         + report_audit_summary
+        + ocr_warning_html
         + rejected_ledger_html
+        + coverage_html
+        + role_audit_html
         + (
-            f"<details class='omitted-audit'><summary>{len(omitted_requirement_audit)} model-proposed requirement(s) omitted before evidence review</summary>"
+            f"<details class='omitted-audit'><summary>{len(omitted_requirement_audit)} {html.escape(proposer_label)}-proposed requirement(s) omitted before evidence review</summary>"
             "<p>Each item is shown with the local reason it was excluded.</p>"
             f"<ul>{omitted_requirement_rows}</ul></details>"
             if omitted_requirement_audit
@@ -1592,6 +2271,7 @@ def build_report(
         + "<h2>Requirement-to-source graph</h2>"
         + "".join(graph_rows)
         + "".join(cards)
+        + clarification_brief_html
         + ("<h2>Verified source pages</h2>" + "".join(page_blocks) if page_blocks else "")
         + f"<footer>{report_model_line} · Created {html.escape(created_at)} UTC"
         f"<br>CV SHA-256: {html.escape(cv_hash)}"
@@ -1672,10 +2352,12 @@ def demo_preview() -> dict[str, Any]:
     pages = extract_pdf(pdf_bytes)
     job_description = (
         "Role: Procurement Automation Lead\n\n"
+        "Join our fast-paced, competitive team; strong communication skills are essential.\n\n"
         "Requirements:\n"
         "1. At least five years of Python experience.\n"
         "2. Current AWS Solutions Architect Professional certification.\n"
-        "3. At least seven years of procurement experience."
+        "3. At least seven years of procurement experience.\n"
+        "4. At least three years of team leadership experience."
     )
     preview_specs = [
         {
@@ -1766,6 +2448,10 @@ def demo_preview() -> dict[str, Any]:
         for page_number, marks in page_marks.items()
     }
     evidence_graph = build_evidence_graph(findings)
+    clarification_brief = build_clarification_brief(findings)
+    application_prep = build_application_prep(findings)
+    job_item_coverage = audit_listed_job_items(job_description, findings)
+    role_clarity_audit = audit_role_description(job_description)
     created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     cv_hash = hashlib.sha256(pdf_bytes).hexdigest()
     job_hash = hashlib.sha256(job_description.encode("utf-8")).hexdigest()
@@ -1796,11 +2482,19 @@ def demo_preview() -> dict[str, Any]:
         verification_audit,
         evidence_graph,
         created_at,
+        job_item_coverage=job_item_coverage,
+        ocr_pages=[page["number"] for page in pages if page["ocr_used"]],
         preview_mode=True,
+        clarification_brief=clarification_brief,
+        role_clarity_audit=role_clarity_audit,
     )
     return {
         "requirements": findings,
         "evidence_graph": evidence_graph,
+        "clarification_brief": clarification_brief,
+        "application_prep": application_prep,
+        "job_item_coverage": job_item_coverage,
+        "role_clarity_audit": role_clarity_audit,
         "excluded_unverified_requirements": 0,
         "omitted_requirement_audit": [],
         "quote_audit": {
@@ -1860,6 +2554,24 @@ def demo_cv() -> Response:
         media_type="application/pdf",
         headers={"Content-Disposition": 'attachment; filename="evidencetrail-demo-cv.pdf"'},
     )
+
+
+@app.post("/api/role-audit")
+def role_audit_preflight(job_description: str = Form(...)) -> dict[str, Any]:
+    """Run deterministic job-text checks without a CV upload or model/API request."""
+    description = job_description.strip()
+    if not description:
+        raise HTTPException(status_code=400, detail="Paste a job description first.")
+    if len(description) > MAX_JOB_CHARS:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Keep the job description under {MAX_JOB_CHARS:,} characters.",
+        )
+    return {
+        "role_clarity_audit": audit_role_description(description),
+        "meta_api_calls": 0,
+        "model_tokens": 0,
+    }
 
 
 @app.post("/api/analyze")
@@ -1952,8 +2664,17 @@ async def analyze(
         if not first_pass_findings:
             raise HTTPException(
                 status_code=502,
-                detail="Muse returned no usable job requirements. No report was generated.",
+                detail=(
+                    "The local mock returned no usable job requirements. No report was generated."
+                    if MOCK_PROVIDER_ENABLED
+                    else "Muse returned no usable job requirements. No report was generated."
+                ),
             )
+
+        job_item_coverage = audit_listed_job_items(
+            job_description.strip(), first_pass_findings
+        )
+        role_clarity_audit = audit_role_description(job_description.strip())
 
         try:
             (
@@ -1983,6 +2704,8 @@ async def analyze(
             )
 
         evidence_graph = build_evidence_graph(findings)
+        clarification_brief = build_clarification_brief(findings)
+        application_prep = build_application_prep(findings)
         usage = {
             "input_tokens": first_pass_usage["input_tokens"] + verification_usage["input_tokens"],
             "output_tokens": first_pass_usage["output_tokens"] + verification_usage["output_tokens"],
@@ -2003,12 +2726,20 @@ async def analyze(
             verification_audit,
             evidence_graph,
             created_at,
+            job_item_coverage=job_item_coverage,
+            ocr_pages=[page["number"] for page in pages if page["ocr_used"]],
             provider_mode=ANALYSIS_PROVIDER,
+            clarification_brief=clarification_brief,
+            role_clarity_audit=role_clarity_audit,
         )
 
         return {
             "requirements": findings,
             "evidence_graph": evidence_graph,
+            "clarification_brief": clarification_brief,
+            "application_prep": application_prep,
+            "job_item_coverage": job_item_coverage,
+            "role_clarity_audit": role_clarity_audit,
             "excluded_unverified_requirements": len(omitted_requirement_audit),
             "omitted_requirement_audit": omitted_requirement_audit,
             "quote_audit": {

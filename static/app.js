@@ -4,6 +4,9 @@ const jobInput = document.getElementById("job-description");
 const fileName = document.getElementById("file-name");
 const charCount = document.getElementById("char-count");
 const analyzeButton = document.getElementById("analyze-button");
+const roleAuditButton = document.getElementById("role-audit-button");
+const roleWorksheetButton = document.getElementById("role-worksheet-download");
+const roleAuditStatus = document.getElementById("role-audit-status");
 const errorBox = document.getElementById("error-box");
 const analysisStatus = document.getElementById("analysis-status");
 const analysisStatusText = document.getElementById("analysis-status-text");
@@ -15,7 +18,13 @@ const analysisReady = modelReady || mockMode;
 const maxPdfBytes = Number(cvInput.dataset.maxBytes) || 12 * 1024 * 1024;
 let currentReport = "";
 let reviewEntries = Object.create(null);
+let currentClarificationBrief = { items: [] };
+let currentCandidateResponses = Object.create(null);
+let currentApplicationPrep = { items: [] };
+let applicationPrepChecks = Object.create(null);
 let analysisTimer = null;
+let roleAuditRequestId = 0;
+let currentRoleAudit = null;
 let sourcePdfFile = null;
 let sourcePdfPayload = null;
 let pdfDocumentPromise = null;
@@ -40,11 +49,62 @@ const PDFJS_ASSET_VERSION = "20261027-2";
 const demoJob = [
   "Role: Procurement Automation Lead",
   "",
+  "Join our fast-paced, competitive team; strong communication skills are essential.",
+  "",
   "Requirements:",
   "1. At least five years of Python experience.",
   "2. Current AWS Solutions Architect Professional certification.",
-  "3. At least seven years of procurement experience."
+  "3. At least seven years of procurement experience.",
+  "4. At least three years of team leadership experience."
 ].join("\n");
+
+roleAuditButton.addEventListener("click", async function () {
+  const description = jobInput.value.trim();
+  if (!description) {
+    roleAuditStatus.textContent = "Paste a job description first.";
+    roleAuditStatus.hidden = false;
+    return;
+  }
+  if (description.length > 18000) {
+    roleAuditStatus.textContent = "Keep the job description under 18,000 characters.";
+    roleAuditStatus.hidden = false;
+    return;
+  }
+
+  roleAuditButton.disabled = true;
+  roleAuditButton.textContent = "Building the evidence plan…";
+  roleAuditStatus.textContent = "Running the check on this app. No CV or Meta request is involved.";
+  roleAuditStatus.hidden = false;
+  const requestId = ++roleAuditRequestId;
+  try {
+    const body = new FormData();
+    body.append("job_description", description);
+    const response = await fetch("/api/role-audit", { method: "POST", body: body });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || "The role check could not run.");
+    if (requestId !== roleAuditRequestId || description !== jobInput.value.trim()) return;
+    const audit = result.role_clarity_audit || {};
+    currentRoleAudit = audit;
+    renderRoleClarityAudit(audit);
+    const total = Number(audit.criteria_count || 0);
+    const cues = Number(audit.count || 0);
+    const shown = Array.isArray(audit.criteria) ? audit.criteria.length : 0;
+    const omitted = Number(audit.criteria_truncated || 0);
+    roleAuditStatus.textContent = total || cues
+      ? "Role evidence plan ready · " + shown + " listed requirement(s) prepared with evidence prompts" +
+        (omitted ? " · " + omitted + " more omitted at the display limit" : "") +
+        " · " + cues + " optional wording cue(s). Download the worksheet or edit the job text to rerun."
+      : "Role evidence plan ready. No numbered or bulleted requirements or listed wording cues were detected; review the job text manually.";
+  } catch (error) {
+    if (requestId !== roleAuditRequestId) return;
+    roleAuditStatus.textContent = error.message || "The role check could not run. Try again.";
+  } finally {
+    if (requestId === roleAuditRequestId) {
+      roleAuditButton.disabled = false;
+      roleAuditButton.textContent = "Build role evidence plan";
+    }
+  }
+});
 
 cvInput.addEventListener("change", function () {
   const file = cvInput.files && cvInput.files[0];
@@ -238,11 +298,28 @@ function getPdfFileError(file) {
 }
 
 function clearCurrentResults(showNotice) {
+  roleAuditRequestId += 1;
+  currentRoleAudit = null;
+  roleWorksheetButton.disabled = true;
+  document.getElementById("role-clarity-audit").hidden = true;
+  document.getElementById("role-clarity-audit-items").replaceChildren();
+  document.getElementById("role-clarity-audit-limit").hidden = true;
+  document.getElementById("role-criteria-items").replaceChildren();
+  document.getElementById("role-criteria-limit").hidden = true;
+  document.getElementById("role-language-reference").hidden = true;
+  roleAuditStatus.textContent = "";
+  roleAuditStatus.hidden = true;
+  roleAuditButton.disabled = false;
+  roleAuditButton.textContent = "Build role evidence plan";
   if (results.hidden) return false;
 
   results.hidden = true;
   currentReport = "";
   reviewEntries = Object.create(null);
+  currentClarificationBrief = { items: [] };
+  currentCandidateResponses = Object.create(null);
+  currentApplicationPrep = { items: [] };
+  applicationPrepChecks = Object.create(null);
   if (currentPdfRenderTask) {
     currentPdfRenderTask.cancel();
     currentPdfRenderTask = null;
@@ -261,9 +338,14 @@ function clearCurrentResults(showNotice) {
   document.getElementById("findings-list").replaceChildren();
   document.getElementById("source-pages").replaceChildren();
   document.getElementById("evidence-graph").replaceChildren();
+  document.getElementById("job-list-coverage").hidden = true;
+  document.getElementById("job-list-coverage-items").replaceChildren();
+  document.getElementById("job-list-coverage-limit").hidden = true;
   document.getElementById("summary-counts").replaceChildren();
   document.getElementById("provenance-details").replaceChildren();
   document.getElementById("run-meta").textContent = "";
+  document.getElementById("ocr-review-warning").textContent = "";
+  document.getElementById("ocr-review-warning").hidden = true;
   document.getElementById("quote-audit").textContent = "";
   document.getElementById("review-summary").textContent = "";
   document.getElementById("preview-notice").textContent = "";
@@ -314,8 +396,12 @@ function renderResults(payload, analyzedFile) {
     counts[finding.status] = (counts[finding.status] || 0) + 1;
     findingsList.appendChild(buildFindingCard(finding));
   });
+  renderApplicationPrep(payload.application_prep || null);
+  renderClarificationBrief(payload.clarification_brief || { items: [] });
   updateReviewSummary();
   renderEvidenceGraph(payload.evidence_graph || { requirements: [] });
+  renderJobListCoverage(payload.job_item_coverage || {});
+  renderRoleClarityAudit(payload.role_clarity_audit || {});
 
   const countsNode = document.getElementById("summary-counts");
   countsNode.replaceChildren();
@@ -388,6 +474,13 @@ function renderResults(payload, analyzedFile) {
     payload.model + " · " + callLabel + tokenDetails + ocrText +
     (rejectedCount ? " · " + rejectedCount +
       (payload.provider_mode === "mock" ? " mock-proposed requirement(s) omitted" : " model-proposed requirement(s) omitted") : "");
+  const ocrWarning = document.getElementById("ocr-review-warning");
+  const ocrPages = Array.isArray(payload.ocr_pages) ? payload.ocr_pages : [];
+  ocrWarning.hidden = ocrPages.length === 0;
+  ocrWarning.textContent = ocrPages.length
+    ? "OCR was used on page(s) " + ocrPages.join(", ") +
+      ". OCR can misread scanned text. Confirm highlighted quotes in the original CV; a missing OCR match does not prove the qualification is absent."
+    : "";
   const rejectedPanel = document.getElementById("rejected-citations-panel");
   const rejectedSummary = document.getElementById("rejected-citations-summary");
   const rejectedIntro = document.getElementById("rejected-citations-intro");
@@ -521,6 +614,184 @@ function renderResults(payload, analyzedFile) {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   results.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
 }
+
+function renderJobListCoverage(coverage) {
+  const panel = document.getElementById("job-list-coverage");
+  const summary = document.getElementById("job-list-coverage-summary");
+  const list = document.getElementById("job-list-coverage-items");
+  const limitNote = document.getElementById("job-list-coverage-limit");
+  list.replaceChildren();
+  const items = Array.isArray(coverage.items) ? coverage.items : [];
+  panel.hidden = !items.length;
+  if (!items.length) return;
+
+  const matched = Number(coverage.matched || 0);
+  const needsReview = Number(coverage.needs_review || 0);
+  summary.textContent = "Job-description list audit · " + matched +
+    " wording match(es) · " + needsReview + " need review";
+  items.forEach(function (entry) {
+    const item = document.createElement("li");
+    const label = document.createElement("strong");
+    const status = entry.status === "matched" ? "wording match" : "needs review";
+    label.className = entry.status === "matched"
+      ? "coverage-matched"
+      : "coverage-needs-review";
+    label.textContent = String(entry.id || "JD") + " · " + status +
+      (entry.requirement_id ? " → " + entry.requirement_id : "");
+    const text = document.createElement("span");
+    text.textContent = String(entry.text || "");
+    item.append(label, text);
+    list.appendChild(item);
+  });
+  const truncated = Number(coverage.truncated || 0);
+  limitNote.hidden = truncated < 1;
+  limitNote.textContent = truncated +
+    " additional list item(s) were not displayed because of the audit limit.";
+}
+
+function renderRoleClarityAudit(audit) {
+  currentRoleAudit = audit;
+  const panel = document.getElementById("role-clarity-audit");
+  const summary = document.getElementById("role-clarity-audit-summary");
+  const disclosure = document.getElementById("role-clarity-audit-disclosure");
+  const criteriaList = document.getElementById("role-criteria-items");
+  const criteriaLimitNote = document.getElementById("role-criteria-limit");
+  const cuesList = document.getElementById("role-clarity-audit-items");
+  const cuesLimitNote = document.getElementById("role-clarity-audit-limit");
+  const languageReference = document.getElementById("role-language-reference");
+  const worksheetButton = document.getElementById("role-worksheet-download");
+  const criteria = Array.isArray(audit.criteria) ? audit.criteria : [];
+  const items = Array.isArray(audit.items) ? audit.items : [];
+  criteriaList.replaceChildren();
+  cuesList.replaceChildren();
+  languageReference.hidden = !items.length;
+  languageReference.open = false;
+  worksheetButton.disabled = !criteria.length;
+  panel.hidden = !items.length && !criteria.length;
+  panel.open = criteria.length > 0;
+  if (panel.hidden) return;
+
+  const count = Number(audit.count || 0);
+  const criterionCount = Number(audit.criteria_count || criteria.length);
+  summary.textContent = "Free role preflight · " + criterionCount + " criterion" +
+    (criterionCount === 1 ? "" : "s") + " · " + count + " optional wording cue" +
+    (count === 1 ? "" : "s");
+  disclosure.textContent = String(audit.disclosure ||
+    "Keyword-based drafting prompts only. Review them before use; no criterion is rated.");
+  criteria.forEach(function (entry) {
+    const item = document.createElement("li");
+    const heading = document.createElement("strong");
+    heading.textContent = "JD line " + String(entry.line || "—") + " · " +
+      String(entry.kind || "Requirement") + " · Priority: " +
+      String(entry.priority || "Not stated");
+    const source = document.createElement("blockquote");
+    source.textContent = String(entry.text || "");
+    const priorityBasis = document.createElement("span");
+    priorityBasis.className = "role-audit-priority";
+    priorityBasis.textContent = "Priority wording: " + String(entry.priority_basis || "Not stated");
+    const reviewer = document.createElement("span");
+    reviewer.className = "role-audit-prompt";
+    reviewer.textContent = "Before reviewing applications: " + String(entry.reviewer_prompt || "");
+    const interview = document.createElement("span");
+    interview.className = "role-audit-interview";
+    interview.textContent = "Draft interview question: " + String(entry.interview_question || "");
+    const candidate = document.createElement("span");
+    candidate.className = "role-audit-candidate";
+    candidate.textContent = "For a candidate: " + String(entry.candidate_prompt || "");
+    const rewrite = document.createElement("span");
+    rewrite.className = "role-audit-rewrite";
+    rewrite.textContent = "Possible tightening: " + String(entry.rewrite_prompt || "");
+    item.append(heading, source, priorityBasis, reviewer, interview, candidate, rewrite);
+    if (entry.possible_exact_duplicate_of) {
+      const duplicate = document.createElement("span");
+      duplicate.className = "role-audit-duplicate";
+      duplicate.textContent = "Exact duplicate of " + String(entry.possible_exact_duplicate_of) + " · check whether both lines are needed.";
+      item.appendChild(duplicate);
+    }
+    criteriaList.appendChild(item);
+  });
+  items.forEach(function (entry) {
+    const item = document.createElement("li");
+    const label = document.createElement("strong");
+    label.textContent = String(entry.category || "Wording cue") + " · “" +
+      String(entry.cue || "") + "”";
+    const excerpt = document.createElement("blockquote");
+    excerpt.textContent = String(entry.excerpt || "");
+    const question = document.createElement("span");
+    question.className = "role-audit-prompt";
+    question.textContent = "Reviewer prompt: " + String(entry.review_question || "");
+    const rewrite = document.createElement("span");
+    rewrite.className = "role-audit-rewrite";
+    rewrite.textContent = "Tighten it: " + String(entry.rewrite_prompt || "");
+    item.append(label, excerpt, question, rewrite);
+    cuesList.appendChild(item);
+  });
+  const criteriaTruncated = Number(audit.criteria_truncated || 0);
+  criteriaLimitNote.hidden = criteriaTruncated < 1;
+  criteriaLimitNote.textContent = criteriaTruncated +
+    " additional requirement(s) were omitted from this view.";
+  const cuesTruncated = Number(audit.truncated || 0);
+  cuesLimitNote.hidden = cuesTruncated < 1;
+  cuesLimitNote.textContent = cuesTruncated +
+    " additional language cue(s) were omitted from this view.";
+}
+
+function escapeRoleWorksheetHtml(value) {
+  return String(value == null ? "" : value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function buildRoleWorksheetHtml(audit) {
+  const criteria = Array.isArray(audit.criteria) ? audit.criteria : [];
+  const truncated = Number(audit.criteria_truncated || 0);
+  const rows = criteria.map(function (entry) {
+    const duplicate = entry.possible_exact_duplicate_of
+      ? "<p><strong>Duplicate check:</strong> exact duplicate of " +
+        escapeRoleWorksheetHtml(entry.possible_exact_duplicate_of) + " · review whether both lines are needed.</p>"
+      : "";
+    return "<article><h2>JD line " + escapeRoleWorksheetHtml(entry.line) + " · " +
+      escapeRoleWorksheetHtml(entry.kind) + "</h2><blockquote>" +
+      escapeRoleWorksheetHtml(entry.text) + "</blockquote><p><strong>Priority:</strong> " +
+      escapeRoleWorksheetHtml(entry.priority || "Not stated") + " — " +
+      escapeRoleWorksheetHtml(entry.priority_basis || "No explicit priority wording found") +
+      "</p><p><strong>Reviewer evidence check:</strong> " +
+      escapeRoleWorksheetHtml(entry.reviewer_prompt) +
+      "</p><p><strong>Draft interview question:</strong> " +
+      escapeRoleWorksheetHtml(entry.interview_question) +
+      "</p><p><strong>Candidate self-check:</strong> " +
+      escapeRoleWorksheetHtml(entry.candidate_prompt) +
+      "</p><p><strong>Possible wording refinement:</strong> " +
+      escapeRoleWorksheetHtml(entry.rewrite_prompt) + "</p>" + duplicate + "</article>";
+  }).join("");
+  return "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
+    "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>EvidenceTrail role worksheet</title>" +
+    "<style>body{font:16px/1.6 system-ui,sans-serif;max-width:850px;margin:36px auto;padding:0 20px;color:#172333;background:#f6f8fb}h1{font-size:30px}h2{font-size:18px}article{margin:18px 0;padding:18px 22px;border:1px solid #dbe3ed;border-radius:12px;background:#fff;break-inside:avoid}blockquote{margin:10px 0;padding:12px;border-left:3px solid #456dd7;background:#f5f7fc}p{margin:9px 0}footer{margin-top:30px;color:#58677a;font-size:13px}@media print{body{background:#fff;margin:0;padding:0}}</style>" +
+    "</head><body><h1>Role criteria evidence plan</h1><p>Prepared from numbered and bulleted job-description lines by EvidenceTrail. Use this worksheet to clarify observable evidence and prepare a consistent review.</p>" +
+    "<p>Draft interview questions should be reviewed by a job expert; if used, ask the same relevant question and apply the same documented standard to each candidate.</p>" +
+    (truncated ? "<p><strong>Coverage limit:</strong> " + escapeRoleWorksheetHtml(truncated) + " additional listed requirement(s) are not included in this worksheet. Check the original posting for the rest.</p>" : "") +
+    "<p>Priority labels reflect explicit words in each line only. They do not infer importance, rate the role, assess applicants, or provide legal advice. Check all prompts before use.</p>" +
+    rows + "<footer>Prepared " + escapeRoleWorksheetHtml(new Date().toLocaleString()) +
+    " · This worksheet contains job criteria only. No CV or applicant data is included.</footer></body></html>";
+}
+
+roleWorksheetButton.addEventListener("click", function () {
+  if (!currentRoleAudit || !Array.isArray(currentRoleAudit.criteria) || !currentRoleAudit.criteria.length) return;
+  const blob = new Blob([buildRoleWorksheetHtml(currentRoleAudit)], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "evidencetrail-role-worksheet.html";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  roleAuditStatus.textContent = "Worksheet downloaded. It contains the job criteria only, with no CV or applicant data.";
+  roleAuditStatus.hidden = false;
+});
 
 function renderEvidenceGraph(graph) {
   const root = document.getElementById("evidence-graph");
@@ -706,6 +977,221 @@ function buildReviewControls(findingId) {
   return section;
 }
 
+function renderApplicationPrep(prep) {
+  const panel = document.getElementById("application-prep");
+  const list = document.getElementById("application-prep-items");
+  const disclosure = document.getElementById("application-prep-disclosure");
+  const empty = document.getElementById("application-prep-empty");
+  const status = document.getElementById("application-prep-status");
+  applicationPrepChecks = Object.create(null);
+  currentApplicationPrep = {
+    items: prep && Array.isArray(prep.items) ? prep.items : [],
+  };
+  list.replaceChildren();
+  status.textContent = "";
+  panel.hidden = !prep;
+  if (!prep) return;
+
+  disclosure.textContent = prep.disclosure ||
+    "This is a document checklist for candidates. Check every detail against your own records and only add accurate information.";
+  empty.hidden = currentApplicationPrep.items.length !== 0;
+  empty.textContent = "No missing, conflicting, or ambiguous items were flagged in this document review. Verify each CV claim against your own records before applying.";
+
+  currentApplicationPrep.items.forEach(function (entry, index) {
+    const item = document.createElement("li");
+    item.className = "application-prep-item";
+    item.dataset.requirementId = String(entry.requirement_id || "");
+    const meta = document.createElement("div");
+    meta.className = "application-prep-meta";
+    meta.textContent = String(entry.requirement_id || "") + " · " +
+      String(entry.status || "needs review").replaceAll("_", " ");
+    const requirement = document.createElement("h4");
+    requirement.textContent = String(entry.requirement || "");
+    const action = document.createElement("p");
+    action.className = "application-prep-action";
+    action.textContent = String(entry.action || "Review this item against your records.");
+    item.append(meta, requirement, action);
+
+    const evidence = Array.isArray(entry.evidence) ? entry.evidence : [];
+    if (evidence.length) {
+      const sources = document.createElement("div");
+      sources.className = "application-prep-sources";
+      evidence.forEach(function (source) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "application-prep-source";
+        button.dataset.page = String(source.page);
+        button.dataset.quote = String(source.quote || "");
+        button.textContent = (source.role === "contradicts" ? "Conflicting passage" : "Related passage") +
+          " · CV page " + String(source.page) + " · “" + String(source.quote || "") + "”";
+        sources.appendChild(button);
+      });
+      item.appendChild(sources);
+    }
+
+    const reviewLabel = document.createElement("label");
+    reviewLabel.className = "application-prep-check-label";
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.dataset.requirementId = String(entry.requirement_id || "");
+    check.dataset.itemIndex = String(index);
+    reviewLabel.append(check, document.createTextNode(" I checked this against my records"));
+    item.appendChild(reviewLabel);
+    list.appendChild(item);
+  });
+}
+
+function applicationPrepText() {
+  const lines = [
+    "EvidenceTrail · before-you-apply checklist",
+    "Document review only. This does not determine whether you have a qualification.",
+    "Check your records; add or correct CV details only when accurate.",
+    "",
+  ];
+  if (!currentApplicationPrep.items.length) {
+    lines.push("No missing, conflicting, or ambiguous items were flagged in this document review.");
+  }
+  currentApplicationPrep.items.forEach(function (entry) {
+    const checked = applicationPrepChecks[entry.requirement_id] ? "x" : " ";
+    lines.push("[" + checked + "] " + String(entry.requirement_id || "") + " · " + String(entry.requirement || ""));
+    lines.push(String(entry.action || ""));
+    (Array.isArray(entry.evidence) ? entry.evidence : []).forEach(function (source) {
+      lines.push("CV page " + String(source.page) + " · “" + String(source.quote || "") + "”");
+    });
+    lines.push("");
+  });
+  return lines.join("\n").trim() + "\n";
+}
+
+function renderClarificationBrief(brief) {
+  const section = document.getElementById("clarification-brief");
+  const list = document.getElementById("clarification-brief-items");
+  const disclosure = document.getElementById("clarification-brief-disclosure");
+  const status = document.getElementById("clarification-brief-status");
+  currentClarificationBrief = {
+    items: Array.isArray(brief.items) ? brief.items : [],
+  };
+  currentCandidateResponses = Object.create(null);
+  list.replaceChildren();
+  status.textContent = "";
+  section.hidden = currentClarificationBrief.items.length === 0;
+  if (section.hidden) return;
+
+  disclosure.textContent = brief.disclosure ||
+    "Draft prompts for consistent, job-related follow-up. Review before use; they are not sent to anyone and do not make a hiring decision.";
+  currentClarificationBrief.items.forEach(function (entry) {
+    const item = document.createElement("li");
+    item.className = "clarification-brief-item";
+    item.dataset.requirementId = String(entry.requirement_id || "");
+    const meta = document.createElement("div");
+    meta.className = "clarification-brief-item-head";
+    meta.textContent = String(entry.requirement_id || "") + " · " +
+      String(entry.status || "needs review").replaceAll("_", " ");
+    const requirement = document.createElement("h4");
+    requirement.textContent = String(entry.requirement || "");
+    const question = document.createElement("p");
+    question.className = "clarification-question";
+    question.textContent = String(entry.question || "");
+    const reason = document.createElement("p");
+    reason.className = "clarification-reason";
+    reason.textContent = String(entry.reason || "");
+    item.append(meta, requirement, question, reason);
+
+    const evidence = Array.isArray(entry.evidence) ? entry.evidence : [];
+    if (evidence.length) {
+      const sources = document.createElement("div");
+      sources.className = "clarification-sources";
+      evidence.forEach(function (source) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "clarification-source";
+        button.dataset.page = String(source.page);
+        button.dataset.quote = String(source.quote || "");
+        button.textContent = (source.role === "contradicts" ? "Conflicting passage" : "Related passage") +
+          " · page " + String(source.page) + " · “" + String(source.quote || "") + "”";
+        sources.appendChild(button);
+      });
+      item.appendChild(sources);
+    }
+
+    const responseSection = document.createElement("div");
+    responseSection.className = "candidate-response-entry";
+    const responseLabel = document.createElement("label");
+    const responseId = "candidate-response-" + String(entry.requirement_id || "item");
+    responseLabel.className = "candidate-response-label";
+    responseLabel.htmlFor = responseId;
+    responseLabel.textContent = "Candidate reply · optional session record";
+    const responseInput = document.createElement("textarea");
+    responseInput.id = responseId;
+    responseInput.className = "candidate-response-input";
+    responseInput.maxLength = 1500;
+    responseInput.placeholder = "Record the candidate’s reply in their own words. This will stay separate from CV evidence.";
+    const responseActions = document.createElement("div");
+    responseActions.className = "candidate-response-actions";
+    const saveResponse = document.createElement("button");
+    saveResponse.type = "button";
+    saveResponse.className = "candidate-response-save";
+    saveResponse.dataset.action = "save-response";
+    saveResponse.textContent = "Record reply in pack";
+    const removeResponse = document.createElement("button");
+    removeResponse.type = "button";
+    removeResponse.className = "candidate-response-remove";
+    removeResponse.dataset.action = "remove-response";
+    removeResponse.textContent = "Remove";
+    removeResponse.hidden = true;
+    const responseStatus = document.createElement("p");
+    responseStatus.className = "candidate-response-status";
+    responseStatus.setAttribute("role", "status");
+    responseStatus.textContent = "No candidate reply recorded.";
+    responseActions.append(saveResponse, removeResponse);
+    responseSection.append(responseLabel, responseInput, responseActions, responseStatus);
+    item.appendChild(responseSection);
+    list.appendChild(item);
+  });
+}
+
+function clarificationBriefText() {
+  const lines = [
+    "EvidenceTrail · draft clarification questions",
+    "Review before use. These prompts are not a hiring decision.",
+    "",
+  ];
+  currentClarificationBrief.items.forEach(function (entry) {
+    lines.push(String(entry.requirement_id || "") + " · " + String(entry.requirement || ""));
+    lines.push(String(entry.question || ""));
+    (Array.isArray(entry.evidence) ? entry.evidence : []).forEach(function (source) {
+      lines.push("Context · CV page " + String(source.page) + " · “" + String(source.quote || "") + "”");
+    });
+    lines.push("");
+  });
+  return lines.join("\n").trim();
+}
+
+async function copyClarificationBrief() {
+  const status = document.getElementById("clarification-brief-status");
+  const text = clarificationBriefText();
+  if (!text) return;
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const fallback = document.createElement("textarea");
+      fallback.value = text;
+      fallback.setAttribute("readonly", "");
+      fallback.style.position = "fixed";
+      fallback.style.opacity = "0";
+      document.body.appendChild(fallback);
+      fallback.select();
+      const copied = document.execCommand("copy");
+      fallback.remove();
+      if (!copied) throw new Error("Clipboard unavailable");
+    }
+    status.textContent = "Questions copied. Review them and apply the same job-related criteria consistently.";
+  } catch (_error) {
+    status.textContent = "Copy was blocked by the browser. Select the questions and copy them manually.";
+  }
+}
+
 function updateReviewSummary() {
   const summary = document.getElementById("review-summary");
   if (!summary) return;
@@ -743,6 +1229,23 @@ function buildReviewedReport(reportHtml) {
     finding.appendChild(record);
   });
 
+  reportDocument.querySelectorAll(".clarification-item[data-requirement-id]").forEach(function (item) {
+    const response = currentCandidateResponses[item.dataset.requirementId];
+    if (!response) return;
+    const record = reportDocument.createElement("section");
+    record.className = "candidate-response-record";
+    const title = reportDocument.createElement("h4");
+    title.textContent = "Candidate-provided follow-up · not independently verified";
+    const recorded = reportDocument.createElement("p");
+    recorded.textContent = "Recorded in this browser session (UTC): " + response.recordedAt;
+    const boundary = reportDocument.createElement("p");
+    boundary.textContent = "This statement was added after CV analysis. It is separate from the CV, was not sent to Muse, and did not change the evidence status.";
+    const reply = reportDocument.createElement("blockquote");
+    reply.textContent = response.text;
+    record.append(title, recorded, boundary, reply);
+    item.appendChild(record);
+  });
+
   const disclosure = reportDocument.createElement("p");
   disclosure.className = "sub review-disclosure";
   disclosure.textContent = "Human review records were entered by the reviewer and are separate from Muse output. They do not represent a hiring decision.";
@@ -756,6 +1259,103 @@ document.getElementById("findings-list").addEventListener("click", function (eve
   if (!target || !sourcePdfFile || !sourcePdfPayload) return;
   event.preventDefault();
   void openInteractivePdf(Number(target.dataset.page), target.dataset.quote || "");
+});
+
+document.getElementById("clarification-brief-items").addEventListener("click", function (event) {
+  const action = event.target instanceof Element
+    ? event.target.closest("button[data-action]")
+    : null;
+  if (action) {
+    const row = action.closest(".clarification-brief-item");
+    if (!row) return;
+    const requirementId = row.dataset.requirementId || "";
+    const input = row.querySelector(".candidate-response-input");
+    const status = row.querySelector(".candidate-response-status");
+    const remove = row.querySelector(".candidate-response-remove");
+    if (!input || !status || !remove) return;
+
+    if (action.dataset.action === "remove-response") {
+      delete currentCandidateResponses[requirementId];
+      input.value = "";
+      remove.hidden = true;
+      status.textContent = "Recorded candidate reply removed from this session.";
+      return;
+    }
+    if (action.dataset.action === "save-response") {
+      const text = input.value.trim();
+      if (!text) {
+        status.textContent = "Enter a candidate reply before recording it.";
+        input.focus();
+        return;
+      }
+      currentCandidateResponses[requirementId] = {
+        text: text,
+        recordedAt: new Date().toISOString(),
+      };
+      remove.hidden = false;
+      status.textContent = "Reply recorded in this tab. It stays separate from CV evidence and will be included in the downloaded pack.";
+      return;
+    }
+  }
+
+  const target = event.target instanceof Element
+    ? event.target.closest(".clarification-source")
+    : null;
+  if (!target || !sourcePdfFile || !sourcePdfPayload) return;
+  void openInteractivePdf(Number(target.dataset.page), target.dataset.quote || "");
+});
+
+document.getElementById("clarification-brief-items").addEventListener("input", function (event) {
+  const input = event.target instanceof Element
+    ? event.target.closest(".candidate-response-input")
+    : null;
+  if (!input) return;
+  const row = input.closest(".clarification-brief-item");
+  if (!row) return;
+  const requirementId = row.dataset.requirementId || "";
+  const status = row.querySelector(".candidate-response-status");
+  const remove = row.querySelector(".candidate-response-remove");
+  delete currentCandidateResponses[requirementId];
+  if (remove) remove.hidden = true;
+  if (status) {
+    status.textContent = input.value.trim()
+      ? "Unsaved edit. Record the reply to include it in the pack."
+      : "No candidate reply recorded.";
+  }
+});
+
+document.getElementById("copy-clarification-brief").addEventListener("click", function () {
+  void copyClarificationBrief();
+});
+
+document.getElementById("application-prep-items").addEventListener("click", function (event) {
+  const target = event.target instanceof Element
+    ? event.target.closest(".application-prep-source")
+    : null;
+  if (!target || !sourcePdfFile || !sourcePdfPayload) return;
+  void openInteractivePdf(Number(target.dataset.page), target.dataset.quote || "");
+});
+
+document.getElementById("application-prep-items").addEventListener("change", function (event) {
+  const target = event.target instanceof HTMLInputElement && event.target.type === "checkbox"
+    ? event.target
+    : null;
+  if (!target) return;
+  applicationPrepChecks[target.dataset.requirementId || ""] = target.checked;
+});
+
+document.getElementById("download-application-prep").addEventListener("click", function () {
+  const blob = new Blob([applicationPrepText()], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "evidencetrail-before-you-apply.txt";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  document.getElementById("application-prep-status").textContent =
+    "Checklist downloaded. The evidence labels stay unchanged; verify all details against your records.";
 });
 
 document.getElementById("evidence-graph").addEventListener("click", function (event) {

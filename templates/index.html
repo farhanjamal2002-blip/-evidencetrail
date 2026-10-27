@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f3f6fb">
     <title>EvidenceTrail — Muse Spark evidence review</title>
-    <link rel="stylesheet" href="/static/app.css?v=20261027-4">
+    <link rel="stylesheet" href="/static/app.css?v=20261027-10">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -30,7 +30,7 @@
           <div class="hero-copy">
           <div class="eyebrow">JOB REQUIREMENTS → CV EVIDENCE</div>
             <h1>Show the evidence.<br><em>Keep the decision human.</em></h1>
-          <p>Compare each job requirement with the exact words in a CV. Muse Spark interprets the evidence; EvidenceTrail checks each quote against the PDF and points to its page. A person decides what it means.</p>
+          <p>Job seekers can check a CV against a role before applying; reviewers can trace each requirement to its source. Muse Spark maps the evidence, EvidenceTrail checks each quote against the PDF, and people decide what it means.</p>
           </div>
           <div class="hero-stamp">
             <span class="stamp-line"></span>
@@ -54,7 +54,7 @@
             </article>
             <article class="review-path-step">
               <span class="review-path-number" aria-hidden="true">03</span>
-              <div><h3>Leave the call to a person</h3><p>Review what is stated, missing, or inconsistent. No candidate score or automatic decision.</p></div>
+              <div><h3>Prepare or follow up</h3><p>Candidates get an honest pre-application checklist; reviewers can ask neutral questions and record replies separately as unverified.</p></div>
             </article>
           </div>
         </section>
@@ -87,6 +87,29 @@
             <textarea id="job-description" name="job_description" maxlength="18000" required
               placeholder="Paste the role description. EvidenceTrail will split it into specific requirements and trace each one to the CV."></textarea>
 
+            <div class="role-preflight-actions">
+              <button id="role-audit-button" class="secondary-button" type="button">Build role evidence plan</button>
+              <span>Only the job post goes to this app server. No CV or Meta request; this check is not stored.</span>
+            </div>
+            <p id="role-audit-status" class="role-audit-status" role="status" aria-live="polite" hidden></p>
+            <details id="role-clarity-audit" class="role-clarity-audit" hidden>
+              <summary id="role-clarity-audit-summary"></summary>
+              <p id="role-clarity-audit-disclosure"></p>
+              <div class="role-worksheet-actions">
+                <button id="role-worksheet-download" class="secondary-button" type="button" disabled>Download role worksheet</button>
+                <span>Standalone HTML · job criteria only · no CV or applicant data</span>
+              </div>
+              <h3 id="role-criteria-title">Role criteria evidence plan</h3>
+              <ol id="role-criteria-items" class="role-criteria-items"></ol>
+              <p id="role-criteria-limit" hidden></p>
+              <details id="role-language-reference" class="role-language-reference" hidden>
+                <summary id="role-cues-title">Optional wording cues · exploratory only</summary>
+                <ol id="role-clarity-audit-items"></ol>
+                <p id="role-clarity-audit-limit" hidden></p>
+                <p class="role-audit-source">The optional language reference adapts a word list from <a href="https://github.com/lovedaybrooke/gender-decoder" target="_blank" rel="noopener noreferrer">Gender Decoder (MIT)</a>. Matches are context-dependent prompts, not a bias score or discrimination finding.</p>
+              </details>
+            </details>
+
             <label class="consent-row" {% if not analysis_ready %}hidden{% endif %}>
               <input id="consent" name="consent" type="checkbox" value="true" required {% if not analysis_ready %}disabled{% endif %}>
               <span>{% if mock_mode %}I understand this is a local mock simulation, not Muse analysis. The deterministic heuristic results are for pipeline development only and must not be used for a hiring assessment.{% else %}I understand the CV and job description are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. The upload may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models.{% endif %}</span>
@@ -117,7 +140,7 @@
           <aside class="demo-panel">
             <div class="step-label">02 / SEE THE IDEA</div>
             <h2>Try the prepared case</h2>
-            <p>A fictional CV contains one supported requirement, one missing qualification, and one internal discrepancy.</p>
+            <p>A fictional CV shows one supported item, one absent qualification, and one internal discrepancy. The preview also leaves one listed job item unmapped so you can inspect the coverage warning.</p>
             {% if mock_mode %}
             <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs for local simulation</button>
             <button id="preview-demo-results" class="secondary-button preview-button" type="button">Preview the sample · no processing</button>
@@ -138,6 +161,7 @@
             <ol class="demo-walkthrough" aria-label="What to do in the sample review">
               <li>Open the sample report</li>
               <li>Select a quote to see its CV page</li>
+              <li>Open the candidate checklist or review follow-up questions</li>
               <li>Download the evidence pack</li>
             </ol>
             <div class="sample-tip">{% if mock_mode %}This static preview is separate from the local simulation. The simulation uses deterministic heuristics and is not Muse output.{% elif model_ready %}This preview is synthetic and makes no API call. For a live run, load the sample inputs and use Analyze.{% else %}This preview uses hand-authored fictional findings. It makes no API call; live analysis is paused until the server key is configured.{% endif %}</div>
@@ -158,7 +182,16 @@
           <p class="report-note">The exported pack embeds full CV page images. Review it before sharing.</p>
           <p id="preview-notice" class="preview-notice" role="status" aria-live="polite" hidden></p>
           <div class="run-meta" id="run-meta"></div>
+          <p id="ocr-review-warning" class="ocr-review-warning" role="status" aria-live="polite" hidden></p>
           <p id="quote-audit" class="quote-audit" role="status" aria-live="polite"></p>
+          <details id="job-list-coverage" class="coverage-audit" hidden>
+            <summary id="job-list-coverage-summary"></summary>
+            <p id="job-list-coverage-intro">
+              This is a conservative wording check, not semantic validation. Review every listed item; paraphrases may need review.
+            </p>
+            <ol id="job-list-coverage-items"></ol>
+            <p id="job-list-coverage-limit" hidden></p>
+          </details>
           <section class="status-key" aria-label="What the result labels mean">
             <div><strong class="status-supported">Supported</strong><span>A relevant passage was found and checked in the CV.</span></div>
             <div><strong class="status-not_found">Not found</strong><span>No direct passage was located; that does not prove the person lacks the qualification.</span></div>
@@ -186,6 +219,31 @@
           </section>
           <p id="review-summary" class="review-summary" role="status" aria-live="polite"></p>
           <div id="findings-list" class="findings-list"></div>
+          <details id="application-prep" class="application-prep" hidden>
+            <summary>Candidate view · prepare your CV before applying</summary>
+            <div class="application-prep-body">
+              <p id="application-prep-disclosure" class="application-prep-disclosure"></p>
+              <ol id="application-prep-items" class="application-prep-items"></ol>
+              <p id="application-prep-empty" class="application-prep-empty" hidden></p>
+              <div class="application-prep-footer">
+                <button id="download-application-prep" class="secondary-button" type="button">Download my checklist</button>
+                <p id="application-prep-status" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+          </details>
+          <section id="clarification-brief" class="clarification-brief" hidden aria-labelledby="clarification-brief-title">
+            <div class="clarification-brief-head">
+              <div>
+                <div class="step-label">REVIEW → FOLLOW-UP</div>
+                <h3 id="clarification-brief-title">Neutral clarification brief</h3>
+              </div>
+              <button id="copy-clarification-brief" class="secondary-button" type="button">Copy questions</button>
+            </div>
+            <p id="clarification-brief-disclosure" class="clarification-brief-disclosure"></p>
+            <p class="candidate-response-disclosure">A reply you record stays in this tab, is not sent to Muse or the server, and is included in the download only after you record it. Record only information you are authorized to keep.</p>
+            <ol id="clarification-brief-items" class="clarification-brief-items"></ol>
+            <p id="clarification-brief-status" class="clarification-brief-status" role="status" aria-live="polite"></p>
+          </section>
           <div id="source-viewer-launch" class="source-viewer-launch" hidden>
             <div class="source-viewer-launch-copy">
               <strong>Inspect the original PDF</strong>
@@ -228,6 +286,6 @@
         <span>Reports what the supplied files say. It does not assess a person’s worth or make a hiring decision.</span>
       </footer>
     </div>
-    <script src="/static/app.js?v=20261027-4"></script>
+    <script src="/static/app.js?v=20261027-11"></script>
   </body>
 </html>
