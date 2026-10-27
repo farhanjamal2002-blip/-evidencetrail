@@ -371,6 +371,43 @@ class MockScenarioTests(unittest.TestCase):
         self.assertNotIn("href='https://", result["report_html"])
         self.assertTrue(result["report_html"].lstrip().lower().startswith("<!doctype html"))
 
+    def test_mock_does_not_claim_current_credentials_without_validity_evidence(self) -> None:
+        cases = [
+            (
+                "AWS certification expired in 2024.",
+                "conflicting",
+                {"contradicts"},
+            ),
+            (
+                "AWS certification is not currently valid.",
+                "conflicting",
+                {"contradicts"},
+            ),
+            (
+                "AWS certification is current and valid through 2027.",
+                "supported",
+                {"supports"},
+            ),
+            (
+                "AWS certification listed; validity date not provided.",
+                "not_found",
+                set(),
+            ),
+        ]
+        for cv_text, expected_status, expected_roles in cases:
+            with self.subTest(cv_text=cv_text):
+                response = self.analyze(
+                    make_pdf(cv_text),
+                    "Requirements\n- Current AWS certification",
+                )
+                self.assertEqual(response.status_code, 200, response.text)
+                finding = response.json()["requirements"][0]
+                self.assertEqual(finding["status"], expected_status)
+                self.assertEqual(
+                    {item["role"] for item in finding["evidence"]},
+                    expected_roles,
+                )
+
     def test_duration_retrieval_surfaces_both_sides_of_sample_discrepancy(self) -> None:
         job = (
             "Requirements\n"
@@ -428,6 +465,95 @@ class MockScenarioTests(unittest.TestCase):
             {item["role"] for item in inconsistent["evidence"]},
             {"supports", "contradicts"},
         )
+
+    def test_mock_handles_confusing_duration_bounds_and_ranges(self) -> None:
+        cases = [
+            # Minimum phrasing and strict lower bounds.
+            ("5+ years of data analysis experience", "Data analysis: 2 years.", "conflicting"),
+            ("More than five years of data analysis experience", "Data analysis: 5 years.", "conflicting"),
+            ("More than five years of data analysis experience", "Data analysis: 6 years.", "supported"),
+            ("No less than five years of data analysis", "Data analysis: 2 years.", "conflicting"),
+            ("Three or more years of data analysis", "Data analysis: 2 years.", "conflicting"),
+            # Maximum wording must not be treated like a minimum.
+            ("No more than five years of data analysis", "Data analysis: 3 years.", "supported"),
+            ("No more than five years of data analysis", "Data analysis: 6 years.", "conflicting"),
+            ("Max five years of data analysis", "Data analysis: 6 years.", "conflicting"),
+            ("Less than five years of data analysis", "Data analysis: 3 years.", "supported"),
+            ("Less than five years of data analysis", "Data analysis: 5 years.", "conflicting"),
+            # Both ends of explicit ranges are mandatory.
+            (
+                "At least five and no more than eight years of team leadership experience",
+                "Team leadership: 3 years of delivery experience.",
+                "conflicting",
+            ),
+            (
+                "At least five and no more than eight years of team leadership experience",
+                "Team leadership: 6 years of delivery experience.",
+                "supported",
+            ),
+            (
+                "At least five and no more than eight years of team leadership experience",
+                "Team leadership: 9 years of delivery experience.",
+                "conflicting",
+            ),
+            (
+                "At least five and max eight years of team leadership experience",
+                "Team leadership: 3 years of delivery experience.",
+                "conflicting",
+            ),
+            (
+                "More than five but under eight years of team leadership experience",
+                "Team leadership: 7 years of delivery experience.",
+                "supported",
+            ),
+            (
+                "More than five but under eight years of team leadership experience",
+                "Team leadership: 5 years of delivery experience.",
+                "conflicting",
+            ),
+            (
+                "Between five and eight years of team leadership experience",
+                "Team leadership: 6 years of delivery experience.",
+                "supported",
+            ),
+            (
+                "Between five and eight years of team leadership experience",
+                "Team leadership: 9 years of delivery experience.",
+                "conflicting",
+            ),
+            (
+                "From five to eight years of team leadership experience",
+                "Team leadership: 6 years of delivery experience.",
+                "supported",
+            ),
+            (
+                "From five to eight years of team leadership experience",
+                "Team leadership: 3 years of delivery experience.",
+                "conflicting",
+            ),
+            (
+                "5–8 yrs of team leadership experience",
+                "Team leadership: 9 years of delivery experience.",
+                "conflicting",
+            ),
+            # Abbreviations count, calendar dates alone do not.
+            ("At least five years of data analysis", "Data analysis: 2 yrs.", "conflicting"),
+            (
+                "At least five years of procurement experience",
+                "Procurement experience: 2018-2023.",
+                "not_found",
+            ),
+        ]
+
+        for requirement, cv_text, expected in cases:
+            with self.subTest(requirement=requirement, cv_text=cv_text):
+                response = self.analyze(
+                    make_pdf(cv_text),
+                    f"Requirements\n- {requirement}",
+                )
+                self.assertEqual(response.status_code, 200, response.text)
+                finding = response.json()["requirements"][0]
+                self.assertEqual(finding["status"], expected)
 
     def test_clarification_brief_skips_clear_support_and_deduplicates_sources(self) -> None:
         findings = [

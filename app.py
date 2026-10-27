@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 31493)
+Total output lines: 2963
+
 from __future__ import annotations
 
 import base64
@@ -719,7 +722,7 @@ def call_muse(pdf_bytes: bytes, job_description: str) -> tuple[dict[str, Any], d
 
 RETRIEVAL_STOP_WORDS = {
     "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in",
-    "is", "of", "on", "or", "the", "to", "with", "years", "year", "experience",
+    "is", "of", "on", "or", "the", "to", "with", "years", "year", "yrs", "yr", "experience",
     "required", "requirement", "minimum", "current",
 }
 
@@ -899,12 +902,13 @@ def rank_comparable_duration_spans(
     requirement_terms -= {
         "least", "minimum", "more", "over", "than", "plus", "at", "years", "year"
     }
-    if not requirement_terms or not re.search(r"\byears?\b", requirement, re.IGNORECASE):
+    if not requirement_terms or not re.search(r"\b(?:years?|yrs?)\b", requirement, re.IGNORECASE):
         return []
 
     number_pattern = (
         r"\b(?:\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|"
-        r"eleven|twelve|fifteen|twenty)(?:\+|\s+plus)?\s+years?\b"
+        r"eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|"
+        r"nineteen|twenty|thirty|forty|fifty|sixty)(?:\+|\s+plus)?\s+(?:years?|yrs?)(?![A-Za-z])"
     )
     comparable: list[dict[str, Any]] = []
     for span in catalog:
@@ -940,8 +944,16 @@ def parse_mock_requirements(job_description: str) -> list[str]:
 MOCK_NUMBER_WORDS = {
     "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
     "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11,
-    "twelve": 12, "fifteen": 15, "twenty": 20,
+    "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
+    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
+    "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60,
 }
+
+MOCK_NUMBER_PATTERN = (
+    r"\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
+    r"thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|"
+    r"thirty|forty|fifty|sixty"
+)
 
 
 def mock_number(value: str) -> int | None:
@@ -951,25 +963,122 @@ def mock_number(value: str) -> int | None:
     return MOCK_NUMBER_WORDS.get(cleaned)
 
 
-def mock_year_threshold(requirement: str) -> int | None:
-    match = re.search(
-        r"\b(?:at least|minimum(?: of)?)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty)\s+years?\b",
-        requirement,
-        flags=re.IGNORECASE,
+def mock_year_constraints(requirement: str) -> list[tuple[str, int]]:
+    """Parse explicit experience-duration bounds for the local simulation."""
+    unit = r"(?:years?|yrs?\.?)"
+    number = MOCK_NUMBER_PATTERN
+    duration = rf"(?P<number>{number})\s*(?:\+\s*)?{unit}(?![A-Za-z])"
+    flags = re.IGNORECASE
+    lower_inclusive_operator = (
+        r"at least|at minimum|minimum(?: of)?|min(?:imum)?(?: of)?|"
+        r"no less than|not less than|no fewer than|not fewer than"
     )
-    return mock_number(match.group(1)) if match else None
+    upper_inclusive_operator = (
+        r"no more than|not more than|at most|up to|at maximum|"
+        r"max(?:imum)?(?: of)?"
+    )
+    lower_operator = rf"(?:{lower_inclusive_operator}|more than|over)"
+    upper_operator = rf"(?:{upper_inclusive_operator}|less than|fewer than|under)"
+    # A range is a pair of conditions. Handle both the compact form and prose
+    # forms such as "between five and eight years" before parsing single bounds.
+    range_patterns = (
+        rf"\b(?:between|from)\s+(?P<low>{number})\s*(?:and|to|-|–|—)\s*(?P<high>{number})\s*{unit}(?![A-Za-z])",
+        rf"\b(?P<low>{number})\s*(?:-|–|—|to)\s*(?P<high>{number})\s*{unit}(?![A-Za-z])",
+    )
+    for pattern in range_patterns:
+        match = re.search(pattern, requirement, flags)
+        if match:
+            low = mock_number(match.group("low"))
+            high = mock_number(match.group("high"))
+            if low is not None and high is not None:
+                return [("minimum", low), ("maximum", high)]
+
+    bounded_pair = re.search(
+        rf"\b(?P<low_op>{lower_operator})\s+(?P<low>{number})(?:\s*{unit})?\s+(?:and|but)\s+"
+        rf"(?P<high_op>{upper_operator})\s+(?P<high>{number})\s*{unit}(?![A-Za-z])",
+        requirement,
+        flags,
+    )
+    if bounded_pair:
+        low = mock_number(bounded_pair.group("low"))
+        high = mock_number(bounded_pair.group("high"))
+        if low is not None and high is not None:
+            low_adjustment = 1 if bounded_pair.group("low_op").casefold() in {"more than", "over"} else 0
+            high_adjustment = -1 if bounded_pair.group("high_op").casefold() in {"less than", "fewer than", "under"} else 0
+            return [
+                ("minimum", low + low_adjustment),
+                ("maximum", high + high_adjustment),
+            ]
+
+    # Keep every distinct bound, so "at least 5 and no more than 8 years"
+    # cannot accidentally degrade to just one side of the interval.
+    patterns: tuple[tuple[str, str, int], ...] = (
+        (rf"\b(?:{upper_inclusive_operator})\s+(?P<number>{number})\s*{unit}(?![A-Za-z])", "maximum", 0),
+        (rf"\b(?P<number>{number})\s*{unit}\s+(?:or less|or fewer|maximum|max)\b", "maximum", 0),
+        (rf"\b(?:{lower_inclusive_operator})\s+{duration}", "minimum", 0),
+        (rf"\b(?:more than|over)\s+(?P<number>{number})\s*{unit}(?![A-Za-z])", "minimum", 1),
+        (rf"\b(?:less than|fewer than|under)\s+(?P<number>{number})\s*{unit}(?![A-Za-z])", "maximum", -1),
+        (rf"\b(?P<number>{number})\s+or\s+(?:less|fewer)\s+{unit}(?![A-Za-z])", "maximum", 0),
+        (rf"\b(?P<number>{number})\s+or\s+more\s+{unit}(?![A-Za-z])", "minimum", 0),
+        (rf"\b(?P<number>{number})\s*{unit}\s+or\s+more\b", "minimum", 0),
+        (rf"\b(?P<number>{number})\s*\+\s*{unit}(?![A-Za-z])", "minimum", 0),
+        (rf"\b(?P<number>{number})\s*{unit}\s+(?:minimum|required|at least)\b", "minimum", 0),
+    )
+    matches: list[tuple[int, int, int, str, int]] = []
+    for pattern, direction, adjustment in patterns:
+        for match in re.finditer(pattern, requirement, flags):
+            value = mock_number(match.group("number"))
+            if value is not None:
+                matches.append(
+                    (match.start(), match.end(), -(match.end() - match.start()), direction, value + adjustment)
+                )
+
+    # Some phrases contain another operator as a substring ("no less than"
+    # includes "less than"). Prefer the longest phrase and discard overlaps.
+    selected: list[tuple[int, int, str, int]] = []
+    for start, end, _negative_length, direction, value in sorted(
+        matches, key=lambda item: (item[0], item[2])
+    ):
+        if any(start < chosen_end and end > chosen_start for chosen_start, chosen_end, *_ in selected):
+            continue
+        selected.append((start, end, direction, value))
+    constraints = [(direction, value) for _start, _end, direction, value in sorted(selected)]
+    if constraints:
+        return constraints
+
+    # A bare duration in a requirement implies the common minimum form.
+    match = re.search(rf"\b{duration}", requirement, flags)
+    if match:
+        value = mock_number(match.group("number"))
+        if value is not None:
+            return [("minimum", value)]
+    return []
+
+
+def mock_year_constraint(requirement: str) -> tuple[str, int] | None:
+    """Compatibility helper for callers that expect a single parsed bound."""
+    constraints = mock_year_constraints(requirement)
+    return constraints[0] if constraints else None
+
+
+def mock_year_threshold(requirement: str) -> int | None:
+    """Compatibility helper for callers needing a minimum-only threshold."""
+    constraints = mock_year_constraints(requirement)
+    minimums = [value for direction, value in constraints if direction == "minimum"]
+    return max(minimums) if minimums else None
 
 
 def mock_year_claims(text: str, topic: str) -> list[tuple[int, str]]:
-    number = r"(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty)"
+    number = rf"({MOCK_NUMBER_PATTERN})"
+    unit = r"(?:years?|yrs?\.?)"
     topic_pattern = re.escape(topic)
     patterns = (
         re.compile(
-            rf"\b{number}\s+years?\s+(?:of\s+)?(?:[a-z-]+\s+){{0,2}}{topic_pattern}\b",
+            rf"\b{number}\s+{unit}\s+(?:of\s+)?(?:[a-z-]+\s+){{0,2}}{topic_pattern}\b",
             flags=re.IGNORECASE,
         ),
         re.compile(
-            rf"\b{topic_pattern}\b[^.\n;]{{0,60}}?\b{number}\s+years?\b",
+            rf"\b{topic_pattern}\b[^.\n;]{{0,60}}?\b{number}\s+{unit}(?![A-Za-z])",
             flags=re.IGNORECASE,
         ),
     )
@@ -1032,22 +1141,73 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
 
         if any(term in lowered for term in certification_terms):
             required_name_terms = requirement_terms - certification_terms - {"current"}
+            requires_current = bool(
+                re.search(
+                    r"\b(?:current(?:ly)?|active|valid|unexpired|in\s+force)\b",
+                    lowered,
+                )
+            )
             for span in candidates:
-                source_terms = set(retrieval_tokens(str(span.get("text", ""))))
+                span_text = str(span.get("text", ""))
+                source_terms = set(retrieval_tokens(span_text))
                 if required_name_terms and required_name_terms.issubset(source_terms):
-                    evidence.append(
-                        {
-                            "source_id": str(span["id"]),
-                            "quote": str(span.get("text", ""))[:1600],
-                            "role": "supports",
-                        }
-                    )
-                    break
+                    role_candidates = ["supports"]
+                    if requires_current:
+                        source_status = span_text.casefold()
+                        negated_stale_marker = bool(
+                            re.search(
+                                r"\b(?:not|never)\s+(?:been\s+)?(?:expired|lapsed|revoked|suspended|inactive|invalid)\b",
+                                source_status,
+                            )
+                        )
+                        stale = bool(
+                            re.search(
+                                r"\b(?:expired|lapsed|revoked|suspended|inactive|invalid)\b",
+                                source_status,
+                            )
+                        ) and not negated_stale_marker
+                        explicitly_not_current = bool(
+                            re.search(
+                                r"\bnot\s+(?:currently\s+)?(?:valid|active|current)\b"
+                                r"|\bno\s+longer\s+(?:valid|active|current)\b",
+                                source_status,
+                            )
+                        )
+                        stale = stale or explicitly_not_current
+                        affirmed_current = bool(
+                            re.search(
+                                r"\b(?:current(?:ly)?|active|valid|unexpired)\b"
+                                r"|\bin\s+force\b",
+                                source_status,
+                            )
+                        ) and not explicitly_not_current
+                        role_candidates = []
+                        if stale:
+                            role_candidates.append("contradicts")
+                        if affirmed_current:
+                            role_candidates.append("supports")
+                        # Mentioning a credential without its validity state cannot
+                        # establish a current-credential requirement in this mock.
+                    for role in role_candidates:
+                        evidence.append(
+                            {
+                                "source_id": str(span["id"]),
+                                "quote": span_text[:1600],
+                                "role": role,
+                            }
+                        )
+                    if len(evidence) >= 4:
+                        break
         else:
-            threshold = mock_year_threshold(requirement)
+            duration_constraints = mock_year_constraints(requirement)
+            has_duration_wording = bool(
+                re.search(r"\b(?:years?|yrs?)\b", requirement, re.IGNORECASE)
+            )
             duration_qualifiers = {
-                "least", "minimum", "more", "over", "than", "plus", "at",
-                "current", "required", "preferred",
+                "least", "minimum", "more", "over", "than", "plus", "at", "less",
+                "fewer", "no", "not", "up", "maximum", "max", "current",
+                "required", "preferred",
+                "between", "range", "from", "through", "but",
             }
             topic_terms = [
                 term
@@ -1056,7 +1216,7 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                 and not term.isdigit()
                 and term not in duration_qualifiers
             ]
-            if threshold is not None and topic_terms:
+            if duration_constraints and topic_terms:
                 seen_claims: set[tuple[int, str]] = set()
                 for span in candidates:
                     span_text = str(span.get("text", ""))
@@ -1075,14 +1235,23 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                             {
                                 "source_id": str(span["id"]),
                                 "quote": quote,
-                                "role": "supports" if value >= threshold else "contradicts",
+                                "role": (
+                                    "supports"
+                                    if all(
+                                        value >= threshold
+                                        if direction == "minimum"
+                                        else value <= threshold
+                                        for direction, threshold in duration_constraints
+                                    )
+                                    else "contradicts"
+                                ),
                             }
                         )
                         if len(evidence) >= 4:
                             break
                     if len(evidence) >= 4:
                         break
-            else:
+            elif not has_duration_wording:
                 ranked: list[tuple[int, str, dict[str, Any]]] = []
                 for span in candidates:
                     source_terms = set(retrieval_tokens(str(span.get("text", ""))))
@@ -1342,158 +1511,7 @@ def apply_verification_reviews(
 
         model_status = str(review.get("status", "not_found"))
         certainty = str(review.get("certainty", "ambiguous"))
-        if certainty not in ("clear", "ambiguous"):
-            certainty = "ambiguous"
-        if status != model_status or local_excluded:
-            certainty = "ambiguous"
-        if certainty == "ambiguous":
-            ambiguous_count += 1
-
-        reason = str(review.get("reason", "")).strip()[:600]
-        base_note = {
-            "supported": (
-                (
-                    "The local mock selected a candidate supporting passage. Its exact "
-                    "text was checked against the cited PDF page; inspect the source "
-                    "yourself."
-                )
-                if MOCK_PROVIDER_ENABLED
-                else (
-                    "The second Muse pass selected a supporting passage. Its exact text "
-                    "was checked against the cited PDF page; review whether it supports "
-                    "the requirement."
-                )
-            ),
-            "not_found": (
-                "No directly supporting or explicitly conflicting passage survived "
-                "the source checks. This does not prove the candidate lacks the skill."
-            ),
-            "conflicting": (
-                (
-                    "The local mock selected a candidate conflicting statement. Its "
-                    "exact text was checked against the cited PDF page; inspect the "
-                    "source yourself."
-                )
-                if MOCK_PROVIDER_ENABLED
-                else (
-                    "The second Muse pass selected a conflicting statement. Its exact "
-                    "text was checked against the cited PDF page; review the context."
-                )
-            ),
-        }[status]
-        note_parts = [reason] if reason else []
-        note_parts.append(base_note)
-        if certainty == "ambiguous":
-            note_parts.append(
-                "The verification result is ambiguous or a proposed source link "
-                "failed a local check; inspect the cited text before relying on it."
-            )
-
-        final_finding = dict(finding)
-        final_finding.update(
-            {
-                "status": status,
-                "note": " ".join(note_parts),
-                "review_reason": reason,
-                "certainty": certainty,
-                "evidence": verified,
-            }
-        )
-        final_findings.append(final_finding)
-        for evidence in verified:
-            page_marks.setdefault(evidence["page"], []).append(
-                {"boxes": evidence["boxes"], "role": evidence["role"]}
-            )
-
-    audit = {
-        "proposed": proposed,
-        "verified": verified_count,
-        "excluded": excluded,
-        "ambiguous_requirements": ambiguous_count,
-        "rejected_citations": rejected_citations,
-    }
-    return final_findings, page_marks, audit
-
-
-def build_evidence_graph(findings: list[dict[str, Any]]) -> dict[str, Any]:
-    nodes: list[dict[str, Any]] = []
-    edges: list[dict[str, Any]] = []
-    requirement_rows: list[dict[str, Any]] = []
-    for finding in findings:
-        requirement_id = str(finding["id"])
-        nodes.append(
-            {
-                "id": requirement_id,
-                "kind": "requirement",
-                "label": str(finding["requirement"]),
-                "status": str(finding["status"]),
-                "certainty": str(finding.get("certainty", "clear")),
-            }
-        )
-        sources: list[dict[str, Any]] = []
-        for index, evidence in enumerate(finding.get("evidence", []), start=1):
-            evidence_id = f"EV-{requirement_id}-{index}"
-            source_node = {
-                "id": evidence_id,
-                "kind": "source_quote",
-                "source_id": str(evidence.get("source_id", evidence_id)),
-                "page": int(evidence["page"]),
-                "bbox": compact_bbox(evidence.get("boxes", [])),
-                "quote": str(evidence["quote"]),
-                "role": str(evidence["role"]),
-            }
-            nodes.append(source_node)
-            edges.append(
-                {
-                    "from": requirement_id,
-                    "to": evidence_id,
-                    "relation": str(evidence["role"]),
-                }
-            )
-            sources.append(source_node)
-        requirement_rows.append(
-            {
-                "id": requirement_id,
-                "requirement": str(finding["requirement"]),
-                "status": str(finding["status"]),
-                "certainty": str(finding.get("certainty", "clear")),
-                "sources": sources,
-            }
-        )
-    return {"nodes": nodes, "edges": edges, "requirements": requirement_rows}
-
-
-def build_clarification_brief(findings: list[dict[str, Any]]) -> dict[str, Any]:
-    """Create reviewer-ready, neutral follow-up prompts from unresolved findings."""
-    items: list[dict[str, Any]] = []
-    for finding in findings:
-        status = str(finding.get("status", ""))
-        certainty = str(finding.get("certainty", "clear"))
-        if status == "supported" and certainty != "ambiguous":
-            continue
-        if status not in {"not_found", "conflicting", "supported"}:
-            continue
-
-        requirement = str(finding.get("requirement", "")).strip()[:500]
-        if not requirement:
-            continue
-
-        evidence: list[dict[str, Any]] = []
-        seen_sources: set[tuple[int, str, str]] = set()
-        for citation in finding.get("evidence", []):
-            try:
-                page = int(citation.get("page", 0))
-            except (TypeError, ValueError):
-                continue
-            quote = str(citation.get("quote", "")).strip()[:1000]
-            role = str(citation.get("role", ""))
-            if page < 1 or not quote or role not in {"supports", "contradicts"}:
-                continue
-            identity = (page, quote, role)
-            if identity in seen_sources:
-                continue
-            seen_sources.add(identity)
-            evidence.append({"page": page, "quote": quote, "role": role})
+        if certainty not in ("clear", "ambiguou…1493 tokens truncated…e": page, "quote": quote, "role": role})
             if len(evidence) == 4:
                 break
 
