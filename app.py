@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 31493)
-Total output lines: 2963
+Warning: truncated output (original token count: 32925)
+Total output lines: 3091
 
 from __future__ import annotations
 
@@ -209,6 +209,16 @@ not a contradiction. Return "not_found" when no direct support or explicit
 conflict is present. Mark certainty "ambiguous" when context does not settle
 the interpretation. Give a short reason tied to the cited text. Do not score,
 rank, or make a hiring decision.
+
+Read qualifiers literally: distinguish "at least" from "more than," "at most"
+from "less than," and require both bounds of a stated range. A duration supports
+only the skill, role, or subject named in the same clause; never borrow years
+from a neighboring job or unrelated skill. A keyword match does not support a
+claim when the CV explicitly negates it (for example, "no Python experience").
+For a requirement that asks for a current credential, an explicit expired,
+lapsed, revoked, or inactive status conflicts; a credential with no validity
+information is not_found, not current by assumption.
+
 Return one review for every supplied requirement.
 """
 
@@ -1069,16 +1079,28 @@ def mock_year_threshold(requirement: str) -> int | None:
 
 
 def mock_year_claims(text: str, topic: str) -> list[tuple[int, str]]:
-    number = rf"({MOCK_NUMBER_PATTERN})"
+    number = MOCK_NUMBER_PATTERN
     unit = r"(?:years?|yrs?\.?)"
     topic_pattern = re.escape(topic)
+    topic_qualifier = (
+        r"(?:experience|work|skill|skills|expertise|background|proficiency|"
+        r"programming|development|engineering|leadership|management|analysis|"
+        r"administration|operations|delivery|use|using|with)"
+    )
+    duration_to_topic = (
+        rf"(?:of\s+)?(?:(?:(?:professional|practical|relevant|hands-on)\s+)?"
+        rf"(?:experience|work|expertise|background|proficiency)(?:\s+(?:in|with|using|on))?"
+        rf"|(?:working|using|developing)\s+(?:in|with|on))\s+{topic_pattern}\b"
+    )
     patterns = (
         re.compile(
-            rf"\b{number}\s+{unit}\s+(?:of\s+)?(?:[a-z-]+\s+){{0,2}}{topic_pattern}\b",
+            rf"\b(?P<number>{number})\s+{unit}\s+(?:of\s+)?"
+            rf"(?:{topic_pattern}\b|{duration_to_topic})",
             flags=re.IGNORECASE,
         ),
         re.compile(
-            rf"\b{topic_pattern}\b[^.\n;]{{0,60}}?\b{number}\s+{unit}(?![A-Za-z])",
+            rf"\b{topic_pattern}\b(?:\s+{topic_qualifier})?[:\s–—-]+"
+            rf"\b(?P<number>{number})\s+{unit}(?![A-Za-z])",
             flags=re.IGNORECASE,
         ),
     )
@@ -1087,11 +1109,60 @@ def mock_year_claims(text: str, topic: str) -> list[tuple[int, str]]:
     for pattern in patterns:
         for match in pattern.finditer(text):
             phrase = match.group(0).strip()
-            value = mock_number(match.group(1))
+            value = mock_number(match.group("number"))
             if value is not None and phrase.casefold() not in seen:
                 seen.add(phrase.casefold())
                 claims.append((value, phrase))
     return claims
+
+
+def mock_clause_negates_requirement(clause: str, requirement_terms: set[str]) -> bool:
+    """Spot explicit local negation so keyword overlap cannot turn it into support."""
+    tokens = tokenize(clause)
+    before_markers = {
+        "no", "not", "never", "without", "lack", "lacks", "lacking", "neither",
+        "cannot", "can't", "isn't", "wasn't", "doesn't", "didn't", "haven't", "hasn't",
+    }
+    after_markers = {
+        "no", "not", "never", "absent", "missing", "incomplete", "unfinished",
+        "unavailable", "lacking", "lapsed", "expired", "revoked", "suspended",
+        "inactive", "invalid",
+    }
+    negated_adverse_states = {
+        "expired", "lapsed", "revoked", "suspended", "inactive", "invalid",
+    }
+    for index, token in enumerate(tokens):
+        if token not in requirement_terms:
+            continue
+        before = tokens[max(0, index - 4) : index]
+        after = tokens[index + 1 : index + 5]
+        for marker_index in range(max(0, index - 4), index):
+            marker = tokens[marker_index]
+            following = tokens[marker_index + 1 : marker_index + 3]
+            if marker not in before_markers:
+                continue
+            if marker == "not" and following[:1] == ["only"]:
+                continue
+            if marker in {"not", "never", "hasn't", "haven't"} and any(
+                word in negated_adverse_states for word in following
+            ):
+                continue
+            return True
+        for offset, marker in enumerate(after):
+            following = after[offset + 1 : offset + 3]
+            if marker not in after_markers:
+                continue
+            preceding = after[:offset]
+            if marker in negated_adverse_states and any(
+                word in preceding for word in {"not", "never", "hasn't", "haven't"}
+            ):
+                continue
+            if marker in {"not", "never"} and any(
+                word in negated_adverse_states for word in following
+            ):
+                continue
+            return True
+    return False
 
 
 def mock_map_requirements(
@@ -1149,11 +1220,26 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
             )
             for span in candidates:
                 span_text = str(span.get("text", ""))
-                source_terms = set(retrieval_tokens(span_text))
-                if required_name_terms and required_name_terms.issubset(source_terms):
-                    role_candidates = ["supports"]
-                    if requires_current:
-                        source_status = span_text.casefold()
+                for clause in re.split(
+                    r"(?:[.!?;]+|\n+|\b(?:but|however|although|yet)\b)",
+                    span_text,
+                    flags=re.IGNORECASE,
+                ):
+                    quote = clause.strip()
+                    quote_terms = set(retrieval_tokens(quote))
+                    if not (
+                        quote
+                        and required_name_terms
+                        and required_name_terms.issubset(quote_terms)
+                    ):
+                        continue
+
+                    source_status = quote.casefold()
+                    if mock_clause_negates_requirement(quote, required_name_terms):
+                        role_candidates = ["contradicts"]
+                    elif not requires_current:
+                        role_candidates = ["supports"]
+                    else:
                         negated_stale_marker = bool(
                             re.search(
                                 r"\b(?:not|never)\s+(?:been\s+)?(?:expired|lapsed|revoked|suspended|inactive|invalid)\b",
@@ -1188,16 +1274,19 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                             role_candidates.append("supports")
                         # Mentioning a credential without its validity state cannot
                         # establish a current-credential requirement in this mock.
+
                     for role in role_candidates:
                         evidence.append(
                             {
                                 "source_id": str(span["id"]),
-                                "quote": span_text[:1600],
+                                "quote": quote[:1600],
                                 "role": role,
                             }
                         )
                     if len(evidence) >= 4:
                         break
+                if len(evidence) >= 4:
+                    break
         else:
             duration_constraints = mock_year_constraints(requirement)
             has_duration_wording = bool(
@@ -1218,6 +1307,35 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
             ]
             if duration_constraints and topic_terms:
                 seen_claims: set[tuple[int, str]] = set()
+                seen_negations: set[str] = set()
+                duration_topics = set(topic_terms)
+                for span in candidates:
+                    span_text = str(span.get("text", ""))
+                    for clause in re.split(
+                        r"(?:[.!?;]+|\n+|\b(?:but|however|although|yet)\b)",
+                        span_text,
+                        flags=re.IGNORECASE,
+                    ):
+                        quote = clause.strip()
+                        quote_key = quote.casefold()
+                        if (
+                            quote
+                            and quote_key not in seen_negations
+                            and mock_clause_negates_requirement(quote, duration_topics)
+                        ):
+                            seen_negations.add(quote_key)
+                            evidence.append(
+                                {
+                                    "source_id": str(span["id"]),
+                                    "quote": quote[:1600],
+                                    "role": "contradicts",
+                                }
+                            )
+                            if len(evidence) >= 4:
+                                break
+                    if len(evidence) >= 4:
+                        break
+
                 for span in candidates:
                     span_text = str(span.get("text", ""))
                     claims_by_value: dict[int, str] = {}
@@ -1252,20 +1370,30 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                     if len(evidence) >= 4:
                         break
             elif not has_duration_wording:
-                ranked: list[tuple[int, str, dict[str, Any]]] = []
+                ranked: list[tuple[int, str, str, str]] = []
                 for span in candidates:
-                    source_terms = set(retrieval_tokens(str(span.get("text", ""))))
-                    overlap = len(requirement_terms & source_terms)
-                    if overlap:
-                        ranked.append((overlap, str(span["id"]), span))
-                ranked.sort(key=lambda record: (-record[0], record[1]))
-                if ranked:
-                    _overlap, source_id, span = ranked[0]
+                    for clause in re.split(
+                        r"(?:[.!?;]+|\n+|\b(?:but|however|although|yet)\b)",
+                        str(span.get("text", "")),
+                        flags=re.IGNORECASE,
+                    ):
+                        quote = clause.strip()
+                        source_terms = set(retrieval_tokens(quote))
+                        overlap = len(requirement_terms & source_terms)
+                        if overlap and quote:
+                            role = (
+                                "contradicts"
+                                if mock_clause_negates_requirement(quote, requirement_terms)
+                                else "supports"
+                            )
+                            ranked.append((overlap, str(span["id"]), quote, role))
+                ranked.sort(key=lambda record: (-record[0], record[1], record[2]))
+                for _overlap, source_id, quote, role in ranked[:4]:
                     evidence.append(
                         {
                             "source_id": source_id,
-                            "quote": str(span.get("text", ""))[:1600],
-                            "role": "supports",
+                            "quote": quote[:1600],
+                            "role": role,
                         }
                     )
 
@@ -1369,149 +1497,7 @@ def call_muse_verification(
         max_retries=0,
         timeout=90.0,
     )
-    response = client.chat.completions.create(
-        model=MODEL_ID,
-        messages=[
-            {"role": "system", "content": VERIFIER_SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": (
-                    "Review these requirements against the source spans. Return "
-                    "one review for every requirement.\n"
-                    + json.dumps(verification_payload, ensure_ascii=False)
-                ),
-            },
-        ],
-        response_format=VERIFIER_SCHEMA,
-        store=False,
-        max_completion_tokens=6_000,
-    )
-
-    content = response.choices[0].message.content
-    if not content:
-        raise RuntimeError("Muse returned an empty verification response.")
-    result = json.loads(content)
-    usage = getattr(response, "usage", None)
-    usage_summary = {
-        "input_tokens": int(getattr(usage, "prompt_tokens", 0) or 0),
-        "output_tokens": int(getattr(usage, "completion_tokens", 0) or 0),
-    }
-    return result, usage_summary
-
-
-def apply_verification_reviews(
-    findings: list[dict[str, Any]],
-    review_result: dict[str, Any],
-    source_by_id: dict[str, dict[str, Any]],
-    allowed_by_requirement: dict[str, set[str]],
-    pages: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, Any]]:
-    reviews_by_id: dict[str, dict[str, Any]] = {}
-    for review in review_result.get("reviews", []):
-        requirement_id = str(review.get("requirement_id", ""))
-        if requirement_id in reviews_by_id:
-            raise RuntimeError("Muse returned duplicate requirement reviews.")
-        reviews_by_id[requirement_id] = review
-
-    expected_ids = {str(finding["id"]) for finding in findings}
-    if set(reviews_by_id) != expected_ids:
-        raise RuntimeError("Muse did not return one verification result per requirement.")
-
-    page_by_number = {int(page["number"]): page for page in pages}
-    final_findings: list[dict[str, Any]] = []
-    page_marks: dict[int, list[dict[str, Any]]] = {}
-    proposed = 0
-    verified_count = 0
-    excluded = 0
-    ambiguous_count = 0
-    rejected_citations: list[dict[str, str]] = []
-
-    for finding in findings:
-        requirement_id = str(finding["id"])
-        review = reviews_by_id[requirement_id]
-        verified: list[dict[str, Any]] = []
-        seen: set[tuple[str, str, int]] = set()
-        local_excluded = 0
-        citations = review.get("evidence", [])
-
-        def reject(
-            reason: str, rejected_source_id: str, rejected_quote: str, rejected_role: Any
-        ) -> None:
-            nonlocal excluded, local_excluded
-            excluded += 1
-            local_excluded += 1
-            if len(rejected_citations) < 40:
-                rejected_citations.append(
-                    {
-                        "requirement_id": requirement_id,
-                        "requirement": str(finding.get("requirement", ""))[:180],
-                        "source_id": rejected_source_id[:80],
-                        "role": str(rejected_role)[:24],
-                        "quote": rejected_quote[:360],
-                        "reason": reason,
-                    }
-                )
-        proposed += len(citations)
-
-        for citation in citations:
-            source_id = str(citation.get("source_id", ""))
-            quote = str(citation.get("quote", "")).strip()
-            role = citation.get("role")
-            if source_id not in allowed_by_requirement.get(requirement_id, set()):
-                reject("source_not_allowed", source_id, quote, role)
-                continue
-            if role not in ("supports", "contradicts"):
-                reject("invalid_evidence_role", source_id, quote, role)
-                continue
-            if not quote:
-                reject("empty_quote", source_id, quote, role)
-                continue
-            source = source_by_id[source_id]
-            source_text = str(source.get("text", ""))
-            source_context = str(source.get("context", ""))
-            if not (
-                contains_token_sequence(source_text, quote)
-                or contains_token_sequence(source_context, quote)
-            ):
-                reject("quote_outside_retrieved_span", source_id, quote, role)
-                continue
-            page_number = int(source["page"])
-            page = page_by_number.get(page_number)
-            if not page:
-                reject("source_page_unavailable", source_id, quote, role)
-                continue
-            match = locate_quote(quote, [page], page_number)
-            if not match:
-                reject("quote_not_found_on_cited_page", source_id, quote, role)
-                continue
-            key = (normalize_text(quote), str(role), page_number)
-            if key in seen:
-                reject("duplicate_citation", source_id, quote, role)
-                continue
-            seen.add(key)
-            verified.append(
-                {
-                    "quote": quote,
-                    "role": str(role),
-                    "page": page_number,
-                    "boxes": match["boxes"],
-                    "source_id": source_id,
-                }
-            )
-            verified_count += 1
-
-        has_support = any(item["role"] == "supports" for item in verified)
-        has_contradiction = any(item["role"] == "contradicts" for item in verified)
-        if has_contradiction:
-            status = "conflicting"
-        elif has_support:
-            status = "supported"
-        else:
-            status = "not_found"
-
-        model_status = str(review.get("status", "not_found"))
-        certainty = str(review.get("certainty", "ambiguous"))
-        if certainty not in ("clear", "ambiguou…1493 tokens truncated…e": page, "quote": quote, "role": role})
+    response = …2925 tokens truncated…e": page, "quote": quote, "role": role})
             if len(evidence) == 4:
                 break
 

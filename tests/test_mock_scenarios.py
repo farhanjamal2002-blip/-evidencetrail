@@ -393,6 +393,16 @@ class MockScenarioTests(unittest.TestCase):
                 "not_found",
                 set(),
             ),
+            (
+                "AWS certification not expired.",
+                "not_found",
+                set(),
+            ),
+            (
+                "No AWS certification.",
+                "conflicting",
+                {"contradicts"},
+            ),
         ]
         for cv_text, expected_status, expected_roles in cases:
             with self.subTest(cv_text=cv_text):
@@ -542,6 +552,65 @@ class MockScenarioTests(unittest.TestCase):
                 "At least five years of procurement experience",
                 "Procurement experience: 2018-2023.",
                 "not_found",
+            ),
+        ]
+
+        for requirement, cv_text, expected in cases:
+            with self.subTest(requirement=requirement, cv_text=cv_text):
+                response = self.analyze(
+                    make_pdf(cv_text),
+                    f"Requirements\n- {requirement}",
+                )
+                self.assertEqual(response.status_code, 200, response.text)
+                finding = response.json()["requirements"][0]
+                self.assertEqual(finding["status"], expected)
+
+    def test_mock_rejects_negated_claims_and_unrelated_year_counts(self) -> None:
+        cases = [
+            ("Python experience", "No Python experience.", "conflicting"),
+            ("Python experience", "Never worked with Python.", "conflicting"),
+            ("Python experience", "Python experience: no.", "conflicting"),
+            ("Bachelor's degree", "No bachelor's degree.", "conflicting"),
+            ("Bachelor's degree", "Bachelor's degree incomplete.", "conflicting"),
+            (
+                "At least five years of Python experience",
+                "No Python experience.",
+                "conflicting",
+            ),
+            (
+                "At least five years of Python experience",
+                "Python skills; 10 years in marketing.",
+                "not_found",
+            ),
+            (
+                "At least five years of Python experience",
+                "Python skills, 10 years in marketing.",
+                "not_found",
+            ),
+            (
+                "At least five years of Python experience",
+                "10 years in marketing with Python.",
+                "not_found",
+            ),
+            (
+                "At least five years of Python experience",
+                "Data analysis: 9 years; Python: 2 years.",
+                "conflicting",
+            ),
+            (
+                "Python experience",
+                "No Python experience; Python experience: 5 years.",
+                "conflicting",
+            ),
+            (
+                "Python experience",
+                "Not only Python experience, but also JavaScript experience.",
+                "supported",
+            ),
+            (
+                "At least five years of Python experience",
+                "5 years of experience with Python.",
+                "supported",
             ),
         ]
 
