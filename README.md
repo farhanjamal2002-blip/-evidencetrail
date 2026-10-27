@@ -62,4 +62,8 @@ The PDF is sent inline to Meta Model API for analysis with API-side output stora
 
 ## Hosting
 
-The Dockerfile installs OCR dependencies. Set MODEL_API_KEY as a server-side secret in the hosting dashboard and deploy the project as a Python web service. The app exposes /health for a health check.
+The repository includes a Render Blueprint at `render.yaml`. It defines a Docker web service in Singapore, uses the existing `/health` endpoint, and sets the analysis concurrency to one for the small demo instance.
+
+To prepare the public demo, create a Blueprint in Render from this repository and choose the `main` branch. The Blueprint marks `MODEL_API_KEY` as a secret prompt; enter it in Render during initial setup or add it in the service's Environment page. Never commit the key to GitHub or put it in browser code. The Dockerfile installs the OCR dependencies and binds Uvicorn to Render's `PORT`.
+
+The Blueprint requests Render's free web plan to keep hosting cost at zero. Free services spin down after 15 minutes without inbound traffic, so open the demo once before recording to warm it up. The app stores no candidate data persistently; it needs no attached disk.

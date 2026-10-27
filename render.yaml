@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: evidencetrail
+    runtime: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: MODEL_API_KEY
+        sync: false
+      - key: MAX_CONCURRENT_ANALYSES
+        value: "1"
