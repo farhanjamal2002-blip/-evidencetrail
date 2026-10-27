@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 32925)
-Total output lines: 3091
-
 from __future__ import annotations
 
 import base64
@@ -1088,19 +1085,19 @@ def mock_year_claims(text: str, topic: str) -> list[tuple[int, str]]:
         r"administration|operations|delivery|use|using|with)"
     )
     duration_to_topic = (
-        rf"(?:of\s+)?(?:(?:(?:professional|practical|relevant|hands-on)\s+)?"
-        rf"(?:experience|work|expertise|background|proficiency)(?:\s+(?:in|with|using|on))?"
-        rf"|(?:working|using|developing)\s+(?:in|with|on))\s+{topic_pattern}\b"
+        rf"(?:of[ \t]+)?(?:(?:(?:professional|practical|relevant|hands-on)[ \t]+)?"
+        rf"(?:experience|work|expertise|background|proficiency)(?:[ \t]+(?:in|with|using|on))?"
+        rf"|(?:working|using|developing)[ \t]+(?:in|with|on))[ \t]+{topic_pattern}\b"
     )
     patterns = (
         re.compile(
-            rf"\b(?P<number>{number})\s+{unit}\s+(?:of\s+)?"
+            rf"\b(?P<number>{number})[ \t]+{unit}[ \t]+(?:of[ \t]+)?"
             rf"(?:{topic_pattern}\b|{duration_to_topic})",
             flags=re.IGNORECASE,
         ),
         re.compile(
-            rf"\b{topic_pattern}\b(?:\s+{topic_qualifier})?[:\s–—-]+"
-            rf"\b(?P<number>{number})\s+{unit}(?![A-Za-z])",
+            rf"\b{topic_pattern}\b(?:[ \t]+{topic_qualifier})?[: \t–—-]+"
+            rf"\b(?P<number>{number})[ \t]+{unit}(?![A-Za-z])",
             flags=re.IGNORECASE,
         ),
     )
@@ -1218,15 +1215,32 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                     lowered,
                 )
             )
+            status_line_pattern = re.compile(
+                r"\b(?:current(?:ly)?|active|valid|unexpired|expired|lapsed|revoked|"
+                r"suspended|inactive|invalid|renewed|in\s+force)\b",
+                re.IGNORECASE,
+            )
+            seen_cert_claims: set[tuple[str, str, int]] = set()
             for span in candidates:
                 span_text = str(span.get("text", ""))
-                for clause in re.split(
-                    r"(?:[.!?;]+|\n+|\b(?:but|however|although|yet)\b)",
-                    span_text,
-                    flags=re.IGNORECASE,
-                ):
-                    quote = clause.strip()
-                    quote_terms = set(retrieval_tokens(quote))
+                span_bbox = span.get("bbox", [])
+                has_grounded_span_bbox = (
+                    isinstance(span_bbox, (list, tuple))
+                    and len(span_bbox) == 4
+                    and float(span_bbox[2]) > float(span_bbox[0])
+                    and float(span_bbox[3]) > float(span_bbox[1])
+                )
+                lines = [line.strip() for line in span_text.splitlines() if line.strip()]
+                for index, line in enumerate(lines):
+                    quote_lines = [line]
+                    if (
+                        has_grounded_span_bbox
+                        and index + 1 < len(lines)
+                        and status_line_pattern.search(lines[index + 1])
+                    ):
+                        quote_lines.append(lines[index + 1])
+                    quote = "\n".join(quote_lines)
+                    quote_terms = set(retrieval_tokens(line))
                     if not (
                         quote
                         and required_name_terms
@@ -1276,6 +1290,14 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                         # establish a current-credential requirement in this mock.
 
                     for role in role_candidates:
+                        claim_key = (
+                            normalize_text(quote),
+                            role,
+                            int(span.get("page", 0) or 0),
+                        )
+                        if claim_key in seen_cert_claims:
+                            continue
+                        seen_cert_claims.add(claim_key)
                         evidence.append(
                             {
                                 "source_id": str(span["id"]),
@@ -1297,6 +1319,9 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                 "fewer", "no", "not", "up", "maximum", "max", "current",
                 "required", "preferred",
                 "between", "range", "from", "through", "but",
+                "work", "working", "skill", "skills", "expertise", "background",
+                "proficiency", "programming", "professional", "practical",
+                "relevant", "hands", "on", "direct", "using", "with", "in",
             }
             topic_terms = [
                 term
@@ -1309,6 +1334,7 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                 seen_claims: set[tuple[int, str]] = set()
                 seen_negations: set[str] = set()
                 duration_topics = set(topic_terms)
+                topic_phrase = " ".join(topic_terms)
                 for span in candidates:
                     span_text = str(span.get("text", ""))
                     for clause in re.split(
@@ -1320,6 +1346,7 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                         quote_key = quote.casefold()
                         if (
                             quote
+                            and duration_topics.issubset(set(retrieval_tokens(quote)))
                             and quote_key not in seen_negations
                             and mock_clause_negates_requirement(quote, duration_topics)
                         ):
@@ -1339,11 +1366,10 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                 for span in candidates:
                     span_text = str(span.get("text", ""))
                     claims_by_value: dict[int, str] = {}
-                    for topic in topic_terms:
-                        for value, quote in mock_year_claims(span_text, topic):
-                            current = claims_by_value.get(value, "")
-                            if len(quote) > len(current):
-                                claims_by_value[value] = quote
+                    for value, quote in mock_year_claims(span_text, topic_phrase):
+                        current = claims_by_value.get(value, "")
+                        if len(quote) > len(current):
+                            claims_by_value[value] = quote
                     for value, quote in sorted(claims_by_value.items()):
                         claim_key = (value, quote.casefold())
                         if claim_key in seen_claims:
@@ -1388,7 +1414,13 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                             )
                             ranked.append((overlap, str(span["id"]), quote, role))
                 ranked.sort(key=lambda record: (-record[0], record[1], record[2]))
-                for _overlap, source_id, quote, role in ranked[:4]:
+                seen_generic: set[tuple[str, str, int]] = set()
+                for _overlap, source_id, quote, role in ranked:
+                    page_number = int(spans_by_id[source_id].get("page", 0) or 0)
+                    citation_key = (normalize_text(quote), role, page_number)
+                    if citation_key in seen_generic:
+                        continue
+                    seen_generic.add(citation_key)
                     evidence.append(
                         {
                             "source_id": source_id,
@@ -1396,6 +1428,8 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                             "role": role,
                         }
                     )
+                    if len(evidence) >= 4:
+                        break
 
         has_support = any(record["role"] == "supports" for record in evidence)
         has_conflict = any(record["role"] == "contradicts" for record in evidence)
@@ -1497,7 +1531,300 @@ def call_muse_verification(
         max_retries=0,
         timeout=90.0,
     )
-    response = …2925 tokens truncated…e": page, "quote": quote, "role": role})
+    response = client.chat.completions.create(
+        model=MODEL_ID,
+        messages=[
+            {"role": "system", "content": VERIFIER_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": (
+                    "Review these requirements against the source spans. Return "
+                    "one review for every requirement.\n"
+                    + json.dumps(verification_payload, ensure_ascii=False)
+                ),
+            },
+        ],
+        response_format=VERIFIER_SCHEMA,
+        store=False,
+        max_completion_tokens=6_000,
+    )
+
+    content = response.choices[0].message.content
+    if not content:
+        raise RuntimeError("Muse returned an empty verification response.")
+    result = json.loads(content)
+    usage = getattr(response, "usage", None)
+    usage_summary = {
+        "input_tokens": int(getattr(usage, "prompt_tokens", 0) or 0),
+        "output_tokens": int(getattr(usage, "completion_tokens", 0) or 0),
+    }
+    return result, usage_summary
+
+
+def apply_verification_reviews(
+    findings: list[dict[str, Any]],
+    review_result: dict[str, Any],
+    source_by_id: dict[str, dict[str, Any]],
+    allowed_by_requirement: dict[str, set[str]],
+    pages: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, Any]]:
+    reviews_by_id: dict[str, dict[str, Any]] = {}
+    for review in review_result.get("reviews", []):
+        requirement_id = str(review.get("requirement_id", ""))
+        if requirement_id in reviews_by_id:
+            raise RuntimeError("Muse returned duplicate requirement reviews.")
+        reviews_by_id[requirement_id] = review
+
+    expected_ids = {str(finding["id"]) for finding in findings}
+    if set(reviews_by_id) != expected_ids:
+        raise RuntimeError("Muse did not return one verification result per requirement.")
+
+    page_by_number = {int(page["number"]): page for page in pages}
+    final_findings: list[dict[str, Any]] = []
+    page_marks: dict[int, list[dict[str, Any]]] = {}
+    proposed = 0
+    verified_count = 0
+    excluded = 0
+    ambiguous_count = 0
+    rejected_citations: list[dict[str, str]] = []
+
+    for finding in findings:
+        requirement_id = str(finding["id"])
+        review = reviews_by_id[requirement_id]
+        verified: list[dict[str, Any]] = []
+        seen: set[tuple[str, str, int]] = set()
+        local_excluded = 0
+        citations = review.get("evidence", [])
+
+        def reject(
+            reason: str, rejected_source_id: str, rejected_quote: str, rejected_role: Any
+        ) -> None:
+            nonlocal excluded, local_excluded
+            excluded += 1
+            local_excluded += 1
+            if len(rejected_citations) < 40:
+                rejected_citations.append(
+                    {
+                        "requirement_id": requirement_id,
+                        "requirement": str(finding.get("requirement", ""))[:180],
+                        "source_id": rejected_source_id[:80],
+                        "role": str(rejected_role)[:24],
+                        "quote": rejected_quote[:360],
+                        "reason": reason,
+                    }
+                )
+        proposed += len(citations)
+
+        for citation in citations:
+            source_id = str(citation.get("source_id", ""))
+            quote = str(citation.get("quote", "")).strip()
+            role = citation.get("role")
+            if source_id not in allowed_by_requirement.get(requirement_id, set()):
+                reject("source_not_allowed", source_id, quote, role)
+                continue
+            if role not in ("supports", "contradicts"):
+                reject("invalid_evidence_role", source_id, quote, role)
+                continue
+            if not quote:
+                reject("empty_quote", source_id, quote, role)
+                continue
+            source = source_by_id[source_id]
+            source_text = str(source.get("text", ""))
+            source_context = str(source.get("context", ""))
+            if not (
+                contains_token_sequence(source_text, quote)
+                or contains_token_sequence(source_context, quote)
+            ):
+                reject("quote_outside_retrieved_span", source_id, quote, role)
+                continue
+            page_number = int(source["page"])
+            page = page_by_number.get(page_number)
+            if not page:
+                reject("source_page_unavailable", source_id, quote, role)
+                continue
+            match = locate_quote(quote, [page], page_number)
+            if not match:
+                reject("quote_not_found_on_cited_page", source_id, quote, role)
+                continue
+            key = (normalize_text(quote), str(role), page_number)
+            if key in seen:
+                reject("duplicate_citation", source_id, quote, role)
+                continue
+            seen.add(key)
+            verified.append(
+                {
+                    "quote": quote,
+                    "role": str(role),
+                    "page": page_number,
+                    "boxes": match["boxes"],
+                    "source_id": source_id,
+                }
+            )
+            verified_count += 1
+
+        has_support = any(item["role"] == "supports" for item in verified)
+        has_contradiction = any(item["role"] == "contradicts" for item in verified)
+        if has_contradiction:
+            status = "conflicting"
+        elif has_support:
+            status = "supported"
+        else:
+            status = "not_found"
+
+        model_status = str(review.get("status", "not_found"))
+        certainty = str(review.get("certainty", "ambiguous"))
+        if certainty not in ("clear", "ambiguous"):
+            certainty = "ambiguous"
+        if status != model_status or local_excluded:
+            certainty = "ambiguous"
+        if certainty == "ambiguous":
+            ambiguous_count += 1
+
+        reason = str(review.get("reason", "")).strip()[:600]
+        base_note = {
+            "supported": (
+                (
+                    "The local mock selected a candidate supporting passage. Its exact "
+                    "text was checked against the cited PDF page; inspect the source "
+                    "yourself."
+                )
+                if MOCK_PROVIDER_ENABLED
+                else (
+                    "The second Muse pass selected a supporting passage. Its exact text "
+                    "was checked against the cited PDF page; review whether it supports "
+                    "the requirement."
+                )
+            ),
+            "not_found": (
+                "No directly supporting or explicitly conflicting passage survived "
+                "the source checks. This does not prove the candidate lacks the skill."
+            ),
+            "conflicting": (
+                (
+                    "The local mock selected a candidate conflicting statement. Its "
+                    "exact text was checked against the cited PDF page; inspect the "
+                    "source yourself."
+                )
+                if MOCK_PROVIDER_ENABLED
+                else (
+                    "The second Muse pass selected a conflicting statement. Its exact "
+                    "text was checked against the cited PDF page; review the context."
+                )
+            ),
+        }[status]
+        note_parts = [reason] if reason else []
+        note_parts.append(base_note)
+        if certainty == "ambiguous":
+            note_parts.append(
+                "The verification result is ambiguous or a proposed source link "
+                "failed a local check; inspect the cited text before relying on it."
+            )
+
+        final_finding = dict(finding)
+        final_finding.update(
+            {
+                "status": status,
+                "note": " ".join(note_parts),
+                "review_reason": reason,
+                "certainty": certainty,
+                "evidence": verified,
+            }
+        )
+        final_findings.append(final_finding)
+        for evidence in verified:
+            page_marks.setdefault(evidence["page"], []).append(
+                {"boxes": evidence["boxes"], "role": evidence["role"]}
+            )
+
+    audit = {
+        "proposed": proposed,
+        "verified": verified_count,
+        "excluded": excluded,
+        "ambiguous_requirements": ambiguous_count,
+        "rejected_citations": rejected_citations,
+    }
+    return final_findings, page_marks, audit
+
+
+def build_evidence_graph(findings: list[dict[str, Any]]) -> dict[str, Any]:
+    nodes: list[dict[str, Any]] = []
+    edges: list[dict[str, Any]] = []
+    requirement_rows: list[dict[str, Any]] = []
+    for finding in findings:
+        requirement_id = str(finding["id"])
+        nodes.append(
+            {
+                "id": requirement_id,
+                "kind": "requirement",
+                "label": str(finding["requirement"]),
+                "status": str(finding["status"]),
+                "certainty": str(finding.get("certainty", "clear")),
+            }
+        )
+        sources: list[dict[str, Any]] = []
+        for index, evidence in enumerate(finding.get("evidence", []), start=1):
+            evidence_id = f"EV-{requirement_id}-{index}"
+            source_node = {
+                "id": evidence_id,
+                "kind": "source_quote",
+                "source_id": str(evidence.get("source_id", evidence_id)),
+                "page": int(evidence["page"]),
+                "bbox": compact_bbox(evidence.get("boxes", [])),
+                "quote": str(evidence["quote"]),
+                "role": str(evidence["role"]),
+            }
+            nodes.append(source_node)
+            edges.append(
+                {
+                    "from": requirement_id,
+                    "to": evidence_id,
+                    "relation": str(evidence["role"]),
+                }
+            )
+            sources.append(source_node)
+        requirement_rows.append(
+            {
+                "id": requirement_id,
+                "requirement": str(finding["requirement"]),
+                "status": str(finding["status"]),
+                "certainty": str(finding.get("certainty", "clear")),
+                "sources": sources,
+            }
+        )
+    return {"nodes": nodes, "edges": edges, "requirements": requirement_rows}
+
+
+def build_clarification_brief(findings: list[dict[str, Any]]) -> dict[str, Any]:
+    """Create reviewer-ready, neutral follow-up prompts from unresolved findings."""
+    items: list[dict[str, Any]] = []
+    for finding in findings:
+        status = str(finding.get("status", ""))
+        certainty = str(finding.get("certainty", "clear"))
+        if status == "supported" and certainty != "ambiguous":
+            continue
+        if status not in {"not_found", "conflicting", "supported"}:
+            continue
+
+        requirement = str(finding.get("requirement", "")).strip()[:500]
+        if not requirement:
+            continue
+
+        evidence: list[dict[str, Any]] = []
+        seen_sources: set[tuple[int, str, str]] = set()
+        for citation in finding.get("evidence", []):
+            try:
+                page = int(citation.get("page", 0))
+            except (TypeError, ValueError):
+                continue
+            quote = str(citation.get("quote", "")).strip()[:1000]
+            role = str(citation.get("role", ""))
+            if page < 1 or not quote or role not in {"supports", "contradicts"}:
+                continue
+            identity = (page, quote, role)
+            if identity in seen_sources:
+                continue
+            seen_sources.add(identity)
+            evidence.append({"page": page, "quote": quote, "role": role})
             if len(evidence) == 4:
                 break
 
