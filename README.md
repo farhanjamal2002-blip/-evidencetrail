@@ -1,18 +1,18 @@
 # EvidenceTrail
 
-EvidenceTrail maps job requirements to exact CV passages. Muse Spark proposes the evidence; the application verifies each quote against the uploaded PDF, locates it on the source page, and builds a standalone HTML evidence pack.
+Muse Spark maps job requirements to candidate-CV evidence. EvidenceTrail verifies each proposed quote against the uploaded PDF, locates it on the source page, and builds a standalone HTML evidence pack.
 
 The report describes supplied documents. It does not score or rank a candidate and it does not make a hiring decision.
 
 See [HACKATHON_COMPLIANCE.md](HACKATHON_COMPLIANCE.md) for the rule-focused submission checklist.
 
-## Model and open-source stack
+## Muse Spark integration and open-source stack
 
-The app is built with open-source Python packages, including FastAPI, PyMuPDF, Pillow, pytesseract, and the OpenAI-compatible Python SDK. Muse Spark is called through Meta's hosted Model API; it is not a locally hosted open-weight model. EvidenceTrail sends one structured request per analysis and keeps the API key server-side.
+The app is built with open-source Python packages, including FastAPI, PyMuPDF, Pillow, pytesseract, and a Python API client. Muse Spark 1.3 is the semantic analyst, called through Meta's hosted Model API in one structured request per analysis. EvidenceTrail keeps the API key server-side, checks proposed evidence against the source documents, and records the model identifier in the exported report.
 
 The optional interactive source viewer uses [Mozilla PDF.js](https://github.com/mozilla/pdf.js) 6.4.299 ([Apache-2.0](https://github.com/mozilla/pdf.js/blob/master/LICENSE)), loaded on demand from jsDelivr when a reviewer opens the viewer. The original CV is read from the browser's selected file; it is not sent to the PDF.js CDN. The regular analysis still sends the CV to the app and Meta Model API after consent. If the library cannot load, the existing highlighted page images and standalone HTML evidence pack remain available.
 
-Meta's current model and input-mode reference: https://dev.meta.ai/docs/models
+Meta's Muse Spark model and input-mode reference: https://dev.meta.ai/docs/models
 
 ## Run locally
 
@@ -48,7 +48,7 @@ Use the synthetic CV at /demo/cv.pdf and load the sample job description in the 
 
 1. The browser sends a CV PDF, job description, and explicit consent to the app.
 2. The app extracts local page text and word coordinates, with OCR fallback for scanned pages.
-3. The app sends the original PDF and job description to Muse Spark in one structured analysis request.
+3. The app sends the original PDF and job description to Muse Spark 1.3 through Meta Model API in one structured analysis request.
 4. The app verifies each quote as a contiguous sequence of source words against extracted or OCR text. Page hints from the model are treated as hints only. Quote candidates tied to rejected or duplicate requirements, or lacking an exact source match, are excluded; the run record reports proposed, matched, and excluded counts.
 5. The app checks that each returned requirement appears as a complete sequence of words in the supplied job description. It drops requirements that do not and removes duplicate requirements; the report records how many unverified requirements were omitted.
 6. The report includes verified quotes, page highlights, CV and job-description SHA-256 fingerprints, and the model identifier.

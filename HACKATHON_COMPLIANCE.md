@@ -1,6 +1,6 @@
-# Meta Global AI Developer Hackathon — Compliance and Submission Guide
+# EvidenceTrail — Muse Spark Hackathon Submission Guide
 
-This guide maps the public event criteria and the event-detail screenshots shared by the entrant to EvidenceTrail’s product design. The organizer’s official rules and waiver remain the controlling documents; the selected entrant must read and accept them in the submission flow.
+EvidenceTrail is built around Muse Spark requirement mapping and source-verified CV evidence. This guide maps the public event criteria and the event-detail screenshots shared by the entrant to the product design. The organizer’s official rules and waiver remain the controlling documents; the selected entrant must read and accept them in the submission flow.
 
 Sources:
 - Public event page: https://cerebralvalley.ai/e/meta-ai-developer-hackathon
@@ -11,7 +11,7 @@ Sources:
 | Area | EvidenceTrail implementation | Submission check |
 |---|---|---|
 | Theme fit | EvidenceTrail helps a reviewer trace job requirements to passages in a CV and keeps the hiring decision with a person. | Explain the real hiring-document problem and show the end-to-end evidence review. |
-| Meta model use | When configured, the server sends the original CV PDF and job description to Muse Spark 1.3 through Meta Model API in one structured request. Muse performs the semantic requirement/evidence mapping; deterministic code checks quoted passages and page locations against the source. | Show the actual Muse analysis and the source-check result in the demo. Keep the API key in server-side secret settings. |
+| Muse Spark integration | When configured, the server sends the original CV PDF and job description to Muse Spark 1.3 through Meta Model API in one structured request. Muse performs the semantic requirement/evidence mapping; deterministic code checks quoted passages and page locations against the source. | Show the actual Muse analysis and the source-check result in the demo. Keep the API key in server-side secret settings. |
 | Sample behavior | The fictional sample case fills the CV and job-description inputs. Analysis results come from the normal analysis flow. | Show an actual analysis response from the demo run. |
 | Evidence and human review | Quotes are checked against the supplied CV. “Not found” is not treated as proof of absence. The app does not score or rank candidates or make hiring decisions. | Show supported, not-found, and conflicting examples; explain that the report does not verify real-world credentials. |
 | Consent and upload handling | The user must consent before the CV and job description are sent to Meta. EvidenceTrail has no persistent CV storage; FastAPI may hold larger uploads in request-scoped temporary storage. | Keep the consent disclosure visible. Avoid claiming that uploads never touch disk. |

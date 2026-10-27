@@ -1,4 +1,4 @@
-# EvidenceTrail — three-minute demo
+# EvidenceTrail — Muse Spark three-minute demo
 
 ## Recording setup
 
@@ -22,11 +22,11 @@
 
 **Say:** “I built this as an evidence review, not an automated hiring decision. The sample is synthetic and deliberately includes a missing qualification and inconsistent experience claims.”
 
-### 0:45–1:20 — The real Muse analysis
+### 0:45–1:20 — Muse Spark 1.3 analysis via Meta Model API
 
 **Show:** Click “Analyze with Muse Spark.” Keep the loading state visible briefly, then show the model name, one real analysis call, token usage, and the source-check count showing matched versus excluded quote candidates.
 
-**Say:** “Muse Spark reads the original CV alongside the job description. It breaks the role into requirements and proposes exact passages that support or conflict with each one. EvidenceTrail checks whether each quote actually occurs in the CV and suppresses any that do not.”
+**Say:** “Muse Spark 1.3 reads the original CV alongside the job description through Meta Model API. It breaks the role into requirements and proposes exact passages that support or conflict with each one. EvidenceTrail checks whether each quote actually occurs in the CV and suppresses any that do not.”
 
 ### 1:20–2:15 — Inspect and review the evidence
 
@@ -44,7 +44,7 @@
 
 **Show:** Return to the evidence map and end on the product name.
 
-**Say:** “Muse does the semantic mapping. Deterministic code verifies every displayed quote against the original document. The result is faster review with a visible trail, while the hiring decision stays with a human.”
+**Say:** “Muse Spark does the semantic mapping. Deterministic code verifies every displayed quote against the original document. The result is faster review with a visible trail, while the hiring decision stays with a human.”
 
 ## Before submitting
 

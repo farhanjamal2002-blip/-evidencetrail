@@ -585,9 +585,9 @@ def build_report(
         "<title>EvidenceTrail evidence pack</title><style>"
         + report_css
         + "</style></head><body><main>"
-        "<div class='brand'>EVIDENCETRAIL · SOURCE-VERIFIED REVIEW</div>"
-        "<h1>Requirement evidence pack</h1>"
-        "<p class='sub'>Exact quote locations are checked against the supplied file. Muse's interpretation needs human review; this is not a hiring decision.</p>"
+        "<div class='brand'>EVIDENCETRAIL · MUSE SPARK EVIDENCE REVIEW</div>"
+        "<h1>Muse Spark requirement evidence pack</h1>"
+        "<p class='sub'>Muse Spark maps job requirements to CV passages; EvidenceTrail verifies quote text and page locations against the supplied file. A human reviews the interpretation. This is not a hiring decision.</p>"
         + (
             f"<p class='audit-summary'>Source check: {proposed_quotes - excluded_quotes} of "
             f"{proposed_quotes} Muse-proposed quote(s) matched the CV exactly; "
@@ -603,11 +603,12 @@ def build_report(
         )
         + "".join(cards)
         + ("<h2>Verified source pages</h2>" + "".join(page_blocks) if page_blocks else "")
-        + f"<footer>Analyzed with {MODEL_ID} · Created {html.escape(created_at)} UTC"
+        + f"<footer>Muse Spark analysis via Meta Model API · Model {MODEL_ID} · Created {html.escape(created_at)} UTC"
         f"<br>CV SHA-256: {html.escape(cv_hash)}"
         f"<br>Job description SHA-256: {html.escape(job_hash)}"
         "<br>Uploaded CV and job text are sent to Meta Model API for this analysis. "
-        "This app does not retain the uploaded files. This report embeds CV page images; "
+        "EvidenceTrail does not write uploaded files to persistent application storage; "
+        "temporary handling depends on the request runtime. This report embeds CV page images; "
         "review it before sharing.</footer></main></body></html>"
     )
 
