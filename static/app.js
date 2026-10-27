@@ -12,6 +12,24 @@ const uploadZone = document.querySelector(".upload-zone");
 let currentReport = "";
 let reviewEntries = Object.create(null);
 let analysisTimer = null;
+let sourcePdfFile = null;
+let sourcePdfPayload = null;
+let pdfDocumentPromise = null;
+let currentPdfRenderTask = null;
+let currentPdfRenderSequence = 0;
+let currentPdfPage = 1;
+let currentPdfZoom = 1;
+let activeSourceQuote = "";
+let sourceViewerResizeTimer = null;
+const PDFJS_VERSION = "6.4.299";
+const sourceViewerLaunch = document.getElementById("source-viewer-launch");
+const sourceViewer = document.getElementById("source-viewer");
+const sourceViewerStatus = document.getElementById("source-viewer-status");
+const sourceViewerPageLabel = document.getElementById("source-viewer-page-label");
+const sourceViewerStage = document.getElementById("source-viewer-stage");
+const sourcePdfPage = document.getElementById("source-pdf-page");
+const sourcePdfCanvas = document.getElementById("source-pdf-canvas");
+const sourcePdfHighlights = document.getElementById("source-pdf-highlights");
 
 const demoJob = [
   "Role: Procurement Automation Lead",
@@ -93,6 +111,7 @@ form.addEventListener("submit", async function (event) {
     return;
   }
 
+  const submittedPdfFile = cvInput.files[0];
   analyzeButton.disabled = true;
   analyzeButton.querySelector("span:first-child").textContent = "Muse is reading the CV and job requirements…";
   const analysisStartedAt = Date.now();
@@ -112,7 +131,7 @@ form.addEventListener("submit", async function (event) {
     if (!response.ok) {
       throw new Error(payload.detail || "Analysis could not be completed.");
     }
-    renderResults(payload);
+    renderResults(payload, submittedPdfFile);
   } catch (error) {
     showError(error.message || "Analysis failed. No result was generated.");
   } finally {
@@ -134,12 +153,29 @@ function hideError() {
   errorBox.textContent = "";
 }
 
-function renderResults(payload) {
+function renderResults(payload, analyzedFile) {
   const findingsList = document.getElementById("findings-list");
   const counts = { supported: 0, not_found: 0, conflicting: 0 };
   reviewEntries = Object.create(null);
   findingsList.replaceChildren();
   document.getElementById("source-pages").replaceChildren();
+  if (currentPdfRenderTask) {
+    currentPdfRenderTask.cancel();
+    currentPdfRenderTask = null;
+  }
+  currentPdfRenderSequence += 1;
+  sourcePdfFile = analyzedFile || null;
+  sourcePdfPayload = payload;
+  pdfDocumentPromise = null;
+  currentPdfPage = 1;
+  currentPdfZoom = 1;
+  activeSourceQuote = "";
+  sourceViewer.hidden = true;
+  sourceViewerLaunch.hidden = !sourcePdfFile;
+  sourceViewerStatus.textContent = "The selected PDF is rendered in your browser; it is not sent to the PDF.js CDN.";
+  sourceViewerPageLabel.textContent = "Open a source passage to begin";
+  sourcePdfPage.hidden = true;
+  sourcePdfHighlights.replaceChildren();
   payload.requirements.forEach(function (finding) {
     counts[finding.status] = (counts[finding.status] || 0) + 1;
     findingsList.appendChild(buildFindingCard(finding));
@@ -280,7 +316,9 @@ function buildFindingCard(finding) {
       const anchor = document.createElement("a");
       anchor.className = "page-anchor";
       anchor.href = "#page-" + evidence.page;
-      anchor.textContent = "Open highlighted source · page " + evidence.page + " ↓";
+      anchor.dataset.page = String(evidence.page);
+      anchor.dataset.quote = evidence.quote;
+      anchor.textContent = "Inspect this passage in the original PDF · page " + evidence.page + " →";
       quote.append(role, text, anchor);
       quoteList.appendChild(quote);
     });
@@ -385,6 +423,198 @@ function buildReviewedReport(reportHtml) {
   const intro = reportDocument.querySelector("main .sub");
   if (intro) intro.insertAdjacentElement("afterend", disclosure);
   return "<!doctype html>\n" + reportDocument.documentElement.outerHTML;
+}
+
+document.getElementById("findings-list").addEventListener("click", function (event) {
+  const target = event.target instanceof Element ? event.target.closest(".page-anchor") : null;
+  if (!target || !sourcePdfFile || !sourcePdfPayload) return;
+  event.preventDefault();
+  void openInteractivePdf(Number(target.dataset.page), target.dataset.quote || "");
+});
+
+document.getElementById("open-source-viewer").addEventListener("click", function () {
+  void openInteractivePdf(1, "");
+});
+
+document.getElementById("close-source-viewer").addEventListener("click", function () {
+  sourceViewer.hidden = true;
+  document.getElementById("open-source-viewer").focus();
+});
+
+document.getElementById("source-viewer-previous").addEventListener("click", function () {
+  void openInteractivePdf(Math.max(1, currentPdfPage - 1), "");
+});
+
+document.getElementById("source-viewer-next").addEventListener("click", function () {
+  void openInteractivePdf(currentPdfPage + 1, "");
+});
+
+document.getElementById("source-viewer-zoom-in").addEventListener("click", function () {
+  currentPdfZoom = Math.min(2.5, currentPdfZoom + 0.2);
+  void openInteractivePdf(currentPdfPage, activeSourceQuote);
+});
+
+document.getElementById("source-viewer-zoom-out").addEventListener("click", function () {
+  currentPdfZoom = Math.max(0.6, currentPdfZoom - 0.2);
+  void openInteractivePdf(currentPdfPage, activeSourceQuote);
+});
+
+window.addEventListener("resize", function () {
+  if (sourceViewer.hidden || !pdfDocumentPromise) return;
+  window.clearTimeout(sourceViewerResizeTimer);
+  sourceViewerResizeTimer = window.setTimeout(function () {
+    void renderInteractivePdfPage(currentPdfPage);
+  }, 160);
+});
+
+async function loadPdfJs() {
+  const pdfjs = await import(
+    "https://cdn.jsdelivr.net/npm/pdfjs-dist@" + PDFJS_VERSION + "/build/pdf.mjs"
+  );
+  pdfjs.GlobalWorkerOptions.workerSrc =
+    "https://cdn.jsdelivr.net/npm/pdfjs-dist@" + PDFJS_VERSION + "/build/pdf.worker.mjs";
+  return pdfjs;
+}
+
+async function loadSourcePdf() {
+  if (!sourcePdfFile) throw new Error("The analyzed PDF is no longer available in this tab.");
+  if (!pdfDocumentPromise) {
+    pdfDocumentPromise = (async function () {
+      const pdfjs = await loadPdfJs();
+      const bytes = new Uint8Array(await sourcePdfFile.arrayBuffer());
+      return pdfjs.getDocument({
+        data: bytes,
+        isEvalSupported: false,
+        enableXfa: false,
+        stopAtErrors: true,
+      }).promise;
+    })().catch(function (error) {
+      pdfDocumentPromise = null;
+      throw error;
+    });
+  }
+  return pdfDocumentPromise;
+}
+
+async function openInteractivePdf(pageNumber, quote) {
+  if (!sourcePdfFile || !sourcePdfPayload) return;
+  sourceViewer.hidden = false;
+  sourceViewerStatus.textContent = "Opening the original CV in the interactive viewer…";
+  sourceViewer.scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    block: "start",
+  });
+  activeSourceQuote = quote || "";
+  try {
+    const pdf = await loadSourcePdf();
+    currentPdfPage = Math.max(1, Math.min(Number(pageNumber) || 1, pdf.numPages));
+    await renderInteractivePdfPage(currentPdfPage);
+  } catch (error) {
+    sourceViewerPageLabel.textContent = "Interactive viewer unavailable";
+    sourceViewerStatus.textContent =
+      "The interactive PDF viewer could not load. The verified highlighted page images remain available below.";
+    const fallback = document.getElementById("page-" + pageNumber);
+    if (fallback) {
+      fallback.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      });
+    }
+  }
+}
+
+async function renderInteractivePdfPage(pageNumber) {
+  const sequence = ++currentPdfRenderSequence;
+  if (currentPdfRenderTask) {
+    currentPdfRenderTask.cancel();
+    currentPdfRenderTask = null;
+  }
+  const pdf = await loadSourcePdf();
+  if (sequence !== currentPdfRenderSequence) return;
+  const safePageNumber = Math.max(1, Math.min(Number(pageNumber) || 1, pdf.numPages));
+  const page = await pdf.getPage(safePageNumber);
+  if (sequence !== currentPdfRenderSequence) return;
+
+  const baseViewport = page.getViewport({ scale: 1 });
+  const availableWidth = Math.max(240, sourceViewerStage.clientWidth - 36);
+  const fitScale = Math.min(1.35, availableWidth / baseViewport.width);
+  const viewport = page.getViewport({ scale: fitScale * currentPdfZoom });
+  const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+  const context = sourcePdfCanvas.getContext("2d", { alpha: false });
+
+  sourcePdfCanvas.width = Math.floor(viewport.width * outputScale);
+  sourcePdfCanvas.height = Math.floor(viewport.height * outputScale);
+  sourcePdfCanvas.style.width = Math.floor(viewport.width) + "px";
+  sourcePdfCanvas.style.height = Math.floor(viewport.height) + "px";
+  sourcePdfPage.style.width = Math.floor(viewport.width) + "px";
+  sourcePdfPage.style.height = Math.floor(viewport.height) + "px";
+  sourcePdfPage.hidden = false;
+  sourcePdfHighlights.replaceChildren();
+
+  const pageSize = (sourcePdfPayload.page_dimensions || {})[String(safePageNumber)] || {};
+  const pageWidth = Number(pageSize.width) || baseViewport.width;
+  const pageHeight = Number(pageSize.height) || baseViewport.height;
+  const pageEvidence = [];
+  sourcePdfPayload.requirements.forEach(function (finding) {
+    (finding.evidence || []).forEach(function (evidence) {
+      if (Number(evidence.page) === safePageNumber) {
+        pageEvidence.push({ finding: finding, evidence: evidence });
+      }
+    });
+  });
+
+  let highlightCount = 0;
+  pageEvidence.forEach(function (entry) {
+    const evidence = entry.evidence;
+    (evidence.boxes || []).forEach(function (box) {
+      if (!Array.isArray(box) || box.length !== 4) return;
+      const x0 = Math.max(0, Math.min(pageWidth, Number(box[0]) || 0));
+      const y0 = Math.max(0, Math.min(pageHeight, Number(box[1]) || 0));
+      const x1 = Math.max(x0, Math.min(pageWidth, Number(box[2]) || 0));
+      const y1 = Math.max(y0, Math.min(pageHeight, Number(box[3]) || 0));
+      const marker = document.createElement("span");
+      marker.className = "pdf-evidence-highlight " +
+        (evidence.role === "contradicts" ? "conflicting" : "supporting") +
+        (activeSourceQuote && evidence.quote === activeSourceQuote ? " is-active" : "");
+      marker.style.left = (x0 / pageWidth * 100) + "%";
+      marker.style.top = (y0 / pageHeight * 100) + "%";
+      marker.style.width = ((x1 - x0) / pageWidth * 100) + "%";
+      marker.style.height = ((y1 - y0) / pageHeight * 100) + "%";
+      marker.title = entry.finding.id + " · " +
+        (evidence.role === "contradicts" ? "conflicting statement" : "supporting passage") +
+        " · " + entry.finding.requirement;
+      sourcePdfHighlights.appendChild(marker);
+      highlightCount += 1;
+    });
+  });
+
+  const renderTask = page.render({
+    canvasContext: context,
+    viewport: viewport,
+    transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0],
+  });
+  currentPdfRenderTask = renderTask;
+  try {
+    await renderTask.promise;
+  } catch (error) {
+    if (error.name !== "RenderingCancelledException") throw error;
+    return;
+  } finally {
+    if (currentPdfRenderTask === renderTask) currentPdfRenderTask = null;
+  }
+  if (sequence !== currentPdfRenderSequence) return;
+
+  sourceViewerPageLabel.textContent =
+    "Page " + safePageNumber + " of " + pdf.numPages + " · " +
+    Math.round(currentPdfZoom * 100) + "%";
+  sourceViewerStatus.textContent = highlightCount
+    ? highlightCount + " verified passage highlight(s) on this page. " +
+      "Teal means supporting; red means conflicting."
+    : "No verified quote was located on this page.";
+  document.getElementById("source-viewer-previous").disabled = safePageNumber <= 1;
+  document.getElementById("source-viewer-next").disabled = safePageNumber >= pdf.numPages;
+  document.getElementById("source-viewer-zoom-out").disabled = currentPdfZoom <= 0.6;
+  document.getElementById("source-viewer-zoom-in").disabled = currentPdfZoom >= 2.5;
 }
 
 document.getElementById("download-report").addEventListener("click", function () {

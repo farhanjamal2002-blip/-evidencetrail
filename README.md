@@ -8,6 +8,8 @@ The report describes supplied documents. It does not score or rank a candidate a
 
 The app is built with open-source Python packages, including FastAPI, PyMuPDF, Pillow, pytesseract, and the OpenAI-compatible Python SDK. Muse Spark is called through Meta's hosted Model API; it is not a locally hosted open-weight model. EvidenceTrail sends one structured request per analysis and keeps the API key server-side.
 
+The optional interactive source viewer uses [Mozilla PDF.js](https://github.com/mozilla/pdf.js) 6.4.299 ([Apache-2.0](https://github.com/mozilla/pdf.js/blob/master/LICENSE)), loaded on demand from jsDelivr when a reviewer opens the viewer. The original CV is read from the browser's selected file; it is not sent to the PDF.js CDN. The regular analysis still sends the CV to the app and Meta Model API after consent. If the library cannot load, the existing highlighted page images and standalone HTML evidence pack remain available.
+
 Meta's current model and input-mode reference: https://dev.meta.ai/docs/models
 
 ## Run locally

@@ -221,11 +221,15 @@ def extract_pdf(pdf_bytes: bytes) -> list[dict[str, Any]]:
     for page_index, page in enumerate(document):
         extracted = page.get_text("text", sort=True).strip()
         raw_words = page.get_text("words", sort=True)
-        words = [
-            word_record(str(item[4]), item[0], item[1], item[2], item[3])
-            for item in raw_words
-            if len(item) >= 5 and str(item[4]).strip()
-        ]
+        words = []
+        rotation = page.rotation_matrix
+        for item in raw_words:
+            if len(item) < 5 or not str(item[4]).strip():
+                continue
+            bounds = fitz.Rect(item[0], item[1], item[2], item[3]) * rotation
+            words.append(
+                word_record(str(item[4]), bounds.x0, bounds.y0, bounds.x1, bounds.y1)
+            )
         ocr_used = False
 
         if len(normalize_text(extracted)) < 24:
@@ -810,6 +814,10 @@ async def analyze(
             "excluded": excluded_quotes,
         },
         "pages": {str(number): image for number, image in previews.items()},
+        "page_dimensions": {
+            str(page["number"]): {"width": page["width"], "height": page["height"]}
+            for page in pages
+        },
         "report_html": report_html,
         "model": MODEL_ID,
         "analysis_calls": 1,

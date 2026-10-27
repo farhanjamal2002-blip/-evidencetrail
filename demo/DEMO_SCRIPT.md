@@ -30,7 +30,7 @@
 
 ### 1:20–2:15 — Inspect and review the evidence
 
-**Show:** One supported result, the not-found certification, and the conflicting procurement-years result. Open the highlighted source page for each relevant quote and use the color key: teal supports; red conflicts. Mark the certification as “Needs follow-up” and add a note such as “Ask for the requested credential evidence.”
+**Show:** One supported result, the not-found certification, and the conflicting procurement-years result. Click a verified quote to jump into the zoomable original CV, then zoom in on the highlighted passage. Use the color key: teal supports; red conflicts. Mark the certification as “Needs follow-up” and add a note such as “Ask for the requested credential evidence.”
 
 **Say:** “A quote only appears if the app can find its exact text in the uploaded PDF. The source page and highlight come from the PDF itself; the model’s page number is only a hint. Muse interprets the passage, and a human reviews that interpretation. ‘Not found’ means this document did not provide verified support; it does not mean the person lacks the skill.”
 

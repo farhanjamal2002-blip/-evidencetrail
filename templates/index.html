@@ -119,6 +119,39 @@
           <div id="summary-counts" class="summary-counts"></div>
           <p id="review-summary" class="review-summary" role="status" aria-live="polite"></p>
           <div id="findings-list" class="findings-list"></div>
+          <div id="source-viewer-launch" class="source-viewer-launch" hidden>
+            <div class="source-viewer-launch-copy">
+              <strong>Inspect the original PDF</strong>
+              <span>Jump from a verified quote to its exact location, then zoom in on the source.</span>
+            </div>
+            <button id="open-source-viewer" class="secondary-button" type="button">
+              Open interactive source <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+          <section id="source-viewer" class="source-viewer" hidden aria-labelledby="source-viewer-title">
+            <div class="source-viewer-head">
+              <div>
+                <div class="step-label">ORIGINAL DOCUMENT · LOCAL VIEW</div>
+                <h3 id="source-viewer-title">CV source viewer</h3>
+                <p id="source-viewer-status" role="status" aria-live="polite"></p>
+              </div>
+              <button id="close-source-viewer" class="secondary-button source-viewer-close" type="button">Close</button>
+            </div>
+            <div class="source-viewer-toolbar" aria-label="PDF viewer controls">
+              <button id="source-viewer-previous" class="viewer-control" type="button" aria-label="Previous page">←</button>
+              <span id="source-viewer-page-label" class="viewer-page-label">Page —</span>
+              <button id="source-viewer-next" class="viewer-control" type="button" aria-label="Next page">→</button>
+              <span class="viewer-control-spacer"></span>
+              <button id="source-viewer-zoom-out" class="viewer-control" type="button" aria-label="Zoom out">−</button>
+              <button id="source-viewer-zoom-in" class="viewer-control" type="button" aria-label="Zoom in">+</button>
+            </div>
+            <div id="source-viewer-stage" class="source-viewer-stage">
+              <div id="source-pdf-page" class="source-pdf-page" hidden>
+                <canvas id="source-pdf-canvas" aria-label="Original CV page"></canvas>
+                <div id="source-pdf-highlights" class="source-pdf-highlights" aria-hidden="true"></div>
+              </div>
+            </div>
+          </section>
           <div id="source-pages" class="source-pages"></div>
         </section>
       </main>
