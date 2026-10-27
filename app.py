@@ -934,7 +934,7 @@ def build_evidence_graph(findings: list[dict[str, Any]]) -> dict[str, Any]:
 
 def verify_findings_with_muse(
     findings: list[dict[str, Any]], pages: list[dict[str, Any]]
-) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, int], dict[str, int]]:
+) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, int], dict[str, Any]]:
     payload, source_by_id, allowed_by_requirement = prepare_verification_request(
         findings, pages
     )
