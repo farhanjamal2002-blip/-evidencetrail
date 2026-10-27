@@ -1350,7 +1350,7 @@ def demo_preview() -> dict[str, Any]:
                 "automation work. The quote is checked against page 1."
             ),
             "evidence_specs": [
-                ("Built Python automations across 6 years of work.", "supports")
+                ("Python automations across 6 years", "supports")
             ],
         },
         {
@@ -1371,10 +1371,7 @@ def demo_preview() -> dict[str, Any]:
                 "another says five years total. Inspect both passages in context."
             ),
             "evidence_specs": [
-                (
-                    "Operations professional with 8 years of procurement experience.",
-                    "supports",
-                ),
+                ("8 years of procurement", "supports"),
                 ("Procurement experience: five years total.", "contradicts"),
             ],
         },
