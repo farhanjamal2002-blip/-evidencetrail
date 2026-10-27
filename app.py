@@ -34,10 +34,12 @@ MAX_PDF_PAGES = int(os.getenv("MAX_PDF_PAGES", "20"))
 MAX_JOB_CHARS = 18_000
 MAX_ANALYSES_PER_PROCESS = int(os.getenv("MAX_ANALYSES_PER_PROCESS", "20"))
 MAX_ANALYSES_PER_HOUR_PER_IP = int(os.getenv("MAX_ANALYSES_PER_HOUR_PER_IP", "5"))
+MAX_CONCURRENT_ANALYSES = max(1, int(os.getenv("MAX_CONCURRENT_ANALYSES", "2")))
 MODEL_ID = "muse-spark-1.3"
 API_BASE_URL = "https://api.meta.ai/v1"
 
 analysis_lock = threading.Lock()
+model_call_semaphore = threading.BoundedSemaphore(MAX_CONCURRENT_ANALYSES)
 analysis_count = 0
 analysis_times_by_ip: dict[str, list[float]] = {}
 
@@ -740,20 +742,29 @@ async def analyze(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    client_ip = request.client.host if request.client else "unknown"
-    reserve_analysis_slot(client_ip)
+    if not model_call_semaphore.acquire(blocking=False):
+        raise HTTPException(
+            status_code=429,
+            detail="Two analyses are already running. Wait for one to finish, then retry.",
+        )
 
     try:
-        model_result, usage = await run_in_threadpool(
-            call_muse, pdf_bytes, job_description.strip()
-        )
-    except RuntimeError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(
-            status_code=502,
-            detail="Muse analysis failed. No result was generated; check the API key and retry.",
-        ) from exc
+        client_ip = request.client.host if request.client else "unknown"
+        reserve_analysis_slot(client_ip)
+
+        try:
+            model_result, usage = await run_in_threadpool(
+                call_muse, pdf_bytes, job_description.strip()
+            )
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(
+                status_code=502,
+                detail="Muse analysis failed. No result was generated; check the API key and retry.",
+            ) from exc
+    finally:
+        model_call_semaphore.release()
 
     (
         findings,

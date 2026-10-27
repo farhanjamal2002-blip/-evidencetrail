@@ -32,7 +32,7 @@ The app uses the standard `muse-spark-1.3` model ID. Keep this standard mode for
 
 Source verification confirms that a quoted text span exists in the supplied CV. Muse supplies the semantic interpretation; the reviewer checks whether that passage actually supports or conflicts with the requirement. Neither the model nor the app verifies real-world credentials or employment history.
 
-The default demo guard allows up to 5 analyses per IP per hour and 20 analyses per running app process. Failed model attempts count toward these limits. The in-memory limits reset when the process restarts; use persistent rate limiting before running this as a public service.
+The default demo guard allows up to 5 analyses per IP per hour, 20 analyses per running app process, and 2 simultaneous model calls. Requests rejected because both model-call slots are busy do not consume an analysis slot. Failed model attempts count toward the hourly and process limits. The in-memory limits reset when the process restarts; use persistent rate limiting before running this as a public service.
 
 Docker installs English and Arabic Tesseract language data. The app uses OCR only for pages where local PDF text extraction finds no readable text.
 
