@@ -365,16 +365,15 @@ def extract_pdf(pdf_bytes: bytes) -> list[dict[str, Any]]:
 def locate_quote(
     quote: str, pages: list[dict[str, Any]], page_hint: Any
 ) -> dict[str, Any] | None:
-    normalized_quote = normalize_text(quote)
     needle = tokenize(quote)
-    if not normalized_quote or not needle:
+    if not needle:
         return None
 
     matches: list[dict[str, Any]] = []
     for page in pages:
-        if normalized_quote not in normalize_text(page["text"]):
-            continue
-
+        # Page-level text can concatenate adjacent PDF columns (for example,
+        # ``work.Vendor``). Use the word stream as the source of truth so the
+        # exact token sequence can still be located and highlighted.
         flattened: list[tuple[str, list[float]]] = []
         for word in page["words"]:
             for token in tokenize(word["text"]):
