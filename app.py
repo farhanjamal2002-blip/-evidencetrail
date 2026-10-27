@@ -1045,13 +1045,32 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
                     break
         else:
             threshold = mock_year_threshold(requirement)
-            topic = next(
-                (term for term in ("python", "procurement") if term in requirement_terms),
-                None,
-            )
-            if threshold is not None and topic:
+            duration_qualifiers = {
+                "least", "minimum", "more", "over", "than", "plus", "at",
+                "current", "required", "preferred",
+            }
+            topic_terms = [
+                term
+                for term in retrieval_tokens(requirement)
+                if term not in number_words
+                and not term.isdigit()
+                and term not in duration_qualifiers
+            ]
+            if threshold is not None and topic_terms:
+                seen_claims: set[tuple[int, str]] = set()
                 for span in candidates:
-                    for value, quote in mock_year_claims(str(span.get("text", "")), topic):
+                    span_text = str(span.get("text", ""))
+                    claims_by_value: dict[int, str] = {}
+                    for topic in topic_terms:
+                        for value, quote in mock_year_claims(span_text, topic):
+                            current = claims_by_value.get(value, "")
+                            if len(quote) > len(current):
+                                claims_by_value[value] = quote
+                    for value, quote in sorted(claims_by_value.items()):
+                        claim_key = (value, quote.casefold())
+                        if claim_key in seen_claims:
+                            continue
+                        seen_claims.add(claim_key)
                         evidence.append(
                             {
                                 "source_id": str(span["id"]),

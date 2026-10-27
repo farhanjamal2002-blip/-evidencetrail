@@ -393,6 +393,42 @@ class MockScenarioTests(unittest.TestCase):
         self.assertEqual(result["analysis_calls"], 0)
         self.assertEqual(result["provider_mode"], "mock")
 
+    def test_mock_applies_duration_thresholds_to_other_topics(self) -> None:
+        requirement = "At least three years of team leadership experience"
+
+        supported = self.analyze(
+            make_pdf("Team leadership: four years of delivery experience."),
+            f"Requirements\n- {requirement}",
+        ).json()["requirements"][0]
+        self.assertEqual(supported["status"], "supported")
+        self.assertEqual(
+            [(item["role"], item["quote"]) for item in supported["evidence"]],
+            [("supports", "Team leadership: four years")],
+        )
+
+        below_threshold = self.analyze(
+            make_pdf("Team leadership: two years of delivery experience."),
+            f"Requirements\n- {requirement}",
+        ).json()["requirements"][0]
+        self.assertEqual(below_threshold["status"], "conflicting")
+        self.assertEqual(
+            [(item["role"], item["quote"]) for item in below_threshold["evidence"]],
+            [("contradicts", "Team leadership: two years")],
+        )
+
+        inconsistent = self.analyze(
+            make_pdf(
+                "Team leadership: four years of delivery experience.\n"
+                "Team leadership: two years total."
+            ),
+            f"Requirements\n- {requirement}",
+        ).json()["requirements"][0]
+        self.assertEqual(inconsistent["status"], "conflicting")
+        self.assertEqual(
+            {item["role"] for item in inconsistent["evidence"]},
+            {"supports", "contradicts"},
+        )
+
     def test_clarification_brief_skips_clear_support_and_deduplicates_sources(self) -> None:
         findings = [
             {
