@@ -39,7 +39,7 @@ MODEL_ID = "muse-spark-1.3"
 API_BASE_URL = "https://api.meta.ai/v1"
 
 analysis_lock = threading.Lock()
-model_call_semaphore = threading.BoundedSemaphore(MAX_CONCURRENT_ANALYSES)
+analysis_semaphore = threading.BoundedSemaphore(MAX_CONCURRENT_ANALYSES)
 analysis_count = 0
 analysis_times_by_ip: dict[str, list[float]] = {}
 
@@ -732,29 +732,34 @@ async def analyze(
             detail=f"Keep the job description under {MAX_JOB_CHARS:,} characters.",
         )
 
-    pdf_bytes = await cv.read(MAX_PDF_BYTES + 1)
-    if not pdf_bytes.startswith(b"%PDF-"):
-        raise HTTPException(status_code=400, detail="The uploaded file is not a readable PDF.")
-    if len(pdf_bytes) > MAX_PDF_BYTES:
-        raise HTTPException(
-            status_code=413,
-            detail=f"Keep the CV PDF under {MAX_PDF_MB} MB.",
-        )
-
-    try:
-        pages = await run_in_threadpool(extract_pdf, pdf_bytes)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-
-    if not model_call_semaphore.acquire(blocking=False):
+    if not analysis_semaphore.acquire(blocking=False):
         raise HTTPException(
             status_code=429,
             detail="Two analyses are already running. Wait for one to finish, then retry.",
         )
 
     try:
+        pdf_bytes = await cv.read(MAX_PDF_BYTES + 1)
+        if not pdf_bytes.startswith(b"%PDF-"):
+            raise HTTPException(
+                status_code=400,
+                detail="The uploaded file is not a readable PDF.",
+            )
+        if len(pdf_bytes) > MAX_PDF_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Keep the CV PDF under {MAX_PDF_MB} MB.",
+            )
+
+        # Reserve quota before parsing/OCR so malformed PDFs cannot bypass the
+        # per-IP and per-process limits by repeatedly consuming local CPU.
         client_ip = request.client.host if request.client else "unknown"
         reserve_analysis_slot(client_ip)
+
+        try:
+            pages = await run_in_threadpool(extract_pdf, pdf_bytes)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
         try:
             model_result, usage = await run_in_threadpool(
@@ -767,63 +772,63 @@ async def analyze(
                 status_code=502,
                 detail="Muse analysis failed. No result was generated; check the API key and retry.",
             ) from exc
+
+        (
+            findings,
+            page_marks,
+            rejected_requirements,
+            proposed_quotes,
+            excluded_quotes,
+        ) = ground_results(
+            model_result, pages, job_description.strip()
+        )
+        if not findings:
+            raise HTTPException(
+                status_code=502,
+                detail="Muse returned no usable job requirements. No report was generated.",
+            )
+
+        previews: dict[int, str] = {}
+        for page_number, marks in page_marks.items():
+            previews[page_number] = await run_in_threadpool(
+                page_preview, pdf_bytes, page_number, marks
+            )
+
+        created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+        cv_hash = hashlib.sha256(pdf_bytes).hexdigest()
+        job_hash = hashlib.sha256(job_description.strip().encode("utf-8")).hexdigest()
+        report_html = build_report(
+            findings,
+            previews,
+            cv_hash,
+            job_hash,
+            rejected_requirements,
+            proposed_quotes,
+            excluded_quotes,
+            created_at,
+        )
+
+        return {
+            "requirements": findings,
+            "excluded_unverified_requirements": rejected_requirements,
+            "quote_audit": {
+                "proposed": proposed_quotes,
+                "verified": proposed_quotes - excluded_quotes,
+                "excluded": excluded_quotes,
+            },
+            "pages": {str(number): image for number, image in previews.items()},
+            "page_dimensions": {
+                str(page["number"]): {"width": page["width"], "height": page["height"]}
+                for page in pages
+            },
+            "report_html": report_html,
+            "model": MODEL_ID,
+            "analysis_calls": 1,
+            "usage": usage,
+            "cv_sha256": cv_hash,
+            "job_sha256": job_hash,
+            "created_at": created_at,
+            "ocr_pages": [page["number"] for page in pages if page["ocr_used"]],
+        }
     finally:
-        model_call_semaphore.release()
-
-    (
-        findings,
-        page_marks,
-        rejected_requirements,
-        proposed_quotes,
-        excluded_quotes,
-    ) = ground_results(
-        model_result, pages, job_description.strip()
-    )
-    if not findings:
-        raise HTTPException(
-            status_code=502,
-            detail="Muse returned no usable job requirements. No report was generated.",
-        )
-
-    previews: dict[int, str] = {}
-    for page_number, marks in page_marks.items():
-        previews[page_number] = await run_in_threadpool(
-            page_preview, pdf_bytes, page_number, marks
-        )
-
-    created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    cv_hash = hashlib.sha256(pdf_bytes).hexdigest()
-    job_hash = hashlib.sha256(job_description.strip().encode("utf-8")).hexdigest()
-    report_html = build_report(
-        findings,
-        previews,
-        cv_hash,
-        job_hash,
-        rejected_requirements,
-        proposed_quotes,
-        excluded_quotes,
-        created_at,
-    )
-
-    return {
-        "requirements": findings,
-        "excluded_unverified_requirements": rejected_requirements,
-        "quote_audit": {
-            "proposed": proposed_quotes,
-            "verified": proposed_quotes - excluded_quotes,
-            "excluded": excluded_quotes,
-        },
-        "pages": {str(number): image for number, image in previews.items()},
-        "page_dimensions": {
-            str(page["number"]): {"width": page["width"], "height": page["height"]}
-            for page in pages
-        },
-        "report_html": report_html,
-        "model": MODEL_ID,
-        "analysis_calls": 1,
-        "usage": usage,
-        "cv_sha256": cv_hash,
-        "job_sha256": job_hash,
-        "created_at": created_at,
-        "ocr_pages": [page["number"] for page in pages if page["ocr_used"]],
-    }
+        analysis_semaphore.release()
