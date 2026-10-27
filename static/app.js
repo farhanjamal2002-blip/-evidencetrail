@@ -10,6 +10,8 @@ const analysisStatusText = document.getElementById("analysis-status-text");
 const results = document.getElementById("results");
 const uploadZone = document.querySelector(".upload-zone");
 const modelReady = form.dataset.modelReady === "true";
+const mockMode = form.dataset.mockMode === "true";
+const analysisReady = modelReady || mockMode;
 const maxPdfBytes = Number(cvInput.dataset.maxBytes) || 12 * 1024 * 1024;
 let currentReport = "";
 let reviewEntries = Object.create(null);
@@ -98,7 +100,9 @@ jobInput.addEventListener("input", function () {
 });
 
 const loadDemoButton = document.getElementById("load-demo-case");
-const loadDemoButtonLabel = modelReady ? "Load sample inputs for a real run" : "Load sample inputs";
+const loadDemoButtonLabel = mockMode
+  ? "Load sample inputs for a local simulation"
+  : modelReady ? "Load sample inputs for a real run" : "Load sample inputs";
 loadDemoButton.addEventListener("click", async function () {
   loadDemoButton.disabled = true;
   loadDemoButton.textContent = "Loading the fictional CV…";
@@ -156,7 +160,7 @@ previewDemoButton.addEventListener("click", async function () {
 form.addEventListener("submit", async function (event) {
   event.preventDefault();
   hideError();
-  if (!modelReady) {
+  if (!analysisReady) {
     showError("Real analysis is paused until the server API key is configured. Your files were not submitted.");
     return;
   }
@@ -170,7 +174,9 @@ form.addEventListener("submit", async function (event) {
   clearCurrentResults(false);
   analyzeButton.disabled = true;
   analyzeButton.setAttribute("aria-busy", "true");
-  analyzeButton.querySelector("span:first-child").textContent = "Muse is mapping and checking source evidence…";
+  analyzeButton.querySelector("span:first-child").textContent = mockMode
+    ? "Local mock is exercising the review pipeline…"
+    : "Muse is mapping and checking source evidence…";
   cvInput.disabled = true;
   jobInput.readOnly = true;
   document.getElementById("consent").disabled = true;
@@ -198,11 +204,11 @@ form.addEventListener("submit", async function (event) {
     if (analysisTimer) window.clearInterval(analysisTimer);
     analysisTimer = null;
     analysisStatus.hidden = true;
-    analyzeButton.disabled = !modelReady;
+    analyzeButton.disabled = !analysisReady;
     analyzeButton.removeAttribute("aria-busy");
-    analyzeButton.querySelector("span:first-child").textContent = modelReady
-      ? "Analyze with Muse Spark"
-      : "Real analysis unavailable";
+    analyzeButton.querySelector("span:first-child").textContent = mockMode
+      ? "Run local mock review"
+      : modelReady ? "Analyze with Muse Spark" : "Real analysis unavailable";
     cvInput.disabled = false;
     jobInput.readOnly = false;
     document.getElementById("consent").disabled = false;
@@ -276,10 +282,12 @@ function clearCurrentResults(showNotice) {
 
 function renderResults(payload, analyzedFile) {
   const previewNotice = document.getElementById("preview-notice");
-  previewNotice.hidden = !payload.preview_mode;
+  previewNotice.hidden = !payload.preview_mode && payload.provider_mode !== "mock";
   previewNotice.textContent = payload.preview_mode
     ? "Synthetic preview only: these hand-authored findings use a fictional CV. No Muse Spark or Meta Model API request was made."
-    : "";
+    : payload.provider_mode === "mock"
+      ? "Local mock simulation only: deterministic heuristics exercise the same pipeline, but this is not Muse analysis and must not be used as a hiring assessment. No Meta API call or model tokens."
+      : "";
   const findingsList = document.getElementById("findings-list");
   const counts = { supported: 0, not_found: 0, conflicting: 0 };
   reviewEntries = Object.create(null);
@@ -360,12 +368,16 @@ function renderResults(payload, analyzedFile) {
   const rejectedCount = Number(payload.excluded_unverified_requirements || 0);
   const callLabel = payload.preview_mode
     ? "synthetic example · no Meta API request"
-    : Number(payload.analysis_calls || 0) === 2
-      ? "2 real Muse Spark passes · requirement mapping + source adjudication"
-      : payload.analysis_calls + " real Muse Spark pass(es)";
+    : payload.provider_mode === "mock"
+      ? "local mock pipeline · no Meta API request"
+      : Number(payload.analysis_calls || 0) === 2
+        ? "2 real Muse Spark passes · requirement mapping + source adjudication"
+        : payload.analysis_calls + " real Muse Spark pass(es)";
   const firstUsage = usage.first_pass || {};
   const secondUsage = usage.verification_pass || {};
-  const tokenDetails = payload.preview_mode ? "" : " · pass 1 " +
+  const tokenDetails = payload.preview_mode || payload.provider_mode === "mock"
+    ? ""
+    : " · pass 1 " +
     (firstUsage.input_tokens || 0).toLocaleString() + " in / " +
     (firstUsage.output_tokens || 0).toLocaleString() + " out · pass 2 " +
     (secondUsage.input_tokens || 0).toLocaleString() + " in / " +
@@ -374,7 +386,8 @@ function renderResults(payload, analyzedFile) {
     (usage.output_tokens || 0).toLocaleString() + " out";
   document.getElementById("run-meta").textContent =
     payload.model + " · " + callLabel + tokenDetails + ocrText +
-    (rejectedCount ? " · " + rejectedCount + " model-proposed requirement(s) omitted" : "");
+    (rejectedCount ? " · " + rejectedCount +
+      (payload.provider_mode === "mock" ? " mock-proposed requirement(s) omitted" : " model-proposed requirement(s) omitted") : "");
   const rejectedPanel = document.getElementById("rejected-citations-panel");
   const rejectedSummary = document.getElementById("rejected-citations-summary");
   const rejectedIntro = document.getElementById("rejected-citations-intro");
@@ -393,7 +406,9 @@ function renderResults(payload, analyzedFile) {
     rejectedSummary.textContent = rejectedTotal + " proposed citation" +
       (rejectedTotal === 1 ? "" : "s") + " rejected by local checks";
     rejectedIntro.textContent = rejectedTotal
-      ? "These model proposals did not pass source validation, so they are excluded from the displayed status, highlights, and evidence graph."
+      ? (payload.provider_mode === "mock"
+        ? "These mock proposals did not pass source validation, so they are excluded from the displayed status, highlights, and evidence graph."
+        : "These model proposals did not pass source validation, so they are excluded from the displayed status, highlights, and evidence graph.")
       : "No second-pass citations were rejected in this run. Every displayed citation still passed the local source checks.";
     const rejectionLabels = {
       source_not_allowed: "Source ID was not allowed for this requirement",
