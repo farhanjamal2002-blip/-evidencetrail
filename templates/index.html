@@ -15,11 +15,11 @@
           <span class="brand-mark">ET</span>
           <span>EvidenceTrail</span>
         </a>
-        <div class="model-pill {{ 'is-configured' if model_ready else 'is-missing' }}" aria-label="Muse Spark model configuration status">
+        <div class="model-pill {{ 'is-configured' if model_ready else 'is-missing' }}" aria-label="Muse Spark setup status; key presence does not confirm API connectivity">
           <span class="model-symbol" aria-hidden="true">✦</span>
           <span class="model-copy">
             <strong>Muse Spark 1.3</strong>
-            <small>Meta Model API · {{ 'server key set' if model_ready else 'server key needed' }}</small>
+            <small>Meta Model API · {{ 'key set · connection unverified' if model_ready else 'server key needed' }}</small>
           </span>
           <span class="config-dot" aria-hidden="true"></span>
         </div>
@@ -112,6 +112,10 @@
           <p class="report-note">The exported pack embeds full CV page images. Review it before sharing.</p>
           <div class="run-meta" id="run-meta"></div>
           <p id="quote-audit" class="quote-audit" role="status" aria-live="polite"></p>
+          <details id="omitted-requirements-panel" class="omitted-audit" hidden>
+            <summary id="omitted-requirements-summary"></summary>
+            <ul id="omitted-requirements-list"></ul>
+          </details>
           <details class="provenance-panel">
             <summary>Source fingerprints and run record</summary>
             <dl id="provenance-details" class="provenance-details"></dl>

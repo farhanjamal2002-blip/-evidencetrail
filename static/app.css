@@ -267,6 +267,13 @@ textarea::placeholder { color: #8793a3; }
 .download-button span { padding-left: 4px; color: var(--blue); font-size: 17px; }
 .run-meta { margin: 18px 0 12px; color: #718096; font-size: 12px; line-height: 1.55; }
 .quote-audit { margin: 0 0 12px; padding: 13px 15px; border: 1px solid #dbe4f1; border-radius: 10px; background: #fff; color: #53647a; font-size: 12px; line-height: 1.6; }
+.omitted-audit { margin: 0 0 12px; padding: 13px 15px; border: 1px solid #dbe4f1; border-radius: 10px; background: #fff; color: #53647a; font-size: 12px; line-height: 1.6; }
+.omitted-audit summary { color: #34465e; font-weight: 700; cursor: pointer; }
+.omitted-audit ul { margin: 10px 0 0; padding-left: 20px; }
+.omitted-audit li { margin: 8px 0; }
+.omitted-audit li strong, .omitted-audit li span { display: block; overflow-wrap: anywhere; }
+.omitted-audit li strong { color: #34465e; }
+.omitted-audit li span { color: #748195; }
 .provenance-panel { margin: 12px 0 17px; border: 1px solid #dbe4ed; border-radius: 10px; background: #fff; }
 .provenance-panel summary { padding: 13px 15px; color: #46566d; font-size: 12px; font-weight: 700; cursor: pointer; }
 .provenance-details { display: grid; grid-template-columns: minmax(160px, .3fr) minmax(0, 1fr); gap: 9px 15px; margin: 0; padding: 0 15px 15px; font-size: 11px; }

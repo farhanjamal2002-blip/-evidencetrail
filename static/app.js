@@ -246,7 +246,7 @@ function renderResults(payload, analyzedFile) {
     (usage.output_tokens || 0).toLocaleString() + " out";
   document.getElementById("run-meta").textContent =
     payload.model + " · " + callLabel + tokenDetails + ocrText +
-    (rejectedCount ? " · " + rejectedCount + " unverified requirement(s) omitted" : "");
+    (rejectedCount ? " · " + rejectedCount + " model-proposed requirement(s) omitted" : "");
   const quoteAudit = payload.quote_audit || {};
   const proposedQuotes = Number(quoteAudit.proposed || 0);
   const verifiedQuotes = Number(quoteAudit.verified || 0);
@@ -261,6 +261,37 @@ function renderResults(payload, analyzedFile) {
     secondVerified + "/" + secondProposed + " citations matched an allowed retrieved span and PDF page (" +
     secondExcluded + " excluded). " + ambiguous + " requirement(s) marked ambiguous. " +
     "A matching quote proves text presence, not qualification truth.";
+
+  const omittedRequirements = Array.isArray(payload.omitted_requirement_audit)
+    ? payload.omitted_requirement_audit
+    : [];
+  const omittedPanel = document.getElementById("omitted-requirements-panel");
+  const omittedSummary = document.getElementById("omitted-requirements-summary");
+  const omittedList = document.getElementById("omitted-requirements-list");
+  omittedList.replaceChildren();
+  if (omittedRequirements.length) {
+    const omittedCount = omittedRequirements.length;
+    omittedPanel.hidden = false;
+    omittedSummary.textContent = omittedCount + " model-proposed requirement" +
+      (omittedCount === 1 ? "" : "s") + " omitted before evidence review";
+    const reasonLabels = {
+      empty_requirement: "Muse returned an empty requirement.",
+      not_in_job_description: "The wording was not found in the supplied job description.",
+      duplicate_requirement: "A duplicate requirement was omitted."
+    };
+    omittedRequirements.forEach(function (entry) {
+      const item = document.createElement("li");
+      const requirement = document.createElement("strong");
+      requirement.textContent = entry.requirement || "(blank requirement)";
+      const reason = document.createElement("span");
+      reason.textContent = reasonLabels[entry.reason] || "Omitted during local validation.";
+      item.append(requirement, reason);
+      omittedList.appendChild(item);
+    });
+  } else {
+    omittedPanel.hidden = true;
+  }
+
   document.getElementById("result-caption").textContent =
     "Muse maps requirements, then reviews locally retrieved source spans. EvidenceTrail verifies each displayed citation against the PDF and shows the source trail for human review; it does not verify real-world qualifications.";
 

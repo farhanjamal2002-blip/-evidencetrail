@@ -885,11 +885,17 @@ def verify_findings_with_muse(
 
 def ground_results(
     model_result: dict[str, Any], pages: list[dict[str, Any]], job_description: str
-) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], int, int, int]:
+) -> tuple[
+    list[dict[str, Any]],
+    dict[int, list[dict[str, Any]]],
+    list[dict[str, str]],
+    int,
+    int,
+]:
     grounded: list[dict[str, Any]] = []
     page_marks: dict[int, list[dict[str, Any]]] = {}
     seen_requirements: set[tuple[str, ...]] = set()
-    rejected_requirements = 0
+    omitted_requirement_audit: list[dict[str, str]] = []
     proposed_quotes = 0
     excluded_quotes = 0
 
@@ -898,11 +904,22 @@ def ground_results(
         proposed_quotes += len(evidence_candidates)
         requirement = str(item.get("requirement", "")).strip()
         requirement_tokens = tuple(tokenize(requirement))
-        if not requirement_tokens or not contains_token_sequence(job_description, requirement):
-            rejected_requirements += 1
+        if not requirement_tokens:
+            omitted_requirement_audit.append(
+                {"requirement": requirement[:500], "reason": "empty_requirement"}
+            )
+            excluded_quotes += len(evidence_candidates)
+            continue
+        if not contains_token_sequence(job_description, requirement):
+            omitted_requirement_audit.append(
+                {"requirement": requirement[:500], "reason": "not_in_job_description"}
+            )
             excluded_quotes += len(evidence_candidates)
             continue
         if requirement_tokens in seen_requirements:
+            omitted_requirement_audit.append(
+                {"requirement": requirement[:500], "reason": "duplicate_requirement"}
+            )
             excluded_quotes += len(evidence_candidates)
             continue
         seen_requirements.add(requirement_tokens)
@@ -970,7 +987,7 @@ def ground_results(
                 {"boxes": evidence["boxes"], "role": evidence["role"]}
             )
 
-    return grounded, page_marks, rejected_requirements, proposed_quotes, excluded_quotes
+    return grounded, page_marks, omitted_requirement_audit, proposed_quotes, excluded_quotes
 
 
 def reserve_analysis_slot(client_ip: str) -> None:
@@ -1035,7 +1052,7 @@ def build_report(
     previews: dict[int, str],
     cv_hash: str,
     job_hash: str,
-    rejected_requirements: int,
+    omitted_requirement_audit: list[dict[str, str]],
     proposed_quotes: int,
     excluded_quotes: int,
     verification_audit: dict[str, int],
@@ -1121,6 +1138,24 @@ def build_report(
     verification_excluded = int(verification_audit.get("excluded", 0))
     ambiguous = int(verification_audit.get("ambiguous_requirements", 0))
     retrieved_spans = int(verification_audit.get("retrieved_source_spans", 0))
+    omission_reason_labels = {
+        "empty_requirement": "Muse returned an empty requirement.",
+        "not_in_job_description": "The wording was not found in the supplied job description.",
+        "duplicate_requirement": "A duplicate requirement was omitted.",
+    }
+    omitted_requirement_rows = "".join(
+        "<li><strong>"
+        + html.escape(str(record.get("requirement") or "(blank requirement)"))
+        + "</strong><span>"
+        + html.escape(
+            omission_reason_labels.get(
+                str(record.get("reason", "")),
+                "The requirement was omitted during local validation.",
+            )
+        )
+        + "</span></li>"
+        for record in omitted_requirement_audit
+    )
 
     report_css = """
       :root{color-scheme:light;--ink:#18212f;--muted:#627084;--line:#dce3ed;--paper:#f3f6fb;--blue:#0866ff}
@@ -1136,6 +1171,10 @@ def build_report(
       .evidence{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.evidence-meta{font-size:12px;color:var(--blue);font-weight:700}
       blockquote{margin:8px 0 0;padding:12px 14px;background:#f2f6fc;border-left:3px solid var(--blue)}
       .audit-summary{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--muted);font-size:13px}
+      .omitted-audit{margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}
+      .omitted-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}
+      .omitted-audit ul{margin:10px 0 0;padding-left:20px}.omitted-audit li{margin:8px 0}
+      .omitted-audit li span{display:block;color:var(--muted);font-size:13px}
       .graph-row{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:16px;padding:16px 0;border-top:1px solid var(--line)}
       .graph-requirement{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;align-self:start}
       .graph-requirement span,.graph-source span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -1173,9 +1212,10 @@ def build_report(
             else "<p class='audit-summary'>No evidence citations passed source verification; no unsupported passage was shown.</p>"
         )
         + (
-            f"<p class='sub'>{rejected_requirements} model-produced requirement(s) were omitted "
-            "because their wording did not appear in the supplied job description.</p>"
-            if rejected_requirements
+            f"<details class='omitted-audit'><summary>{len(omitted_requirement_audit)} model-proposed requirement(s) omitted before evidence review</summary>"
+            "<p>Each item is shown with the local reason it was excluded.</p>"
+            f"<ul>{omitted_requirement_rows}</ul></details>"
+            if omitted_requirement_audit
             else ""
         )
         + "<h2>Requirement-to-source graph</h2>"
@@ -1355,7 +1395,7 @@ async def analyze(
         (
             first_pass_findings,
             _first_pass_page_marks,
-            rejected_requirements,
+            omitted_requirement_audit,
             proposed_quotes,
             excluded_quotes,
         ) = ground_results(
@@ -1405,7 +1445,7 @@ async def analyze(
             previews,
             cv_hash,
             job_hash,
-            rejected_requirements,
+            omitted_requirement_audit,
             proposed_quotes,
             excluded_quotes,
             verification_audit,
@@ -1416,7 +1456,8 @@ async def analyze(
         return {
             "requirements": findings,
             "evidence_graph": evidence_graph,
-            "excluded_unverified_requirements": rejected_requirements,
+            "excluded_unverified_requirements": len(omitted_requirement_audit),
+            "omitted_requirement_audit": omitted_requirement_audit,
             "quote_audit": {
                 "proposed": proposed_quotes,
                 "verified": proposed_quotes - excluded_quotes,
