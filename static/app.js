@@ -764,6 +764,7 @@ async function openInteractivePdf(pageNumber, quote) {
     currentPdfPage = Math.max(1, Math.min(Number(pageNumber) || 1, pdf.numPages));
     await renderInteractivePdfPage(currentPdfPage);
   } catch (error) {
+    console.error("EvidenceTrail PDF viewer failed to open", error);
     sourceViewerPageLabel.textContent = "Interactive viewer unavailable";
     sourceViewerStatus.textContent =
       "The interactive PDF viewer could not load. The verified highlighted page images remain available below.";
