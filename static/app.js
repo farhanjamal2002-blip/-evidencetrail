@@ -726,7 +726,7 @@ window.addEventListener("resize", function () {
 async function loadPdfJs() {
   const pdfjs = await import(PDFJS_BASE_URL + "pdf.min.mjs");
   pdfjs.GlobalWorkerOptions.workerSrc =
-    new URL(PDFJS_BASE_URL + "pdf.worker.min.mjs", window.location.href).toString();
+    new URL(PDFJS_BASE_URL + "pdf-engine.min.mjs", window.location.href).toString();
   return pdfjs;
 }
 
