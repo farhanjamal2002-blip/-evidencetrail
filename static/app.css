@@ -244,6 +244,7 @@ textarea::placeholder { color: #8793a3; }
 .secondary-button:hover { border-color: #9db9e5; background: #f7faff; }
 .demo-panel .secondary-button { width: 100%; justify-content: center; border-color: #b7cdf0; color: var(--blue-dark); }
 .demo-panel .secondary-button:hover { border-color: #8bb2f4; background: #f8fbff; }
+.demo-panel .preview-button { margin-top: 9px; border-color: #a8bfdc; color: #435a78; }
 .text-link { color: #24599f; font-size: 12px; font-weight: 650; line-height: 1.5; text-decoration: none; }
 .text-link:hover { text-decoration: underline; }
 .demo-download { margin-top: 13px; }
@@ -263,6 +264,7 @@ textarea::placeholder { color: #8793a3; }
 .results-top h2 { margin: 7px 0 6px; font-size: 27px; }
 .result-caption { max-width: 760px; margin: 0; color: #637186; font-size: 13px; line-height: 1.6; }
 .report-note { margin: 12px 0 0; color: #748195; font-size: 12px; }
+.preview-notice { margin: 12px 0; padding: 12px 15px; border: 1px solid #e6cf8d; border-radius: 10px; background: #fff8e6; color: #705316; font-size: 12px; line-height: 1.55; }
 .download-button { flex: 0 0 auto; white-space: nowrap; }
 .download-button span { padding-left: 4px; color: var(--blue); font-size: 17px; }
 .run-meta { margin: 18px 0 12px; color: #718096; font-size: 12px; line-height: 1.55; }

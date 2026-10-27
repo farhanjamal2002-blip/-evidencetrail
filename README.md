@@ -16,18 +16,18 @@ Meta's Muse Spark model and input-mode reference: https://dev.meta.ai/docs/model
 
 ## Run locally
 
-Requirements: Python 3.11 or newer, Tesseract OCR, and a Meta Model API key.
+Requirements: Python 3.11 or newer and Tesseract OCR. A Meta Model API key is required only for real analysis.
 
 On any OS:
 
 1. Create and activate a virtual environment.
 2. Install dependencies with pip install -r requirements.txt.
-3. Copy .env.example to .env and add your Meta API key as MODEL_API_KEY.
+3. To run real analysis, copy .env.example to .env and add your Meta API key as MODEL_API_KEY. Skip this step to explore the synthetic UI preview.
 4. Start the app with uvicorn app:app --reload.
 5. Open the local address http://127.0.0.1:8000.
 
 The key stays on the server and must never be committed to the repository.
-The app header reports whether MODEL_API_KEY is set; it does not validate the key or test API connectivity. If the key is missing, analysis stops before the app extracts or forwards the CV and no Meta call is made.
+Click “Preview the finished result · no Meta call” to inspect the result screen without a key. That view uses hand-authored findings grounded in the fictional sample PDF; it is not a Muse result and must not be presented as a live model run. The app header reports whether MODEL_API_KEY is set; it does not validate the key or test API connectivity. If the key is missing, analysis stops before the app extracts or forwards the CV and no Meta call is made.
 Each click on “Analyze with Muse Spark” makes two real model requests: the first maps job requirements to candidate CV evidence, and the second adjudicates locally retrieved source spans. Editing the app and loading the synthetic CV do not call the API. The sample analysis uses both requests. Token usage is shown in aggregate and by pass; actual usage depends on the documents and model responses.
 
 The app uses the standard `muse-spark-1.3` model ID. Keep this standard mode for real CVs; Meta’s discounted contributor mode allows submitted content to be used to train future models.
@@ -42,7 +42,7 @@ Docker installs English and Arabic Tesseract language data. The app uses OCR onl
 
 ## Demo
 
-Use the synthetic CV at /demo/cv.pdf and load the sample job description in the app. It is fictional and contains an intentionally inconsistent procurement experience claim. The example is designed to show supported, not found, and conflicting outcomes in one analysis.
+The synthetic CV and job description are available in the app. “Preview the finished result · no Meta call” opens a locally generated, clearly labeled UI preview so the screens can be explored before a key is configured. “Load sample inputs for a real run” prepares the same fictional documents for an actual two-pass Muse analysis. The sample contains one supported requirement, one not found, and one internally conflicting claim.
 
 ## Analysis flow
 
@@ -62,8 +62,8 @@ The PDF is sent inline to Meta Model API for analysis with API-side output stora
 
 ## Hosting
 
-The repository includes a Render Blueprint at `render.yaml`. It defines a Docker web service in Singapore, uses the existing `/health` endpoint, and sets the analysis concurrency to one for the small demo instance.
+The repository includes a Render Blueprint at `render.yaml`. It defines a Docker web service in Singapore, uses the existing `/health` endpoint, and sets analysis concurrency to one. Deploy it without a model key to open the UI and synthetic result preview; real analysis remains disabled until the server key is added.
 
-To prepare the public demo, create a Blueprint in Render from this repository and choose the `main` branch. The Blueprint marks `MODEL_API_KEY` as a secret prompt; enter it in Render during initial setup or add it in the service's Environment page. Never commit the key to GitHub or put it in browser code. The Dockerfile installs the OCR dependencies and binds Uvicorn to Render's `PORT`.
+When you are ready for live Muse requests, add `MODEL_API_KEY` in the Render service's Environment page and redeploy. Never commit the key to GitHub or put it in browser code. The Dockerfile installs the OCR dependencies and binds Uvicorn to Render's `PORT`.
 
-The Blueprint requests Render's free web plan to keep hosting cost at zero. Free services spin down after 15 minutes without inbound traffic, so open the demo once before recording to warm it up. The app stores no candidate data persistently; it needs no attached disk.
+The Blueprint requests Render's free web plan. Free services may sleep when idle, so open the demo before a live walkthrough. The app stores no candidate data persistently and needs no attached disk.

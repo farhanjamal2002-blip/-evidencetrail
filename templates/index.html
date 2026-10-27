@@ -45,7 +45,7 @@
                 <div class="step-label">01 / ADD YOUR DOCUMENTS</div>
                 <h2>Start an evidence review</h2>
               </div>
-              <span class="private-note">No persistent app storage</span>
+              <span class="private-note">No sign-in · no persistent storage</span>
             </div>
 
             <label class="field-label" for="cv">Candidate CV</label>
@@ -86,7 +86,8 @@
             <div class="step-label">02 / SEE THE IDEA</div>
             <h2>Try the prepared case</h2>
             <p>A fictional CV contains one supported requirement, one missing qualification, and one internal discrepancy.</p>
-            <button id="load-demo-case" class="secondary-button" type="button">Load the complete sample case</button>
+            <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs for a real run</button>
+            <button id="preview-demo-results" class="secondary-button preview-button" type="button">Preview the finished result · no Meta call</button>
             <a class="text-link demo-download" href="/demo/cv.pdf" download>Download the synthetic CV separately <span>↓</span></a>
             <div class="demo-divider"></div>
             <div class="demo-state-list">
@@ -94,7 +95,7 @@
               <div><span class="state-dot missing-dot"></span><span>No passage located</span><b>Not found</b></div>
               <div><span class="state-dot conflict-dot"></span><span>Incompatible CV claims</span><b>Conflicting</b></div>
             </div>
-            <div class="sample-tip">Loading the sample fills the CV and job description locally. It does not contact Meta; Analyze makes two real Muse Spark passes.</div>
+            <div class="sample-tip">Load sample inputs to prepare a real run. Preview the results screen without a Meta call. Analyze makes two real Muse Spark passes.</div>
           </aside>
         </section>
 
@@ -110,6 +111,7 @@
             </button>
           </div>
           <p class="report-note">The exported pack embeds full CV page images. Review it before sharing.</p>
+          <p id="preview-notice" class="preview-notice" role="status" aria-live="polite" hidden></p>
           <div class="run-meta" id="run-meta"></div>
           <p id="quote-audit" class="quote-audit" role="status" aria-live="polite"></p>
           <details id="omitted-requirements-panel" class="omitted-audit" hidden>

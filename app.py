@@ -1058,6 +1058,7 @@ def build_report(
     verification_audit: dict[str, int],
     evidence_graph: dict[str, Any],
     created_at: str,
+    preview_mode: bool = False,
 ) -> str:
     cards: list[str] = []
     for finding in findings:
@@ -1156,6 +1157,50 @@ def build_report(
         + "</span></li>"
         for record in omitted_requirement_audit
     )
+    if preview_mode:
+        report_brand = "EVIDENCETRAIL · SYNTHETIC UI PREVIEW"
+        report_intro = (
+            "Illustrative results from the fictional sample CV. These findings are "
+            "hand-authored for preview, with source quotes checked against the sample PDF. "
+            "No Muse Spark or Meta Model API request was made."
+        )
+        report_audit_summary = (
+            "<p class='audit-summary'>Synthetic preview only · no model inference or "
+            "Meta API request occurred. The displayed passages are grounded in the "
+            "fictional sample PDF.</p>"
+        )
+        report_model_line = "Synthetic preview · no Muse Spark analysis was run"
+        report_privacy_note = (
+            "This preview uses only generated fictional documents. No uploaded CV or "
+            "job description was sent to Meta Model API."
+        )
+    else:
+        report_brand = "EVIDENCETRAIL · MUSE SPARK EVIDENCE REVIEW"
+        report_intro = (
+            "A first Muse pass proposes requirement-level evidence. Local retrieval "
+            "supplies source blocks to a second Muse review. EvidenceTrail checks every "
+            "displayed quote against the cited PDF page and derives the displayed status "
+            "from verified citations. A human reviews the interpretation. This is not a "
+            "hiring decision."
+        )
+        report_audit_summary = (
+            f"<p class='audit-summary'>First-pass exact quote check: "
+            f"{proposed_quotes - excluded_quotes} of {proposed_quotes} proposed quote(s) matched the CV; "
+            f"{excluded_quotes} were excluded. Second-pass citation check: "
+            f"{verification_verified} of {verification_proposed} proposed citation(s) matched a retrieved source and PDF location; "
+            f"{verification_excluded} were excluded. The reviewer examined {retrieved_spans} source span(s); "
+            f"{ambiguous} requirement(s) were marked ambiguous.</p>"
+            if proposed_quotes or verification_proposed
+            else "<p class='audit-summary'>No evidence citations passed source verification; no unsupported passage was shown.</p>"
+        )
+        report_model_line = (
+            f"Two-pass Muse Spark analysis via Meta Model API · Model {MODEL_ID}"
+        )
+        report_privacy_note = (
+            "Uploaded CV and job text are sent to Meta Model API for this analysis. "
+            "EvidenceTrail does not write uploaded files to persistent application storage; "
+            "temporary handling depends on the request runtime."
+        )
 
     report_css = """
       :root{color-scheme:light;--ink:#18212f;--muted:#627084;--line:#dce3ed;--paper:#f3f6fb;--blue:#0866ff}
@@ -1198,19 +1243,10 @@ def build_report(
         "<title>EvidenceTrail evidence pack</title><style>"
         + report_css
         + "</style></head><body><main>"
-        "<div class='brand'>EVIDENCETRAIL · MUSE SPARK EVIDENCE REVIEW</div>"
+        f"<div class='brand'>{report_brand}</div>"
         "<h1>Grounded requirement evidence pack</h1>"
-        "<p class='sub'>A first Muse pass proposes requirement-level evidence. Local retrieval supplies source blocks to a second Muse review. EvidenceTrail checks every displayed quote against the cited PDF page and derives the displayed status from verified citations. A human reviews the interpretation. This is not a hiring decision.</p>"
-        + (
-            f"<p class='audit-summary'>First-pass exact quote check: "
-            f"{proposed_quotes - excluded_quotes} of {proposed_quotes} proposed quote(s) matched the CV; "
-            f"{excluded_quotes} were excluded. Second-pass citation check: "
-            f"{verification_verified} of {verification_proposed} proposed citation(s) matched a retrieved source and PDF location; "
-            f"{verification_excluded} were excluded. The reviewer examined {retrieved_spans} source span(s); "
-            f"{ambiguous} requirement(s) were marked ambiguous.</p>"
-            if proposed_quotes or verification_proposed
-            else "<p class='audit-summary'>No evidence citations passed source verification; no unsupported passage was shown.</p>"
-        )
+        f"<p class='sub'>{report_intro}</p>"
+        + report_audit_summary
         + (
             f"<details class='omitted-audit'><summary>{len(omitted_requirement_audit)} model-proposed requirement(s) omitted before evidence review</summary>"
             "<p>Each item is shown with the local reason it was excluded.</p>"
@@ -1222,13 +1258,11 @@ def build_report(
         + "".join(graph_rows)
         + "".join(cards)
         + ("<h2>Verified source pages</h2>" + "".join(page_blocks) if page_blocks else "")
-        + f"<footer>Two-pass Muse Spark analysis via Meta Model API · Model {MODEL_ID} · Created {html.escape(created_at)} UTC"
+        + f"<footer>{report_model_line} · Created {html.escape(created_at)} UTC"
         f"<br>CV SHA-256: {html.escape(cv_hash)}"
         f"<br>Job description SHA-256: {html.escape(job_hash)}"
-        "<br>Uploaded CV and job text are sent to Meta Model API for this analysis. "
-        "EvidenceTrail does not write uploaded files to persistent application storage; "
-        "temporary handling depends on the request runtime. This report embeds CV page images; "
-        "review it before sharing.</footer></main></body></html>"
+        f"<br>{report_privacy_note} "
+        "This report embeds CV page images; review it before sharing.</footer></main></body></html>"
     )
 
 
@@ -1295,6 +1329,173 @@ def make_demo_pdf() -> bytes:
     document.save(output)
     document.close()
     return output.getvalue()
+
+@app.get("/demo/preview")
+def demo_preview() -> dict[str, Any]:
+    """Return a synthetic, locally grounded result so the interface is visible without a model key."""
+    pdf_bytes = make_demo_pdf()
+    pages = extract_pdf(pdf_bytes)
+    job_description = (
+        "Role: Procurement Automation Lead\n\n"
+        "Requirements:\n"
+        "1. At least five years of Python experience.\n"
+        "2. Current AWS Solutions Architect Professional certification.\n"
+        "3. At least seven years of procurement experience."
+    )
+    preview_specs = [
+        {
+            "id": "R1",
+            "requirement": "At least five years of Python experience.",
+            "note": (
+                "A supporting passage in the fictional CV states six years of Python "
+                "automation work. The quote is checked against page 1."
+            ),
+            "evidence_specs": [
+                ("Built Python automations across 6 years of work.", "supports")
+            ],
+        },
+        {
+            "id": "R2",
+            "requirement": "Current AWS Solutions Architect Professional certification.",
+            "note": (
+                "No direct evidence for this exact credential was found. The fictional CV "
+                "mentions AWS Cloud Practitioner, awarded in 2022; that does not establish "
+                "a current Solutions Architect Professional certification."
+            ),
+            "evidence_specs": [],
+        },
+        {
+            "id": "R3",
+            "requirement": "At least seven years of procurement experience.",
+            "note": (
+                "Two statements in the fictional CV disagree: one says eight years, while "
+                "another says five years total. Inspect both passages in context."
+            ),
+            "evidence_specs": [
+                (
+                    "Operations professional with 8 years of procurement experience.",
+                    "supports",
+                ),
+                ("Procurement experience: five years total.", "contradicts"),
+            ],
+        },
+    ]
+
+    findings: list[dict[str, Any]] = []
+    page_marks: dict[int, list[dict[str, Any]]] = {}
+    proposed_count = 0
+    verified_count = 0
+    for spec in preview_specs:
+        evidence: list[dict[str, Any]] = []
+        proposed_count += len(spec["evidence_specs"])
+        for quote, role in spec["evidence_specs"]:
+            match = locate_quote(quote, pages, None)
+            if not match:
+                continue
+            evidence.append(
+                {
+                    "quote": quote,
+                    "role": role,
+                    "page": match["page"],
+                    "boxes": match["boxes"],
+                    "source_id": f"DEMO-{spec['id']}-{len(evidence) + 1}",
+                }
+            )
+            verified_count += 1
+            page_marks.setdefault(match["page"], []).append(
+                {"boxes": match["boxes"], "role": role}
+            )
+
+        has_support = any(item["role"] == "supports" for item in evidence)
+        has_contradiction = any(item["role"] == "contradicts" for item in evidence)
+        if has_contradiction:
+            status = "conflicting"
+        elif has_support:
+            status = "supported"
+        else:
+            status = "not_found"
+        certainty = "clear" if len(evidence) == len(spec["evidence_specs"]) else "ambiguous"
+        note = str(spec["note"])
+        if len(evidence) != len(spec["evidence_specs"]):
+            note += " A sample citation could not be located, so it was withheld."
+        findings.append(
+            {
+                "id": str(spec["id"]),
+                "requirement": str(spec["requirement"]),
+                "status": status,
+                "note": note,
+                "certainty": certainty,
+                "evidence": evidence,
+            }
+        )
+
+    previews = {
+        page_number: page_preview(pdf_bytes, page_number, marks)
+        for page_number, marks in page_marks.items()
+    }
+    evidence_graph = build_evidence_graph(findings)
+    created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    cv_hash = hashlib.sha256(pdf_bytes).hexdigest()
+    job_hash = hashlib.sha256(job_description.encode("utf-8")).hexdigest()
+    verification_audit = {
+        "proposed": proposed_count,
+        "verified": verified_count,
+        "excluded": proposed_count - verified_count,
+        "ambiguous_requirements": sum(
+            finding["certainty"] == "ambiguous" for finding in findings
+        ),
+        "retrieved_source_spans": verified_count,
+    }
+    usage = {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "first_pass": {"input_tokens": 0, "output_tokens": 0},
+        "verification_pass": {"input_tokens": 0, "output_tokens": 0},
+    }
+    report_html = build_report(
+        findings,
+        previews,
+        cv_hash,
+        job_hash,
+        [],
+        proposed_count,
+        proposed_count - verified_count,
+        verification_audit,
+        evidence_graph,
+        created_at,
+        preview_mode=True,
+    )
+    return {
+        "requirements": findings,
+        "evidence_graph": evidence_graph,
+        "excluded_unverified_requirements": 0,
+        "omitted_requirement_audit": [],
+        "quote_audit": {
+            "proposed": proposed_count,
+            "verified": verified_count,
+            "excluded": proposed_count - verified_count,
+            "verification_proposed": verified_count,
+            "verification_verified": verified_count,
+            "verification_excluded": 0,
+            "ambiguous_requirements": verification_audit["ambiguous_requirements"],
+        },
+        "verification_audit": verification_audit,
+        "pages": {str(number): image for number, image in previews.items()},
+        "page_dimensions": {
+            str(page["number"]): {"width": page["width"], "height": page["height"]}
+            for page in pages
+        },
+        "report_html": report_html,
+        "model": "EvidenceTrail synthetic sample",
+        "preview_mode": True,
+        "analysis_calls": 0,
+        "usage": usage,
+        "cv_sha256": cv_hash,
+        "job_sha256": job_hash,
+        "created_at": created_at,
+        "ocr_pages": [page["number"] for page in pages if page["ocr_used"]],
+    }
+
 
 
 @app.get("/", response_class=HTMLResponse)

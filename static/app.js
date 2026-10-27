@@ -99,7 +99,34 @@ loadDemoButton.addEventListener("click", async function () {
     showError(error.message || "The sample could not be loaded. Download the synthetic CV and choose it manually.");
   } finally {
     loadDemoButton.disabled = false;
-    loadDemoButton.textContent = "Load the complete sample case";
+    loadDemoButton.textContent = "Load sample inputs for a real run";
+  }
+});
+
+const previewDemoButton = document.getElementById("preview-demo-results");
+previewDemoButton.addEventListener("click", async function () {
+  previewDemoButton.disabled = true;
+  previewDemoButton.textContent = "Preparing synthetic preview…";
+  hideError();
+  try {
+    const responses = await Promise.all([
+      fetch("/demo/preview"),
+      fetch("/demo/cv.pdf")
+    ]);
+    if (!responses[0].ok || !responses[1].ok) {
+      throw new Error("The synthetic preview could not be prepared.");
+    }
+    const payload = await responses[0].json();
+    const samplePdf = await responses[1].blob();
+    const sampleFile = new File([samplePdf], "evidencetrail-demo-cv.pdf", {
+      type: "application/pdf",
+    });
+    renderResults(payload, sampleFile);
+  } catch (error) {
+    showError(error.message || "The synthetic preview could not be loaded.");
+  } finally {
+    previewDemoButton.disabled = false;
+    previewDemoButton.textContent = "Preview the finished result · no Meta call";
   }
 });
 
@@ -154,6 +181,11 @@ function hideError() {
 }
 
 function renderResults(payload, analyzedFile) {
+  const previewNotice = document.getElementById("preview-notice");
+  previewNotice.hidden = !payload.preview_mode;
+  previewNotice.textContent = payload.preview_mode
+    ? "Synthetic preview only: these hand-authored findings use a fictional CV. No Muse Spark or Meta Model API request was made."
+    : "";
   const findingsList = document.getElementById("findings-list");
   const counts = { supported: 0, not_found: 0, conflicting: 0 };
   reviewEntries = Object.create(null);
@@ -232,12 +264,14 @@ function renderResults(payload, analyzedFile) {
     ? " · OCR used on page(s) " + payload.ocr_pages.join(", ")
     : "";
   const rejectedCount = Number(payload.excluded_unverified_requirements || 0);
-  const callLabel = Number(payload.analysis_calls || 0) === 2
-    ? "2 real Muse Spark passes · requirement mapping + source adjudication"
-    : payload.analysis_calls + " real Muse Spark pass(es)";
+  const callLabel = payload.preview_mode
+    ? "synthetic example · no Meta API request"
+    : Number(payload.analysis_calls || 0) === 2
+      ? "2 real Muse Spark passes · requirement mapping + source adjudication"
+      : payload.analysis_calls + " real Muse Spark pass(es)";
   const firstUsage = usage.first_pass || {};
   const secondUsage = usage.verification_pass || {};
-  const tokenDetails = " · pass 1 " +
+  const tokenDetails = payload.preview_mode ? "" : " · pass 1 " +
     (firstUsage.input_tokens || 0).toLocaleString() + " in / " +
     (firstUsage.output_tokens || 0).toLocaleString() + " out · pass 2 " +
     (secondUsage.input_tokens || 0).toLocaleString() + " in / " +
@@ -255,12 +289,19 @@ function renderResults(payload, analyzedFile) {
   const secondVerified = Number(quoteAudit.verification_verified || 0);
   const secondExcluded = Number(quoteAudit.verification_excluded || 0);
   const ambiguous = Number(quoteAudit.ambiguous_requirements || 0);
-  document.getElementById("quote-audit").textContent =
-    "Pass 1 exact quote check: " + verifiedQuotes + "/" + proposedQuotes +
-    " matched the PDF (" + excludedQuotes + " excluded). Pass 2 source adjudication: " +
-    secondVerified + "/" + secondProposed + " citations matched an allowed retrieved span and PDF page (" +
-    secondExcluded + " excluded). " + ambiguous + " requirement(s) marked ambiguous. " +
-    "A matching quote proves text presence, not qualification truth.";
+  const auditNode = document.getElementById("quote-audit");
+  if (payload.preview_mode) {
+    auditNode.textContent =
+      "Synthetic sample only: quotes are locally checked against the fictional PDF; " +
+      "no model verification or token usage is represented.";
+  } else {
+    auditNode.textContent =
+      "Pass 1 exact quote check: " + verifiedQuotes + "/" + proposedQuotes +
+      " matched the PDF (" + excludedQuotes + " excluded). Pass 2 source adjudication: " +
+      secondVerified + "/" + secondProposed + " citations matched an allowed retrieved span and PDF page (" +
+      secondExcluded + " excluded). " + ambiguous + " requirement(s) marked ambiguous. " +
+      "A matching quote proves text presence, not qualification truth.";
+  }
 
   const omittedRequirements = Array.isArray(payload.omitted_requirement_audit)
     ? payload.omitted_requirement_audit
@@ -292,8 +333,9 @@ function renderResults(payload, analyzedFile) {
     omittedPanel.hidden = true;
   }
 
-  document.getElementById("result-caption").textContent =
-    "Muse maps requirements, then reviews locally retrieved source spans. EvidenceTrail verifies each displayed citation against the PDF and shows the source trail for human review; it does not verify real-world qualifications.";
+  document.getElementById("result-caption").textContent = payload.preview_mode
+    ? "This fictional sample shows the finished review screen. The findings are illustrative, not Muse output. Select the sample inputs and run Analyze for a real Muse Spark result."
+    : "Muse maps requirements, then reviews locally retrieved source spans. EvidenceTrail verifies each displayed citation against the PDF and shows the source trail for human review; it does not verify real-world qualifications.";
 
   const provenance = document.getElementById("provenance-details");
   provenance.replaceChildren();

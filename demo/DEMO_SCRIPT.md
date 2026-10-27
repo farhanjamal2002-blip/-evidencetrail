@@ -3,8 +3,9 @@
 ## Recording setup
 
 - The prepared case uses a synthetic two-page CV and three focused requirements: one supported, one not found, and one conflicting.
-- Select “Load the complete sample case.” The fictional CV and matching job description are prepared locally.
-- Confirm the Meta data-sharing checkbox and run the two-pass live analysis. Loading the sample does not use API credits; the live run makes two model requests.
+- To inspect the interface before the key is configured, click “Preview the finished result · no Meta call.” This is a clearly labeled, hand-authored synthetic preview; no model request runs, and it is not proof of a live model analysis.
+- For the competition recording, click “Load sample inputs for a real run.” The fictional CV and job description are prepared locally.
+- Confirm the Meta data-sharing checkbox and run the two-pass live analysis. Loading either preview/input does not use API credits; the live run makes two model requests.
 - Keep the API key out of the browser, screen recording, repository, and submission video.
 - Record the full screen at readable zoom. Have the result page ready to scroll smoothly after the live request.
 
@@ -18,7 +19,7 @@
 
 ### 0:25–0:45 — The product
 
-**Show:** Load the complete sample case, then show the upload form and privacy disclosure. Point out that it has no candidate score.
+**Show:** Load sample inputs for a real run, then show the upload form and privacy disclosure. Point out that it has no candidate score.
 
 **Say:** “I built this as an evidence review, not an automated hiring decision. The sample is synthetic and deliberately includes a missing qualification and inconsistent experience claims.”
 
