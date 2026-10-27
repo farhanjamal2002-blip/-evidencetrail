@@ -24,7 +24,7 @@
 
 ### 0:45–1:20 — Muse Spark 1.3 analysis via Meta Model API
 
-**Show:** Click “Analyze with Muse Spark.” Keep the two-pass loading state visible briefly, then show the model name, two real Muse passes, aggregate token usage, and the first-pass and second-pass source-check counts.
+**Show:** Click “Analyze with Muse Spark.” Keep the two-pass loading state visible briefly, then show the model name, two real Muse passes, per-pass and total token usage, and the first-pass and second-pass source-check counts.
 
 **Say:** “Muse Spark 1.3 first maps the job into requirements and candidate evidence. EvidenceTrail then retrieves relevant source blocks locally and sends those bounded, page-linked spans to a second Muse review. The app verifies every final citation against its allowed span and the original PDF page.”
 

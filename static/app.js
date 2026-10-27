@@ -235,10 +235,17 @@ function renderResults(payload, analyzedFile) {
   const callLabel = Number(payload.analysis_calls || 0) === 2
     ? "2 real Muse Spark passes · requirement mapping + source adjudication"
     : payload.analysis_calls + " real Muse Spark pass(es)";
+  const firstUsage = usage.first_pass || {};
+  const secondUsage = usage.verification_pass || {};
+  const tokenDetails = " · pass 1 " +
+    (firstUsage.input_tokens || 0).toLocaleString() + " in / " +
+    (firstUsage.output_tokens || 0).toLocaleString() + " out · pass 2 " +
+    (secondUsage.input_tokens || 0).toLocaleString() + " in / " +
+    (secondUsage.output_tokens || 0).toLocaleString() + " out · total " +
+    (usage.input_tokens || 0).toLocaleString() + " in / " +
+    (usage.output_tokens || 0).toLocaleString() + " out";
   document.getElementById("run-meta").textContent =
-    payload.model + " · " + callLabel + " · " +
-    (usage.input_tokens || 0).toLocaleString() + " total input tokens · " +
-    (usage.output_tokens || 0).toLocaleString() + " total output tokens" + ocrText +
+    payload.model + " · " + callLabel + tokenDetails + ocrText +
     (rejectedCount ? " · " + rejectedCount + " unverified requirement(s) omitted" : "");
   const quoteAudit = payload.quote_audit || {};
   const proposedQuotes = Number(quoteAudit.proposed || 0);
