@@ -1089,6 +1089,16 @@ def mock_year_claims(text: str, topic: str) -> list[tuple[int, str]]:
         rf"(?:experience|work|expertise|background|proficiency)(?:[ \t]+(?:in|with|using|on))?"
         rf"|(?:working|using|developing)[ \t]+(?:in|with|on))[ \t]+{topic_pattern}\b"
     )
+    experience_before_topic = (
+        rf"(?:professional[ \t]+|practical[ \t]+|relevant[ \t]+|hands-on[ \t]+)?"
+        rf"(?:experience|work|expertise|background|proficiency)"
+        rf"(?:[ \t]+(?:in|with|using|on))?[: \t–—-]+{topic_pattern}"
+        rf"\b[ \t]*[,;:–—-]?[ \t]*"
+    )
+    topic_experience_before_duration = (
+        rf"{topic_pattern}\b[ \t]+(?:experience|work|expertise|background|proficiency)"
+        rf"[ \t]*[,;:–—-][ \t]*"
+    )
     patterns = (
         re.compile(
             rf"\b(?P<number>{number})[ \t]+{unit}[ \t]+(?:of[ \t]+)?"
@@ -1098,6 +1108,20 @@ def mock_year_claims(text: str, topic: str) -> list[tuple[int, str]]:
         re.compile(
             rf"\b{topic_pattern}\b(?:[ \t]+{topic_qualifier})?[: \t–—-]+"
             rf"\b(?P<number>{number})[ \t]+{unit}(?![A-Za-z])",
+            flags=re.IGNORECASE,
+        ),
+        re.compile(
+            rf"\b{topic_pattern}\b(?:[ \t]+[A-Za-z][A-Za-z'-]*){{0,3}}[ \t]+"
+            rf"(?:across|over|for|during)[ \t]+(?P<number>{number})[ \t]+{unit}"
+            rf"(?:[ \t]+of[ \t]+(?:work|experience|practice))?(?![A-Za-z])",
+            flags=re.IGNORECASE,
+        ),
+        re.compile(
+            rf"\b{experience_before_topic}(?P<number>{number})[ \t]+{unit}(?![A-Za-z])",
+            flags=re.IGNORECASE,
+        ),
+        re.compile(
+            rf"\b{topic_experience_before_duration}(?P<number>{number})[ \t]+{unit}(?![A-Za-z])",
             flags=re.IGNORECASE,
         ),
     )
@@ -1316,7 +1340,7 @@ def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str
             )
             duration_qualifiers = {
                 "least", "minimum", "more", "over", "than", "plus", "at", "less",
-                "fewer", "no", "not", "up", "maximum", "max", "current",
+                "fewer", "under", "no", "not", "up", "maximum", "max", "current",
                 "required", "preferred",
                 "between", "range", "from", "through", "but",
                 "work", "working", "skill", "skills", "expertise", "background",

@@ -712,6 +712,28 @@ class MockScenarioTests(unittest.TestCase):
             {"supports", "contradicts"},
         )
 
+        across_years = self.analyze(
+            make_pdf("Built Python automations across 6 years of work."),
+            "Requirements\n- At least five years of Python experience",
+        ).json()["requirements"][0]
+        self.assertEqual(across_years["status"], "supported")
+        self.assertEqual(
+            [(item["role"], item["quote"]) for item in across_years["evidence"]],
+            [("supports", "Python automations across 6 years of work")],
+        )
+
+        demo_python = self.analyze(
+            app.make_demo_pdf(),
+            "Requirements\n- At least five years of Python experience",
+        ).json()["requirements"][0]
+        self.assertEqual(demo_python["status"], "supported")
+        self.assertTrue(
+            any(
+                "Python automations across 6 years" in item["quote"]
+                for item in demo_python["evidence"]
+            )
+        )
+
     def test_mock_handles_confusing_duration_bounds_and_ranges(self) -> None:
         cases = [
             # Minimum phrasing and strict lower bounds.
