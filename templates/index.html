@@ -39,7 +39,7 @@
         </section>
 
         <section class="workbench">
-          <form id="analysis-form" class="input-panel">
+          <form id="analysis-form" class="input-panel" data-model-ready="{{ 'true' if model_ready else 'false' }}">
             <div class="panel-heading">
               <div>
                 <div class="step-label">01 / ADD YOUR DOCUMENTS</div>
@@ -50,11 +50,11 @@
 
             <label class="field-label" for="cv">Candidate CV</label>
             <label class="upload-zone" for="cv">
-              <input id="cv" name="cv" type="file" accept="application/pdf,.pdf" required>
+              <input id="cv" name="cv" type="file" accept="application/pdf,.pdf" data-max-bytes="{{ max_pdf_bytes }}" required>
               <span class="upload-icon">↑</span>
               <span class="upload-copy">
                 <strong id="file-name">Choose a PDF or drop it here</strong>
-                <small>Searchable and scanned PDFs · up to 12 MB · max 20 pages</small>
+                <small>Searchable and scanned PDFs · up to {{ max_pdf_mb }} MB · max 20 pages</small>
               </span>
               <span class="browse-link">Browse</span>
             </label>
@@ -66,8 +66,8 @@
             <textarea id="job-description" name="job_description" maxlength="18000" required
               placeholder="Paste the role description. EvidenceTrail will split it into specific requirements and trace each one to the CV."></textarea>
 
-            <label class="consent-row">
-              <input id="consent" name="consent" type="checkbox" value="true" required>
+            <label class="consent-row" {% if not model_ready %}hidden{% endif %}>
+              <input id="consent" name="consent" type="checkbox" value="true" required {% if not model_ready %}disabled{% endif %}>
               <span>I understand the CV and job description are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. The upload may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models.</span>
             </label>
 
@@ -76,8 +76,14 @@
               <span class="status-spinner" aria-hidden="true"></span>
               <span id="analysis-status-text"></span>
             </div>
-            <button id="analyze-button" class="primary-button" type="submit">
-              <span>Analyze with Muse Spark</span><span class="button-arrow">↗</span>
+            {% if not model_ready %}
+            <div id="model-key-notice" class="model-key-notice" role="status">
+              <strong>Real analysis is paused.</strong>
+              <span>The server API key is not configured, so Analyze is disabled and this form will not submit your files. Use the synthetic preview to explore the result screen.</span>
+            </div>
+            {% endif %}
+            <button id="analyze-button" class="primary-button" type="submit" {% if not model_ready %}disabled aria-describedby="model-key-notice"{% endif %}>
+              <span>{% if model_ready %}Analyze with Muse Spark{% else %}Real analysis unavailable{% endif %}</span><span class="button-arrow">↗</span>
             </button>
             <div class="privacy-footnote">Two Muse Spark passes per run: requirement mapping, then source-span adjudication. No candidate score or persistent CV storage.</div>
           </form>
@@ -86,7 +92,7 @@
             <div class="step-label">02 / SEE THE IDEA</div>
             <h2>Try the prepared case</h2>
             <p>A fictional CV contains one supported requirement, one missing qualification, and one internal discrepancy.</p>
-            <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs for a real run</button>
+            <button id="load-demo-case" class="secondary-button" type="button">{% if model_ready %}Load sample inputs for a real run{% else %}Load sample inputs{% endif %}</button>
             <button id="preview-demo-results" class="secondary-button preview-button" type="button">Preview the finished result · no Meta call</button>
             <a class="text-link demo-download" href="/demo/cv.pdf" download>Download the synthetic CV separately <span>↓</span></a>
             <div class="demo-divider"></div>
@@ -95,7 +101,7 @@
               <div><span class="state-dot missing-dot"></span><span>No passage located</span><b>Not found</b></div>
               <div><span class="state-dot conflict-dot"></span><span>Incompatible CV claims</span><b>Conflicting</b></div>
             </div>
-            <div class="sample-tip">Load sample inputs to prepare a real run. Preview the results screen without a Meta call. Analyze makes two real Muse Spark passes.</div>
+            <div class="sample-tip">{% if model_ready %}Load sample inputs for a real run. Preview the results screen without a Meta call. Analyze makes two real Muse Spark passes.{% else %}Load sample inputs to prepare a future run. Real analysis stays paused until the server API key is configured. Preview the results screen without a Meta call.{% endif %}</div>
           </aside>
         </section>
 

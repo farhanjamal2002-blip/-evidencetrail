@@ -226,6 +226,10 @@ textarea::placeholder { color: #8793a3; }
 .primary-button:disabled, .secondary-button:disabled { cursor: wait; opacity: .65; }
 .button-arrow { margin-left: auto; font-size: 18px; font-weight: 500; }
 .privacy-footnote { margin-top: 11px; color: #788598; font-size: 11px; line-height: 1.5; text-align: center; }
+.model-key-notice { display: grid; gap: 5px; margin: 0 0 11px; padding: 12px 14px; border: 1px solid #e6cf8d; border-radius: 9px; background: #fff8e6; color: #705316; font-size: 12px; line-height: 1.55; }
+.model-key-notice strong { color: #63490e; font-size: 12px; }
+.primary-button:disabled:not([aria-busy="true"]) { cursor: not-allowed; border-color: #aab6c8; background: #aab6c8; box-shadow: none; opacity: 1; }
+.primary-button[aria-busy="true"] { cursor: progress; opacity: .68; }
 .error-box { margin: 0 0 12px; padding: 11px 13px; border: 1px solid #e6b8b4; border-radius: 9px; background: var(--red-pale); color: #963b35; font-size: 13px; line-height: 1.55; }
 .analysis-status { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 12px 13px; border: 1px solid #cbdcf8; border-radius: 9px; background: #f5f8ff; color: #415573; font-size: 12px; }
 .status-spinner { width: 14px; height: 14px; flex: 0 0 14px; border: 2px solid #cbdcf8; border-top-color: var(--blue); border-radius: 50%; animation: status-spin .9s linear infinite; }

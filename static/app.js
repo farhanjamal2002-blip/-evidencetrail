@@ -9,6 +9,8 @@ const analysisStatus = document.getElementById("analysis-status");
 const analysisStatusText = document.getElementById("analysis-status-text");
 const results = document.getElementById("results");
 const uploadZone = document.querySelector(".upload-zone");
+const modelReady = form.dataset.modelReady === "true";
+const maxPdfBytes = Number(cvInput.dataset.maxBytes) || 12 * 1024 * 1024;
 let currentReport = "";
 let reviewEntries = Object.create(null);
 let analysisTimer = null;
@@ -21,7 +23,7 @@ let currentPdfPage = 1;
 let currentPdfZoom = 1;
 let activeSourceQuote = "";
 let sourceViewerResizeTimer = null;
-const PDFJS_VERSION = "6.4.299";
+const PDFJS_BASE_URL = "/static/vendor/pdfjs/";
 const sourceViewerLaunch = document.getElementById("source-viewer-launch");
 const sourceViewer = document.getElementById("source-viewer");
 const sourceViewerStatus = document.getElementById("source-viewer-status");
@@ -42,7 +44,21 @@ const demoJob = [
 
 cvInput.addEventListener("change", function () {
   const file = cvInput.files && cvInput.files[0];
-  fileName.textContent = file ? file.name : "Choose a PDF or drop it here";
+  const resultsWereCleared = clearCurrentResults(true);
+  if (!file) {
+    fileName.textContent = "Choose a PDF or drop it here";
+    if (!resultsWereCleared) hideError();
+    return;
+  }
+  const fileError = getPdfFileError(file);
+  if (fileError) {
+    cvInput.value = "";
+    fileName.textContent = "Choose a PDF or drop it here";
+    showError(fileError);
+    return;
+  }
+  fileName.textContent = file.name;
+  if (!resultsWereCleared) hideError();
 });
 
 ["dragenter", "dragover"].forEach(function (eventName) {
@@ -61,8 +77,10 @@ cvInput.addEventListener("change", function () {
 
 uploadZone.addEventListener("drop", function (event) {
   const droppedFile = event.dataTransfer.files && event.dataTransfer.files[0];
-  if (!droppedFile || !droppedFile.name.toLowerCase().endsWith(".pdf")) {
-    showError("Drop a PDF file here.");
+  if (!droppedFile) return;
+  const fileError = getPdfFileError(droppedFile);
+  if (fileError) {
+    showError(fileError);
     return;
   }
   const transfer = new DataTransfer();
@@ -73,10 +91,12 @@ uploadZone.addEventListener("drop", function (event) {
 });
 
 jobInput.addEventListener("input", function () {
+  clearCurrentResults(true);
   charCount.textContent = String(jobInput.value.length);
 });
 
 const loadDemoButton = document.getElementById("load-demo-case");
+const loadDemoButtonLabel = modelReady ? "Load sample inputs for a real run" : "Load sample inputs";
 loadDemoButton.addEventListener("click", async function () {
   loadDemoButton.disabled = true;
   loadDemoButton.textContent = "Loading the fictional CV…";
@@ -99,7 +119,7 @@ loadDemoButton.addEventListener("click", async function () {
     showError(error.message || "The sample could not be loaded. Download the synthetic CV and choose it manually.");
   } finally {
     loadDemoButton.disabled = false;
-    loadDemoButton.textContent = "Load sample inputs for a real run";
+    loadDemoButton.textContent = loadDemoButtonLabel;
   }
 });
 
@@ -133,14 +153,26 @@ previewDemoButton.addEventListener("click", async function () {
 form.addEventListener("submit", async function (event) {
   event.preventDefault();
   hideError();
+  if (!modelReady) {
+    showError("Real analysis is paused until the server API key is configured. Your files were not submitted.");
+    return;
+  }
   if (!cvInput.files || !cvInput.files.length) {
     showError("Choose the synthetic demo CV or another PDF first.");
     return;
   }
 
   const submittedPdfFile = cvInput.files[0];
+  const formData = new FormData(form);
+  clearCurrentResults(false);
   analyzeButton.disabled = true;
+  analyzeButton.setAttribute("aria-busy", "true");
   analyzeButton.querySelector("span:first-child").textContent = "Muse is mapping and checking source evidence…";
+  cvInput.disabled = true;
+  jobInput.readOnly = true;
+  document.getElementById("consent").disabled = true;
+  loadDemoButton.disabled = true;
+  previewDemoButton.disabled = true;
   const analysisStartedAt = Date.now();
   function updateAnalysisStatus() {
     const elapsedSeconds = Math.floor((Date.now() - analysisStartedAt) / 1000);
@@ -150,8 +182,6 @@ form.addEventListener("submit", async function (event) {
   analysisStatus.hidden = false;
   updateAnalysisStatus();
   analysisTimer = window.setInterval(updateAnalysisStatus, 5000);
-  const formData = new FormData(form);
-
   try {
     const response = await fetch("/api/analyze", { method: "POST", body: formData });
     const payload = await response.json();
@@ -165,8 +195,16 @@ form.addEventListener("submit", async function (event) {
     if (analysisTimer) window.clearInterval(analysisTimer);
     analysisTimer = null;
     analysisStatus.hidden = true;
-    analyzeButton.disabled = false;
-    analyzeButton.querySelector("span:first-child").textContent = "Analyze with Muse Spark";
+    analyzeButton.disabled = !modelReady;
+    analyzeButton.removeAttribute("aria-busy");
+    analyzeButton.querySelector("span:first-child").textContent = modelReady
+      ? "Analyze with Muse Spark"
+      : "Real analysis unavailable";
+    cvInput.disabled = false;
+    jobInput.readOnly = false;
+    document.getElementById("consent").disabled = false;
+    loadDemoButton.disabled = false;
+    previewDemoButton.disabled = false;
   }
 });
 
@@ -178,6 +216,55 @@ function showError(message) {
 function hideError() {
   errorBox.hidden = true;
   errorBox.textContent = "";
+}
+
+function getPdfFileError(file) {
+  if (!/\.pdf$/i.test(file.name || "")) return "Choose a PDF file.";
+  if (!file.size) return "That PDF is empty. Choose another file.";
+  if (file.size > maxPdfBytes) {
+    const limitMb = Math.max(1, Math.round(maxPdfBytes / (1024 * 1024)));
+    return "Keep the PDF under " + limitMb + " MB.";
+  }
+  return "";
+}
+
+function clearCurrentResults(showNotice) {
+  if (results.hidden) return false;
+
+  results.hidden = true;
+  currentReport = "";
+  reviewEntries = Object.create(null);
+  if (currentPdfRenderTask) {
+    currentPdfRenderTask.cancel();
+    currentPdfRenderTask = null;
+  }
+  currentPdfRenderSequence += 1;
+  sourcePdfFile = null;
+  sourcePdfPayload = null;
+  pdfDocumentPromise = null;
+  activeSourceQuote = "";
+  sourceViewer.hidden = true;
+  sourceViewerLaunch.hidden = true;
+  sourceViewerStatus.textContent = "";
+  sourceViewerPageLabel.textContent = "Open a source passage to begin";
+  sourcePdfPage.hidden = true;
+  sourcePdfHighlights.replaceChildren();
+  document.getElementById("findings-list").replaceChildren();
+  document.getElementById("source-pages").replaceChildren();
+  document.getElementById("evidence-graph").replaceChildren();
+  document.getElementById("summary-counts").replaceChildren();
+  document.getElementById("provenance-details").replaceChildren();
+  document.getElementById("run-meta").textContent = "";
+  document.getElementById("quote-audit").textContent = "";
+  document.getElementById("review-summary").textContent = "";
+  document.getElementById("preview-notice").textContent = "";
+  document.getElementById("preview-notice").hidden = true;
+  document.getElementById("omitted-requirements-panel").hidden = true;
+  document.getElementById("omitted-requirements-list").replaceChildren();
+  if (showNotice) {
+    showError("The CV or job description changed, so the previous evidence map was cleared. Run another analysis to refresh it.");
+  }
+  return true;
 }
 
 function renderResults(payload, analyzedFile) {
@@ -341,7 +428,7 @@ function renderResults(payload, analyzedFile) {
   provenance.replaceChildren();
   [
     ["Model", payload.model || ""],
-    ["Analysis time (UTC)", payload.created_at || ""],
+    [payload.preview_mode ? "Preview generated (UTC)" : "Analysis time (UTC)", payload.created_at || ""],
     ["CV SHA-256", payload.cv_sha256 || ""],
     ["Job description SHA-256", payload.job_sha256 || ""],
   ].forEach(function (entry) {
@@ -637,11 +724,9 @@ window.addEventListener("resize", function () {
 });
 
 async function loadPdfJs() {
-  const pdfjs = await import(
-    "https://cdn.jsdelivr.net/npm/pdfjs-dist@" + PDFJS_VERSION + "/build/pdf.mjs"
-  );
+  const pdfjs = await import(PDFJS_BASE_URL + "pdf.min.mjs");
   pdfjs.GlobalWorkerOptions.workerSrc =
-    "https://cdn.jsdelivr.net/npm/pdfjs-dist@" + PDFJS_VERSION + "/build/pdf.worker.mjs";
+    new URL(PDFJS_BASE_URL + "pdf.worker.min.mjs", window.location.href).toString();
   return pdfjs;
 }
 

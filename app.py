@@ -247,6 +247,33 @@ def word_record(text: str, x0: float, y0: float, x1: float, y1: float) -> dict[s
     }
 
 
+def merge_line_boxes(boxes: list[list[float]]) -> list[list[float]]:
+    """Join adjacent word boxes into readable, line-level evidence highlights."""
+    merged: list[list[float]] = []
+    ordered = sorted(
+        ([float(value) for value in box] for box in boxes),
+        key=lambda box: ((box[1] + box[3]) / 2, box[0]),
+    )
+    for box in ordered:
+        if merged:
+            previous = merged[-1]
+            previous_height = max(1.0, previous[3] - previous[1])
+            box_height = max(1.0, box[3] - box[1])
+            same_line = abs(
+                ((previous[1] + previous[3]) / 2) - ((box[1] + box[3]) / 2)
+            ) <= max(3.0, min(previous_height, box_height) * 0.35)
+            gap = box[0] - previous[2]
+            adjacent = -2.0 <= gap <= max(4.0, min(previous_height, box_height) * 0.6)
+            if same_line and adjacent:
+                previous[0] = min(previous[0], box[0])
+                previous[1] = min(previous[1], box[1])
+                previous[2] = max(previous[2], box[2])
+                previous[3] = max(previous[3], box[3])
+                continue
+        merged.append(box)
+    return merged
+
+
 def extract_ocr(page: fitz.Page) -> tuple[str, list[dict[str, Any]]]:
     pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
     image = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
@@ -391,6 +418,7 @@ def locate_quote(
                     if key not in seen:
                         seen.add(key)
                         box.append(list(key))
+                box = merge_line_boxes(box)
                 break
 
         if box:
@@ -1503,6 +1531,8 @@ def home(request: Request) -> HTMLResponse:
             "request": request,
             "model_id": MODEL_ID,
             "model_ready": bool(os.getenv("MODEL_API_KEY", "").strip()),
+            "max_pdf_mb": MAX_PDF_MB,
+            "max_pdf_bytes": MAX_PDF_BYTES,
         },
     )
 
@@ -1541,8 +1571,6 @@ async def analyze(
                 "No analysis was started and no Meta API call was made."
             ),
         )
-    if cv.content_type not in ("application/pdf", "application/octet-stream"):
-        raise HTTPException(status_code=400, detail="Upload the CV as a PDF.")
     if not job_description.strip():
         raise HTTPException(status_code=400, detail="Paste the job description.")
     if len(job_description) > MAX_JOB_CHARS:
