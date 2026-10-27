@@ -57,7 +57,7 @@ Use the synthetic CV at /demo/cv.pdf and load the sample job description in the 
 
 Reviewers can mark each evidence trail as not reviewed, evidence reviewed, or needing follow-up, then add a short note. These annotations stay in the current browser tab and are added to the downloaded pack; they are not sent to Muse or saved by the app. They record review of the documents, not a hiring decision.
 
-The PDF is sent inline to Meta Model API for the analysis with API-side output storage explicitly disabled. The app does not save uploaded files to disk or retain them after the request. The PDF and job description leave the app for the Meta analysis, as disclosed in the interface.
+The PDF is sent inline to Meta Model API for analysis with API-side output storage explicitly disabled. EvidenceTrail does not write uploaded CVs to a database, object store, or persistent application file path. FastAPI's multipart UploadFile handling uses a spooled temporary file, so an upload may be held in memory or temporarily placed on the host's temporary disk while the request is parsed and processed ([FastAPI upload-file documentation](https://fastapi.tiangolo.com/tutorial/request-files/#file-parameters-with-uploadfile)). The PDF and job description are sent to Meta only after the user consents. The app does not intentionally retain a durable copy after handling the request; temporary-file cleanup depends on the request/runtime lifecycle.
 
 ## Hosting
 
