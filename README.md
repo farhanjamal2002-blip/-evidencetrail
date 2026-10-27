@@ -4,6 +4,8 @@ EvidenceTrail maps job requirements to exact CV passages. Muse Spark proposes th
 
 The report describes supplied documents. It does not score or rank a candidate and it does not make a hiring decision.
 
+See [HACKATHON_COMPLIANCE.md](HACKATHON_COMPLIANCE.md) for the rule-focused submission checklist.
+
 ## Model and open-source stack
 
 The app is built with open-source Python packages, including FastAPI, PyMuPDF, Pillow, pytesseract, and the OpenAI-compatible Python SDK. Muse Spark is called through Meta's hosted Model API; it is not a locally hosted open-weight model. EvidenceTrail sends one structured request per analysis and keeps the API key server-side.
