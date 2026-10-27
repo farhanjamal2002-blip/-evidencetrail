@@ -264,6 +264,10 @@ function clearCurrentResults(showNotice) {
   document.getElementById("preview-notice").hidden = true;
   document.getElementById("omitted-requirements-panel").hidden = true;
   document.getElementById("omitted-requirements-list").replaceChildren();
+  document.getElementById("rejected-citations-panel").hidden = true;
+  document.getElementById("rejected-citations-summary").textContent = "";
+  document.getElementById("rejected-citations-intro").textContent = "";
+  document.getElementById("rejected-citations-list").replaceChildren();
   if (showNotice) {
     showError("The CV or job description changed, so the previous evidence map was cleared. Run another analysis to refresh it.");
   }
@@ -371,6 +375,60 @@ function renderResults(payload, analyzedFile) {
   document.getElementById("run-meta").textContent =
     payload.model + " · " + callLabel + tokenDetails + ocrText +
     (rejectedCount ? " · " + rejectedCount + " model-proposed requirement(s) omitted" : "");
+  const rejectedPanel = document.getElementById("rejected-citations-panel");
+  const rejectedSummary = document.getElementById("rejected-citations-summary");
+  const rejectedIntro = document.getElementById("rejected-citations-intro");
+  const rejectedList = document.getElementById("rejected-citations-list");
+  rejectedList.replaceChildren();
+  const verificationAudit = payload.verification_audit || {};
+  const rejectedCitations = Array.isArray(verificationAudit.rejected_citations)
+    ? verificationAudit.rejected_citations
+    : [];
+  const rejectedTotal = Number(verificationAudit.excluded || 0);
+  rejectedPanel.hidden = false;
+  if (payload.preview_mode) {
+    rejectedSummary.textContent = "Verifier rejection ledger · synthetic preview";
+    rejectedIntro.textContent = "This sample made no model call and contains no rejected model proposal. Live analyses list any second-pass citation rejected by local source checks.";
+  } else {
+    rejectedSummary.textContent = rejectedTotal + " proposed citation" +
+      (rejectedTotal === 1 ? "" : "s") + " rejected by local checks";
+    rejectedIntro.textContent = rejectedTotal
+      ? "These model proposals did not pass source validation, so they are excluded from the displayed status, highlights, and evidence graph."
+      : "No second-pass citations were rejected in this run. Every displayed citation still passed the local source checks.";
+    const rejectionLabels = {
+      source_not_allowed: "Source ID was not allowed for this requirement",
+      invalid_evidence_role: "Evidence role was not supported",
+      empty_quote: "The proposed quote was empty",
+      quote_outside_retrieved_span: "Quote was outside the retrieved source text",
+      source_page_unavailable: "The cited page was unavailable",
+      quote_not_found_on_cited_page: "Quote could not be located on the cited PDF page",
+      duplicate_citation: "Duplicate citation"
+    };
+    rejectedCitations.forEach(function (record) {
+      const item = document.createElement("li");
+      item.className = "rejected-item";
+      const reason = document.createElement("strong");
+      reason.textContent = rejectionLabels[record.reason] || "Rejected by local source validation";
+      const source = document.createElement("span");
+      source.textContent = (record.requirement_id || "") + " · " +
+        (record.source_id || "no source ID") + (record.role ? " · " + record.role : "");
+      item.append(reason, source);
+      if (record.quote) {
+        const quote = document.createElement("blockquote");
+        quote.textContent = record.quote;
+        item.appendChild(quote);
+      }
+      rejectedList.appendChild(item);
+    });
+    if (rejectedTotal > rejectedCitations.length) {
+      const more = document.createElement("li");
+      more.className = "rejected-more";
+      more.textContent = (rejectedTotal - rejectedCitations.length) +
+        " additional rejected citation(s) are counted in the audit but not displayed.";
+      rejectedList.appendChild(more);
+    }
+  }
+
   const quoteAudit = payload.quote_audit || {};
   const proposedQuotes = Number(quoteAudit.proposed || 0);
   const verifiedQuotes = Number(quoteAudit.verified || 0);

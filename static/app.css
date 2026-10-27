@@ -304,6 +304,15 @@ textarea::placeholder { color: #8793a3; }
 .omitted-audit li strong, .omitted-audit li span { display: block; overflow-wrap: anywhere; }
 .omitted-audit li strong { color: #34465e; }
 .omitted-audit li span { color: #748195; }
+.rejected-audit { margin: 14px 0; padding: 14px 16px; border: 1px solid #efc9c6; border-radius: 12px; background: linear-gradient(135deg, #fffafa, #fff 72%); box-shadow: 0 8px 24px rgba(92,31,28,.04); }
+.rejected-audit summary { cursor: pointer; color: #9b3f38; font-weight: 760; }
+.rejected-audit > p { margin: 9px 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.rejected-audit ol { display: grid; gap: 8px; margin: 12px 0 0; padding-left: 22px; }
+.rejected-item { padding: 11px 13px; border: 1px solid #f0dddd; border-left: 3px solid #d65b53; border-radius: 8px; background: #fff; overflow-wrap: anywhere; }
+.rejected-item > span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+.rejected-item blockquote { margin: 8px 0 0; padding: 8px 10px; border-left: 2px solid #d65b53; background: #fff5f4; color: #694845; font-size: 12px; line-height: 1.55; }
+.rejected-more { color: var(--muted); font-size: 12px; }
+
 .provenance-panel { margin: 12px 0 17px; border: 1px solid #dbe4ed; border-radius: 10px; background: #fff; }
 .provenance-panel summary { padding: 13px 15px; color: #46566d; font-size: 12px; font-weight: 700; cursor: pointer; }
 .provenance-details { display: grid; grid-template-columns: minmax(160px, .3fr) minmax(0, 1fr); gap: 9px 15px; margin: 0; padding: 0 15px 15px; font-size: 11px; }

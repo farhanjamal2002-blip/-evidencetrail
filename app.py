@@ -721,7 +721,7 @@ def apply_verification_reviews(
     source_by_id: dict[str, dict[str, Any]],
     allowed_by_requirement: dict[str, set[str]],
     pages: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, int]]:
+) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, Any]]:
     reviews_by_id: dict[str, dict[str, Any]] = {}
     for review in review_result.get("reviews", []):
         requirement_id = str(review.get("requirement_id", ""))
@@ -740,6 +740,7 @@ def apply_verification_reviews(
     verified_count = 0
     excluded = 0
     ambiguous_count = 0
+    rejected_citations: list[dict[str, str]] = []
 
     for finding in findings:
         requirement_id = str(finding["id"])
@@ -748,19 +749,38 @@ def apply_verification_reviews(
         seen: set[tuple[str, str, int]] = set()
         local_excluded = 0
         citations = review.get("evidence", [])
+
+        def reject(
+            reason: str, rejected_source_id: str, rejected_quote: str, rejected_role: Any
+        ) -> None:
+            nonlocal excluded, local_excluded
+            excluded += 1
+            local_excluded += 1
+            if len(rejected_citations) < 40:
+                rejected_citations.append(
+                    {
+                        "requirement_id": requirement_id,
+                        "requirement": str(finding.get("requirement", ""))[:180],
+                        "source_id": rejected_source_id[:80],
+                        "role": str(rejected_role)[:24],
+                        "quote": rejected_quote[:360],
+                        "reason": reason,
+                    }
+                )
         proposed += len(citations)
 
         for citation in citations:
             source_id = str(citation.get("source_id", ""))
             quote = str(citation.get("quote", "")).strip()
             role = citation.get("role")
-            if (
-                source_id not in allowed_by_requirement.get(requirement_id, set())
-                or role not in ("supports", "contradicts")
-                or not quote
-            ):
-                excluded += 1
-                local_excluded += 1
+            if source_id not in allowed_by_requirement.get(requirement_id, set()):
+                reject("source_not_allowed", source_id, quote, role)
+                continue
+            if role not in ("supports", "contradicts"):
+                reject("invalid_evidence_role", source_id, quote, role)
+                continue
+            if not quote:
+                reject("empty_quote", source_id, quote, role)
                 continue
             source = source_by_id[source_id]
             source_text = str(source.get("text", ""))
@@ -769,24 +789,20 @@ def apply_verification_reviews(
                 contains_token_sequence(source_text, quote)
                 or contains_token_sequence(source_context, quote)
             ):
-                excluded += 1
-                local_excluded += 1
+                reject("quote_outside_retrieved_span", source_id, quote, role)
                 continue
             page_number = int(source["page"])
             page = page_by_number.get(page_number)
             if not page:
-                excluded += 1
-                local_excluded += 1
+                reject("source_page_unavailable", source_id, quote, role)
                 continue
             match = locate_quote(quote, [page], page_number)
             if not match:
-                excluded += 1
-                local_excluded += 1
+                reject("quote_not_found_on_cited_page", source_id, quote, role)
                 continue
             key = (normalize_text(quote), str(role), page_number)
             if key in seen:
-                excluded += 1
-                local_excluded += 1
+                reject("duplicate_citation", source_id, quote, role)
                 continue
             seen.add(key)
             verified.append(
@@ -863,6 +879,7 @@ def apply_verification_reviews(
         "verified": verified_count,
         "excluded": excluded,
         "ambiguous_requirements": ambiguous_count,
+        "rejected_citations": rejected_citations,
     }
     return final_findings, page_marks, audit
 
@@ -1101,7 +1118,7 @@ def build_report(
     omitted_requirement_audit: list[dict[str, str]],
     proposed_quotes: int,
     excluded_quotes: int,
-    verification_audit: dict[str, int],
+    verification_audit: dict[str, Any],
     evidence_graph: dict[str, Any],
     created_at: str,
     preview_mode: bool = False,
@@ -1203,6 +1220,61 @@ def build_report(
         + "</span></li>"
         for record in omitted_requirement_audit
     )
+    rejection_reason_labels = {
+        "source_not_allowed": "Source ID was not allowed for this requirement",
+        "invalid_evidence_role": "Evidence role was not supported",
+        "empty_quote": "The proposed quote was empty",
+        "quote_outside_retrieved_span": "Quote was outside the retrieved source text",
+        "source_page_unavailable": "The cited page was unavailable",
+        "quote_not_found_on_cited_page": "Quote could not be located on the cited PDF page",
+        "duplicate_citation": "Duplicate citation",
+    }
+    rejected_citations = verification_audit.get("rejected_citations", [])
+    rejected_citation_rows = "".join(
+        "<li class='rejected-item'><strong>"
+        + html.escape(
+            rejection_reason_labels.get(
+                str(record.get("reason", "")),
+                "Rejected by local source validation",
+            )
+        )
+        + "</strong><span>"
+        + html.escape(str(record.get("requirement_id", "")))
+        + " · "
+        + html.escape(str(record.get("source_id") or "no source ID"))
+        + "</span>"
+        + (
+            "<blockquote>"
+            + html.escape(str(record.get("quote", "")))
+            + "</blockquote>"
+            if record.get("quote")
+            else ""
+        )
+        + "</li>"
+        for record in rejected_citations[:40]
+    )
+    rejected_ledger_html = (
+        "<details class='rejected-audit'>"
+        "<summary>Verifier rejection ledger · synthetic preview</summary>"
+        "<p>This sample made no model call and contains no rejected model proposal. Live analyses list any second-pass citation rejected by local source checks.</p>"
+        "</details>"
+        if preview_mode
+        else (
+            "<details class='rejected-audit'>"
+            f"<summary>{verification_excluded} proposed citation(s) rejected by local checks"
+            + (f" · showing first {len(rejected_citations)}" if len(rejected_citations) < verification_excluded else "")
+            + "</summary>"
+            "<p>A rejected proposal is excluded from the displayed status, highlights, and evidence graph.</p>"
+            + (
+                f"<ol>{rejected_citation_rows}</ol>"
+                if rejected_citation_rows
+                else "<p>No rejected citation details were returned for this run.</p>"
+            )
+            + "</details>"
+            if verification_excluded
+            else ""
+        )
+    )
     if preview_mode:
         report_brand = "EVIDENCETRAIL · SYNTHETIC UI PREVIEW"
         report_intro = (
@@ -1266,6 +1338,13 @@ def build_report(
       .omitted-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}
       .omitted-audit ul{margin:10px 0 0;padding-left:20px}.omitted-audit li{margin:8px 0}
       .omitted-audit li span{display:block;color:var(--muted);font-size:13px}
+      .rejected-audit{margin:14px 0;padding:12px 14px;border:1px solid #f0c9c5;border-radius:10px;background:#fffafa}
+      .rejected-audit summary{cursor:pointer;font-weight:700;color:#9b3f38}
+      .rejected-audit>p{color:var(--muted);font-size:13px}
+      .rejected-audit ol{margin:10px 0 0;padding-left:22px}
+      .rejected-item{margin:10px 0;padding:10px 12px;border-left:3px solid #d65b53;background:#fff}
+      .rejected-item>span{display:block;margin-top:4px;color:var(--muted);font-size:12px}
+      .rejected-item blockquote{margin:8px 0 0;padding:9px 11px;background:#fff5f4;border-left:2px solid #d65b53;overflow-wrap:anywhere}
       .graph-row{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:16px;padding:16px 0;border-top:1px solid var(--line)}
       .graph-requirement{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;align-self:start}
       .graph-requirement span,.graph-source span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -1293,6 +1372,7 @@ def build_report(
         "<h1>Grounded requirement evidence pack</h1>"
         f"<p class='sub'>{report_intro}</p>"
         + report_audit_summary
+        + rejected_ledger_html
         + (
             f"<details class='omitted-audit'><summary>{len(omitted_requirement_audit)} model-proposed requirement(s) omitted before evidence review</summary>"
             "<p>Each item is shown with the local reason it was excluded.</p>"
@@ -1488,6 +1568,7 @@ def demo_preview() -> dict[str, Any]:
             finding["certainty"] == "ambiguous" for finding in findings
         ),
         "retrieved_source_spans": verified_count,
+        "rejected_citations": [],
     }
     usage = {
         "input_tokens": 0,
