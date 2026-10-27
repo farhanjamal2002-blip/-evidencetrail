@@ -23,6 +23,7 @@ let currentPdfPage = 1;
 let currentPdfZoom = 1;
 let activeSourceQuote = "";
 let sourceViewerResizeTimer = null;
+let pdfWorkerBlobUrl = "";
 const PDFJS_BASE_URL = "/static/vendor/pdfjs/";
 const sourceViewerLaunch = document.getElementById("source-viewer-launch");
 const sourceViewer = document.getElementById("source-viewer");
@@ -725,8 +726,15 @@ window.addEventListener("resize", function () {
 
 async function loadPdfJs() {
   const pdfjs = await import(PDFJS_BASE_URL + "pdf.min.js");
-  pdfjs.GlobalWorkerOptions.workerSrc =
-    new URL(PDFJS_BASE_URL + "pdf-engine.min.js", window.location.href).toString();
+  if (!pdfWorkerBlobUrl) {
+    const response = await fetch(PDFJS_BASE_URL + "pdf-engine.min.js");
+    if (!response.ok) throw new Error("The local PDF worker could not be loaded.");
+    const workerSource = await response.text();
+    pdfWorkerBlobUrl = URL.createObjectURL(
+      new Blob([workerSource], { type: "text/javascript" })
+    );
+  }
+  pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerBlobUrl;
   return pdfjs;
 }
 
