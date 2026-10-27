@@ -1,6 +1,6 @@
 # EvidenceTrail
 
-Muse Spark maps job requirements to candidate-CV evidence, then adjudicates candidate passages retrieved from locally extracted source blocks. EvidenceTrail checks every displayed quote against the PDF, locates it on the source page, and builds a standalone HTML evidence pack.
+EvidenceTrail helps a hiring reviewer check what a CV says about a job. Muse Spark turns the job description into requirements and interprets candidate passages; EvidenceTrail verifies each quote against the PDF, links it to the page, and creates a shareable HTML evidence pack.
 
 The report describes supplied documents. It does not score or rank a candidate and it does not make a hiring decision.
 
@@ -27,7 +27,7 @@ On any OS:
 5. Open the local address http://127.0.0.1:8000.
 
 The key stays on the server and must never be committed to the repository.
-Click “Preview the finished result · no Meta call” to inspect the result screen without a key. That view uses hand-authored findings grounded in the fictional sample PDF; it is not a Muse result and must not be presented as a live model run. The app header reports whether MODEL_API_KEY is set; it does not validate the key or test API connectivity. If the key is missing, analysis stops before the app extracts or forwards the CV and no Meta call is made.
+Click “Open the sample review” to inspect the result screen without a key. That view uses hand-authored findings grounded in the fictional sample PDF; it is not a Muse result and must not be presented as a live model run. The app header reports whether MODEL_API_KEY is set; it does not validate the key or test API connectivity. If the key is missing, analysis stops before the app extracts or forwards the CV and no Meta call is made.
 Each click on “Analyze with Muse Spark” makes two real model requests: the first maps job requirements to candidate CV evidence, and the second adjudicates locally retrieved source spans. Editing the app and loading the synthetic CV do not call the API. The sample analysis uses both requests. Token usage is shown in aggregate and by pass; actual usage depends on the documents and model responses.
 
 The app uses the standard `muse-spark-1.3` model ID. Keep this standard mode for real CVs; Meta’s discounted contributor mode allows submitted content to be used to train future models.
@@ -42,7 +42,7 @@ Docker installs English and Arabic Tesseract language data. The app uses OCR onl
 
 ## Demo
 
-The synthetic CV and job description are available in the app. “Preview the finished result · no Meta call” opens a locally generated, clearly labeled UI preview so the screens can be explored before a key is configured. “Load sample inputs for a real run” prepares the same fictional documents for an actual two-pass Muse analysis. The sample contains one supported requirement, one not found, and one internally conflicting claim.
+The synthetic CV and job description are available in the app. “Open the sample review” opens a locally generated, clearly labeled UI preview so the screens can be explored before a key is configured. “Load sample inputs for a real run” prepares the same fictional documents for an actual two-pass Muse analysis. The sample contains one supported requirement, one not found, and one internally conflicting claim.
 
 ## Analysis flow
 

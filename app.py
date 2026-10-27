@@ -249,28 +249,47 @@ def word_record(text: str, x0: float, y0: float, x1: float, y1: float) -> dict[s
 
 def merge_line_boxes(boxes: list[list[float]]) -> list[list[float]]:
     """Join adjacent word boxes into readable, line-level evidence highlights."""
-    merged: list[list[float]] = []
     ordered = sorted(
-        ([float(value) for value in box] for box in boxes),
+        ([float(value) for value in box] for box in boxes if len(box) == 4),
         key=lambda box: ((box[1] + box[3]) / 2, box[0]),
     )
+    rows: list[dict[str, Any]] = []
     for box in ordered:
-        if merged:
-            previous = merged[-1]
-            previous_height = max(1.0, previous[3] - previous[1])
-            box_height = max(1.0, box[3] - box[1])
-            same_line = abs(
-                ((previous[1] + previous[3]) / 2) - ((box[1] + box[3]) / 2)
-            ) <= max(3.0, min(previous_height, box_height) * 0.35)
-            gap = box[0] - previous[2]
-            adjacent = -2.0 <= gap <= max(4.0, min(previous_height, box_height) * 0.6)
-            if same_line and adjacent:
-                previous[0] = min(previous[0], box[0])
-                previous[1] = min(previous[1], box[1])
-                previous[2] = max(previous[2], box[2])
-                previous[3] = max(previous[3], box[3])
-                continue
-        merged.append(box)
+        center_y = (box[1] + box[3]) / 2
+        height = max(1.0, box[3] - box[1])
+        target = next(
+            (
+                row
+                for row in reversed(rows)
+                if abs(center_y - row["center_y"])
+                <= max(3.5, min(height, row["height"]) * 0.5)
+            ),
+            None,
+        )
+        if target is None:
+            rows.append({"center_y": center_y, "height": height, "boxes": [box]})
+            continue
+        count = len(target["boxes"])
+        target["center_y"] = (target["center_y"] * count + center_y) / (count + 1)
+        target["height"] = (target["height"] * count + height) / (count + 1)
+        target["boxes"].append(box)
+
+    merged: list[list[float]] = []
+    for row in rows:
+        row_boxes = sorted(row["boxes"], key=lambda box: box[0])
+        for box in row_boxes:
+            if merged and abs(
+                ((merged[-1][1] + merged[-1][3]) / 2) - row["center_y"]
+            ) <= max(3.5, row["height"] * 0.5):
+                previous = merged[-1]
+                gap = box[0] - previous[2]
+                if -2.0 <= gap <= max(5.0, row["height"] * 0.9):
+                    previous[0] = min(previous[0], box[0])
+                    previous[1] = min(previous[1], box[1])
+                    previous[2] = max(previous[2], box[2])
+                    previous[3] = max(previous[3], box[3])
+                    continue
+            merged.append(box[:])
     return merged
 
 

@@ -19,7 +19,7 @@
           <span class="model-symbol" aria-hidden="true">✦</span>
           <span class="model-copy">
             <strong>Muse Spark 1.3</strong>
-            <small>Meta Model API · {{ 'key set · connection unverified' if model_ready else 'server key needed' }}</small>
+            <small>{{ 'key set · connection unverified' if model_ready else 'sample mode · live analysis paused' }}</small>
           </span>
           <span class="config-dot" aria-hidden="true"></span>
         </div>
@@ -28,13 +28,34 @@
       <main id="main-content">
         <section class="hero">
           <div class="hero-copy">
-            <div class="eyebrow">MUSE SPARK · SOURCE-VERIFIED HIRING REVIEW</div>
+          <div class="eyebrow">JOB REQUIREMENTS → CV EVIDENCE</div>
             <h1>Show the evidence.<br><em>Keep the decision human.</em></h1>
-            <p>Muse Spark extracts and adjudicates requirement-level evidence. EvidenceTrail retrieves source passages, checks quote and page provenance, and shows each requirement’s path back to the PDF.</p>
+          <p>Compare each job requirement with the exact words in a CV. Muse Spark interprets the evidence; EvidenceTrail checks each quote against the PDF and points to its page. A person decides what it means.</p>
           </div>
           <div class="hero-stamp">
             <span class="stamp-line"></span>
             <span>Every finding<br>points to its source.</span>
+          </div>
+        </section>
+
+        <section class="review-path" aria-label="How EvidenceTrail works">
+          <div class="review-path-heading">
+            <div class="step-label">THE REVIEW PATH</div>
+            <h2>From job requirement to a checkable source</h2>
+          </div>
+          <div class="review-path-steps">
+            <article class="review-path-step">
+              <span class="review-path-number" aria-hidden="true">01</span>
+              <div><h3>Break down the role</h3><p>Muse Spark turns the job description into a clear list of requirements.</p></div>
+            </article>
+            <article class="review-path-step">
+              <span class="review-path-number" aria-hidden="true">02</span>
+              <div><h3>Trace each claim</h3><p>EvidenceTrail checks the quoted text and connects it to a CV page.</p></div>
+            </article>
+            <article class="review-path-step">
+              <span class="review-path-number" aria-hidden="true">03</span>
+              <div><h3>Leave the call to a person</h3><p>Review what is stated, missing, or inconsistent. No candidate score or automatic decision.</p></div>
+            </article>
           </div>
         </section>
 
@@ -79,7 +100,7 @@
             {% if not model_ready %}
             <div id="model-key-notice" class="model-key-notice" role="status">
               <strong>Real analysis is paused.</strong>
-              <span>The server API key is not configured, so Analyze is disabled and this form will not submit your files. Use the synthetic preview to explore the result screen.</span>
+              <span>The server has no Meta API key, so Analyze is disabled and this form will not upload your files. Open the fictional sample review to explore the result screen.</span>
             </div>
             {% endif %}
             <button id="analyze-button" class="primary-button" type="submit" {% if not model_ready %}disabled aria-describedby="model-key-notice"{% endif %}>
@@ -92,8 +113,13 @@
             <div class="step-label">02 / SEE THE IDEA</div>
             <h2>Try the prepared case</h2>
             <p>A fictional CV contains one supported requirement, one missing qualification, and one internal discrepancy.</p>
-            <button id="load-demo-case" class="secondary-button" type="button">{% if model_ready %}Load sample inputs for a real run{% else %}Load sample inputs{% endif %}</button>
-            <button id="preview-demo-results" class="secondary-button preview-button" type="button">Preview the finished result · no Meta call</button>
+            {% if model_ready %}
+            <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs for a real run</button>
+            <button id="preview-demo-results" class="secondary-button preview-button" type="button">Preview the sample · no API call</button>
+            {% else %}
+            <button id="preview-demo-results" class="primary-button demo-preview-button" type="button">Open the sample review</button>
+            <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs</button>
+            {% endif %}
             <a class="text-link demo-download" href="/demo/cv.pdf" download>Download the synthetic CV separately <span>↓</span></a>
             <div class="demo-divider"></div>
             <div class="demo-state-list">
@@ -101,7 +127,12 @@
               <div><span class="state-dot missing-dot"></span><span>No passage located</span><b>Not found</b></div>
               <div><span class="state-dot conflict-dot"></span><span>Incompatible CV claims</span><b>Conflicting</b></div>
             </div>
-            <div class="sample-tip">{% if model_ready %}Load sample inputs for a real run. Preview the results screen without a Meta call. Analyze makes two real Muse Spark passes.{% else %}Load sample inputs to prepare a future run. Real analysis stays paused until the server API key is configured. Preview the results screen without a Meta call.{% endif %}</div>
+            <ol class="demo-walkthrough" aria-label="What to do in the sample review">
+              <li>Open the sample report</li>
+              <li>Select a quote to see its CV page</li>
+              <li>Download the evidence pack</li>
+            </ol>
+            <div class="sample-tip">{% if model_ready %}This preview is synthetic and makes no API call. For a live run, load the sample inputs and use Analyze.{% else %}This preview uses hand-authored fictional findings. It makes no API call; live analysis is paused until the server key is configured.{% endif %}</div>
           </aside>
         </section>
 
@@ -120,6 +151,11 @@
           <p id="preview-notice" class="preview-notice" role="status" aria-live="polite" hidden></p>
           <div class="run-meta" id="run-meta"></div>
           <p id="quote-audit" class="quote-audit" role="status" aria-live="polite"></p>
+          <section class="status-key" aria-label="What the result labels mean">
+            <div><strong class="status-supported">Supported</strong><span>A relevant passage was found and checked in the CV.</span></div>
+            <div><strong class="status-not_found">Not found</strong><span>No direct passage was located; that does not prove the person lacks the qualification.</span></div>
+            <div><strong class="status-conflicting">Conflicting</strong><span>Two CV statements disagree and need human review.</span></div>
+          </section>
           <details id="omitted-requirements-panel" class="omitted-audit" hidden>
             <summary id="omitted-requirements-summary"></summary>
             <ul id="omitted-requirements-list"></ul>

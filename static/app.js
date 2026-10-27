@@ -125,6 +125,7 @@ loadDemoButton.addEventListener("click", async function () {
 });
 
 const previewDemoButton = document.getElementById("preview-demo-results");
+const previewDemoButtonLabel = previewDemoButton.textContent.trim();
 previewDemoButton.addEventListener("click", async function () {
   previewDemoButton.disabled = true;
   previewDemoButton.textContent = "Preparing synthetic preview…";
@@ -147,7 +148,7 @@ previewDemoButton.addEventListener("click", async function () {
     showError(error.message || "The synthetic preview could not be loaded.");
   } finally {
     previewDemoButton.disabled = false;
-    previewDemoButton.textContent = "Preview the finished result · no Meta call";
+    previewDemoButton.textContent = previewDemoButtonLabel;
   }
 });
 
