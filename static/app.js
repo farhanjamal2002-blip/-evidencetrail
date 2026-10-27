@@ -385,8 +385,11 @@ function renderResults(payload, analyzedFile) {
     ? verificationAudit.rejected_citations
     : [];
   const rejectedTotal = Number(verificationAudit.excluded || 0);
-  rejectedPanel.hidden = Boolean(payload.preview_mode);
-  if (!payload.preview_mode) {
+  rejectedPanel.hidden = false;
+  if (payload.preview_mode) {
+    rejectedSummary.textContent = "Verifier rejection ledger · synthetic preview";
+    rejectedIntro.textContent = "This sample made no model call and contains no rejected model proposal. Live analyses list any second-pass citation rejected by local source checks.";
+  } else {
     rejectedSummary.textContent = rejectedTotal + " proposed citation" +
       (rejectedTotal === 1 ? "" : "s") + " rejected by local checks";
     rejectedIntro.textContent = rejectedTotal
