@@ -1501,8 +1501,9 @@ def demo_preview() -> dict[str, Any]:
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
-        "index.html",
-        {
+        request=request,
+        name="index.html",
+        context={
             "request": request,
             "model_id": MODEL_ID,
             "model_ready": bool(os.getenv("MODEL_API_KEY", "").strip()),
