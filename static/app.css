@@ -288,6 +288,18 @@ textarea::placeholder { color: #8793a3; }
 .status-not_found { color: #8c6013 !important; }
 .status-conflicting { color: #a13d37 !important; }
 .review-summary { margin: 7px 0 13px; color: #6d7b90; font-size: 12px; line-height: 1.55; }
+.evidence-graph { display: grid; gap: 0; }
+.graph-row { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 12px; align-items: stretch; padding: 12px 0; border-top: 1px solid var(--line); }
+.graph-requirement { min-width: 0; align-self: start; padding: 13px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.graph-meta, .graph-source > span { display: block; color: var(--muted); font-size: 10px; line-height: 1.4; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.graph-requirement strong { display: block; margin-top: 7px; color: #304057; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.graph-links { display: flex; min-width: 0; align-items: stretch; gap: 9px; flex-wrap: wrap; }
+.graph-arrow { flex: 0 0 auto; align-self: center; color: var(--blue); font-size: 20px; }
+.graph-source { min-width: 0; flex: 1 1 220px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: #334258; text-align: left; }
+.graph-source.is-support { border-top: 3px solid var(--teal); }
+.graph-source.is-conflict { border-top: 3px solid #d65b53; }
+.graph-source q { display: block; margin-top: 8px; color: #42536a; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.graph-empty { min-width: 0; align-self: center; color: var(--muted); font-size: 12px; font-style: italic; line-height: 1.5; overflow-wrap: anywhere; }
 .findings-list { display: grid; gap: 12px; }
 .finding-card { overflow: hidden; border: 1px solid #dbe3ed; border-radius: 13px; background: #fff; }
 .finding-body { padding: 19px 21px; }
@@ -409,6 +421,9 @@ textarea::placeholder { color: #8793a3; }
   .sample-tip { grid-row: 5; }
 }
 @media (max-width: 560px) {
+  .graph-row { grid-template-columns: 1fr; gap: 8px; }
+  .graph-links { padding-left: 8px; }
+  .graph-arrow { transform: rotate(90deg); }
   .source-viewer-launch { display: grid; align-items: stretch; }
   .source-viewer-launch .secondary-button { width: 100%; }
   .source-viewer { padding: 13px; }
