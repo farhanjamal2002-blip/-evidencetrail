@@ -934,7 +934,7 @@ def build_evidence_graph(findings: list[dict[str, Any]]) -> dict[str, Any]:
 
 def verify_findings_with_muse(
     findings: list[dict[str, Any]], pages: list[dict[str, Any]]
-) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, int], dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, int], dict[str, int]]:
     payload, source_by_id, allowed_by_requirement = prepare_verification_request(
         findings, pages
     )
@@ -1255,18 +1255,25 @@ def build_report(
     )
     rejected_ledger_html = (
         "<details class='rejected-audit'>"
-        f"<summary>{verification_excluded} proposed citation(s) rejected by local checks"
-        + (f" · showing first {len(rejected_citations)}" if len(rejected_citations) < verification_excluded else "")
-        + "</summary>"
-        "<p>A rejected proposal is excluded from the displayed status, highlights, and evidence graph.</p>"
-        + (
-            f"<ol>{rejected_citation_rows}</ol>"
-            if rejected_citation_rows
-            else "<p>No rejected citation details were returned for this run.</p>"
+        "<summary>Verifier rejection ledger · synthetic preview</summary>"
+        "<p>This sample made no model call and contains no rejected model proposal. Live analyses list any second-pass citation rejected by local source checks.</p>"
+        "</details>"
+        if preview_mode
+        else (
+            "<details class='rejected-audit'>"
+            f"<summary>{verification_excluded} proposed citation(s) rejected by local checks"
+            + (f" · showing first {len(rejected_citations)}" if len(rejected_citations) < verification_excluded else "")
+            + "</summary>"
+            "<p>A rejected proposal is excluded from the displayed status, highlights, and evidence graph.</p>"
+            + (
+                f"<ol>{rejected_citation_rows}</ol>"
+                if rejected_citation_rows
+                else "<p>No rejected citation details were returned for this run.</p>"
+            )
+            + "</details>"
+            if verification_excluded
+            else ""
         )
-        + "</details>"
-        if not preview_mode and verification_excluded
-        else ""
     )
     if preview_mode:
         report_brand = "EVIDENCETRAIL · SYNTHETIC UI PREVIEW"
