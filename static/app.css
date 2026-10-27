@@ -88,6 +88,10 @@ a { color: var(--blue-dark); }
   border-radius: 13px;
   background: #fff;
 }
+.model-pill.is-mock { border-color: #e8d29e; background: #fffaf0; }
+.model-pill.is-mock .model-symbol { background: #fff0ce; color: #8b6218; }
+.model-pill.is-mock .config-dot { background: #d39a2f; box-shadow: 0 0 0 3px #fff0ce; }
+
 .model-symbol {
   width: 31px;
   height: 31px;
@@ -246,6 +250,9 @@ textarea::placeholder { color: #8793a3; }
 .privacy-footnote { margin-top: 11px; color: #788598; font-size: 11px; line-height: 1.5; text-align: center; }
 .model-key-notice { display: grid; gap: 5px; margin: 0 0 11px; padding: 12px 14px; border: 1px solid #e6cf8d; border-radius: 9px; background: #fff8e6; color: #705316; font-size: 12px; line-height: 1.55; }
 .model-key-notice strong { color: #63490e; font-size: 12px; }
+.mock-provider-notice { border-color: #d9cdef; background: #f7f3ff; color: #554778; }
+.mock-provider-notice strong { color: #453668; }
+
 .primary-button:disabled:not([aria-busy="true"]) { cursor: not-allowed; border-color: #aab6c8; background: #aab6c8; box-shadow: none; opacity: 1; }
 .primary-button[aria-busy="true"] { cursor: progress; opacity: .68; }
 .error-box { margin: 0 0 12px; padding: 11px 13px; border: 1px solid #e6b8b4; border-radius: 9px; background: var(--red-pale); color: #963b35; font-size: 13px; line-height: 1.55; }

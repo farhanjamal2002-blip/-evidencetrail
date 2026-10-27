@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f3f6fb">
     <title>EvidenceTrail — Muse Spark evidence review</title>
-    <link rel="stylesheet" href="/static/app.css?v=20261027-3">
+    <link rel="stylesheet" href="/static/app.css?v=20261027-4">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -15,11 +15,11 @@
           <span class="brand-mark">ET</span>
           <span>EvidenceTrail</span>
         </a>
-        <div class="model-pill {{ 'is-configured' if model_ready else 'is-missing' }}" aria-label="Muse Spark setup status; key presence does not confirm API connectivity">
+        <div class="model-pill {{ 'is-mock' if mock_mode else ('is-configured' if model_ready else 'is-missing') }}" aria-label="{{ 'Local mock simulation; not Muse and no Meta API request' if mock_mode else 'Muse Spark setup status; key presence does not confirm API connectivity' }}">
           <span class="model-symbol" aria-hidden="true">✦</span>
           <span class="model-copy">
-            <strong>Muse Spark 1.3</strong>
-            <small>{{ 'key set · connection unverified' if model_ready else 'sample mode · live analysis paused' }}</small>
+            <strong>{{ 'Local mock · NOT MUSE' if mock_mode else 'Muse Spark 1.3' }}</strong>
+            <small>{{ 'simulation mode · no Meta API request' if mock_mode else ('key set · connection unverified' if model_ready else 'sample mode · live analysis paused') }}</small>
           </span>
           <span class="config-dot" aria-hidden="true"></span>
         </div>
@@ -60,7 +60,7 @@
         </section>
 
         <section class="workbench">
-          <form id="analysis-form" class="input-panel" data-model-ready="{{ 'true' if model_ready else 'false' }}">
+          <form id="analysis-form" class="input-panel" data-model-ready="{{ 'true' if model_ready else 'false' }}" data-mock-mode="{{ 'true' if mock_mode else 'false' }}">
             <div class="panel-heading">
               <div>
                 <div class="step-label">01 / ADD YOUR DOCUMENTS</div>
@@ -87,9 +87,9 @@
             <textarea id="job-description" name="job_description" maxlength="18000" required
               placeholder="Paste the role description. EvidenceTrail will split it into specific requirements and trace each one to the CV."></textarea>
 
-            <label class="consent-row" {% if not model_ready %}hidden{% endif %}>
-              <input id="consent" name="consent" type="checkbox" value="true" required {% if not model_ready %}disabled{% endif %}>
-              <span>I understand the CV and job description are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. The upload may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models.</span>
+            <label class="consent-row" {% if not analysis_ready %}hidden{% endif %}>
+              <input id="consent" name="consent" type="checkbox" value="true" required {% if not analysis_ready %}disabled{% endif %}>
+              <span>{% if mock_mode %}I understand this is a local mock simulation, not Muse analysis. The deterministic heuristic results are for pipeline development only and must not be used for a hiring assessment.{% else %}I understand the CV and job description are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. The upload may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models.{% endif %}</span>
             </label>
 
             <div id="error-box" class="error-box" role="alert" hidden></div>
@@ -97,23 +97,31 @@
               <span class="status-spinner" aria-hidden="true"></span>
               <span id="analysis-status-text"></span>
             </div>
-            {% if not model_ready %}
+            {% if mock_mode %}
+            <div id="mock-provider-notice" class="model-key-notice mock-provider-notice" role="status">
+              <strong>Local simulation is active · not Muse.</strong>
+              <span>This exercises extraction, retrieval, source checks, and export with deterministic heuristics. It makes no Meta API calls and is not a hiring assessment.</span>
+            </div>
+            {% elif not model_ready %}
             <div id="model-key-notice" class="model-key-notice" role="status">
               <strong>Real analysis is paused.</strong>
               <span>The server has no Meta API key, so Analyze is disabled and this form will not upload your files. Open the fictional sample review to explore the result screen.</span>
             </div>
             {% endif %}
-            <button id="analyze-button" class="primary-button" type="submit" {% if not model_ready %}disabled aria-describedby="model-key-notice"{% endif %}>
-              <span>{% if model_ready %}Analyze with Muse Spark{% else %}Real analysis unavailable{% endif %}</span><span class="button-arrow">↗</span>
+            <button id="analyze-button" class="primary-button" type="submit" {% if not analysis_ready %}disabled aria-describedby="model-key-notice"{% elif mock_mode %}aria-describedby="mock-provider-notice"{% endif %}>
+              <span>{% if mock_mode %}Run local mock review{% elif model_ready %}Analyze with Muse Spark{% else %}Real analysis unavailable{% endif %}</span><span class="button-arrow">↗</span>
             </button>
-            <div class="privacy-footnote">Two Muse Spark passes per run: requirement mapping, then source-span adjudication. No candidate score or persistent CV storage.</div>
+            <div class="privacy-footnote">{% if mock_mode %}Local mock only: zero Meta API calls or model tokens. Results are simulated and not for hiring decisions.{% else %}Two Muse Spark passes per run: requirement mapping, then source-span adjudication. No candidate score or persistent CV storage.{% endif %}</div>
           </form>
 
           <aside class="demo-panel">
             <div class="step-label">02 / SEE THE IDEA</div>
             <h2>Try the prepared case</h2>
             <p>A fictional CV contains one supported requirement, one missing qualification, and one internal discrepancy.</p>
-            {% if model_ready %}
+            {% if mock_mode %}
+            <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs for local simulation</button>
+            <button id="preview-demo-results" class="secondary-button preview-button" type="button">Preview the sample · no processing</button>
+            {% elif model_ready %}
             <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs for a real run</button>
             <button id="preview-demo-results" class="secondary-button preview-button" type="button">Preview the sample · no API call</button>
             {% else %}
@@ -132,7 +140,7 @@
               <li>Select a quote to see its CV page</li>
               <li>Download the evidence pack</li>
             </ol>
-            <div class="sample-tip">{% if model_ready %}This preview is synthetic and makes no API call. For a live run, load the sample inputs and use Analyze.{% else %}This preview uses hand-authored fictional findings. It makes no API call; live analysis is paused until the server key is configured.{% endif %}</div>
+            <div class="sample-tip">{% if mock_mode %}This static preview is separate from the local simulation. The simulation uses deterministic heuristics and is not Muse output.{% elif model_ready %}This preview is synthetic and makes no API call. For a live run, load the sample inputs and use Analyze.{% else %}This preview uses hand-authored fictional findings. It makes no API call; live analysis is paused until the server key is configured.{% endif %}</div>
           </aside>
         </section>
 
@@ -220,6 +228,6 @@
         <span>Reports what the supplied files say. It does not assess a person’s worth or make a hiring decision.</span>
       </footer>
     </div>
-    <script src="/static/app.js?v=20261027-3"></script>
+    <script src="/static/app.js?v=20261027-4"></script>
   </body>
 </html>

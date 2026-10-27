@@ -39,6 +39,10 @@ MAX_ANALYSES_PER_HOUR_PER_IP = int(os.getenv("MAX_ANALYSES_PER_HOUR_PER_IP", "5"
 MAX_CONCURRENT_ANALYSES = max(1, int(os.getenv("MAX_CONCURRENT_ANALYSES", "2")))
 MODEL_ID = "muse-spark-1.3"
 API_BASE_URL = "https://api.meta.ai/v1"
+ANALYSIS_PROVIDER = os.getenv("EVIDENCETRAIL_PROVIDER", "muse").strip().casefold()
+if ANALYSIS_PROVIDER not in {"muse", "mock"}:
+    raise RuntimeError("EVIDENCETRAIL_PROVIDER must be either 'muse' or 'mock'.")
+MOCK_PROVIDER_ENABLED = ANALYSIS_PROVIDER == "mock"
 
 analysis_lock = threading.Lock()
 analysis_semaphore = threading.BoundedSemaphore(MAX_CONCURRENT_ANALYSES)
@@ -617,6 +621,187 @@ def rank_source_spans(
     return [catalog[index] for _, index in ranked[:limit]]
 
 
+def parse_mock_requirements(job_description: str) -> list[str]:
+    requirements: list[str] = []
+    for line in job_description.splitlines():
+        match = re.match(r"^\s*(?:\d+[.)]\s*|[-*•]\s*)(.+?)\s*$", line)
+        if match:
+            value = match.group(1).strip()
+            if value:
+                requirements.append(value)
+    if requirements:
+        return requirements[:20]
+
+    ignored_headers = {"requirements", "responsibilities", "qualifications", "about the role"}
+    return [
+        line.strip()
+        for line in job_description.splitlines()
+        if len(line.strip()) >= 24 and line.strip().casefold().rstrip(":") not in ignored_headers
+    ][:20]
+
+
+MOCK_NUMBER_WORDS = {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+    "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11,
+    "twelve": 12, "fifteen": 15, "twenty": 20,
+}
+
+
+def mock_number(value: str) -> int | None:
+    cleaned = value.casefold().strip()
+    if cleaned.isdigit():
+        return int(cleaned)
+    return MOCK_NUMBER_WORDS.get(cleaned)
+
+
+def mock_year_threshold(requirement: str) -> int | None:
+    match = re.search(
+        r"\b(?:at least|minimum(?: of)?)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty)\s+years?\b",
+        requirement,
+        flags=re.IGNORECASE,
+    )
+    return mock_number(match.group(1)) if match else None
+
+
+def mock_year_claims(text: str, topic: str) -> list[tuple[int, str]]:
+    number = r"(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty)"
+    topic_pattern = re.escape(topic)
+    patterns = (
+        re.compile(
+            rf"\b{number}\s+years?\s+(?:of\s+)?(?:[a-z-]+\s+){{0,2}}{topic_pattern}\b",
+            flags=re.IGNORECASE,
+        ),
+        re.compile(
+            rf"\b{topic_pattern}\b[^.\n;]{{0,60}}?\b{number}\s+years?\b",
+            flags=re.IGNORECASE,
+        ),
+    )
+    claims: list[tuple[int, str]] = []
+    seen: set[str] = set()
+    for pattern in patterns:
+        for match in pattern.finditer(text):
+            phrase = match.group(0).strip()
+            value = mock_number(match.group(1))
+            if value is not None and phrase.casefold() not in seen:
+                seen.add(phrase.casefold())
+                claims.append((value, phrase))
+    return claims
+
+
+def mock_map_requirements(
+    pages: list[dict[str, Any]], job_description: str
+) -> tuple[dict[str, Any], dict[str, int]]:
+    """Return deterministic schema-compatible suggestions for local pipeline development only."""
+    catalog = build_source_span_catalog(pages)
+    mapped: list[dict[str, Any]] = []
+    for requirement in parse_mock_requirements(job_description):
+        evidence: list[dict[str, Any]] = []
+        for span in rank_source_spans(requirement, catalog, limit=2):
+            quote = str(span["text"])[:1600]
+            if locate_quote(quote, pages, span["page"]):
+                evidence.append(
+                    {
+                        "quote": quote,
+                        "role": "supports",
+                        "page_hint": int(span["page"]),
+                    }
+                )
+        mapped.append({"requirement": requirement, "evidence": evidence})
+    return {"requirements": mapped}, {"input_tokens": 0, "output_tokens": 0}
+
+
+def mock_verification_response(verification_payload: dict[str, Any]) -> dict[str, Any]:
+    """Exercise the real verifier contract with local heuristics; never represents Muse output."""
+    spans_by_id = {
+        str(span.get("id", "")): span
+        for span in verification_payload.get("source_spans", [])
+    }
+    reviews: list[dict[str, Any]] = []
+    certification_terms = {"certification", "certificate", "license", "licence"}
+    number_words = set(MOCK_NUMBER_WORDS)
+
+    for item in verification_payload.get("requirements", []):
+        requirement_id = str(item.get("id", ""))
+        requirement = str(item.get("text", ""))
+        requirement_terms = set(retrieval_tokens(requirement))
+        requirement_terms -= number_words
+        candidates = [
+            spans_by_id[source_id]
+            for source_id in item.get("source_span_ids", [])
+            if source_id in spans_by_id
+        ]
+        evidence: list[dict[str, str]] = []
+        lowered = requirement.casefold()
+
+        if any(term in lowered for term in certification_terms):
+            required_name_terms = requirement_terms - certification_terms - {"current"}
+            for span in candidates:
+                source_terms = set(retrieval_tokens(str(span.get("text", ""))))
+                if required_name_terms and required_name_terms.issubset(source_terms):
+                    evidence.append(
+                        {
+                            "source_id": str(span["id"]),
+                            "quote": str(span.get("text", ""))[:1600],
+                            "role": "supports",
+                        }
+                    )
+                    break
+        else:
+            threshold = mock_year_threshold(requirement)
+            topic = next(
+                (term for term in ("python", "procurement") if term in requirement_terms),
+                None,
+            )
+            if threshold is not None and topic:
+                for span in candidates:
+                    for value, quote in mock_year_claims(str(span.get("text", "")), topic):
+                        evidence.append(
+                            {
+                                "source_id": str(span["id"]),
+                                "quote": quote,
+                                "role": "supports" if value >= threshold else "contradicts",
+                            }
+                        )
+                        if len(evidence) >= 4:
+                            break
+                    if len(evidence) >= 4:
+                        break
+            else:
+                ranked: list[tuple[int, str, dict[str, Any]]] = []
+                for span in candidates:
+                    source_terms = set(retrieval_tokens(str(span.get("text", ""))))
+                    overlap = len(requirement_terms & source_terms)
+                    if overlap:
+                        ranked.append((overlap, str(span["id"]), span))
+                ranked.sort(key=lambda record: (-record[0], record[1]))
+                if ranked:
+                    _overlap, source_id, span = ranked[0]
+                    evidence.append(
+                        {
+                            "source_id": source_id,
+                            "quote": str(span.get("text", ""))[:1600],
+                            "role": "supports",
+                        }
+                    )
+
+        has_support = any(record["role"] == "supports" for record in evidence)
+        has_conflict = any(record["role"] == "contradicts" for record in evidence)
+        status = "conflicting" if has_conflict else "supported" if has_support else "not_found"
+        reviews.append(
+            {
+                "requirement_id": requirement_id,
+                "status": status,
+                "certainty": "ambiguous",
+                "reason": (
+                    "Local mock only: deterministic keyword and year heuristics exercised "
+                    "the response contract. This is not Muse analysis or a hiring assessment."
+                ),
+                "evidence": evidence,
+            }
+        )
+    return {"reviews": reviews}
+
+
 def prepare_verification_request(
     findings: list[dict[str, Any]], pages: list[dict[str, Any]]
 ) -> tuple[dict[str, Any], dict[str, dict[str, Any]], dict[str, set[str]]]:
@@ -673,6 +858,12 @@ def prepare_verification_request(
 def call_muse_verification(
     verification_payload: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, int]]:
+    if MOCK_PROVIDER_ENABLED:
+        return mock_verification_response(verification_payload), {
+            "input_tokens": 0,
+            "output_tokens": 0,
+        }
+
     api_key = os.getenv("MODEL_API_KEY", "").strip()
     if not api_key:
         raise RuntimeError(
@@ -1122,6 +1313,7 @@ def build_report(
     evidence_graph: dict[str, Any],
     created_at: str,
     preview_mode: bool = False,
+    provider_mode: str = "muse",
 ) -> str:
     cards: list[str] = []
     for finding in findings:
@@ -1291,6 +1483,23 @@ def build_report(
         report_privacy_note = (
             "This preview uses only generated fictional documents. No uploaded CV or "
             "job description was sent to Meta Model API."
+        )
+    elif provider_mode == "mock":
+        report_brand = "EVIDENCETRAIL · LOCAL MOCK SIMULATION"
+        report_intro = (
+            "This run used a deterministic local provider to exercise EvidenceTrail's "
+            "request, retrieval, source-check, and export path. Its heuristic labels are "
+            "not Muse analysis and must not be used to make a hiring assessment."
+        )
+        report_audit_summary = (
+            "<p class='audit-summary'>Local mock provider · zero Meta API calls and "
+            "zero model tokens. Source-location checks still run against the uploaded PDF.</p>"
+        )
+        report_model_line = "Local mock provider · no Muse Spark analysis was run"
+        report_privacy_note = (
+            "No Meta Model API request occurred. The uploaded files were processed by "
+            "the configured EvidenceTrail server; request-scoped temporary handling "
+            "depends on that runtime."
         )
     else:
         report_brand = "EVIDENCETRAIL · MUSE SPARK EVIDENCE REVIEW"
@@ -1631,6 +1840,8 @@ def home(request: Request) -> HTMLResponse:
             "request": request,
             "model_id": MODEL_ID,
             "model_ready": bool(os.getenv("MODEL_API_KEY", "").strip()),
+            "mock_mode": MOCK_PROVIDER_ENABLED,
+            "analysis_ready": MOCK_PROVIDER_ENABLED or bool(os.getenv("MODEL_API_KEY", "").strip()),
             "max_pdf_mb": MAX_PDF_MB,
             "max_pdf_bytes": MAX_PDF_BYTES,
         },
@@ -1661,9 +1872,13 @@ async def analyze(
     if not consent:
         raise HTTPException(
             status_code=400,
-            detail="Confirm that the CV and job description may be sent to Meta Model API.",
+            detail=(
+                "Confirm that this is a local mock simulation."
+                if MOCK_PROVIDER_ENABLED
+                else "Confirm that the CV and job description may be sent to Meta Model API."
+            ),
         )
-    if not os.getenv("MODEL_API_KEY", "").strip():
+    if not MOCK_PROVIDER_ENABLED and not os.getenv("MODEL_API_KEY", "").strip():
         raise HTTPException(
             status_code=503,
             detail=(
@@ -1707,16 +1922,23 @@ async def analyze(
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
         try:
-            first_pass_result, first_pass_usage = await run_in_threadpool(
-                call_muse, pdf_bytes, job_description.strip()
-            )
+            if MOCK_PROVIDER_ENABLED:
+                first_pass_result, first_pass_usage = await run_in_threadpool(
+                    mock_map_requirements, pages, job_description.strip()
+                )
+            else:
+                first_pass_result, first_pass_usage = await run_in_threadpool(
+                    call_muse, pdf_bytes, job_description.strip()
+                )
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         except Exception as exc:
-            raise HTTPException(
-                status_code=502,
-                detail="Muse requirement extraction failed. No report was generated; check the API key and retry.",
-            ) from exc
+            detail = (
+                "The local mock requirement mapper failed."
+                if MOCK_PROVIDER_ENABLED
+                else "Muse requirement extraction failed. No report was generated; check the API key and retry."
+            )
+            raise HTTPException(status_code=502, detail=detail) from exc
 
         (
             first_pass_findings,
@@ -1747,7 +1969,11 @@ async def analyze(
         except Exception as exc:
             raise HTTPException(
                 status_code=502,
-                detail="Muse source adjudication failed. No result was generated; check the API key and retry.",
+                detail=(
+                    "The local mock verifier failed."
+                    if MOCK_PROVIDER_ENABLED
+                    else "Muse source adjudication failed. No result was generated; check the API key and retry."
+                ),
             ) from exc
 
         previews: dict[int, str] = {}
@@ -1777,6 +2003,7 @@ async def analyze(
             verification_audit,
             evidence_graph,
             created_at,
+            provider_mode=ANALYSIS_PROVIDER,
         )
 
         return {
@@ -1801,8 +2028,13 @@ async def analyze(
                 for page in pages
             },
             "report_html": report_html,
-            "model": MODEL_ID,
-            "analysis_calls": 2,
+            "model": (
+                "Local mock provider · NOT MUSE"
+                if MOCK_PROVIDER_ENABLED
+                else MODEL_ID
+            ),
+            "provider_mode": ANALYSIS_PROVIDER,
+            "analysis_calls": 0 if MOCK_PROVIDER_ENABLED else 2,
             "usage": usage,
             "cv_sha256": cv_hash,
             "job_sha256": job_hash,
