@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f3f6fb">
     <title>EvidenceTrail — Muse Spark evidence review</title>
-    <link rel="stylesheet" href="/static/app.css?v=20261027-10">
+    <link rel="stylesheet" href="/static/app.css?v=20261028-20">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -28,9 +28,9 @@
       <main id="main-content">
         <section class="hero">
           <div class="hero-copy">
-          <div class="eyebrow">JOB REQUIREMENTS → CV EVIDENCE</div>
-            <h1>Show the evidence.<br><em>Keep the decision human.</em></h1>
-          <p>Job seekers can check a CV against a role before applying; reviewers can trace each requirement to its source. Muse Spark maps the evidence, EvidenceTrail checks each quote against the PDF, and people decide what it means.</p>
+          <div class="eyebrow">JOB REQUIREMENTS → CV EVIDENCE → HUMAN REVIEW</div>
+            <h1>Review the evidence behind every requirement.</h1>
+          <p>Give a recruiter one job description and a small batch of CVs. EvidenceTrail uses Muse to find direct or potentially related experience, then checks every displayed quote against the uploaded PDF. A person reviews gaps and conflicts and makes every hiring decision.</p>
           </div>
           <div class="hero-stamp">
             <span class="stamp-line"></span>
@@ -41,20 +41,20 @@
         <section class="review-path" aria-label="How EvidenceTrail works">
           <div class="review-path-heading">
             <div class="step-label">THE REVIEW PATH</div>
-            <h2>From job requirement to a checkable source</h2>
+            <h2>From role criteria to a reviewable shortlist</h2>
           </div>
           <div class="review-path-steps">
             <article class="review-path-step">
               <span class="review-path-number" aria-hidden="true">01</span>
-              <div><h3>Break down the role</h3><p>Muse Spark turns the job description into a clear list of requirements.</p></div>
+              <div><h3>Set the role criteria</h3><p>Muse Spark turns the job description into a structured set of requirements.</p></div>
             </article>
             <article class="review-path-step">
               <span class="review-path-number" aria-hidden="true">02</span>
-              <div><h3>Trace each claim</h3><p>EvidenceTrail checks the quoted text and connects it to a CV page.</p></div>
+              <div><h3>Trace each CV</h3><p>EvidenceTrail verifies the quoted text and connects it to the original CV page.</p></div>
             </article>
             <article class="review-path-step">
               <span class="review-path-number" aria-hidden="true">03</span>
-              <div><h3>Prepare or follow up</h3><p>Candidates get an honest pre-application checklist; reviewers can ask neutral questions and record replies separately as unverified.</p></div>
+              <div><h3>Review gaps and conflicts</h3><p>Compare candidates by evidence type, inspect the source, and prepare consistent follow-up questions.</p></div>
             </article>
           </div>
         </section>
@@ -63,33 +63,22 @@
           <form id="analysis-form" class="input-panel" data-model-ready="{{ 'true' if model_ready else 'false' }}" data-mock-mode="{{ 'true' if mock_mode else 'false' }}">
             <div class="panel-heading">
               <div>
-                <div class="step-label">01 / ADD YOUR DOCUMENTS</div>
-                <h2>Start an evidence review</h2>
+                <div class="step-label">01 / DEFINE THE ROLE</div>
+                <h2>Set the role, then review the CVs</h2>
               </div>
               <span class="private-note">No sign-in · no persistent storage</span>
             </div>
-
-            <label class="field-label" for="cv">Candidate CV</label>
-            <label class="upload-zone" for="cv">
-              <input id="cv" name="cv" type="file" accept="application/pdf,.pdf" data-max-bytes="{{ max_pdf_bytes }}" required>
-              <span class="upload-icon">↑</span>
-              <span class="upload-copy">
-                <strong id="file-name">Choose a PDF or drop it here</strong>
-                <small>Searchable and scanned PDFs · up to {{ max_pdf_mb }} MB · max 20 pages</small>
-              </span>
-              <span class="browse-link">Browse</span>
-            </label>
 
             <div class="field-row">
               <label class="field-label" for="job-description">Job description</label>
               <span class="char-count"><span id="char-count">0</span> / 18,000</span>
             </div>
             <textarea id="job-description" name="job_description" maxlength="18000" required
-              placeholder="Paste the role description. EvidenceTrail will split it into specific requirements and trace each one to the CV."></textarea>
+              placeholder="Paste the role description. Muse will structure its requirements, then EvidenceTrail will trace them to each CV."></textarea>
 
             <div class="role-preflight-actions">
-              <button id="role-audit-button" class="secondary-button" type="button">Build role evidence plan</button>
-              <span>Only the job post goes to this app server. No CV or Meta request; this check is not stored.</span>
+              <button id="role-audit-button" class="secondary-button" type="button">Build role review checklist</button>
+              <span>Only the job text is sent to this app. No CV or Muse call; the checklist is not stored and does not change the analysis.</span>
             </div>
             <p id="role-audit-status" class="role-audit-status" role="status" aria-live="polite" hidden></p>
             <details id="role-clarity-audit" class="role-clarity-audit" hidden>
@@ -110,9 +99,34 @@
               </details>
             </details>
 
+            <div class="step-label candidate-upload-step">02 / ADD CANDIDATES</div>
+            <label class="field-label" for="cv">Candidate CVs <span>(up to 5)</span></label>
+            <label class="upload-zone" for="cv">
+              <input id="cv" name="cv" type="file" accept="application/pdf,.pdf" multiple data-max-bytes="{{ max_pdf_bytes }}" data-max-files="5" required>
+              <span class="upload-icon">↑</span>
+              <span class="upload-copy">
+                <strong id="file-name">Choose CV PDFs or drop them here</strong>
+                <small>Up to 5 searchable or scanned CVs · {{ max_pdf_mb }} MB each · max 20 pages each</small>
+              </span>
+              <span class="browse-link">Browse</span>
+            </label>
+
+            <details class="application-draft-field">
+              <summary>Optional: check a candidate statement against one CV</summary>
+              <div class="application-draft-body">
+                <div class="field-row">
+                  <label class="field-label" for="application-draft">Candidate statement <span>(single CV only)</span></label>
+                  <span class="char-count"><span id="draft-char-count">0</span> / 8,000</span>
+                </div>
+                <textarea id="application-draft" name="application_draft" maxlength="8000" rows="4"
+                  placeholder="Paste a cover-letter paragraph or application answer. We’ll check its factual claims against the CV and show the source—or flag that the CV doesn’t show it."></textarea>
+                <p class="field-help">If the CV doesn't mention a claim, that doesn't mean the claim is false.</p>
+              </div>
+            </details>
+
             <label class="consent-row" {% if not analysis_ready %}hidden{% endif %}>
               <input id="consent" name="consent" type="checkbox" value="true" required {% if not analysis_ready %}disabled{% endif %}>
-              <span>{% if mock_mode %}I understand this is a local mock simulation, not Muse analysis. The deterministic heuristic results are for pipeline development only and must not be used for a hiring assessment.{% else %}I understand the CV and job description are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. The upload may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models.{% endif %}</span>
+              <span>{% if mock_mode %}I understand this is a local mock simulation, not Muse analysis. Its deterministic results are for pipeline development only and must not be used for a hiring assessment.{% else %}I understand the selected CVs and job description are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. If supplied for a single CV, the candidate statement is sent too. Uploads may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models; its terms allow processing to provide the service and address policy, safety, and security concerns.{% endif %}</span>
             </label>
 
             <div id="error-box" class="error-box" role="alert" hidden></div>
@@ -132,15 +146,21 @@
             </div>
             {% endif %}
             <button id="analyze-button" class="primary-button" type="submit" {% if not analysis_ready %}disabled aria-describedby="model-key-notice"{% elif mock_mode %}aria-describedby="mock-provider-notice"{% endif %}>
-              <span>{% if mock_mode %}Run local mock review{% elif model_ready %}Analyze with Muse Spark{% else %}Real analysis unavailable{% endif %}</span><span class="button-arrow">↗</span>
+              <span>{% if mock_mode %}Run local mock review{% elif model_ready %}Review CVs with Muse Spark{% else %}Real analysis unavailable{% endif %}</span><span class="button-arrow">↗</span>
             </button>
-            <div class="privacy-footnote">{% if mock_mode %}Local mock only: zero Meta API calls or model tokens. Results are simulated and not for hiring decisions.{% else %}Two Muse Spark passes per run: requirement mapping, then source-span adjudication. No candidate score or persistent CV storage.{% endif %}</div>
+            <div class="privacy-footnote">{% if mock_mode %}Local mock only: zero Meta API calls or model tokens. Results are simulated and not for hiring decisions.{% else %}Two Muse Spark passes per CV: requirement mapping, then source-span adjudication. EvidenceTrail verifies quotes locally. No candidate score, automatic ranking, or persistent CV storage.{% endif %}</div>
           </form>
 
           <aside class="demo-panel">
             <div class="step-label">02 / SEE THE IDEA</div>
             <h2>Try the prepared case</h2>
-            <p>A fictional CV shows one supported item, one absent qualification, and one internal discrepancy. The preview also leaves one listed job item unmapped so you can inspect the coverage warning.</p>
+            <p>The fictional case includes direct evidence, a possible transferable skill, a missing requirement, and a conflict—each tied to the CV page.</p>
+            <div class="unified-demo-card">
+              <strong>Unified supplier-operations set · rubric v1</strong>
+              <p>One fixed job description and five fictional CVs: concrete contract work, generic claims, adjacent experience, overlapping dates, and a scanned two-column CV.</p>
+              <button id="load-unified-demo" class="secondary-button" type="button">Load the five-CV set</button>
+              <small>Loading fills the form only. Files are sent for analysis only after you confirm and choose Review CVs.</small>
+            </div>
             {% if mock_mode %}
             <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs for local simulation</button>
             <button id="preview-demo-results" class="secondary-button preview-button" type="button">Preview the sample · no processing</button>
@@ -154,9 +174,10 @@
             <a class="text-link demo-download" href="/demo/cv.pdf" download>Download the synthetic CV separately <span>↓</span></a>
             <div class="demo-divider"></div>
             <div class="demo-state-list">
-              <div><span class="state-dot supported-dot"></span><span>Direct evidence</span><b>Supported</b></div>
-              <div><span class="state-dot missing-dot"></span><span>No passage located</span><b>Not found</b></div>
-              <div><span class="state-dot conflict-dot"></span><span>Incompatible CV claims</span><b>Conflicting</b></div>
+              <div><span class="state-dot supported-dot"></span><span>A passage was found</span><b>CV shows it</b></div>
+              <div><span class="state-dot related-dot"></span><span>A nearby task may transfer</span><b>Review the link</b></div>
+              <div><span class="state-dot missing-dot"></span><span>No passage was found</span><b>Not mentioned</b></div>
+              <div><span class="state-dot conflict-dot"></span><span>CV details don't agree</span><b>Check both</b></div>
             </div>
             <ol class="demo-walkthrough" aria-label="What to do in the sample review">
               <li>Open the sample report</li>
@@ -169,10 +190,31 @@
         </section>
 
         <section id="results" class="results" hidden>
+          <section id="batch-review" class="batch-review" aria-labelledby="batch-review-title" hidden>
+            <div class="batch-review-heading">
+              <div>
+                <div class="step-label">REVIEW ORDER · UPLOAD ORDER</div>
+                <h2 id="batch-review-title">Candidate evidence reviews</h2>
+              </div>
+              <div class="batch-review-actions">
+                <p>These summaries describe CV evidence only. Shortlist decisions are yours; the app does not rank candidates.</p>
+                <button id="batch-review-download" class="secondary-button" type="button">Download shortlist audit JSON</button>
+              </div>
+            </div>
+            <div class="batch-review-toolbar">
+              <div id="batch-review-view-switch" class="batch-review-view-switch" role="group" aria-label="Batch review layout">
+                <button id="batch-review-dossier-view" type="button" data-batch-review-mode="dossier" aria-pressed="true">Candidate dossiers</button>
+                <button id="batch-review-matrix-view" type="button" data-batch-review-mode="matrix" aria-pressed="false">Requirement matrix</button>
+              </div>
+              <p class="batch-review-view-note">Candidates stay in upload order. The matrix compares CV evidence and does not rank people.</p>
+            </div>
+            <div id="batch-review-matrix" class="batch-review-matrix" hidden></div>
+            <div id="batch-review-items" class="batch-review-items"></div>
+          </section>
           <div class="results-top">
             <div>
-              <div class="step-label">03 / REVIEW VERIFIED EVIDENCE</div>
-              <h2>Your evidence map</h2>
+              <div class="step-label">03 / PLAIN-LANGUAGE SUMMARY</div>
+              <h2>What we found in the CV</h2>
               <p id="result-caption" class="result-caption"></p>
             </div>
             <button id="download-report" class="secondary-button download-button" type="button">
@@ -181,44 +223,92 @@
           </div>
           <p class="report-note">The exported pack embeds full CV page images. Review it before sharing.</p>
           <p id="preview-notice" class="preview-notice" role="status" aria-live="polite" hidden></p>
-          <div class="run-meta" id="run-meta"></div>
+          <section class="result-overview" aria-labelledby="plain-summary-title">
+            <div class="result-overview-copy">
+              <div class="step-label">AT A GLANCE</div>
+              <h3 id="plain-summary-title"></h3>
+              <p id="plain-summary-detail"></p>
+              <p id="verifier-chip" class="verifier-chip" role="status" aria-live="polite" hidden></p>
+              <p id="job-coverage-summary" class="job-coverage-summary" hidden></p>
+            </div>
+            <div id="summary-counts" class="summary-counts" aria-label="CV findings at a glance"></div>
+          </section>
+          <section id="timeline-audit" class="timeline-audit" hidden aria-labelledby="timeline-audit-title">
+            <div class="timeline-audit-head">
+              <div>
+                <div class="step-label">DATE CHECK</div>
+                <h3 id="timeline-audit-title">Timeline review</h3>
+              </div>
+              <p id="timeline-audit-summary"></p>
+            </div>
+            <p class="timeline-audit-disclosure">Dates are checked with local arithmetic against CV quotes. Month totals are approximate when the CV gives years only. An overlap or difference is a prompt to clarify, not a finding of dishonesty; a CV may omit earlier roles.</p>
+            <ul id="timeline-audit-flags" class="timeline-audit-flags"></ul>
+            <p id="timeline-area-summary" class="timeline-area-summary" hidden></p>
+            <details id="timeline-episodes-panel" class="timeline-episodes-panel">
+              <summary id="timeline-episodes-summary"></summary>
+              <ol id="timeline-episodes"></ol>
+            </details>
+          </section>
+          <section id="application-claim-audit" class="application-claim-audit" hidden aria-labelledby="application-claim-audit-title">
+            <div class="application-claim-audit-head">
+              <div>
+                <div class="step-label">APPLICATION CLAIM CHECK</div>
+                <h3 id="application-claim-audit-title">Before you send this</h3>
+              </div>
+              <p id="application-claim-audit-summary"></p>
+            </div>
+            <p class="application-claim-disclosure">This checks whether the supplied CV supports what the draft says. It cannot verify real-world truth; “not found” does not mean false.</p>
+            <div id="application-claim-audit-items" class="application-claim-audit-items"></div>
+          </section>
           <p id="ocr-review-warning" class="ocr-review-warning" role="status" aria-live="polite" hidden></p>
-          <p id="quote-audit" class="quote-audit" role="status" aria-live="polite"></p>
-          <details id="job-list-coverage" class="coverage-audit" hidden>
-            <summary id="job-list-coverage-summary"></summary>
-            <p id="job-list-coverage-intro">
-              This is a conservative wording check, not semantic validation. Review every listed item; paraphrases may need review.
-            </p>
-            <ol id="job-list-coverage-items"></ol>
-            <p id="job-list-coverage-limit" hidden></p>
+          <details class="status-key-details">
+            <summary>About these results</summary>
+            <section class="status-key" aria-label="About the CV findings">
+              <div><strong class="status-supported">Direct evidence</strong><span>The CV describes the job need in a sufficiently similar context. Check the original passage.</span></div>
+              <div><strong class="status-related">Related experience</strong><span>Muse sees a possible transfer. Review the explanation and what remains unproven.</span></div>
+              <div><strong class="status-not_found">Not mentioned</strong><span>This CV doesn't show it. The person may still have the experience.</span></div>
+              <div><strong class="status-conflicting">Details differ</strong><span>Two parts of the CV say different things. Check both passages.</span></div>
+              <div><strong class="status-needs_review">Needs a closer look</strong><span>The wording or source is unclear, so a person should review it.</span></div>
+            </section>
           </details>
-          <section class="status-key" aria-label="What the result labels mean">
-            <div><strong class="status-supported">Supported</strong><span>A relevant passage was found and checked in the CV.</span></div>
-            <div><strong class="status-not_found">Not found</strong><span>No direct passage was located; that does not prove the person lacks the qualification.</span></div>
-            <div><strong class="status-conflicting">Conflicting</strong><span>Two CV statements disagree and need human review.</span></div>
-          </section>
-          <details id="omitted-requirements-panel" class="omitted-audit" hidden>
-            <summary id="omitted-requirements-summary"></summary>
-            <ul id="omitted-requirements-list"></ul>
+          <details class="technical-audit">
+            <summary id="technical-audit-summary">Open verification details</summary>
+            <div class="run-meta" id="run-meta"></div>
+            <p id="quote-audit" class="quote-audit" role="status" aria-live="polite"></p>
+            <details id="job-list-coverage" class="coverage-audit" hidden>
+              <summary id="job-list-coverage-summary"></summary>
+              <p id="job-list-coverage-intro">
+                This is a conservative wording check, not semantic validation. Review every listed item; paraphrases may need review.
+              </p>
+              <ol id="job-list-coverage-items"></ol>
+              <p id="job-list-coverage-limit" hidden></p>
+            </details>
+            <details id="omitted-requirements-panel" class="omitted-audit" hidden>
+              <summary id="omitted-requirements-summary"></summary>
+              <ul id="omitted-requirements-list"></ul>
+            </details>
+            <details id="rejected-citations-panel" class="rejected-audit" hidden>
+              <summary id="rejected-citations-summary"></summary>
+              <p id="rejected-citations-intro"></p>
+              <ol id="rejected-citations-list"></ol>
+            </details>
+            <details class="provenance-panel">
+              <summary>Source fingerprints and run record</summary>
+              <dl id="provenance-details" class="provenance-details"></dl>
+            </details>
+            <details class="evidence-graph-panel">
+              <summary>Open the technical evidence graph</summary>
+              <div class="step-label">REQUIREMENTS → SOURCE SPANS</div>
+              <h3 id="evidence-graph-title">Evidence graph</h3>
+              <p class="graph-intro">Each edge points to a source quote that passed the local text and page checks. Open a source to inspect its original PDF location.</p>
+              <div id="evidence-graph" class="evidence-graph"></div>
+            </details>
           </details>
-          <details id="rejected-citations-panel" class="rejected-audit" hidden>
-            <summary id="rejected-citations-summary"></summary>
-            <p id="rejected-citations-intro"></p>
-            <ol id="rejected-citations-list"></ol>
-          </details>
-          <details class="provenance-panel">
-            <summary>Source fingerprints and run record</summary>
-            <dl id="provenance-details" class="provenance-details"></dl>
-          </details>
-          <div id="summary-counts" class="summary-counts"></div>
-          <section class="evidence-graph-panel" aria-labelledby="evidence-graph-title">
-            <div class="step-label">REQUIREMENTS → SOURCE SPANS</div>
-            <h3 id="evidence-graph-title">Evidence graph</h3>
-            <p class="graph-intro">Each edge points to a source quote that passed the local text and page checks. Open a source to inspect its original PDF location.</p>
-            <div id="evidence-graph" class="evidence-graph"></div>
-          </section>
-          <p id="review-summary" class="review-summary" role="status" aria-live="polite"></p>
           <div id="findings-list" class="findings-list"></div>
+          <details class="review-activity">
+            <summary>Reviewer activity</summary>
+            <p id="review-summary" class="review-summary" role="status" aria-live="polite"></p>
+          </details>
           <details id="application-prep" class="application-prep" hidden>
             <summary>Candidate view · prepare your CV before applying</summary>
             <div class="application-prep-body">
@@ -231,7 +321,8 @@
               </div>
             </div>
           </details>
-          <section id="clarification-brief" class="clarification-brief" hidden aria-labelledby="clarification-brief-title">
+          <details id="clarification-brief" class="clarification-brief" hidden aria-labelledby="clarification-brief-title">
+            <summary class="clarification-brief-summary">Optional reviewer follow-up</summary>
             <div class="clarification-brief-head">
               <div>
                 <div class="step-label">REVIEW → FOLLOW-UP</div>
@@ -243,6 +334,55 @@
             <p class="candidate-response-disclosure">A reply you record stays in this tab, is not sent to Muse or the server, and is included in the download only after you record it. Record only information you are authorized to keep.</p>
             <ol id="clarification-brief-items" class="clarification-brief-items"></ol>
             <p id="clarification-brief-status" class="clarification-brief-status" role="status" aria-live="polite"></p>
+          </details>
+          <section id="recruiter-decision" class="recruiter-decision" hidden aria-labelledby="recruiter-decision-title">
+            <div class="recruiter-decision-head">
+              <div>
+                <div class="step-label">04 / RECRUITER DECISION & HANDOFF</div>
+                <h3 id="recruiter-decision-title">Record your decision</h3>
+              </div>
+              <p id="recruiter-decision-candidate" class="recruiter-decision-candidate"></p>
+            </div>
+            <p class="recruiter-decision-disclosure">This is your decision. It does not change the evidence findings or reorder candidates. Review the source passages and follow-up items before recording it.</p>
+            <p id="recruiter-decision-evidence-summary" class="recruiter-decision-evidence-summary"></p>
+            <div class="recruiter-decision-fields">
+              <div>
+                <label class="recruiter-decision-label" for="recruiter-decision-select">Recruiter shortlist decision</label>
+                <select id="recruiter-decision-select" class="recruiter-decision-select">
+                  <option value="undecided">Not decided</option>
+                  <option value="advance">Advance</option>
+                  <option value="hold">Hold for follow-up</option>
+                  <option value="do_not_advance">Do not advance</option>
+                </select>
+              </div>
+              <div>
+                <label class="recruiter-decision-label" for="recruiter-decision-note">Handoff note <span>(optional)</span></label>
+                <textarea id="recruiter-decision-note" class="recruiter-decision-note" maxlength="400" rows="3" placeholder="What should the hiring manager know or check next?"></textarea>
+              </div>
+            </div>
+            <div class="interview-invite-actions">
+              <div>
+                <strong>Interview follow-up</strong>
+                <span>Prepare an editable invitation using only clear, specific CV evidence where available.</span>
+              </div>
+              <button id="prepare-interview-invite" class="secondary-button" type="button">Prepare interview invitation</button>
+            </div>
+            <section id="interview-invite-panel" class="interview-invite-panel" hidden aria-labelledby="interview-invite-title">
+              <div class="interview-invite-head">
+                <div>
+                  <h4 id="interview-invite-title">Editable interview invitation</h4>
+                  <p>Replace the placeholders and review the wording. This draft is not sent and no interview is scheduled.</p>
+                </div>
+                <div class="interview-invite-buttons">
+                  <button id="copy-interview-invite" class="secondary-button" type="button">Copy draft</button>
+                  <button id="clear-interview-invite" class="quiet-button" type="button">Clear draft</button>
+                </div>
+              </div>
+              <label class="recruiter-decision-label" for="interview-invite-draft">Message draft</label>
+              <textarea id="interview-invite-draft" class="interview-invite-draft" maxlength="2400" rows="10"></textarea>
+              <p id="interview-invite-status" class="interview-invite-status" role="status" aria-live="polite"></p>
+            </section>
+            <p id="recruiter-decision-status" class="recruiter-decision-status" role="status" aria-live="polite"></p>
           </section>
           <div id="source-viewer-launch" class="source-viewer-launch" hidden>
             <div class="source-viewer-launch-copy">
@@ -283,9 +423,10 @@
 
       <footer class="footer">
         <span>EvidenceTrail</span>
-        <span>Reports what the supplied files say. It does not assess a person’s worth or make a hiring decision.</span>
+        <span>Reports what the supplied files say. It does not score, rank, or make a hiring decision about a person.</span>
       </footer>
     </div>
-    <script src="/static/app.js?v=20261027-11"></script>
+    <script src="/static/interview-invite.js?v=20261028-1"></script>
+    <script src="/static/app.js?v=20261028-19"></script>
   </body>
 </html>

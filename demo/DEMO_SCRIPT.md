@@ -1,56 +1,63 @@
-# EvidenceTrail — Muse Spark three-minute demo
+# EvidenceTrail — recruiter workflow demo
 
 ## Recording setup
 
-- The synthetic case uses a two-page CV and four listed job items. The static preview hand-authors three evidence findings (supported, not found, conflicting) and intentionally leaves one list item unmapped so the omission warning is visible. This warning is a synthetic demonstration, not a Muse result.
-- The sample job description has four listed criteria and wording cues for the free role preflight. The preflight sends only the job description to the EvidenceTrail app server, makes no Meta call, and has no CV or applicant data to inspect.
-- To inspect the interface before the key is configured, click “Open the sample review.” This is a hand-authored preview using fictional data; no model request runs, and it is not proof of a live model analysis.
-- For the competition recording, click “Load sample inputs for a real run.” The fictional CV and job description are prepared locally.
-- Confirm the Meta data-sharing checkbox and run the two-pass live analysis. Loading either preview/input does not use API credits; the live run makes two model requests.
-- Keep the API key out of the browser, screen recording, repository, and submission video.
-- Record the full screen at readable zoom. Have the result page ready to scroll smoothly after the live request.
+- Review `calibration/iteration_review_20261028_strength_ladder.md`, the five-case JSON, and the one-time paired strength-ladder result before recording. The five-case set used 10 Muse requests; Muse alone matched 16/18 labels and the deterministic timeline gate resolves the two flagged date findings to **Conflict to clarify** (18/18 combined labels). The paired keyword-only/specific example used four requests with no retries. Do not rerun either set for the recording.
+- Use fictional CVs only. The five calibration cases span four industries, including a deliberately messy image-only scan and date discrepancies.
+- Keep `MODEL_API_KEY` in the server environment, out of the browser, repository, and recording.
+- The app can review one CV or up to five against the same job description. Batch results stay in upload order and do not create a candidate score or automatic ranking.
+- The saved five-case and paired reports omit response bodies and accepted CV quotes. The targeted scanned-CV report now retains the two actual rejected quote snippets, cited page, and failure reason. Use that saved trace for the amber catch; do not imply the report is a replayable full CV session.
+- Finish the real analyses before recording and begin with the actual results visible; this keeps the video moving without substituting mock output for a live result. Keep each case clearly identified because the timeline example and scanned-CV verifier catch are separate candidates and roles.
+- Record at readable zoom. Keep the source-check chip, evidence labels, and cited page legible at normal playback size.
 
-## Shot list and voiceover
+## Two-minute walkthrough
 
-### 0:00–0:25 — The problem and plain-language product pitch
+### 0:00–0:12 — The promise
 
-**Show:** The three-step review path, then the job description and clearly fictional CV. Point out the free role criteria preflight before the CV upload.
+**Show:** Start on completed results with the role and reviewer decision controls visible.
 
-**Say:** “Job seekers need to know whether their CV actually shows the experience a role asks for. Reviewers need to inspect those claims quickly. EvidenceTrail connects requirements to source passages and leaves conclusions to people.”
+**Say:** “A match score hides the reason. EvidenceTrail shows CV evidence, gaps, and the recruiter’s decision; it does not rank applicants.”
 
-### 0:25–0:45 — Criteria before candidate data
+### 0:12–0:28 — Compare by requirement
 
-**Show:** Click “Build role evidence plan” before uploading the CV. Show the exact source line, category, explicit priority wording (or “Not stated”), reviewer evidence check, draft interview question, candidate self-check, and download the role worksheet. If time, open the secondary optional wording cues. Then open the synthetic sample review and point to supported, not found, and conflicting results.
+**Show:** Open the two-CV strength-ladder batch in matrix view. Point to the same requirement across the two candidates, then the Specific and Keyword only labels.
 
-**Say:** “Before you share a CV, EvidenceTrail can turn listed role requirements into an evidence plan. It reports priority wording only when the job post states it and exports a job-only worksheet; no CV or Meta request is involved. In the sample, one requirement is supported, one has no direct evidence, and one conflicts with another CV statement. ‘Not found’ means only that this document did not show it.”
+**Say:** “The matrix compares requirements across candidates in upload order. One CV shows specific work; the other has keywords only.”
 
-### 0:45–1:20 — Muse Spark 1.3 analysis via Meta Model API
+### 0:28–0:48 — Explain related experience
 
-**Show:** Scroll to the form, load the sample inputs, confirm the data-sharing checkbox, and click “Analyze with Muse Spark.” Keep the two-pass loading state visible briefly, then show the model name, two real Muse passes, token usage, and source-check counts.
+**Show:** Open the public-procurement candidate dossier. Show the related finding, source passage, transfer explanation, and remaining gap.
 
-**Say:** “Muse Spark reads the job and CV to identify requirements and relevant claims. EvidenceTrail then finds nearby source passages and asks Muse Spark to review those passages. Before anything appears as evidence, the app checks that the quote is really in the CV and points to the right page.”
+**Say:** “This candidate’s internal audit work may transfer to public procurement, but GFR, CVC, and GeM are unproven. Muse explains the link; the recruiter decides whether it counts.”
 
-### 1:20–2:15 — Inspect evidence and capture follow-up
+### 0:48–1:05 — Clarify the date discrepancy
 
-**Show:** Point to the evidence graph: each analyzed requirement connects to its retrieved, verified source quote. Show one supported result, the not-found certification, and the conflicting procurement-years result. Open a supporting and conflicting graph link in the zoomable original PDF. Use the color key: teal supports; red conflicts. Show the job-description list audit and explain that any weak wording match needs human review. Mark the certification as “Needs follow-up,” then show the neutral clarification question and record a clearly fictional candidate reply.
+**Show:** Open the 10-year experience finding. Point to **Conflict to clarify** and “Muse: Direct · Timeline check: conflict.”
 
-**Say:** “Follow the line from this requirement to the exact quote and page. The green passage appears to support the requirement; the red passage disagrees with another statement in the same CV. A quote being present does not prove the claim is true, so a person still checks the context. When a document is incomplete or unclear, EvidenceTrail drafts a neutral follow-up. A reply can be recorded as candidate-provided and unverified; it stays separate from the CV finding and is not sent back to Muse.”
+**Say:** “The profile claims 12 years; dated roles cover about eight. The date gate marks Conflict to clarify and preserves Muse’s original label.”
 
-### 2:15–2:45 — Export the evidence pack
+### 1:05–1:25 — Show the real scan catch
 
-**Show:** Download the standalone HTML report. Scroll through the quote, highlighted page, reviewer note, separately labeled candidate reply, and CV and job-description fingerprints.
+**Show:** Switch to the separate image-only scan result. Show the MCIPS finding, then the amber source-check chip, then expand the rejection ledger for the exact reason and quote, and finish on scanned page 1.
 
-**Say:** “The evidence pack keeps the requirements, source quotes, highlighted pages, reviewer notes, and candidate-provided follow-up together while preserving where each statement came from. The original CV finding stays unchanged.”
+**Say:** “The amber chip shows two of five quotes rejected. The ledger says each could not be found on page 1. Both stay out of the evidence.”
 
-### 2:45–3:00 — Close
+### 1:25–1:45 — Advance and prepare the hand-off
 
-**Show:** Return to the evidence map and end on the product name.
+**Show:** Return to the candidate review, prepare an interview invitation, edit one placeholder, then open the HTML evidence pack.
 
-**Say:** “Muse Spark interprets the documents. EvidenceTrail checks the citations against the CV. The reviewer makes the decision. That’s the whole point: every finding has a trail a person can inspect.”
+**Say:** “The recruiter chooses to advance and gets an editable invitation draft grounded only in clear, verified evidence. Nothing is sent or scheduled. The hand-off carries the decision, draft, accepted related findings, gaps, and next questions.”
 
-## Before submitting
+### 1:45–2:00 — Give the measured result and boundary
 
-- Use the same build shown in the video and linked from the public repository.
-- Confirm the deployed demo works without showing or exposing the API key.
-- Make sure the video link and repository are publicly accessible to judges.
-- Review the final report once more for the three expected outcomes and the PDF highlights.
+**Show:** Finish on the calibration summary, with the two result sets visibly separated.
+
+**Say:** “Five-case calibration: Muse, 16 of 18; with the timeline gate, 18 of 18 combined. Separate scan: 3 of 3 labels; 3 of 5 quotes verified, 2 blocked. Muse interprets; the recruiter decides.”
+
+## Before submission
+
+- State the metrics as separate layers: **Muse alone: 16/18**; **after the deterministic timeline gate: 18/18 on this same set**; **23/24 proposed quotes passed local checks in the five-case run**. In one separate image-only scanned-CV rerun, **3/3 expected labels matched, 3/5 proposed quotes passed local checks, and the other 2/5 were blocked because they were not found on cited page 1**. Do not merge those quote denominators. The 18/18 figure is a derived, combined label result for the two flagged duration discrepancies, not Muse accuracy and not a general accuracy rate.
+- The paired strength-ladder run matched both prewritten focal category and strength labels, used four Muse requests, and had an estimated $0.0483815 token cost. Call it a two-candidate demonstration, not a benchmark.
+- Confirm that the live recording matches the submitted app build and the actual model output.
+- Keep the fictional data and server-side key disclosure visible.
+- Check the public app, repository, and video links from a signed-out browser before submission.

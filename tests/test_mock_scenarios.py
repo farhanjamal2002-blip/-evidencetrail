@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import random
 import io
+import json
 import math
 import subprocess
 import sys
@@ -41,8 +42,32 @@ class RequirementProposal(StrictContract):
     evidence: list[CandidateQuote]
 
 
+class ApplicationClaimProposal(StrictContract):
+    claim: str
+
+
+class EmploymentEpisodeProposal(StrictContract):
+    role: str
+    company: str
+    start_date: str
+    end_date: str
+    date_quote: str
+    scope_quote: str | None
+    experience_areas: list[str]
+    page_hint: int | None
+
+
+class ExperienceDurationClaim(StrictContract):
+    topic: str
+    claim_quote: str
+    page_hint: int | None
+
+
 class FirstPassContract(StrictContract):
     requirements: list[RequirementProposal]
+    application_claims: list[ApplicationClaimProposal]
+    employment_episodes: list[EmploymentEpisodeProposal]
+    experience_claims: list[ExperienceDurationClaim]
 
 
 class SourceCitation(StrictContract):
@@ -54,6 +79,19 @@ class SourceCitation(StrictContract):
 class RequirementReview(StrictContract):
     requirement_id: str
     status: Literal["supported", "not_found", "conflicting"]
+    evidence_type: Literal["direct", "related", "unsupported", "conflicting"]
+    evidence_strength: Literal["specific", "stated", "keyword_only", "none"]
+    transfer_explanation: str | None
+    unproven_aspects: list[str]
+    follow_up_question: str | None
+    certainty: Literal["clear", "ambiguous"]
+    reason: str
+    evidence: list[SourceCitation]
+
+
+class ApplicationClaimReview(StrictContract):
+    claim_id: str
+    status: Literal["supported", "not_found", "conflicting"]
     certainty: Literal["clear", "ambiguous"]
     reason: str
     evidence: list[SourceCitation]
@@ -61,6 +99,7 @@ class RequirementReview(StrictContract):
 
 class SecondPassContract(StrictContract):
     reviews: list[RequirementReview]
+    application_reviews: list[ApplicationClaimReview]
 
 
 def make_pdf(*pages: str, password: str | None = None) -> bytes:
@@ -171,26 +210,52 @@ class MockScenarioTests(unittest.TestCase):
         app.OpenAI = cls.original_openai
         cls.client.close()
 
-    def analyze(self, pdf: bytes, job: str, *, consent: str = "true"):
+    def analyze(
+        self,
+        pdf: bytes,
+        job: str,
+        *,
+        consent: str = "true",
+        application_draft: str = "",
+    ):
         return self.client.post(
             "/api/analyze",
             files={"cv": ("fictional-cv.pdf", pdf, "application/pdf")},
-            data={"job_description": job, "consent": consent},
+            data={
+                "job_description": job,
+                "application_draft": application_draft,
+                "consent": consent,
+            },
         )
 
     def test_health_landing_preview_and_sample_pdf(self) -> None:
         self.assertEqual(self.client.get("/health").json(), {"status": "ok"})
         landing = self.client.get("/")
         self.assertEqual(landing.status_code, 200)
-        self.assertIn("Candidate view · prepare your CV before applying", landing.text)
-        self.assertIn("Job seekers", landing.text)
-        self.assertIn("Prepare or follow up", landing.text)
-        self.assertIn("record replies separately as unverified", landing.text)
+        self.assertIn("Review the evidence behind every requirement.", landing.text)
+        self.assertIn('type="file" accept="application/pdf,.pdf" multiple', landing.text)
+        self.assertIn("Candidate statement", landing.text)
+        self.assertIn("Candidate evidence reviews", landing.text)
+        self.assertIn("Recruiter shortlist decision", landing.text)
+        self.assertIn("Download shortlist audit JSON", landing.text)
+        self.assertIn("A reply you record stays in this tab", landing.text)
         self.assertEqual(self.client.get("/demo/preview").status_code, 200)
-        self.assertIn("Build role evidence plan", landing.text)
+        self.assertIn("Role criteria evidence plan", landing.text)
         self.assertIn("role-worksheet-download", landing.text)
         preview = self.client.get("/demo/preview").json()
         self.assertEqual(preview["job_item_coverage"]["needs_review"], 1)
+        self.assertEqual(preview["requirements"][0]["job_source"]["line"], 6)
+        self.assertIn(
+            "1. At least five years of Python experience.",
+            preview["requirements"][0]["job_source"]["text"],
+        )
+        self.assertIn("Job post · starts at line 6", preview["report_html"])
+        self.assertTrue(
+            any(
+                node["id"] == "JD-R1" and node["kind"] == "job_description_source"
+                for node in preview["evidence_graph"]["nodes"]
+            )
+        )
         self.assertGreater(preview["role_clarity_audit"]["count"], 0)
         self.assertIn(
             "fast-paced",
@@ -201,15 +266,15 @@ class MockScenarioTests(unittest.TestCase):
             [item["cue"].casefold() for item in preview["role_clarity_audit"]["items"]],
         )
         self.assertIn("observable", preview["role_clarity_audit"]["items"][0]["rewrite_prompt"])
-        self.assertEqual(preview["role_clarity_audit"]["criteria_count"], 4)
+        self.assertEqual(preview["role_clarity_audit"]["criteria_count"], 5)
         self.assertIn("Free role preflight", preview["report_html"])
         self.assertIn("Draft interview question", preview["report_html"])
         self.assertIn("Priority: Explicitly required", preview["report_html"])
-        self.assertEqual(preview["clarification_brief"]["count"], 2)
+        self.assertEqual(preview["clarification_brief"]["count"], 3)
         self.assertEqual(preview["application_prep"]["count"], 2)
         self.assertEqual(
             {item["requirement_id"] for item in preview["clarification_brief"]["items"]},
-            {"R2", "R3"},
+            {"R2", "R3", "R4"},
         )
         self.assertEqual(
             {item["requirement_id"] for item in preview["application_prep"]["items"]},
@@ -221,6 +286,50 @@ class MockScenarioTests(unittest.TestCase):
         demo = self.client.get("/demo/cv.pdf")
         self.assertEqual(demo.status_code, 200)
         self.assertTrue(demo.content.startswith(b"%PDF-"))
+
+    def test_analyze_batch_reviews_multiple_pdfs_without_candidate_ranking(self) -> None:
+        pdf = make_pdf("Python experience: 8 years")
+        response = self.client.post(
+            "/api/analyze-batch",
+            files=[
+                ("cvs", ("candidate-a.pdf", pdf, "application/pdf")),
+                ("cvs", ("candidate-b.pdf", pdf, "application/pdf")),
+            ],
+            data={
+                "job_description": "- At least 5 years of Python experience",
+                "consent": "true",
+            },
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertEqual(payload["candidate_count"], 2)
+        self.assertEqual(payload["completed_count"], 2)
+        self.assertEqual(payload["failed_count"], 0)
+        self.assertEqual(payload["analysis_calls"], 0)
+        self.assertFalse(payload["automated_ranking"])
+        self.assertEqual(
+            [item["filename"] for item in payload["results"]],
+            ["candidate-a.pdf", "candidate-b.pdf"],
+        )
+        self.assertTrue(
+            all(item["result"]["provider_mode"] == "mock" for item in payload["results"])
+        )
+
+    def test_analyze_batch_rejects_bad_file_before_analyzing_any_candidate(self) -> None:
+        valid_pdf = make_pdf("Python experience: 8 years")
+        response = self.client.post(
+            "/api/analyze-batch",
+            files=[
+                ("cvs", ("candidate-a.pdf", valid_pdf, "application/pdf")),
+                ("cvs", ("not-a-pdf.pdf", b"not a pdf", "application/pdf")),
+            ],
+            data={
+                "job_description": "- At least 5 years of Python experience",
+                "consent": "true",
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("No CV in the batch was analyzed", response.json()["detail"])
 
     def test_role_description_audit_is_local_explainable_and_html_safe(self) -> None:
         job = (
@@ -295,6 +404,55 @@ class MockScenarioTests(unittest.TestCase):
         self.assertGreater(payload["role_clarity_audit"]["count"], 0)
         self.assertIn("&lt;script&gt;", payload["report_html"])
         self.assertNotIn("<script>alert", payload["report_html"])
+
+    def test_requirement_keeps_original_wrapped_job_description_source(self) -> None:
+        job = (
+            "Role: Automation Lead\n\n"
+            "Requirements:\n"
+            "- At least five years of\n"
+            "  Python experience, including automation and integrations.\n"
+            "- Current AWS certification."
+        )
+        source = app.locate_job_requirement_source(
+            job, "At least five years of Python experience"
+        )
+
+        self.assertEqual(source["line"], 4)
+        self.assertTrue(source["verified"])
+        self.assertIn("At least five years of Python experience", source["text"])
+        self.assertIn("automation and integrations", source["text"])
+
+        grounded, *_ = app.ground_results(
+            {
+                "requirements": [
+                    {
+                        "requirement": "At least five years of Python experience",
+                        "evidence": [],
+                    }
+                ]
+            },
+            [],
+            job,
+        )
+        graph = app.build_evidence_graph(grounded)
+        self.assertEqual(grounded[0]["job_source"], source)
+        self.assertIn(
+            {"from": "JD-R1", "to": "R1", "relation": "defines"}, graph["edges"]
+        )
+        report = app.build_report(
+            findings=grounded,
+            previews={},
+            cv_hash="cv",
+            job_hash="job",
+            omitted_requirement_audit=[],
+            proposed_quotes=0,
+            excluded_quotes=0,
+            verification_audit={"proposed": 0, "verified": 0, "excluded": 0},
+            evidence_graph=graph,
+            created_at="2026-10-28T00:00:00+00:00",
+        )
+        self.assertIn("Job post · starts at line 4", report)
+        self.assertIn("At least five years of Python experience", report)
 
     def test_role_audit_handles_limits_unicode_and_adversarial_text(self) -> None:
         blank = app.audit_role_description("\n\t")
@@ -447,6 +605,66 @@ class MockScenarioTests(unittest.TestCase):
         self.assertNotIn('src="https://', result["report_html"])
         self.assertNotIn("href='https://", result["report_html"])
         self.assertTrue(result["report_html"].lstrip().lower().startswith("<!doctype html"))
+
+    def test_application_draft_claim_audit_distinguishes_support_missing_and_conflict(self) -> None:
+        cv = make_pdf(
+            "Python automations across 6 years of work.\n"
+            "Procurement experience: 8 years.\n"
+            "Procurement experience: five years total.\n"
+            "AWS Cloud Practitioner, awarded 2022."
+        )
+        draft = (
+            "I built Python automations across 6 years of work.\n"
+            "I have 8 years of procurement experience.\n"
+            "I hold a current AWS Solutions Architect Professional certification."
+        )
+        response = self.analyze(
+            cv,
+            "Requirements\n- At least 5 years of Python experience",
+            application_draft=draft,
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        result = response.json()
+        audit = result["application_claim_audit"]
+        claims = {item["claim"]: item for item in audit["results"]}
+        self.assertEqual(len(claims), 3)
+        self.assertEqual(
+            claims["I built Python automations across 6 years of work."]["status"],
+            "supported",
+        )
+        self.assertEqual(
+            claims["I have 8 years of procurement experience."]["status"],
+            "conflicting",
+        )
+        self.assertEqual(
+            claims[
+                "I hold a current AWS Solutions Architect Professional certification."
+            ]["status"],
+            "not_found",
+        )
+        conflict_quotes = {
+            item["quote"]
+            for item in claims["I have 8 years of procurement experience."]["evidence"]
+        }
+        self.assertIn("Procurement experience: 8 years.", conflict_quotes)
+        self.assertIn("Procurement experience: five years total.", conflict_quotes)
+        self.assertTrue(all(item["certainty"] == "ambiguous" for item in audit["results"]))
+        self.assertIn("Application draft claim check", result["report_html"])
+        self.assertEqual(result["analysis_calls"], 0)
+
+    def test_application_claim_proposals_must_be_present_in_the_user_draft(self) -> None:
+        claims, audit = app.ground_application_claims(
+            {
+                "application_claims": [
+                    {"claim": "I led a team of 8 engineers."},
+                    {"claim": "I invented this claim completely."},
+                ]
+            },
+            "I led a team of 8 engineers.",
+        )
+        self.assertEqual(len(claims), 1)
+        self.assertEqual(claims[0]["claim"], "I led a team of 8 engineers.")
+        self.assertEqual(audit, {"proposed": 2, "accepted": 1, "excluded": 1})
 
     def test_complex_multicolumn_cv_keeps_conflicts_and_grounded_evidence(self) -> None:
         cv = make_complex_cv_pdf()
@@ -1060,6 +1278,14 @@ class MockScenarioTests(unittest.TestCase):
         self.assertEqual(
             self.analyze(cv, "x" * (app.MAX_JOB_CHARS + 1)).status_code, 400
         )
+        self.assertEqual(
+            self.analyze(
+                cv,
+                job,
+                application_draft="x" * (app.MAX_APPLICATION_DRAFT_CHARS + 1),
+            ).status_code,
+            400,
+        )
 
     def test_encrypted_empty_and_overlong_pdfs_are_rejected(self) -> None:
         job = "- At least 3 years of Python experience"
@@ -1193,6 +1419,86 @@ class MockScenarioTests(unittest.TestCase):
             {"source_not_allowed", "quote_outside_retrieved_span", "invalid_evidence_role"},
         )
 
+    def test_related_review_keeps_transfer_claim_separate_and_requires_local_quote(self) -> None:
+        quote = "Coordinated factory purchasing, supplier pricing, and delivery changes across Oman."
+        pages = app.extract_pdf(make_pdf(quote))
+        match = app.locate_quote(quote, pages, 1)
+        finding = {
+            "id": "R1",
+            "requirement": "Negotiate multi-year supply agreements with GCC manufacturers",
+            "job_source": {"text": "Negotiate multi-year supply agreements with GCC manufacturers"},
+            "status": "supported",
+            "evidence": [{"quote": quote, "page": 1, "boxes": match["boxes"], "role": "supports"}],
+        }
+        _payload, source_by_id, allowed = app.prepare_verification_request([finding], pages)
+        review = {
+            "requirement_id": "R1",
+            "status": "supported",
+            "evidence_type": "related",
+            "evidence_strength": "specific",
+            "transfer_explanation": "Supplier pricing and factory coordination may transfer to supplier negotiations.",
+            "unproven_aspects": ["multi-year agreement ownership", "personal negotiation authority"],
+            "follow_up_question": "What multi-year supplier agreement did you personally negotiate?",
+            "certainty": "clear",
+            "reason": "The CV shows supplier and factory coordination, but not the full contract requirement.",
+            "evidence": [{"source_id": "R1-Q1", "quote": quote, "role": "supports"}],
+        }
+        verified, page_marks, _audit = app.apply_verification_reviews(
+            [finding], {"reviews": [review]}, source_by_id, allowed, pages
+        )
+        self.assertEqual(verified[0]["evidence_type"], "related")
+        self.assertEqual(verified[0]["transfer_explanation"], review["transfer_explanation"])
+        self.assertEqual(verified[0]["unproven_aspects"], review["unproven_aspects"])
+        self.assertEqual(page_marks[1][0]["role"], "related")
+        self.assertEqual(app.build_evidence_graph(verified)["requirements"][0]["evidence_type"], "related")
+        brief = app.build_clarification_brief(verified)
+        self.assertEqual(brief["items"][0]["question"], review["follow_up_question"])
+
+        bad_review = dict(review)
+        bad_review["evidence"] = [
+            {"source_id": "R1-Q1", "quote": "Managed multi-year contracts personally", "role": "supports"}
+        ]
+        rejected, _bad_marks, audit = app.apply_verification_reviews(
+            [finding], {"reviews": [bad_review]}, source_by_id, allowed, pages
+        )
+        self.assertEqual(rejected[0]["evidence_type"], "unsupported")
+        self.assertEqual(rejected[0]["status"], "not_found")
+        self.assertEqual(rejected[0]["certainty"], "ambiguous")
+        self.assertEqual(audit["rejected_citations"][0]["reason"], "quote_outside_retrieved_span")
+        self.assertEqual(audit["rejected_citations"][0]["cited_page"], 1)
+
+    def test_keyword_only_quote_is_not_accepted_as_requirement_support(self) -> None:
+        quote = "Python"
+        pages = app.extract_pdf(make_pdf(quote))
+        match = app.locate_quote(quote, pages, 1)
+        finding = {
+            "id": "R1",
+            "requirement": "Build production Python integrations",
+            "status": "supported",
+            "evidence": [{"quote": quote, "page": 1, "boxes": match["boxes"], "role": "supports"}],
+        }
+        _payload, source_by_id, allowed = app.prepare_verification_request([finding], pages)
+        review = {
+            "requirement_id": "R1",
+            "status": "supported",
+            "evidence_type": "direct",
+            "evidence_strength": "keyword_only",
+            "transfer_explanation": None,
+            "unproven_aspects": [],
+            "follow_up_question": "What production integration did you build?",
+            "certainty": "clear",
+            "reason": "The CV contains only a skill keyword.",
+            "evidence": [{"source_id": "R1-Q1", "quote": quote, "role": "supports"}],
+        }
+        verified, _marks, audit = app.apply_verification_reviews(
+            [finding], {"reviews": [review]}, source_by_id, allowed, pages
+        )
+        self.assertEqual(verified[0]["status"], "not_found")
+        self.assertEqual(verified[0]["evidence_type"], "unsupported")
+        self.assertEqual(verified[0]["evidence_strength"], "keyword_only")
+        self.assertEqual(verified[0]["evidence"], [])
+        self.assertEqual(audit["strength_suppressed_supports"], 1)
+
     def test_mock_passes_obey_the_same_strict_contracts_as_muse(self) -> None:
         pages = app.extract_pdf(
             make_pdf("Python experience: 8 years\nAWS Solutions Architect Professional")
@@ -1303,7 +1609,10 @@ with TestClient(app.app) as client:
         )
         self.assertEqual(result.returncode, 2)
         self.assertIn("MODEL_API_KEY is not configured", result.stderr)
-        self.assertIn("No Meta request was made", result.stderr)
+        blocked_json = result.stderr[result.stderr.find("{"):]
+        blocked_summary = json.loads(blocked_json)
+        self.assertEqual(blocked_summary["meta_request_made"], False)
+        self.assertEqual(blocked_summary["expected_live_requests"], 0)
 
     def test_configured_muse_pipeline_rejects_hostile_citations_without_network(self) -> None:
         script = r'''
@@ -1321,11 +1630,28 @@ import app
 from fastapi.testclient import TestClient
 
 calls = []
+scenario = "normal"
 class FakeCompletions:
     def create(self, **kwargs):
         calls.append(kwargs)
         request_number = len(calls)
         schema_name = kwargs["response_format"]["json_schema"]["name"]
+        if schema_name == "requirement_evidence_map" and scenario == "invalid_json":
+            return SimpleNamespace(
+                choices=[SimpleNamespace(
+                    message=SimpleNamespace(content='{"requirements":'),
+                    finish_reason="stop",
+                )],
+                usage=SimpleNamespace(prompt_tokens=31, completion_tokens=7),
+            )
+        if schema_name == "requirement_evidence_map" and scenario == "truncated":
+            return SimpleNamespace(
+                choices=[SimpleNamespace(
+                    message=SimpleNamespace(content='{"requirements":'),
+                    finish_reason="length",
+                )],
+                usage=SimpleNamespace(prompt_tokens=31, completion_tokens=7),
+            )
         if schema_name == "requirement_evidence_map":
             quote = (
                 "Python experience: 8 years"
@@ -1340,11 +1666,16 @@ class FakeCompletions:
                         "role": "supports",
                         "page_hint": 1,
                     }],
-                }]
+                }],
+                "application_claims": [],
+                "employment_episodes": [],
+                "experience_claims": [],
             }
+            if scenario == "extra_first_field":
+                result["unexpected"] = "must not be trusted"
         else:
             user_text = kwargs["messages"][1]["content"]
-            prefix = "Review these requirements against the source spans. Return one review for every requirement.\n"
+            prefix = "Review every job requirement and application claim against the source spans. Return one review per supplied item.\n"
             payload = json.loads(user_text[len(prefix):])
             source_id = (
                 next(
@@ -1360,8 +1691,17 @@ class FakeCompletions:
                 else "I have 20 years in quantum procurement"
             )
             result = {"reviews": [{
-                "requirement_id": payload["requirements"][0]["id"],
+                "requirement_id": (
+                    "FORGED-ID"
+                    if scenario == "forged_review_id"
+                    else payload["requirements"][0]["id"]
+                ),
                 "status": "supported",
+                "evidence_type": "direct",
+                "evidence_strength": "stated",
+                "transfer_explanation": None,
+                "unproven_aspects": [],
+                "follow_up_question": None,
                 "certainty": "clear",
                 "reason": "The model proposes a supporting statement.",
                 "evidence": [{
@@ -1369,9 +1709,14 @@ class FakeCompletions:
                     "quote": quote,
                     "role": "supports",
                 }],
-            }]}
+            }], "application_reviews": []}
+            if scenario == "missing_review":
+                result["reviews"] = []
         return SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(result)))],
+            choices=[SimpleNamespace(
+                message=SimpleNamespace(content=json.dumps(result)),
+                finish_reason="stop",
+            )],
             usage=SimpleNamespace(prompt_tokens=31, completion_tokens=7),
         )
 
@@ -1420,6 +1765,20 @@ assert hostile_result["pages"] == {}
 assert hostile_result["verification_audit"]["excluded"] == 1
 assert hostile_result["verification_audit"]["rejected_citations"][0]["reason"] == "source_not_allowed"
 assert "Source ID was not allowed for this requirement" in hostile_result["report_html"]
+
+for bad_scenario, expected_calls in (
+    ("invalid_json", 1),
+    ("truncated", 1),
+    ("extra_first_field", 1),
+    ("forged_review_id", 2),
+    ("missing_review", 2),
+):
+    scenario = bad_scenario
+    calls.clear()
+    failed = analyze_once()
+    assert failed.status_code == 502, (bad_scenario, failed.status_code, failed.text)
+    assert len(calls) == expected_calls, (bad_scenario, len(calls))
+    assert "report_html" not in failed.json()
 '''
         env = os.environ.copy()
         env["EVIDENCETRAIL_PROVIDER"] = "muse"
