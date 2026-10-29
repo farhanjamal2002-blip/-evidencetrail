@@ -11,6 +11,7 @@ import os
 import re
 from copy import deepcopy
 from semantic_review import clarify_verified_findings
+from verification_receipt import build_verification_receipt
 import hashlib
 import json
 import textwrap
@@ -205,6 +206,7 @@ def recorded_muse_evidence():
     totals={}
     for candidate in data["results"]:
         summary=clarify_verified_findings(candidate["requirements"])
+        candidate["verification_receipt"]=build_verification_receipt(candidate, recorded=True)
         for key,count in summary.items():
             totals[key]=totals.get(key,0)+count
     data["presentation_calibration"]={
