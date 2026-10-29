@@ -11,13 +11,16 @@
 
 1. **Start with the [public fictional recruiter inbox](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20)** (verified live October 29) running the feature branch. One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. Nothing is falsely marked as AI-reviewed when first loaded.
 2. **Confirm the role checklist** and inspect the applicants in upload/received order. Search for `ET-018` (injected prompt), `ET-019` (OCR scan), or `ET-005` (related-vs-direct negotiation) to show hard cases.
-3. **Run a selected candidate only when Muse is configured, consented, and quota allows**, or open the existing clearly labeled **saved five-CV Muse replay** from the main workbench. A simulation is never presented as a live model result.
+3. **Click “Explore genuine Muse-reviewed applicants.”** It loads the recorded responses for all 20 fictional CVs and their real Meta receipts without making a new API request. No login, key, credits or wait. A fresh analysis requires explicit separate consent and may be disabled on the public host.
 4. Open one requirement and its exact CV page citation; show how **verified quote ≠ proven job requirement**, and how a related quote cannot silently become Direct support.
 5. Record a *human* Hold decision with a reason, then export the review/evidence. This is a demo browser-state record, not a durable database.
 
 ## Actual Meta Muse demonstration receipts — recorded October 29, 2026
 
 These are **distinct controlled runs**, not arbitrary combined statistics:
+
+- [**One-time recorded 20-CV Muse replay**](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40892660190): **20/20 genuine Muse responses**, all 20 with authentic Meta response IDs, **76 locally verified PDF quotations**, original Muse labels preserved for **80/80 criteria**, and no missing recordings. The exact source PDF and job checklist hashes are verified before the saved data is published. Viewing the public replay uses ZERO new model calls. A first recording attempt was rejected because randomly generated PDF trailer IDs made source hashes unstable; the generator was corrected and the full replay re-run before publication. This is a fictional QA dataset, not a general accuracy/latency claim.
+
 
 - [20-applicant workflow: five live Muse test CVs](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40888203979): `ET-001`, `ET-005`, `ET-015`, `ET-018`, `ET-019`. **Five actual Meta API responses / five authentic provider receipts**. **21/21 proposed quotations page-verified**; 20/20 original model-label fields retained; zero verified-Related findings incorrectly accepted as exact requirement support. ET-019 required OCR on page 1. The malicious-instruction ET-018 did not receive a supported criterion. Median **5.94 seconds per CV** for this small, sequential fictional test; not a service-level promise.
 - [Frozen five-CV replay with provider receipts](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40867761271): five real requests; 15/15 quotations verified. [Independent receipt audit](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40868066727) confirmed 5/5 authentic saved IDs. This earlier replay was **before** the later semantic hardening; never conflate it with the newer 20-applicant workflow.
@@ -28,10 +31,12 @@ These are **distinct controlled runs**, not arbitrary combined statistics:
 ## Inspect the implementation and tests
 
 - `app.py`: `call_muse`, `verify_single_pass_proposals_locally`, `enforce_evidence_status_invariants`, `apply_explicit_scope_boundary_guard`, timeline audit and PDF previews.
-- `demo20_workflow.py`: fixed fictional 20-applicant dataset, on-demand real PDFs and two image-only scans.
+- `demo20_workflow.py`: fixed fictional 20-applicant dataset, on-demand deterministically fingerprinted PDFs, two image-only scans, and an authenticity-checking saved Muse replay endpoint.
+- `data/demo20_muse_replay.json`: the genuine 20-fictional-applicant source-verified Muse outputs and provider receipts. It is NOT a fabricated or live response.
 - `static/demo20.html`: recruiter-controlled criteria, received-order inbox, opt-in analysis, page/source evidence and manual decisions.
 - `tests/test_demo20_workflow.py`, `tests/test_production_semantics.py`: fixture and fail-closed behavior.
-- [Full acceptance build](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40888555124): **143 Python tests, 13 JavaScript tests**, Chromium desktop/mobile UI, invalid uploads and source checks, plus Docker image build. Both jobs passed.
+- [Full 20-CV replay acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40893215283) adds genuine-receipt/fixture hash checks and a browser proof that **opening all 20 saved results sends no new Muse requests**.
+- [Previous full acceptance build](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40888555124): **143 Python tests, 13 JavaScript tests**, Chromium desktop/mobile UI, invalid uploads and source checks, plus Docker image build. Both jobs passed.
 
 ## Run locally (without Meta credits)
 
