@@ -39,17 +39,33 @@ async def main():
                 legend=await page.locator("#list .coverage-dots").first.get_attribute("aria-label")
                 assert "Requirement 1:" in legend and "Requirement 4:" in legend,legend
                 assert not paid_calls,"Instant evidence replay must incur zero new Muse calls"
+                # First-minute judge proof uses the exact saved Muse source,
+                # opens the true correction, and highlights its original PDF.
+                await page.locator("#proof-correction").click()
+                await page.wait_for_function("document.querySelector('#pdf-geometry-badge')?.textContent.includes('Source located')",timeout=20000)
+                assert "ET-008" in await page.locator("#review .review-top .eyebrow").inner_text()
+                assert await page.locator("#audit-drawer").is_visible()
+                assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()>=1
+                assert "Source located" in await page.locator("#pdf-geometry-badge").inner_text()
+                assert "previously recorded genuine Muse" in (await page.locator("#proof-result").inner_text())
+                await page.screenshot(path=str(OUT/f"judge-proof-scope-{width}.png"),full_page=True)
+                await page.locator("#proof-scan").click()
+                await page.wait_for_function("document.querySelector('#pdf-geometry-badge')?.textContent.includes('scanned OCR')",timeout=20000)
+                assert "ET-019" in await page.locator("#review .review-top .eyebrow").inner_text()
+                assert "scanned OCR" in await page.locator("#pdf-geometry-badge").inner_text()
+                assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()==0
+                assert not paid_calls,"Judge walkthrough must never call the Meta inference API"
                 await page.locator("#quickviews [data-view='all_direct']").click()
                 count=await page.locator("#list .item").count()
                 assert 0<count<20
                 await page.locator("#quickviews [data-view='awaiting_decision']").click()
                 assert await page.locator("#list .item").count()==20
                 # Keyboard stepping through the currently visible human review queue.
-                first_id=await page.locator("#review .eyebrow").inner_text()
+                first_id=await page.locator("#review .review-top .eyebrow").inner_text()
                 await page.keyboard.press("j")
-                assert await page.locator("#review .eyebrow").inner_text()!=first_id
+                assert await page.locator("#review .review-top .eyebrow").inner_text()!=first_id
                 await page.keyboard.press("k")
-                assert await page.locator("#review .eyebrow").inner_text()==first_id
+                assert await page.locator("#review .review-top .eyebrow").inner_text()==first_id
                 await page.locator("#load").click()
                 await page.wait_for_function("document.querySelector('#ready').textContent==='0'",timeout=15000)
                 assert await page.locator("#list .item").count()==20
@@ -121,9 +137,9 @@ async def main():
                     assert await page.locator("#list").get_by_text("Recorded Muse").count()==20
                     assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
                     assert "Authentic Meta response" in await page.locator("#review").inner_text()
-                    start_id=await page.locator("#review .eyebrow").inner_text()
+                    start_id=await page.locator("#review .review-top .eyebrow").inner_text()
                     await page.locator("#next-review").click()
-                    assert await page.locator("#review .eyebrow").inner_text()!=start_id, "Next pending reviewer action must navigate"
+                    assert await page.locator("#review .review-top .eyebrow").inner_text()!=start_id, "Next pending reviewer action must navigate"
                     await page.locator('#list [data-id="ET-005"]').click()
                     assert await page.locator("#review .quote a[href*='#page=']").count()>=1
                     async with page.expect_download() as download_info:
@@ -151,7 +167,7 @@ async def main():
                     assert "status override" in await page.locator("#inspect-audit").inner_text()
                     assert await page.locator("#review .matrix .source-snap").count()>0
                     await page.locator("#review .matrix .source-snap").first.click()
-                    await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                    await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").first.wait_for(timeout=20000)
                     assert await page.locator("#pdf-evidence-viewer").is_visible()
                     assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()>=1
                     assert "Source located" in await page.locator("#pdf-geometry-badge").inner_text()
@@ -181,7 +197,7 @@ async def main():
                     assert "Tesseract OCR" in await page.locator("#audit-drawer").inner_text()
                     assert await page.locator("#review .matrix .source-snap").count()>0
                     await page.locator("#review .matrix .source-snap").first.click()
-                    await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                    await page.wait_for_function("document.querySelector('#pdf-geometry-badge')?.textContent.includes('scanned OCR')",timeout=20000)
                     assert "scanned OCR" in (await page.locator("#pdf-geometry-badge").inner_text())
                     assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()==0
                     await page.screenshot(path=str(OUT/"honest-scanned-page-only.png"),full_page=True)
