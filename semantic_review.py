@@ -110,3 +110,39 @@ def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
         else:
             counters["unchanged"] += 1
     return counters
+
+
+def reconcile_scope_context_page_marks(
+    findings: list[dict[str, Any]], page_marks: dict[int, list[dict[str, Any]]]
+) -> int:
+    """Keep PDF highlight colors aligned with post-verification status changes.
+
+    A demoted conflict retains its original quote, page and raw role for audit.
+    However, the reader-facing highlight must be a scope limitation, not a red
+    self-contradiction. Only exact requirement + source IDs are rewritten.
+    """
+    changed = 0
+    for finding in findings:
+        if not isinstance(finding, dict) or finding.get("review_reason_code") not in {
+            "explicit_scope_limit_not_contradiction",
+            "document_absence_not_contradiction",
+        }:
+            continue
+        requirement_id = str(finding.get("id", ""))
+        for citation in finding.get("evidence") or []:
+            if not isinstance(citation, dict) or citation.get("display_role") != "scope_context":
+                continue
+            page = citation.get("page")
+            source_id = citation.get("source_id")
+            if not isinstance(page, int) or isinstance(page, bool) or page < 1 or not source_id:
+                continue
+            for mark in page_marks.get(page, []):
+                if (
+                    isinstance(mark, dict)
+                    and mark.get("requirement_id") == requirement_id
+                    and mark.get("source_id") == source_id
+                    and mark.get("role") != "scope_limitation"
+                ):
+                    mark["role"] = "scope_limitation"
+                    changed += 1
+    return changed
