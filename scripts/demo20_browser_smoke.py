@@ -21,6 +21,16 @@ async def main():
                 assert await page.locator("#criteria input").count()==4
                 assert await page.locator("#ready").inner_text()=="0"
                 assert await page.locator("#analyze-one").is_disabled()
+                # Editing a criterion must survive a control refresh or candidate selection.
+                first=page.locator("#criteria input").first
+                original=await first.input_value()
+                await first.fill("Five years managing cross-border supplier operations.")
+                await page.locator('#list [data-id="ET-005"]').click()
+                assert await first.input_value()=="Five years managing cross-border supplier operations."
+                await page.locator("#consent").check()
+                assert await first.input_value()=="Five years managing cross-border supplier operations."
+                await first.fill(original)
+                await page.locator("#consent").uncheck()
                 # No fabricated 'Muse done' cards on initial load
                 assert await page.locator("#list").get_by_text("Not analyzed").count()==20
                 small=await page.evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})")
@@ -58,6 +68,21 @@ async def main():
                     assert await page.locator("#list").get_by_text("Recorded Muse").count()==20
                     assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
                     assert "Authentic Meta response" in await page.locator("#review").inner_text()
+                    assert await page.locator("#review .quote a[href*='#page=']").count()>=1
+                    async with page.expect_download() as download_info:
+                        await page.locator("#export-report").click()
+                    received=await download_info.value
+                    assert received.suggested_filename.endswith("-evidence.html")
+                    exported=await received.path()
+                    report=Path(exported).read_text(encoding="utf-8")
+                    assert "Original Muse status" in report
+                    assert "Original PDF page" in report
+                    assert "<script" not in report.lower()
+                    await page.locator("#consent").check()
+                    page.once("dialog",lambda dialog: asyncio.create_task(dialog.dismiss()))
+                    await page.locator("#analyze-one").click()
+                    assert await page.locator("#ready").inner_text()=="20"
+                    assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
                     await page.locator("#filter").select_option("related")
                     assert 0 < await page.locator("#list .item").count() <= 20
                     assert not calls, "Viewing recorded evidence must not make paid API calls"
