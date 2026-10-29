@@ -181,7 +181,7 @@
               <strong>Unified supplier-operations set · rubric v3</strong>
               <p>One fixed job description and five fictional CVs: concrete contract work, generic claims, adjacent experience, overlapping dates, and a scanned two-column CV.</p>
               <button id="load-unified-demo" class="secondary-button" type="button">Load the five-CV set</button>
-              <button id="load-unified-replay" class="secondary-button" type="button">Open saved Muse results · replay only</button>
+              <button id="load-unified-replay" class="{{ 'primary-button replay-primary-button' if not model_ready and not mock_mode else 'secondary-button' }}" type="button">Open saved Muse results · replay only</button>
               <small>{% if mock_mode %}The local review makes no model call. The saved Muse replay is historical and makes no new request.{% else %}Loading inputs makes no API call. The frozen replay shows saved model results and source evidence without another request.{% endif %}</small>
             </div>
             {% if mock_mode %}
@@ -191,7 +191,7 @@
             <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs for a real run</button>
             <button id="preview-demo-results" class="secondary-button preview-button" type="button">Preview the sample · no API call</button>
             {% else %}
-            <button id="preview-demo-results" class="primary-button demo-preview-button" type="button">Open the sample review</button>
+            <button id="preview-demo-results" class="secondary-button preview-button" type="button" hidden>Preview the hand-authored sample · no API call</button>
             <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs</button>
             {% endif %}
             <a class="text-link demo-download" href="/demo/cv.pdf" download>Download the synthetic CV separately <span>↓</span></a>
@@ -208,7 +208,7 @@
               <li>Open the candidate checklist or review follow-up questions</li>
               <li>Download the evidence pack</li>
             </ol>
-            <div class="sample-tip">{% if mock_mode %}This static preview is separate from the local simulation. The simulation uses deterministic heuristics and is not Muse output.{% elif model_ready %}This preview is synthetic and makes no API call. For a live run, load the sample inputs and use Analyze.{% else %}This preview uses hand-authored fictional findings. It makes no API call; live analysis is paused until the server key is configured.{% endif %}</div>
+            <div class="sample-tip">{% if mock_mode %}This static preview is separate from the local simulation. The simulation uses deterministic heuristics and is not Muse output.{% elif model_ready %}This preview is synthetic and makes no API call. For a live run, load the sample inputs and use Analyze.{% else %}The saved Muse replay above is the default review: historical model output on five fictional CVs. Replaying it makes no API call. It is a small calibration demo, not a hiring recommendation or general accuracy estimate.{% endif %}</div>
           </aside>
         </section>
 
@@ -493,6 +493,6 @@
     <script src="/static/interview-invite.js?v=20261028-1"></script>
     <script src="/static/recruiter-decision.js?v=20261028-1"></script>
     <script src="/static/requirement-coverage.js?v=20261028-1"></script>
-    <script src="/static/app.js?v=20261029-28"></script>
+    <script src="/static/app.js?v=20261029-29"></script>
   </body>
 </html>

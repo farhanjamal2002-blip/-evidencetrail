@@ -505,6 +505,11 @@ loadUnifiedReplayButton.addEventListener("click", async function () {
       const result = entry.result;
       result.frozen_replay = true;
       result.replay_disclosure = replay.disclosure;
+      result.replay_provenance = {
+        model: replay.model,
+        run_at_utc: replay.run_at_utc,
+        analysis_calls: replay.analysis_calls,
+      };
       return {
         candidateId: entry.candidate_id,
         filename: file.name,
@@ -2132,11 +2137,32 @@ function renderVerifierChip(payload) {
   chip.append(label, detail);
 }
 
+function replayRunDetail(payload) {
+  const provenance = payload.replay_provenance || {};
+  const parts = [];
+  const model = String(provenance.model || payload.model || "").trim();
+  if (model) parts.push(model);
+  const runAt = new Date(provenance.run_at_utc || "");
+  if (!Number.isNaN(runAt.getTime())) {
+    parts.push("run " + runAt.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, " UTC"));
+  }
+  const analysisCalls = Number(provenance.analysis_calls);
+  if (Number.isInteger(analysisCalls) && analysisCalls >= 0) {
+    parts.push(analysisCalls + " Muse calls");
+  }
+  return parts.join(" · ");
+}
+
 function renderResults(payload, analyzedFile, savedState) {
   results.classList.remove("batch-failures-only");
   currentResultPayload = payload;
+  const savedRunDetail = payload.frozen_replay ? replayRunDetail(payload) : "";
   if (payload.frozen_replay) {
-    setModeBadge("replay", "VERIFIED REPLAY", "Saved output from real Muse calls · no new API request");
+    setModeBadge(
+      "replay",
+      "SAVED META AI REPLAY",
+      (savedRunDetail ? savedRunDetail + " · " : "") + "no new API request"
+    );
   } else if (payload.preview_mode) {
     setModeBadge("preview", "SAMPLE PREVIEW", "Hand-authored fictional result · no model call");
   } else if (payload.provider_mode === "mock") {
@@ -2151,7 +2177,8 @@ function renderResults(payload, analyzedFile, savedState) {
   previewNotice.textContent = payload.preview_mode
     ? "Synthetic preview only: these hand-authored findings use a fictional CV. No Muse Spark or Meta Model API request was made."
     : payload.frozen_replay
-      ? "Frozen live Muse replay · recorded 28 Oct 2026 from fictional CVs. Loading it makes no API request. This set combines four completed batch analyses with a separate C3 recovery after the first C3 response failed local schema validation; usage for that failed request was not returned."
+      ? (payload.replay_disclosure || "Saved output from a historical Muse run. Loading it makes no new API request.") +
+        (savedRunDetail ? " Recorded run: " + savedRunDetail + "." : "")
     : payload.provider_mode === "mock"
       ? "Local workflow simulation only: deterministic heuristics exercise document handling and reviewer controls. It cannot judge paraphrases or transferable experience and must not be used as a hiring assessment. No model call or model tokens."
       : "";
