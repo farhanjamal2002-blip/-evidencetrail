@@ -3913,7 +3913,7 @@ async function openInteractivePdf(pageNumber, quote) {
   // Image CVs were safely normalized to an OCR PDF on the server; the
   // original image is not a PDF.js document. Keep using the source-backed
   // server-rendered page preview instead of attempting to parse it as PDF.
-  if (/\\.(png|jpe?g)$/i.test(sourcePdfFile.name || "")) {
+  if (/\.(png|jpe?g)$/i.test(sourcePdfFile.name || "")) {
     const page = document.getElementById("page-" + pageNumber);
     if (page) page.scrollIntoView({behavior:"smooth",block:"start"});
     sourceViewerStatus.textContent =
