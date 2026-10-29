@@ -38,6 +38,7 @@ async def main():
                 await page.wait_for_function("document.querySelector('#jobstatus').textContent.includes('Extracted')",timeout=10000)
                 assert await page.locator("#criteria input").count()>=1
                 await page.locator("#load").click()
+                await page.wait_for_function("document.querySelectorAll('#criteria input').length===4 && document.querySelector('#job').value.includes('Cedar Gate Supply')",timeout=12000)
                 assert await page.locator("#criteria input").count()==4
                 # No fabricated 'Muse done' cards on initial load
                 assert await page.locator("#list").get_by_text("Not analyzed").count()==20
