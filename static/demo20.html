@@ -84,7 +84,7 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
   <div id="jobstatus" class="status">Criteria not yet confirmed. Editing the job makes reference expectations inapplicable.</div>
   <div class="divider"></div>
   <div class="eyebrow">02 · Demo intake</div>
-  <div class="btn-row"><button type="button" class="primary" id="load">Load 20 fictional CVs</button></div>
+  <div class="btn-row"><button type="button" class="primary" id="recorded" disabled>Explore genuine Muse-reviewed applicants</button><button type="button" class="secondary" id="load">Reset fictional inbox</button></div><p class="small muted">Instantly open the recorded, page-verified Meta Muse results. No new API call, login, or credits. Every CV is fictional. Recorded results are not live inference.</p>
   <div class="status">The 20 PDFs are generated locally by EvidenceTrail. Two are image-only scans and one contains a prompt-injection test.</div>
   <div class="divider"></div>
   <div class="eyebrow">03 · Optional live analysis</div>
@@ -123,7 +123,7 @@ function matchesFilter(row,filter){const result=state.results.get(row.id);if(fil
 function statusTag(text,type=""){return '<span class="pill '+escapeHtml(type)+'">'+escapeHtml(text)+'</span>'}
 function updateControls(){const allowed=state.confirmed&&state.canAnalyze&&state.items.length>0&&!state.busy&&$("consent").checked;$("analyze-one").disabled=!allowed||!state.selected;$("analyze-five").disabled=!allowed||state.items.every(row=>state.results.has(row.id)||row.state==="failed");$("lock").disabled=state.confirmed;$("unlock").disabled=!state.confirmed;$("job").readOnly=state.confirmed;renderCriteria()}
 function renderList(){const q=$("search").value.trim().toLowerCase(),f=$("filter").value;const shown=state.items.filter(x=>matchesFilter(x,f)&&(x.id.toLowerCase().includes(q)||x.role.toLowerCase().includes(q)||x.fixture_lines.join(" ").toLowerCase().includes(q)));const el=$("list");
-el.innerHTML=shown.length?shown.map(row=>{const r=state.results.get(row.id),decision=state.decisions.get(row.id);const tag=r?statusTag(r.provider_mode==="muse"?"Muse checked":"Simulation",r.provider_mode==="muse"?"live":"sim"):row.state==="failed"?statusTag("Failed","error"):row.state==="processing"?statusTag("Analyzing…"):statusTag("Not analyzed");return '<button class="item '+(row.id===state.selected?"selected":"")+'" data-id="'+escapeHtml(row.id)+'"><span class="avatar">'+escapeHtml(row.id.slice(-2))+'</span><span><span class="name">'+escapeHtml(row.id)+" · "+escapeHtml(row.role)+'</span><div class="meta">'+escapeHtml(row.period)+" · "+(row.scan?"Image-only PDF":"Text PDF")+'</div><span class="pills">'+tag+(decision?statusTag("Human: "+decision.action):"")+'</span></span></button>'}).join(""):'<div class="empty">No applicants match the chosen filter.</div>';
+el.innerHTML=shown.length?shown.map(row=>{const r=state.results.get(row.id),decision=state.decisions.get(row.id);const tag=r?statusTag(r.saved_replay?"Recorded Muse":r.provider_mode==="muse"?"Live Muse":"Simulation",r.provider_mode==="muse"?"live":"sim"):row.state==="failed"?statusTag("Failed","error"):row.state==="processing"?statusTag("Analyzing…"):statusTag("Not analyzed");return '<button class="item '+(row.id===state.selected?"selected":"")+'" data-id="'+escapeHtml(row.id)+'"><span class="avatar">'+escapeHtml(row.id.slice(-2))+'</span><span><span class="name">'+escapeHtml(row.id)+" · "+escapeHtml(row.role)+'</span><div class="meta">'+escapeHtml(row.period)+" · "+(row.scan?"Image-only PDF":"Text PDF")+'</div><span class="pills">'+tag+(decision?statusTag("Human: "+decision.action):"")+'</span></span></button>'}).join(""):'<div class="empty">No applicants match the chosen filter.</div>';
 el.querySelectorAll("[data-id]").forEach(b=>b.addEventListener("click",()=>{state.selected=b.dataset.id;renderList();renderReview();updateControls()}));
 $("total").textContent=state.items.length;$("ready").textContent=state.results.size;$("pending").textContent=state.items.filter(x=>!state.results.has(x.id)).length;$("needs").textContent=state.items.filter(needsReview).length;}
 function evidenceHtml(result){return result.requirements.map((x,i)=>{
@@ -134,7 +134,7 @@ return '<div class="cell"><strong>R'+(i+1)+'.</strong> '+escapeHtml(x.requiremen
 }).join("")}
 function renderReview(){const row=state.items.find(x=>x.id===state.selected), el=$("review");if(!row){el.innerHTML='<div class="empty">Select an applicant.</div>';return}
 const result=state.results.get(row.id),decision=state.decisions.get(row.id);
-const activeStatus=result?(result.provider_mode==="muse"?"Live Muse · page verified":"Local simulation · no model calls"):"Awaiting analysis";
+const activeStatus=result?(result.saved_replay?"Recorded genuine Muse response · verified PDF quotes · NO new API call":result.provider_mode==="muse"?"Live Muse · page verified":"Local simulation · no model calls"):"Awaiting analysis";
 const criteriaTable=result?evidenceHtml(result):state.criteria.map((x,i)=>'<div class="cell"><strong>R'+(i+1)+'.</strong> '+escapeHtml(x)+'</div><div class="cell">'+statusTag("Not analyzed")+'</div>').join("");
 const provenance=result?'<div class="status">'+escapeHtml(activeStatus)+' · '+escapeHtml(result.model||"")+' · '+escapeHtml(result.analysis_calls||0)+' Muse API call(s) reported · '+escapeHtml((result.quote_audit||{}).verified||0)+' source quotations verified.</div>':'<div class="status warn">No model results for this applicant. Never interpret the fictional reference key as a Muse evaluation.</div>';
 let reference='<details id="qa-key" class="small"><summary>Show fictional reference expectations (QA only)</summary>'+Object.entries(row.reference_only).map(([key,val])=>'<p>'+escapeHtml(key)+" · "+escapeHtml(val)+'</p>').join("")+'<p>These are human-authored test expectations, not model predictions or hiring recommendations.</p></details>';
@@ -146,12 +146,50 @@ $("export-decision").onclick=()=>download(JSON.stringify({fictional:true,candida
 if(result?.report_html)$("export-report").onclick=()=>download(result.report_html,row.id+"-evidence.html","text/html");
 }
 function download(contents,filename,mime){const blob=new Blob([contents],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)}
-async function load(){try{const r=await fetch("/demo20/manifest",{cache:"no-store"});if(!r.ok)throw Error("Manifest unavailable ("+r.status+")");const m=await r.json();if(m.total!==20||m.candidates.length!==20)throw Error("Fictional manifest incomplete");state.manifest=m;state.items=m.candidates.map(x=>({...x,state:"not_analyzed"}));state.selected=state.items[0].id;state.criteria=Object.values(m.criteria);state.criteriaDefault=[...state.criteria];state.jobDefault=m.job_description;$("job").value=m.job_description;state.confirmed=false;state.results.clear();state.decisions.clear();state.canAnalyze=m.live_muse_configured||m.provider_mode==="mock";state.mode=m.provider_mode;renderCriteria();updateControls();renderList();renderReview();notice(m.live_muse_configured?"Muse is configured on this server. Confirm criteria and consent before analyzing.":"Muse is not enabled on this server. You can inspect all 20 fictional CVs; real AI analysis is unavailable here.",m.live_muse_configured?"":"warn");setJobMessage("Job rubric loaded from the fictional role. Review and confirm it before analysis.");}catch(e){notice("Unable to load the fictional dataset: "+String(e.message),"bad")}}
+async function load(){try{const r=await fetch("/demo20/manifest",{cache:"no-store"});if(!r.ok)throw Error("Manifest unavailable ("+r.status+")");const m=await r.json();if(m.total!==20||m.candidates.length!==20)throw Error("Fictional manifest incomplete");state.manifest=m;state.items=m.candidates.map(x=>({...x,state:"not_analyzed"}));state.selected=state.items[0].id;state.criteria=Object.values(m.criteria);state.criteriaDefault=[...state.criteria];state.jobDefault=m.job_description;$("job").value=m.job_description;state.confirmed=false;state.results.clear();state.decisions.clear();state.canAnalyze=m.live_muse_configured||m.provider_mode==="mock";state.mode=m.provider_mode;$("recorded").disabled=false;renderCriteria();updateControls();renderList();renderReview();notice(m.live_muse_configured?"Muse is configured on this server. Confirm criteria and consent before analyzing.":"Muse is not enabled on this server. You can inspect all 20 fictional CVs; real AI analysis is unavailable here.",m.live_muse_configured?"":"warn");setJobMessage("Job rubric loaded from the fictional role. Review and confirm it before analysis.");}catch(e){notice("Unable to load the fictional dataset: "+String(e.message),"bad")}}
+async function showRecordedMuse(){
+  if(state.busy||!state.items.length)return;
+  if($("job").value.trim()!==state.jobDefault.trim()||JSON.stringify(criteriaValues())!==JSON.stringify(state.criteriaDefault)){
+    notice("The recorded Muse results belong to the original fixed demo job and criteria. Reset the inbox to load them.","warn");
+    return;
+  }
+  state.busy=true;
+  $("recorded").disabled=true;
+  notice("Loading the saved authentic Muse responses — no model requests or credits...");
+  try{
+    const response=await fetch("/demo20/recorded-muse",{cache:"no-store"});
+    const payload=await response.json();
+    if(!response.ok)throw Error(typeof payload.detail==="string"?payload.detail:"No authentic replay available");
+    if(payload.fictional_only!==true||!Array.isArray(payload.results)||payload.results.length<5)
+      throw Error("Saved replay invalid or too small");
+    if(new Set(payload.results.map(x=>x.id)).size!==payload.results.length)
+      throw Error("Duplicated candidate IDs in saved replay");
+    if(!payload.results.every(x=>x.receipt&&x.provider_mode==="muse"&&x.analysis_calls===1&&x.requirements?.length===4))
+      throw Error("Saved results have missing Muse receipts or requirements");
+    state.results.clear();state.decisions.clear();state.items.forEach(x=>x.state="not_analyzed");
+    state.criteria=[...state.criteriaDefault];state.confirmed=true;
+    for(const saved of payload.results){
+      const row=state.items.find(x=>x.id===saved.id);
+      if(!row)continue;
+      state.results.set(saved.id,{...saved,saved_replay:true});
+      row.state="ready";
+    }
+    notice("Verified saved Muse replay · "+state.results.size+" authentic responses · "+payload.successful_quotes+" page-checked quotes · recorded "+new Date(payload.recorded_utc).toLocaleDateString()+". ZERO new API calls.");
+    setJobMessage("Original demo rubric confirmed for the recorded Muse evidence. Edit criteria only after clearing old results.");
+    $("filter").value="all";
+    state.selected=payload.results.find(x=>x.id==="ET-005")?.id||payload.results[0].id;
+  }catch(e){
+    notice("Recorded Muse results unavailable: "+e.message+". All fictional CVs remain inspectable. No fake results will be shown.","warn");
+  }finally{
+    state.busy=false;$("recorded").disabled=false;
+    updateControls();renderList();renderReview();
+  }
+}
 async function checkJob(){if(!$("job").value.trim()){setJobMessage("Job description cannot be empty.","bad");return}const form=new FormData();form.append("job_description",$("job").value.trim());try{const r=await fetch("/api/role-audit",{method:"POST",body:form});const obj=await r.json();if(!r.ok)throw Error(obj.detail||"Role audit failed");const data=obj.role_clarity_audit||{};setJobMessage("Local role preflight completed with 0 Muse calls. Review the checklist below; it has "+(data.criteria_count??0)+" source criteria.")}catch(e){setJobMessage(String(e.message),"bad")}}
 function lockJob(){const items=criteriaValues(),job=$("job").value.trim();if(!state.items.length){setJobMessage("Load the fictional applicants first.","warn");return}if(!job||job.length>18000||items.length<1||items.length>20||items.some(x=>x.length>1200)){setJobMessage("Provide a JD under 18,000 characters and 1–20 readable criteria.","bad");return}if(new Set(items.map(x=>x.toLowerCase())).size!==items.length){setJobMessage("Duplicate criteria need to be removed.","bad");return}state.criteria=items;state.confirmed=true;updateControls();renderReview();setJobMessage("Criteria confirmed for this browser session. Live analysis uses exactly this shared checklist.") }
 async function analyze(row){row.state="processing";renderList();renderReview();let r;try{const pdf=await fetch(row.file_url,{cache:"no-store"});if(!pdf.ok)throw Error("Unable to open fictional PDF ("+pdf.status+")");const bytes=await pdf.blob();const form=new FormData();form.append("job_description",$("job").value.trim());form.append("consent","true");form.append("locked_rubric_json",JSON.stringify(state.criteria));form.append("rubric_mode","recruiter_locked");form.append("cv",bytes,row.id+"-fictional.pdf");r=await fetch("/api/analyze",{method:"POST",body:form});const data=await r.json();if(!r.ok)throw Error((typeof data.detail==="string"?data.detail:"Analysis failed")+" (HTTP "+r.status+")");if(!Array.isArray(data.requirements)||!data.verification_audit||!data.cv_sha256)throw Error("Missing structured source verification");if(data.provider_mode!=="muse"&&data.provider_mode!=="mock")throw Error("Unexpected provider mode");state.results.set(row.id,data);row.state="ready";notice(row.id+" complete · "+data.provider_mode+" · "+(data.quote_audit?.verified||0)+" verified source quotations.")}catch(e){row.state="failed";notice(row.id+" failed: "+e.message+" — No automatic retries or fabricated result.", "bad")}renderList();renderReview()}
 async function runBatch(count){if(state.busy||!state.confirmed||!state.canAnalyze||!$("consent").checked)return;const targets=(count===1?[state.items.find(x=>x.id===state.selected)]:state.items.filter(x=>!state.results.has(x.id)&&x.state!=="failed").slice(0,5)).filter(Boolean);if(!targets.length)return;if(targets.length>1&&!window.confirm("Analyze "+targets.length+" fictional PDFs? This sends "+targets.length+" separate requests and may consume Meta credits when Muse is enabled."))return;state.busy=true;updateControls();notice("Processing "+targets.length+" fictional CV(s), up to two concurrently. Failed items stay visible.");let next=0;const workers=Array.from({length:Math.min(2,targets.length)},async()=>{while(next<targets.length){const row=targets[next++];await analyze(row)}});try{await Promise.all(workers)}finally{state.busy=false;updateControls();renderList();renderReview()}}
-$("load").onclick=load;$("prepare").onclick=checkJob;
+$("load").onclick=load;$("recorded").onclick=showRecordedMuse;$("prepare").onclick=checkJob;
 $("lock").onclick=lockJob;$("unlock").onclick=()=>{if(state.results.size&&!window.confirm("Editing the confirmed rubric invalidates the existing analysis and review records in this temporary demo. Clear these results and edit?"))return;state.results.clear();state.decisions.clear();state.items.forEach(x=>x.state="not_analyzed");state.confirmed=false;updateControls();renderList();renderReview();setJobMessage("Criteria unlocked; existing evidence was cleared to avoid showing findings against the wrong rubric. Reconfirm before analysis.","warn")};
 $("consent").onchange=updateControls;$("analyze-one").onclick=()=>runBatch(1);$("analyze-five").onclick=()=>runBatch(5);
 $("search").oninput=renderList;$("filter").onchange=renderList;
