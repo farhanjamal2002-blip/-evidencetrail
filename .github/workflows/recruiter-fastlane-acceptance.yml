@@ -9,7 +9,7 @@ name: EvidenceTrail recruiter fastlane acceptance
 on:
   push:
     branches: [feat/hackathon-recruiter-fastlane-20261029]
-    paths: [.github/workflows/demo20-acceptance.yml]
+    paths: [.github/workflows/recruiter-fastlane-acceptance.yml]
   workflow_dispatch:
 permissions:
   contents: read
