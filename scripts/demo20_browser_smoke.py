@@ -122,6 +122,20 @@ async def main():
                     await page.locator("#analyze-one").click()
                     assert await page.locator("#ready").inner_text()=="20"
                     assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
+                    # Critical semantic acceptance: a scope limitation is NOT a CV self-contradiction.
+                    await page.locator("#filter").select_option("scope_limit")
+                    assert 0 < await page.locator("#list .item").count() <= 20
+                    await page.locator("#filter").select_option("all")
+                    await page.locator('#list [data-id="ET-008"]').click()
+                    review=await page.locator("#review").inner_text()
+                    assert "Scope not established" in review
+                    assert "Model: conflicting" in review
+                    assert "Used a warehouse management system, not SAP procurement." in review
+                    await page.locator('#list [data-id="ET-015"]').click()
+                    review=await page.locator("#review").inner_text()
+                    assert "Discrepancy to clarify" in review
+                    assert "I never led contract negotiations" in review
+                    await page.locator('#list [data-id="ET-005"]').click()
                     await page.locator("#filter").select_option("all_direct")
                     assert 0 < await page.locator("#list .item").count() < 20
                     await page.locator("#filter").select_option("direct")
