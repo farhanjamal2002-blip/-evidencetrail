@@ -1,4 +1,5 @@
 name: EvidenceTrail PDF quote-snap visual acceptance
+# Fixed receipt expectation and overlapping evidence-grid click targets; no Muse calls.
 # Regression: 41 total raw-to-final deltas, including 33 scope clarifications, and honest unknown security states.
 # Rerun after correcting calibrated input fixture and awaited Playwright reset-count assertion.
 # Legacy mock vs fake real Muse stress expectations now separately checked.
