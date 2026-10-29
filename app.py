@@ -5659,6 +5659,9 @@ async def analyze(
     provider_error = analysis_provider_error()
     if provider_error:
         raise HTTPException(status_code=503, detail=provider_error)
+    # Direct internal batch callers do not run FastAPI's Form default parsing.
+    # Treat the unparsed default Form object as disabled, never as consent.
+    visual_review = visual_review if type(visual_review) is bool else False
     if visual_review and (MOCK_PROVIDER_ENABLED or not MUSE_VISION_ENABLED):
         raise HTTPException(
             status_code=400,
@@ -6210,7 +6213,6 @@ async def analyze_batch(
                     job_description.strip(),
                     True,
                     "",
-                    False,  # Explicit: batch analysis does not opt in to Meta vision.
                 )
                 return {"candidate_id": f"C{index}", "filename": filename, "result": payload}
             except HTTPException as exc:
