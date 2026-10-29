@@ -1,4 +1,5 @@
 name: EvidenceTrail 20-CV recruiter inbox acceptance
+# Regression: editing a locked rubric clears stale evidence and human decisions.
 # Rerun with updated offline stress import shims for the new demo router.
 on:
   push:
