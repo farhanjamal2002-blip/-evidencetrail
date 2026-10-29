@@ -445,12 +445,29 @@ evidence_type (direct, related, unsupported, or conflicting), evidence_strength
 follow_up_question when evidence is related, unsupported, conflicting, or
 ambiguous. Use supported only when you cite a relevant passage. Use not_found
 when no relevant passage is shown; this is not proof the candidate lacks it.
-Use conflicting only for explicit incompatible statements, not missing
-information. Related evidence must remain Related and must state what it does
-not establish. Keyword-only or title-only mentions must not be treated as
-supporting evidence. Local code will reject a citation that cannot be found on
-the source page, regardless of the label you return. Return at most two concise CV passages per requirement, normally one strongest
-passage and only a second when it adds distinct evidence.
+Use conflicting only for two explicit incompatible statements WITHIN
+the same CV about the applicant's actual responsibility. The job requirement
+disagreeing with a CV limitation is NOT an internal CV contradiction. Missing
+proof and negative experience disclosures use not_found, not conflicting.
+Related evidence must remain Related and must state what it does not establish.
+Keyword-only or title-only mentions must not be treated as supporting evidence.
+If the CV says "I prepared notes; the director led negotiations" against a
+requirement to personally lead negotiations, choose status=not_found and
+evidence_type=related; the note-taking is adjacent work, not a contradiction.
+If it says "I observed SIEM alerts; another team authored rules" against a
+requirement to deploy SIEM rules, choose status=not_found, evidence_type=related.
+If the CV says "I personally led negotiations" AND elsewhere "I never led
+negotiations" about the same role, choose conflicting with TWO different
+verbatim passages containing the affirmative and denial claims, using roles
+supports and contradicts respectively. The second passage MUST be incompatible
+with the first CV claim, not merely an explanation of what a director did.
+A course listing keywords without job duties is not_found, unsupported.
+When not_found, include a concise actual adjacent passage only if it
+describes work; omit generic keyword lists and absent experiences.
+Local code will reject a citation that cannot be found on the source page,
+regardless of the label you return. Return at most two concise CV passages
+per requirement, normally one strongest passage and only a second when it
+adds distinct evidence.
 
 Evidence strength records what text is present, separately from whether it
 supports the requirement: use keyword_only when only a matching skills-list
