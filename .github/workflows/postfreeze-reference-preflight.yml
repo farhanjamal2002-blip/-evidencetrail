@@ -1,0 +1,17 @@
+name: EvidenceTrail postfreeze reference preflight
+on:
+  push:
+    branches: [eval/postfreeze-16-cv-generalization-oct30]
+    paths: [.github/workflows/postfreeze-reference-preflight.yml]
+permissions:
+  contents: read
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: PYTHONPATH=. python -m unittest tests.test_postfreeze_corpus -v
