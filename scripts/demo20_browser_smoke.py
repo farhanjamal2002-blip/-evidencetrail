@@ -33,7 +33,7 @@ async def main():
                 await page.locator("#consent").uncheck()
                 assert "NOT Muse" in await page.locator("#consent-copy").inner_text()
                 # A custom JD must produce genuinely editable criteria, not merely a count.
-                await page.locator("#job").fill("Role: Supply Analyst\\nRequirements:\\n1. Five years purchasing experience.\\n2. Managed supplier contracts.")
+                await page.locator("#job").fill(chr(10).join(["Role: Supply Analyst","Requirements:","1. Five years purchasing experience.","2. Managed supplier contracts."]))
                 await page.locator("#prepare").click()
                 await page.wait_for_function("document.querySelector('#jobstatus').textContent.includes('Extracted')",timeout=10000)
                 assert await page.locator("#criteria input").count()>=1
