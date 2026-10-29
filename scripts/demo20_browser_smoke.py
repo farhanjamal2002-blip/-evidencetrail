@@ -182,6 +182,7 @@ async def main():
                     assert await page.locator("#review .matrix .source-snap").count()>0
                     await page.locator("#review .matrix .source-snap").first.click()
                     await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                    await page.wait_for_function("document.getElementById('pdf-geometry-badge')?.textContent.includes('scanned OCR')",timeout=20000)
                     assert "scanned OCR" in (await page.locator("#pdf-geometry-badge").inner_text())
                     assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()==0
                     await page.screenshot(path=str(OUT/"honest-scanned-page-only.png"),full_page=True)
