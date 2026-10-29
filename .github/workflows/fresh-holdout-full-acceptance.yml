@@ -1,0 +1,108 @@
+name: EvidenceTrail independent holdout full regression
+# Fixed receipt expectation and overlapping evidence-grid click targets; no Muse calls.
+# Regression: 41 total raw-to-final deltas, including 33 scope clarifications, and honest unknown security states.
+# Rerun after correcting calibrated input fixture and awaited Playwright reset-count assertion.
+# Legacy mock vs fake real Muse stress expectations now separately checked.
+# Fake Muse regression now explicitly checks raw-vs-effective semantics on one-sided limits.
+# Real Muse evidence is calibrated; legacy mock classifications remain unchanged.
+# Browser test waits for async reset before validating original four criteria.
+# Retest with properly multiline custom job description in browser acceptance.
+# Production-useful interaction gates: JD extraction, human decisions, true exports, source links.
+# Release gate: PDF-page citation links, edit safety, true source exports and replay protection.
+# Full acceptance of saved real Muse replay for all 20 fictional CVs, no new Meta calls.
+# Regression: editing a locked rubric clears stale evidence and human decisions.
+# Rerun with updated offline stress import shims for the new demo router.
+on:
+  push:
+    branches: [eval/fresh-four-sector-holdout-oct29]
+    paths: [.github/workflows/fresh-holdout-full-acceptance.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '200'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '200'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install application and OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Python unit and integration tests
+        run: python -m unittest discover -s tests -v
+      - name: 1000 controlled semantic scenarios with oracle consistency check
+        run: |
+          PYTHONPATH=. python scripts/semantic_policy_benchmark_1000.py
+          PYTHONPATH=. python scripts/validate_semantic_scenarios.py
+          python -c 'import json; a=json.load(open("artifacts/semantic-benchmark/oracle_quality.json")); assert a["flagged"]==0'
+      - name: Precisely render source-backed PDF quote boxes and respect OCR fallbacks
+        run: python -m unittest tests.test_quote_geometry -v
+      - name: Genuine Muse source receipts, raw-vs-effective deltas, and honest unrecorded checks
+        run: python -m unittest tests.test_verification_receipt -v
+      - name: Source-based tiering, stable arrival order, no scores or paid calls
+        run: node --test tests/test_coverage_matrix.js
+      - name: Existing JavaScript regression tests
+        run: node --test tests/test_interview_invite.js tests/test_recruiter_decision.js tests/test_requirement_coverage.js
+      - name: Invalid input stress and mock simulation
+        run: python scripts/offline_stress_test.py
+      - name: Python compile and Docker production image
+        run: |
+          python -m py_compile app.py demo20_workflow.py scripts/demo20_browser_smoke.py
+          docker build -t evidencetrail:demo20 .
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '100'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '100'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install app and Chromium
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt playwright
+          python -m playwright install --with-deps chromium
+      - name: Run actual browser through twenty fictional applicants and mock pipeline
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/demo20-browser
+          python -m uvicorn app:app --host 127.0.0.1 --port 8016 >artifacts/demo20-browser/server.log 2>&1 &
+          p=$!
+          trap 'kill "$p" 2>/dev/null || true' EXIT
+          ready=false
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8016/health >/dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          python scripts/demo20_browser_smoke.py
+      - name: Save source screenshots and server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-demo20-browser
+          path: artifacts/demo20-browser
+          retention-days: 14
