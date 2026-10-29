@@ -10,10 +10,20 @@
 ## What judges should open
 
 1. **Start with the [public fictional recruiter inbox](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20)** (verified live October 29) running the feature branch. One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. The genuine 20-CV recorded Muse results load automatically, distinctly labeled as a **saved real recording**, not new inference.
-2. **Confirm the role checklist** and inspect the applicants in upload/received order. Search for `ET-018` (injected prompt), `ET-019` (OCR scan), or `ET-005` (related-vs-direct negotiation) to show hard cases.
-3. **Click “Explore genuine Muse-reviewed applicants.”** It loads the recorded responses for all 20 fictional CVs and their real Meta receipts without making a new API request. No login, key, credits or wait. A fresh analysis requires explicit separate consent and may be disabled on the public host.
+2. **Confirm the role checklist** and explore the transparent source-evidence coverage groups. Applicant order is preserved **within** each group, rather than claiming a global received-order list. Search for `ET-018` (adversarial fixture), `ET-019` (scanned OCR), or `ET-005` (related-vs-direct negotiation).
+3. **The genuine saved Muse replay loads automatically.** All 20 fictional CVs and their original Meta receipts appear without a new API request, login, or credits. The optional **Explore genuine Muse-reviewed applicants** button can reopen this same recording after a reset. Fresh real inference remains disabled on the public host and requires explicit consent and private server configuration.
 4. Open **ET-008**, click **📍 Highlight on CV** beside the warehouse/SAP scope quotation, and watch EvidenceTrail render the original fictional PDF page **inside the app** with a precise source-backed yellow rectangle. Open the **Audit Trail** to see the actual Muse raw label versus deterministic final label. Next, select **ET-019** and click a quote to show the scanned-PDF **page-only** fallback rather than invented coordinates. **Verified quote ≠ proven job qualification.**
 5. Record a *human* Hold decision with a reason, then export the review/evidence. This is a demo browser-state record, not a durable database.
+
+## Newly measured semantic reliability — October 30, 2026
+
+EvidenceTrail preserves the original Meta interpretation, then applies transparent local PDF and semantic checks. Two separate evaluation stages now show **why**:
+
+1. [Same 20-document development-set A/B](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40932201249): revised Muse instructions changed source-author-referenced correctness from **45/80 raw → 80/80 raw**, and from **68/80 final → 80/80 final**. This dataset directly informed the updated prompt and **is not held-out evidence**.
+2. [Post-freeze 16-CV challenge](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40935108963): on four new fictional job sectors (48 locked reference judgments), raw Muse matched **48/48** but the old local verifier made **two incorrect corrections**. This failure was independently exposed by the test.
+3. [Zero-API full-source replay after verifier repair](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40936416154): the patched code correctly preserved both genuine CV-internal contradictions, changing the final **46/48 → 48/48** on the saved authentic Muse responses without any additional model call.
+
+**Judge disclosure:** all documents and reference labels are builder-authored fiction, not external recruiter annotations, real-world hiring outcomes or a representative accuracy estimate. We also do not claim production-grade fairness or quantified reviewer time savings. The value being demonstrated is **inspectable source evidence plus correction transparency**, not a magic percentage score.
 
 ## Source quote geometry benchmark — October 29, 2026
 
