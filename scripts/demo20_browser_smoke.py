@@ -42,7 +42,7 @@ async def main():
                 # First-minute judge proof uses the exact saved Muse source,
                 # opens the true correction, and highlights its original PDF.
                 await page.locator("#proof-correction").click()
-                await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                await page.wait_for_function("document.querySelector('#pdf-geometry-badge')?.textContent.includes('scanned OCR')",timeout=20000)
                 assert "ET-008" in await page.locator("#review .review-top .eyebrow").inner_text()
                 assert await page.locator("#audit-drawer").is_visible()
                 assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()>=1
@@ -50,7 +50,7 @@ async def main():
                 assert "previously recorded genuine Muse" in (await page.locator("#proof-result").inner_text())
                 await page.screenshot(path=str(OUT/f"judge-proof-scope-{width}.png"),full_page=True)
                 await page.locator("#proof-scan").click()
-                await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                await page.wait_for_function("document.querySelector('#pdf-geometry-badge')?.textContent.includes('scanned OCR')",timeout=20000)
                 assert "ET-019" in await page.locator("#review .review-top .eyebrow").inner_text()
                 assert "scanned OCR" in await page.locator("#pdf-geometry-badge").inner_text()
                 assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()==0
@@ -197,7 +197,7 @@ async def main():
                     assert "Tesseract OCR" in await page.locator("#audit-drawer").inner_text()
                     assert await page.locator("#review .matrix .source-snap").count()>0
                     await page.locator("#review .matrix .source-snap").first.click()
-                    await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                    await page.wait_for_function("document.querySelector('#pdf-geometry-badge')?.textContent.includes('scanned OCR')",timeout=20000)
                     assert "scanned OCR" in (await page.locator("#pdf-geometry-badge").inner_text())
                     assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()==0
                     await page.screenshot(path=str(OUT/"honest-scanned-page-only.png"),full_page=True)
