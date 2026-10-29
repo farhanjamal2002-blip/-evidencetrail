@@ -2533,10 +2533,16 @@ function renderResults(payload, analyzedFile, savedState) {
       : "Open any finding to see the source quote and page. EvidenceTrail checks document text; a person decides what it means.";
 
   const provenance = document.getElementById("provenance-details");
+  const usage = payload.usage || {};
+  const analysisUsage = usage.analysis_pass || usage.first_pass || {};
+  const providerResponseId = payload.provider_mode === "muse"
+    ? String(analysisUsage.provider_response_id || usage.provider_response_id || "").trim()
+    : "";
   provenance.replaceChildren();
   [
     ["Model", payload.model || ""],
     [payload.preview_mode ? "Preview generated (UTC)" : "Analysis time (UTC)", payload.created_at || ""],
+    ["Meta response ID", providerResponseId],
     ["CV SHA-256", payload.cv_sha256 || ""],
     ["Job description SHA-256", payload.job_sha256 || ""],
   ].forEach(function (entry) {

@@ -495,7 +495,11 @@ in the CV (such as "I did not own supplier negotiations") as evidence about
 the person's stated role. Do not call that a conflict when the job asks only
 for support; check whether the CV actually describes that support. If the CV
 does describe participation at the requested level, it may be Direct even when
-someone else held final approval. Never infer negotiation, ownership, approval,
+someone else held final approval. Phrases such as "supported rather than led",
+"no direct experience with", or "exposure only to" limit what that passage proves;
+they are not Direct evidence by themselves. Use Related only when concrete
+transferable work is shown, and otherwise use Unsupported or Conflicting
+according to the exact requirement. Never infer negotiation, ownership, approval,
 or sign-off from adjacent tasks alone.
 
 For a minimum-years requirement that lists alternative domains with "or", treat
@@ -613,7 +617,11 @@ explicit CV scope statement (such as "I did not own supplier negotiations")
 as evidence about the person's stated role. Do not call it a conflict when the
 job asks only for support: check whether the CV describes support at the level
 the job asks for. Direct may be appropriate when that participation is
-documented even if the person did not hold final approval. Never infer
+documented even if the person did not hold final approval. Phrases such as
+"supported rather than led", "no direct experience with", or "exposure only to"
+limit what that passage proves; they are not Direct evidence by themselves.
+Use Related only when concrete transferable work is shown, and otherwise use
+Unsupported or Conflicting according to the exact requirement. Never infer
 negotiation, ownership, approval, or sign-off from adjacent tasks alone.
 
 Also classify evidence_strength for the best relevant passage:
@@ -1314,12 +1322,28 @@ def format_cv_text_for_model(pages: list[dict[str, Any]]) -> str:
     return cv_text
 
 
+def attach_provider_response_id(
+    usage_summary: dict[str, Any], response: Any
+) -> None:
+    """Keep an authentic provider response ID when the API returned one."""
+    response_id = getattr(response, "id", None)
+    if not isinstance(response_id, str):
+        return
+    response_id = response_id.strip()
+    if (
+        response_id
+        and len(response_id) <= 256
+        and not any(ord(char) < 32 for char in response_id)
+    ):
+        usage_summary["provider_response_id"] = response_id
+
+
 def call_muse(
     pages: list[dict[str, Any]],
     job_description: str,
     application_draft: str = "",
     locked_requirements: list[str] | None = None,
-) -> tuple[dict[str, Any], dict[str, int]]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
     api_key = configured_model_api_key()
     if not api_key:
         raise RuntimeError(
@@ -1376,6 +1400,7 @@ def call_muse(
     result, usage_summary = decode_chat_json_response(
         response, response_name="candidate evidence analysis"
     )
+    attach_provider_response_id(usage_summary, response)
     response_decode_ms = max(0, round((time.perf_counter() - decode_started) * 1000))
     validation_started = time.perf_counter()
     validate_single_pass_result(
@@ -2547,7 +2572,7 @@ def prepare_verification_request(
 
 def call_muse_verification(
     verification_payload: dict[str, Any],
-) -> tuple[dict[str, Any], dict[str, int]]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
     if MOCK_PROVIDER_ENABLED:
         return mock_verification_response(verification_payload), {
             "input_tokens": 0,
@@ -2586,6 +2611,7 @@ def call_muse_verification(
     result, usage_summary = decode_chat_json_response(
         response, response_name="verification"
     )
+    attach_provider_response_id(usage_summary, response)
     validate_verification_result(
         result,
         verification_payload,
@@ -3526,7 +3552,7 @@ def verify_findings_with_muse(
     findings: list[dict[str, Any]],
     pages: list[dict[str, Any]],
     application_claims: list[dict[str, str]] | None = None,
-) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, int], dict[str, int]]:
+) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], dict[str, Any], dict[str, Any]]:
     payload, source_by_id, allowed_by_requirement = prepare_verification_request(
         findings, pages, application_claims
     )
@@ -3721,10 +3747,47 @@ SCOPE_ACTION_PATTERNS: dict[str, re.Pattern[str]] = {
         re.IGNORECASE,
     ),
     "ownership_or_leadership": re.compile(
-        r"\bown\w*\b|\blead\w*\b|\bheaded\b|\baccountab\w*\b",
+        r"\bown\w*\b|\blead\w*\b|\bled\b|\bheaded\b|\baccountab\w*\b",
         re.IGNORECASE,
     ),
 }
+
+SCOPE_REQUIRED_HIGH_SCOPE_PATTERN = re.compile(
+    r"\bown\w*\b|\blead\w*\b|\bled\b|\bhead\w*\b|\bmanage\w*\b|"
+    r"\bsupervise\w*\b|\bapprove\w*\b|\bauthori[sz]\w*\b|"
+    r"\bsign[\s-]?off\b|\baccountab\w*\b|\bresponsible\s+for\b|"
+    r"\bfinali[sz]\w*\b",
+    re.IGNORECASE,
+)
+SCOPE_DIRECT_EXPERIENCE_REQUIREMENT_PATTERN = re.compile(
+    r"\b(?:direct|hands[- ]on|first[- ]hand|firsthand)\s+"
+    r"(?:experience|participation|ownership|responsibility)\b",
+    re.IGNORECASE,
+)
+SCOPE_AUTHORITY_DENIAL_PATTERN = re.compile(
+    r"\b(?:did\s+not|didn't|never|no|without)\s+(?:personally\s+)?"
+    r"(?:own\w*|lead\w*|led|head\w*|manage\w*|supervise\w*|approve\w*|"
+    r"authori[sz]\w*|sign[\s-]?off|control\w*|decide\w*|finali[sz]\w*)\b|"
+    r"\b(?:am|was)\s+not\s+(?:personally\s+)?"
+    r"(?:responsible|accountable|authorized|empowered)\b|"
+    r"\b(?:rather\s+than|instead\s+of|but\s+not)\b[^.!?]{0,120}"
+    r"\b(?:own\w*|lead\w*|led|head\w*|manage\w*|supervise\w*|approve\w*|"
+    r"authori[sz]\w*|sign[\s-]?off|accountab\w*)\b",
+    re.IGNORECASE,
+)
+SCOPE_DIRECT_EXPERIENCE_DENIAL_PATTERN = re.compile(
+    r"\b(?:no|without)\s+(?:(?:direct|hands[- ]on|first[- ]hand|firsthand)\s+)?"
+    r"experience\s+(?:with|in|for|to)\b|"
+    r"\b(?:exposure|familiarity)\s+only\s+(?:to|with|in)\b|"
+    r"\bonly\s+(?:exposure|familiarity)\s+(?:to|with|in)\b",
+    re.IGNORECASE,
+)
+SCOPE_SUPPORTED_NOT_LEADING_PATTERN = re.compile(
+    r"\b(?:support\w*|assist\w*|help\w*|participat\w*|contribut\w*|join\w*)\b"
+    r"[^.!?]{0,160}\b(?:rather\s+than|instead\s+of|but\s+not)\b"
+    r"[^.!?]{0,120}\b(?:own\w*|lead\w*|led|head\w*|manage\w*|supervise\w*)\b",
+    re.IGNORECASE | re.DOTALL,
+)
 
 EXPLICIT_SCOPE_BOUNDARY_PATTERNS = (
     re.compile(
@@ -3737,6 +3800,31 @@ EXPLICIT_SCOPE_BOUNDARY_PATTERNS = (
         r"\bI\s+(?:am|was)\s+not\s+(?:personally\s+)?"
         r"(?:responsible|accountable|authorized|empowered)\s+(?:for|to)\b"
         r"[^.!?]{0,240}(?:[.!?]|$)",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
+        r"\b(?:I\s+)?(?:support\w*|assist\w*|help\w*|participat\w*|"
+        r"contribut\w*|join\w*|work\w*)\b[^.!?]{0,160}"
+        r"\b(?:rather\s+than|instead\s+of|but\s+not)\b[^.!?]{0,120}"
+        r"\b(?:own\w*|lead\w*|led|head\w*|manage\w*|supervise\w*|"
+        r"negotiate\w*|approve\w*|authori[sz]\w*|sign\s+off|sign-off)\b"
+        r"[^.!?]{0,240}(?:[.!?]|$)",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
+        r"\b(?:no|without)\s+(?:(?:direct|hands[- ]on|first[- ]hand|firsthand)\s+)?"
+        r"(?:experience|participation|involvement|ownership|responsibility|authority)\s+"
+        r"(?:with|in|for|to)\b[^.!?]{0,240}(?:[.!?]|$)",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
+        r"\b(?:(?:I|we)\s+(?:had|have)\s+)?(?:exposure|familiarity)\s+only\s+"
+        r"(?:to|with|in)\b[^.!?]{0,240}(?:[.!?]|$)",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
+        r"\b(?:(?:I|we)\s+(?:had|have)\s+)?only\s+(?:exposure|familiarity)\s+"
+        r"(?:to|with|in)\b[^.!?]{0,240}(?:[.!?]|$)",
         re.IGNORECASE | re.DOTALL,
     ),
 )
@@ -3793,17 +3881,35 @@ def find_explicit_scope_limitations(
     return limitations
 
 
+def _scope_quote_proves_required_action(
+    action: str, quote: str, requirement: str
+) -> bool:
+    if not SCOPE_ACTION_PATTERNS[action].search(quote):
+        return False
+    if not any(pattern.search(quote) for pattern in EXPLICIT_SCOPE_BOUNDARY_PATTERNS):
+        return True
+    # Supported rather than led negotiations is Direct evidence for a job
+    # asking for support. It does not prove a leadership requirement.
+    if (
+        action == "negotiation"
+        and not SCOPE_REQUIRED_HIGH_SCOPE_PATTERN.search(requirement)
+        and not SCOPE_DIRECT_EXPERIENCE_REQUIREMENT_PATTERN.search(requirement)
+        and SCOPE_SUPPORTED_NOT_LEADING_PATTERN.search(quote)
+    ):
+        return True
+    return False
+
+
 def apply_explicit_scope_boundary_guard(
     findings: list[dict[str, Any]],
     pages: list[dict[str, Any]],
     page_marks: dict[int, list[dict[str, Any]]],
 ) -> dict[str, Any]:
-    """Downgrade a Direct label when the CV explicitly limits that task scope.
+    """Apply quote-grounded scope limits without overstating what they prove.
 
-    This rule is intentionally narrow: the relevant responsibility must be
-    explicitly limited in the CV, and the verified supporting quotes must not
-    document that same action. It preserves the Muse label for audit and routes
-    the result to Related + human review rather than inferring a contradiction.
+    Preserve Muse's raw label. Route adjacent positive work to Related, a denial
+    of a required ownership level to Conflicting, and a limitation with no
+    positive experience to Unsupported.
     """
     checked = 0
     adjusted: list[dict[str, Any]] = []
@@ -3844,17 +3950,43 @@ def apply_explicit_scope_boundary_guard(
             action
             for action in sorted(limited_actions)
             if not any(
-                SCOPE_ACTION_PATTERNS[action].search(quote)
-                and not any(pattern.search(quote) for pattern in EXPLICIT_SCOPE_BOUNDARY_PATTERNS)
+                _scope_quote_proves_required_action(action, quote, requirement)
                 for quote in support_quotes
             )
         ]
         if not missing_direct_actions:
             continue
 
+        related_support_quotes = [
+            quote
+            for quote in support_quotes
+            if not any(pattern.search(quote) for pattern in EXPLICIT_SCOPE_BOUNDARY_PATTERNS)
+        ]
+        explicit_level_conflict = (
+            bool(
+                SCOPE_REQUIRED_HIGH_SCOPE_PATTERN.search(requirement)
+                or SCOPE_DIRECT_EXPERIENCE_REQUIREMENT_PATTERN.search(requirement)
+            )
+            and any(
+                SCOPE_AUTHORITY_DENIAL_PATTERN.search(item["quote"])
+                or SCOPE_DIRECT_EXPERIENCE_DENIAL_PATTERN.search(item["quote"])
+                for item in limitations
+            )
+        )
+        if explicit_level_conflict:
+            effective_type = "conflicting"
+            effective_status = "conflicting"
+        elif related_support_quotes:
+            effective_type = "related"
+            effective_status = "supported"
+        else:
+            effective_type = "unsupported"
+            effective_status = "not_found"
+
         finding["muse_evidence_type"] = model_label
-        finding["evidence_type"] = "related"
-        finding["final_evidence_type"] = "related"
+        finding["status"] = effective_status
+        finding["evidence_type"] = effective_type
+        finding["final_evidence_type"] = effective_type
         finding["certainty"] = "ambiguous"
         finding["scope_limitations"] = [
             {
@@ -3877,41 +4009,76 @@ def apply_explicit_scope_boundary_guard(
         existing_gaps = existing_gaps if isinstance(existing_gaps, list) else []
         if gap not in existing_gaps:
             finding["unproven_aspects"] = [*existing_gaps[:11], gap]
-        finding["transfer_explanation"] = (
-            "The CV contains concrete related work, but a locally quote-checked scope statement "
-            "limits responsibility for the action required here. Keep the finding Related until "
-            "the recruiter clarifies the person's exact role."
-        )
-        finding["follow_up_question"] = (
-            "Which parts of this work did you personally perform, and who held the negotiation, "
-            "approval, or sign-off responsibility?"
-        )
+
+        if effective_type == "related":
+            finding["transfer_explanation"] = (
+                "The CV contains concrete related work, but a locally quote-checked scope statement "
+                "limits responsibility for the action required here. Keep the finding Related until "
+                "the recruiter clarifies the person's exact role."
+            )
+            finding["follow_up_question"] = (
+                "Which parts of this work did you personally perform, and who held the negotiation, "
+                "approval, or sign-off responsibility?"
+            )
+            routing_note = "routed to Related for recruiter review"
+        elif effective_type == "conflicting":
+            finding["transfer_explanation"] = None
+            finding["follow_up_question"] = (
+                "Can you clarify the explicit scope statement against the responsibility this role requires?"
+            )
+            routing_note = "routed to Conflict to clarify for recruiter review"
+        else:
+            finding["transfer_explanation"] = None
+            finding["follow_up_question"] = (
+                "Do you have experience at the responsibility level this requirement asks for?"
+            )
+            routing_note = "routed to Unsupported for recruiter review"
+
         boundary_note = (
-            "Local scope check: an explicit CV statement limits responsibility for a task in this "
-            "requirement, and the verified supporting passages do not document that same action. "
-            "The original Muse label is retained below; this is routed to Related for recruiter review."
+            "Local scope check: a quote-verified CV statement limits the responsibility level "
+            "documented for this requirement. The original Muse label is retained below; "
+            + routing_note
+            + "."
         )
         existing_note = str(finding.get("note", "")).strip()
         finding["note"] = (existing_note + " " + boundary_note).strip()
         finding["scope_boundary_review"] = {
             "rule": "explicit_scope_limit_with_no_matching_direct_action",
             "muse_evidence_type": model_label,
-            "final_evidence_type": "related",
+            "final_evidence_type": effective_type,
+            "final_status": effective_status,
+            "review_required": True,
             "missing_actions": missing_direct_actions,
         }
         for item in finding.get("evidence", []):
-            if isinstance(item, dict) and item.get("role") == "supports":
-                item["evidence_type"] = "related"
-                source_id = item.get("source_id")
-                page_number = item.get("page")
-                if source_id and isinstance(page_number, int):
-                    for mark in page_marks.get(page_number, []):
-                        if mark.get("source_id") == source_id:
-                            mark["role"] = "related"
+            if not isinstance(item, dict):
+                continue
+            quote = str(item.get("quote", ""))
+            page_number = item.get("page")
+            source_id = item.get("source_id")
+            if item.get("role") == "supports" and any(
+                pattern.search(quote) for pattern in EXPLICIT_SCOPE_BOUNDARY_PATTERNS
+            ):
+                item["role"] = "contradicts"
+                item["display_role"] = "scope_context"
+                item["evidence_type"] = effective_type
+            elif item.get("role") == "supports":
+                item["evidence_type"] = (
+                    "related" if effective_type in {"related", "conflicting"} else "unsupported"
+                )
+            if source_id and isinstance(page_number, int):
+                for mark in page_marks.get(page_number, []):
+                    if mark.get("source_id") == source_id and mark.get("role") in {
+                        "direct", "related", "supports"
+                    }:
+                        mark["role"] = (
+                            "related" if effective_type in {"related", "conflicting"} else "scope_context"
+                        )
         adjusted.append({
             "requirement_id": str(finding.get("id", "")),
             "muse_evidence_type": model_label,
-            "final_evidence_type": "related",
+            "final_evidence_type": effective_type,
+            "final_status": effective_status,
             "missing_actions": missing_direct_actions,
             "scope_pages": sorted({item["page"] for item in finding["scope_limitations"]}),
         })
@@ -3919,7 +4086,15 @@ def apply_explicit_scope_boundary_guard(
     return {
         "requirements_checked": checked,
         "explicit_scope_limitations_detected": detected_limitations,
-        "direct_to_related_adjustments": len(adjusted),
+        "direct_to_related_adjustments": sum(
+            item["final_evidence_type"] == "related" for item in adjusted
+        ),
+        "direct_to_conflict_adjustments": sum(
+            item["final_evidence_type"] == "conflicting" for item in adjusted
+        ),
+        "direct_to_unsupported_adjustments": sum(
+            item["final_evidence_type"] == "unsupported" for item in adjusted
+        ),
         "adjusted_requirements": adjusted,
     }
 
@@ -4429,10 +4604,18 @@ def build_report(
         scope_provenance = ""
         if isinstance(scope_review, dict):
             original_type = str(scope_review.get("muse_evidence_type", "direct"))
+            final_type = str(scope_review.get("final_evidence_type", "related"))
+            final_label = {
+                "related": "Related",
+                "conflicting": "Conflict to clarify",
+                "unsupported": "Unsupported",
+            }.get(final_type, "Needs review")
             scope_provenance = (
                 "<p class='scope-provenance'>Muse: "
                 + html.escape(original_type.title())
-                + " · Local scope check: Related · recruiter review</p>"
+                + " · Local scope check: "
+                + html.escape(final_label)
+                + " · recruiter review</p>"
             )
         evidence_conflict_review = finding.get("evidence_conflict_review")
         if isinstance(evidence_conflict_review, dict):

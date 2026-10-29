@@ -12,13 +12,17 @@ REQUIREMENT = (
 )
 
 
-def finding_with_quote(page: dict[str, object], quote: str) -> dict[str, object]:
+def finding_with_quote(
+    page: dict[str, object],
+    quote: str,
+    requirement: str = REQUIREMENT,
+) -> dict[str, object]:
     match = app.locate_quote(quote, [page], 1)
     if not match:
         raise AssertionError("Test quote must resolve on the source page.")
     return {
         "id": "R2",
-        "requirement": REQUIREMENT,
+        "requirement": requirement,
         "status": "supported",
         "evidence_type": "direct",
         "evidence_strength": "specific",
@@ -127,6 +131,70 @@ class ExplicitScopeBoundaryTests(unittest.TestCase):
         self.assertEqual(finding["evidence_type"], "direct")
         self.assertNotIn("scope_limitations", finding)
         self.assertEqual(audit["direct_to_related_adjustments"], 0)
+
+    def test_supported_rather_than_led_is_direct_when_the_job_only_asks_for_support(self) -> None:
+        quote = "Supported rather than led supplier negotiations."
+        page = synthetic_page(quote)
+        finding = finding_with_quote(page, quote)
+        audit = app.apply_explicit_scope_boundary_guard([finding], [page], {})
+
+        self.assertEqual(finding["evidence_type"], "direct")
+        self.assertEqual(finding["status"], "supported")
+        self.assertEqual(audit["direct_to_related_adjustments"], 0)
+
+    def test_no_direct_experience_and_exposure_only_are_limited_to_related(self) -> None:
+        support = "Requested bids, compared supplier quotations, and coordinated renewals."
+        for limitation in (
+            "I have no direct experience with supplier negotiations.",
+            "My exposure only to supplier negotiations was through renewal tracking.",
+            "I had only exposure to supplier negotiations.",
+        ):
+            with self.subTest(limitation=limitation):
+                page = synthetic_page(support + " " + limitation)
+                finding = finding_with_quote(page, support)
+                audit = app.apply_explicit_scope_boundary_guard([finding], [page], {})
+
+                self.assertEqual(finding["evidence_type"], "related")
+                self.assertEqual(finding["final_evidence_type"], "related")
+                self.assertEqual(finding["muse_evidence_type"], "direct")
+                self.assertEqual(audit["direct_to_related_adjustments"], 1)
+
+    def test_limitation_quote_alone_does_not_become_related_evidence(self) -> None:
+        quote = "I have no direct experience with supplier negotiations."
+        page = synthetic_page(quote)
+        finding = finding_with_quote(page, quote)
+        audit = app.apply_explicit_scope_boundary_guard([finding], [page], {})
+
+        self.assertEqual(finding["status"], "not_found")
+        self.assertEqual(finding["evidence_type"], "unsupported")
+        self.assertEqual(finding["muse_evidence_type"], "direct")
+        self.assertEqual(finding["evidence"][0]["role"], "contradicts")
+        self.assertEqual(audit["direct_to_unsupported_adjustments"], 1)
+
+    def test_exposure_only_conflicts_with_a_direct_experience_requirement(self) -> None:
+        requirement = "Direct experience with supplier negotiations."
+        quote = "My exposure only to supplier negotiations was through renewals."
+        page = synthetic_page(quote)
+        finding = finding_with_quote(page, quote, requirement)
+        audit = app.apply_explicit_scope_boundary_guard([finding], [page], {})
+
+        self.assertEqual(finding["status"], "conflicting")
+        self.assertEqual(finding["evidence_type"], "conflicting")
+        self.assertEqual(finding["scope_boundary_review"]["final_status"], "conflicting")
+        self.assertEqual(audit["direct_to_conflict_adjustments"], 1)
+
+    def test_explicit_denial_conflicts_when_the_job_requires_leadership(self) -> None:
+        requirement = "Lead supplier negotiations."
+        quote = "Supported rather than led supplier negotiations."
+        page = synthetic_page(quote)
+        finding = finding_with_quote(page, quote, requirement)
+        audit = app.apply_explicit_scope_boundary_guard([finding], [page], {})
+
+        self.assertEqual(finding["status"], "conflicting")
+        self.assertEqual(finding["evidence_type"], "conflicting")
+        self.assertEqual(finding["muse_evidence_type"], "direct")
+        self.assertEqual(finding["scope_boundary_review"]["final_evidence_type"], "conflicting")
+        self.assertEqual(audit["direct_to_conflict_adjustments"], 1)
 
     def test_scope_limit_for_unrelated_action_does_not_change_label(self) -> None:
         page = synthetic_page(

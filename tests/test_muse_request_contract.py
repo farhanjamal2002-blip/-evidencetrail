@@ -10,8 +10,9 @@ from unittest.mock import Mock, patch
 import app
 
 
-def fake_response(payload: dict) -> SimpleNamespace:
+def fake_response(payload: dict, response_id: str | None = None) -> SimpleNamespace:
     return SimpleNamespace(
+        id=response_id,
         choices=[
             SimpleNamespace(
                 finish_reason="stop",
@@ -51,9 +52,11 @@ class MuseRequestContractTests(unittest.TestCase):
             x += width + 2
         return [{"number": 1, "text": text, "words": words, "blocks": [text], "ocr_used": False}]
 
-    def run_fake_request(self, function, response_payload, *args):
+    def run_fake_request(self, function, response_payload, *args, response_id=None):
         client = Mock()
-        client.chat.completions.create.return_value = fake_response(response_payload)
+        client.chat.completions.create.return_value = fake_response(
+            response_payload, response_id=response_id
+        )
         with (
             patch.object(app, "_muse_client", None),
             patch.object(app, "_muse_client_api_key", None),
@@ -87,6 +90,23 @@ class MuseRequestContractTests(unittest.TestCase):
             timeout=90.0,
         )
 
+    def test_live_response_id_is_retained_only_when_provider_returns_it(self):
+        payload = {
+            "requirements": [],
+            "application_claims": [],
+            "employment_episodes": [],
+            "experience_claims": [],
+        }
+        _result, usage, _request = self.run_fake_request(
+            app.call_muse,
+            payload,
+            self.sample_pages(),
+            "A procurement role",
+            response_id="muse-response-test-123",
+        )
+
+        self.assertEqual(usage["provider_response_id"], "muse-response-test-123")
+
     def test_mapping_pass_uses_developer_prompt_and_json_schema(self):
         payload = {
             "requirements": [],
@@ -104,6 +124,7 @@ class MuseRequestContractTests(unittest.TestCase):
             {"input_tokens": 17, "output_tokens": 9},
         )
         self.assertGreaterEqual(usage["api_latency_ms"], 0)
+        self.assertNotIn("provider_response_id", usage)
         for timing_key in (
             "client_setup_ms",
             "prompt_build_ms",
@@ -217,6 +238,12 @@ class MuseRequestContractTests(unittest.TestCase):
             "purchase-order changes and supplier-record maintenance may relate",
             prompt,
         )
+        self.assertIn("supported rather than led", prompt)
+        self.assertIn("no direct experience with", prompt)
+        self.assertIn("exposure only to", prompt)
+        self.assertIn("supported rather than led", app.VERIFIER_SYSTEM_PROMPT)
+        self.assertIn("no direct experience with", app.VERIFIER_SYSTEM_PROMPT)
+        self.assertIn("exposure only to", app.VERIFIER_SYSTEM_PROMPT)
         self.assertIn("do not prove supplier selection", prompt)
         self.assertIn("treat the list disjunctively", prompt)
         self.assertIn("dated role and a concrete same-role duty", prompt)
