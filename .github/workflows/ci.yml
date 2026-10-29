@@ -52,3 +52,6 @@ jobs:
           node --check static/recruiter-decision.js
           node --check static/interview-invite.js
           git diff --check
+
+      - name: Build deployment container
+        run: docker build --tag evidencetrail:ci .
