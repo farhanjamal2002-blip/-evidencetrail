@@ -50,6 +50,18 @@ async def main():
                     await page.locator("#unlock").click()
                     assert await page.locator("#ready").inner_text()=="0"
                     assert "No decision" in await page.locator("#decision").inner_text()
+                    # Competition demo: instant authentic Muse results, with ZERO new model calls.
+                    calls=[]
+                    page.on("request",lambda req: calls.append(req.url) if "/api/analyze" in req.url else None)
+                    await page.locator("#recorded").click()
+                    await page.wait_for_function("document.querySelector('#ready').textContent==='20'",timeout=30000)
+                    assert await page.locator("#list").get_by_text("Recorded Muse").count()==20
+                    assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
+                    assert "Authentic Meta response" in await page.locator("#review").inner_text()
+                    await page.locator("#filter").select_option("related")
+                    assert 0 < await page.locator("#list .item").count() <= 20
+                    assert not calls, "Viewing recorded evidence must not make paid API calls"
+                    await page.screenshot(path=str(OUT/"real-muse-recorded-evidence.png"),full_page=True)
                 assert not errors,errors
                 await page.close()
         finally:
