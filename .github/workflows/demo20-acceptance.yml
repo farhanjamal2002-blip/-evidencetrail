@@ -1,4 +1,5 @@
 name: EvidenceTrail 20-CV recruiter inbox acceptance
+# Release gate: PDF-page citation links, edit safety, true source exports and replay protection.
 # Full acceptance of saved real Muse replay for all 20 fictional CVs, no new Meta calls.
 # Regression: editing a locked rubric clears stale evidence and human decisions.
 # Rerun with updated offline stress import shims for the new demo router.
