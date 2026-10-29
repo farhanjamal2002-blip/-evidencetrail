@@ -167,7 +167,7 @@ async def main():
                     assert "status override" in await page.locator("#inspect-audit").inner_text()
                     assert await page.locator("#review .matrix .source-snap").count()>0
                     await page.locator("#review .matrix .source-snap").first.click()
-                    await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                    await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").first.wait_for(timeout=20000)
                     assert await page.locator("#pdf-evidence-viewer").is_visible()
                     assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()>=1
                     assert "Source located" in await page.locator("#pdf-geometry-badge").inner_text()
