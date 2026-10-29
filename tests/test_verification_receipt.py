@@ -41,7 +41,14 @@ class ReceiptTests(unittest.TestCase):
                     self.assertIsNone(citation["char_span"])
                     self.assertIsNone(citation["bounding_boxes"])
                     self.assertTrue(citation["page"]>=1)
-        self.assertEqual(corrections,33)
+        # 33 new scope-only clarifications + 8 pre-existing verifier gates.
+        # Both are genuine raw-to-final deltas; never claim all 41 are the same rule.
+        self.assertEqual(corrections,41)
+        self.assertEqual(
+            published["presentation_calibration"]["counts"]["single_scope_limits_clarified"]
+            + published["presentation_calibration"]["counts"]["document_absences_clarified"],
+            33,
+        )
 
     def test_real_fictional_scan_and_injection_fixture_do_not_overclaim(self):
         with TestClient(app.app) as client:
