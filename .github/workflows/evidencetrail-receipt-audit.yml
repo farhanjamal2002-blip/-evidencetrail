@@ -1,0 +1,98 @@
+name: EvidenceTrail Muse replay receipt audit (offline)
+
+on:
+  push:
+    branches:
+      - ops/muse-frozen-8140662-20261029
+    paths:
+      - .github/workflows/evidencetrail-receipt-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit-saved-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download saved successful Muse artifact (zero model calls)
+        uses: actions/download-artifact@v4
+        with:
+          name: evidencetrail-muse-8140662-canonical
+          run-id: 40867761271
+          github-token: ${{ github.token }}
+          repository: farhanjamal2002-blip/-evidencetrail
+          path: audit-input
+
+      - name: Audit provider receipts and raw/final status preservation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('audit-input')
+          def load(name):
+              paths = list(root.rglob(name))
+              if len(paths) != 1:
+                  raise RuntimeError(f'Expected one {name}, found {len(paths)}')
+              return json.loads(paths[0].read_text(encoding='utf-8'))
+
+          replay = load('unified_demo_replay_canonical_8140662_20261029.json')
+          metrics = load('unified_demo_metrics_canonical_8140662_20261029.json')
+          attempt = load('unified_demo_attempt_canonical_8140662_20261029.json')
+          identity = load('identity.json')
+          results = replay.get('results', [])
+          receipts, raw_labels, final_labels, calls = [], 0, 0, 0
+          for item in results:
+              data = item.get('result') or {}
+              usage = data.get('usage') or {}
+              rid = (usage.get('analysis_pass') or {}).get('provider_response_id')
+              receipts.append(bool(isinstance(rid, str) and rid.strip()))
+              calls += int(data.get('analysis_calls') or 0)
+              for finding in data.get('requirements', []):
+                  raw_labels += int('muse_status' in finding or 'raw_status' in finding)
+                  final_labels += int('status' in finding)
+
+          output = {
+              'artifact_source_run': 40867761271,
+              'executed_sha': identity.get('executed_sha'),
+              'provider': replay.get('provider_mode'),
+              'model': replay.get('model'),
+              'reasoning_effort': replay.get('reasoning_effort'),
+              'candidate_count': len(results),
+              'complete_candidates': replay.get('completed_count'),
+              'successful_muse_calls_reported': calls,
+              'authentic_provider_response_ids_saved': sum(receipts),
+              'missing_provider_receipt_candidates': [item.get('candidate_id') for item, yes in zip(results, receipts) if not yes],
+              'raw_status_fields_saved': raw_labels,
+              'final_status_fields_saved': final_labels,
+              'metrics_status': metrics.get('status'),
+              'attempt_status': attempt.get('status'),
+              'verified_quotes': (metrics.get('overall') or {}).get('verified_quotes'),
+              'proposed_quotes': (metrics.get('overall') or {}).get('proposed_quotes'),
+              'raw_label_matches': (metrics.get('overall') or {}).get('muse_label_matches'),
+              'adjudicated_label_matches': (metrics.get('overall') or {}).get('timeline_adjudicated_label_matches'),
+              'estimated_token_cost_usd': (metrics.get('overall') or {}).get('estimated_standard_token_cost_usd'),
+              'note': 'Audit reads saved GitHub artifact ONLY; zero Meta Muse requests.'
+          }
+          Path('muse-receipt-audit-summary.json').write_text(json.dumps(output, indent=2) + '\n')
+          print(json.dumps(output, indent=2))
+          assert output['executed_sha'] == '8140662cae1e14fbae7b66f664a7d9d99b396674'
+          assert len(results) == 5 and calls == 5
+          assert output['metrics_status'] == 'completed' and output['attempt_status'] == 'completed'
+          assert output['authentic_provider_response_ids_saved'] == 5, 'Provider IDs absent from at least one candidate'
+          assert raw_labels and final_labels, 'Missing raw/final status data'
+          PY
+
+      - name: Save receipt summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-8140662-receipt-audit-summary
+          path: muse-receipt-audit-summary.json
+          if-no-files-found: warn
+          retention-days: 14
