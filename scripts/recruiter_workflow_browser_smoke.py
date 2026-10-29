@@ -4,6 +4,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+import pymupdf as fitz
+from demo20_workflow import make_cv_pdf
 
 BASE = os.getenv("EVIDENCETRAIL_SMOKE_URL","http://127.0.0.1:8017")
 OUT = Path("artifacts/recruiter-workflow-browser")
@@ -42,5 +44,16 @@ with sync_playwright() as engine:
     assert "waiting_external" in body and "ET-005" in body
     assert not calls, "Review/export should never call the Muse analysis endpoint"
     page.screenshot(path=str(OUT/"review-workflow.png"),full_page=True)
+    # Main application uploader must accept scanned images, not only PDFs.
+    main = browser.new_page()
+    main.goto(BASE+"/",wait_until="domcontentloaded")
+    with fitz.open(stream=make_cv_pdf("ET-001"),filetype="pdf") as source_pdf:
+        png = source_pdf[0].get_pixmap(dpi=135).tobytes("png")
+    main.locator("#cv").set_input_files({
+        "name":"fictional-scanned-cv.png","mimeType":"image/png","buffer":png,
+    })
+    assert "fictional-scanned-cv.png" in main.locator("#file-name").inner_text()
+    main.screenshot(path=str(OUT/"image-upload.png"),full_page=True)
+    main.close()
     browser.close()
 print("PASS: Recorded Muse replay, manual clarification, stage, CSV, zero new model calls")
