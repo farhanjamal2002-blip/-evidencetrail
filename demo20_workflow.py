@@ -9,6 +9,8 @@ from __future__ import annotations
 import io
 import os
 import re
+import hashlib
+import json
 import textwrap
 from functools import lru_cache
 from pathlib import Path
@@ -153,3 +155,51 @@ def fictional_cv(candidate_id: str):
             "X-Robots-Tag":"noindex, nofollow",
         },
     )
+
+
+@lru_cache(maxsize=1)
+def _load_verified_recording() -> dict:
+    """Expose only genuine fictional Muse outcomes saved by the one-time recorder.
+
+    Refuse mismatched job, criteria, CV bytes, incomplete/model-less results or
+    missing provider receipts. This endpoint never invokes the paid provider.
+    """
+    path=BASE/"data"/"demo20_muse_replay.json"
+    if not path.is_file():
+        raise HTTPException(404,"No genuine recorded Muse replay has been published for this build.")
+    payload=json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("schema")!="evidencetrail-fixture-replay/v1" or payload.get("fictional_only") is not True:
+        raise HTTPException(503,"Saved replay schema or fiction declaration invalid.")
+    if payload.get("job_sha256")!=hashlib.sha256(JOB.encode()).hexdigest():
+        raise HTTPException(503,"Recorded Muse results do not match current job.")
+    if payload.get("rubric_sha256")!=hashlib.sha256(json.dumps(CRITERIA).encode()).hexdigest():
+        raise HTTPException(503,"Recorded Muse results do not match current rubric.")
+    rows=payload.get("results",[])
+    if not isinstance(rows,list) or not 5<=len(rows)<=20:
+        raise HTTPException(503,"Saved replay has no sufficient real Muse responses.")
+    if len({r.get("id") for r in rows})!=len(rows):
+        raise HTTPException(503,"Duplicate saved applicant entry.")
+    for r in rows:
+        cid=r.get("id")
+        get_item(cid)
+        if r.get("cv_sha256")!=hashlib.sha256(make_cv_pdf(cid)).hexdigest():
+            raise HTTPException(503,"The stored replay does not match the source PDF.")
+        if r.get("provider_mode")!="muse" or r.get("analysis_calls")!=1 or not r.get("receipt"):
+            raise HTTPException(503,"Recorded outcome has no genuine Meta receipt.")
+        findings=r.get("requirements") or []
+        if len(findings)!=len(CRITERIA):
+            raise HTTPException(503,"Recorded outcome has no complete rubric.")
+        if any(not q.get("raw_status") or q.get("effective_status")!=q.get("status") for q in findings):
+            raise HTTPException(503,"Recorded outcome is missing trustworthy raw/effective audit.")
+        if any(q.get("status")=="supported" and q.get("evidence_type")!="direct" for q in findings):
+            raise HTTPException(503,"Recorded outcome violates source evidence policy.")
+    return payload
+
+@router.get("/demo20/recorded-muse")
+def recorded_muse_evidence():
+    """Serve reproducible, frozen REAL Muse responses; never call the API here."""
+    data=_load_verified_recording()
+    return JSONResponse(data,headers={
+        "Cache-Control":"public, max-age=300",
+        "X-Robots-Tag":"noindex, nofollow",
+    })
