@@ -149,6 +149,17 @@ async def main():
                     assert "Scope not established" in review
                     assert "Model: conflicting" in review
                     assert "status override" in await page.locator("#inspect-audit").inner_text()
+                    assert await page.locator("#review .matrix .source-snap").count()>0
+                    await page.locator("#review .matrix .source-snap").first.click()
+                    await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                    assert await page.locator("#pdf-evidence-viewer").is_visible()
+                    assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()>=1
+                    assert "Source located" in await page.locator("#pdf-geometry-badge").inner_text()
+                    raw=await page.locator("#pdf-raw-link").get_attribute("href")
+                    assert raw.startswith("/demo20/cv/ET-008#page="),raw
+                    await page.screenshot(path=str(OUT/"precise-pdf-quote-snap.png"),full_page=True)
+                    await page.locator("#pdf-close").click()
+                    assert await page.locator("#pdf-evidence-viewer").is_hidden()
                     assert await page.locator("#inspect-audit").get_attribute("aria-expanded")=="false"
                     await page.locator("#inspect-audit").click()
                     assert await page.locator("#inspect-audit").get_attribute("aria-expanded")=="true"
@@ -168,6 +179,12 @@ async def main():
                     assert "OCR" in await page.locator("#inspect-audit").inner_text()
                     await page.keyboard.press("a")
                     assert "Tesseract OCR" in await page.locator("#audit-drawer").inner_text()
+                    assert await page.locator("#review .matrix .source-snap").count()>0
+                    await page.locator("#review .matrix .source-snap").first.click()
+                    await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                    assert "scanned OCR" in (await page.locator("#pdf-geometry-badge").inner_text())
+                    assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()==0
+                    await page.screenshot(path=str(OUT/"honest-scanned-page-only.png"),full_page=True)
                     await page.locator('#list [data-id="ET-018"]').click()
                     text=await page.locator("#audit-drawer").inner_text()
                     assert "prompt injection scan" in text.lower() and "not_recorded" in text.lower()
