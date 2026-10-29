@@ -344,9 +344,12 @@ def run_mock_pipeline() -> None:
     }
     assert [item["status"] for item in result["requirements"]] == [
         "supported",
-        "conflicting",
+        "not_found",  # A lone scope-limiting quote is not a self-contradictory CV.
         "not_found",
     ]
+    assert result["requirements"][1]["raw_status"] == "conflicting"
+    assert result["requirements"][1]["review_reason_code"] == "explicit_scope_limit_not_contradiction"
+    assert result["verification_audit"]["semantic_review_clarifications"]["single_scope_limits_clarified"] >= 1
     assert [item["job_source"]["line"] for item in result["requirements"]] == [2, 3, 4]
     assert all(item["job_source"]["verified"] for item in result["requirements"])
     assert all(
