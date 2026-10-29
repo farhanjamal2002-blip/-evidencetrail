@@ -1,4 +1,5 @@
 name: EvidenceTrail semantic accuracy acceptance
+# Legacy mock vs fake real Muse stress expectations now separately checked.
 # Fake Muse regression now explicitly checks raw-vs-effective semantics on one-sided limits.
 # Real Muse evidence is calibrated; legacy mock classifications remain unchanged.
 # Browser test waits for async reset before validating original four criteria.
