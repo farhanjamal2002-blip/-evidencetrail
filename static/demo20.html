@@ -177,7 +177,7 @@ function coverageSummary(){
   b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));
  });
 }
-function visibleRows(){const q=$("search").value.trim().toLowerCase(),f=$("filter").value;return state.items.filter(x=>matchesFilter(x,f)&&(x.id.toLowerCase().includes(q)||x.role.toLowerCase().includes(q)||x.fixture_lines.join(" ").toLowerCase().includes(q)))}
+function visibleRows(){const q=$("search").value.trim().toLowerCase(),f=$("filter").value;const rows=state.items.filter(x=>matchesFilter(x,f)&&(x.id.toLowerCase().includes(q)||x.role.toLowerCase().includes(q)||x.fixture_lines.join(" ").toLowerCase().includes(q)));return EvidenceCoverage.sortStable(rows,state.results,state.criteria.length).map(x=>x.row)}
 function pickCandidate(id){if(!state.items.some(x=>x.id===id))return;state.selected=id;renderList();renderReview();updateControls()}
 function nextCandidate(step=1,pending=false){let rows=visibleRows();if(pending)rows=rows.filter(x=>state.results.has(x.id)&&!state.decisions.has(x.id));if(!rows.length){notice("No applicants in this view need a decision. Select another evidence view.");return}const current=rows.findIndex(x=>x.id===state.selected);const index=(current<0?(step>0?0:rows.length-1):(current+step+rows.length)%rows.length);pickCandidate(rows[index].id)}
 function updateQuickViews(){for(const b of $("quickviews").querySelectorAll("[data-view]")){b.classList.toggle("active",b.dataset.view===$("filter").value);b.setAttribute("aria-pressed",String(b.dataset.view===$("filter").value))}}
@@ -189,10 +189,28 @@ $("lock").disabled=state.confirmed;$("unlock").disabled=!state.confirmed;$("prep
 // Preserve unconfirmed edits. Rebuilding the input fields on selection/consent used to wipe them.
 $("criteria").querySelectorAll("input").forEach(input=>{input.disabled=state.confirmed});
 }
-function renderList(){const shown=visibleRows(),el=$("list");
-el.innerHTML=shown.length?shown.map(row=>{const r=state.results.get(row.id),decision=state.decisions.get(row.id);const tag=r?statusTag(r.saved_replay?"Recorded Muse":r.provider_mode==="muse"?"Live Muse":"Simulation",r.provider_mode==="muse"?"live":"sim"):row.state==="failed"?statusTag("Failed","error"):row.state==="processing"?statusTag("Analyzing…"):statusTag("Not analyzed");return '<button class="item '+(row.id===state.selected?"selected":"")+'" data-id="'+escapeHtml(row.id)+'"><span class="avatar">'+escapeHtml(row.id.slice(-2))+'</span><span><span class="name">'+escapeHtml(row.id)+" · "+escapeHtml(row.role)+'</span><div class="meta">'+escapeHtml(row.period)+" · "+(row.scan?"Image-only PDF":"Text PDF")+'</div><span class="pills">'+tag+(r?statusTag("Direct evidence: "+directCount(r)+"/"+r.requirements.length,"proof"):"")+(r?.requirements?.some(x=>x.review_reason_code==="explicit_scope_limit_not_contradiction"||x.review_reason_code==="document_absence_not_contradiction")?statusTag("Scope clarification","related"):"")+(decision?statusTag("Human: "+decision.action):"")+'</span></span></button>'}).join(""):'<div class="empty">No applicants match the chosen filter.</div>';
-el.querySelectorAll("[data-id]").forEach(b=>b.addEventListener("click",()=>pickCandidate(b.dataset.id)));
-$("total").textContent=state.items.length;$("ready").textContent=state.results.size;$("pending").textContent=state.items.filter(x=>!state.results.has(x.id)).length;$("needs").textContent=state.items.filter(x=>needsReview(x)&&!state.decisions.has(x.id)).length;$("reviewed").textContent=state.decisions.size;$("next-review").disabled=!state.items.some(x=>state.results.has(x.id)&&!state.decisions.has(x.id));updateQuickViews();coverageSummary();}
+function renderList(){
+ const shown=visibleRows(),el=$("list");let lastGroup="";
+ el.innerHTML=shown.length?shown.map(row=>{
+  const result=state.results.get(row.id),decision=state.decisions.get(row.id);
+  const group=EvidenceCoverage.groupFor(row,result,state.criteria.length);
+  const info=EvidenceCoverage.GROUPS[group];
+  const header=group!==lastGroup?'<div class="coverage-group">'+escapeHtml(info.label)+'<small>'+escapeHtml(info.detail)+'</small></div>':"";
+  lastGroup=group;
+  const badge=result?statusTag(result.saved_replay?"Recorded Muse":result.provider_mode==="muse"?"Live Muse":"Simulation",result.provider_mode==="muse"?"live":"sim"):row.state==="failed"?statusTag("Failed","error"):row.state==="processing"?statusTag("Analyzing…"):statusTag("Not analyzed");
+  const counts=result?statusTag("Direct evidence: "+directCount(result)+"/"+state.criteria.length,"proof"):"";
+  const clarification=result?.requirements?.some(x=>x.review_reason_code==="explicit_scope_limit_not_contradiction"||x.review_reason_code==="document_absence_not_contradiction")?statusTag("Scope clarification","related"):"";
+  return header+'<button class="item '+(row.id===state.selected?"selected":"")+'" data-id="'+escapeHtml(row.id)+'"><span class="avatar">'+escapeHtml(row.id.slice(-2))+'</span><span><span class="name">'+escapeHtml(row.id)+" · "+escapeHtml(row.role)+'</span><div class="meta">'+escapeHtml(row.period)+" · "+(row.scan?"Image-only PDF":"Text PDF")+'</div>'+coverageSquares(result)+'<span class="pills">'+badge+counts+clarification+(decision?statusTag("Human: "+decision.action):"")+'</span></span></button>';
+ }).join(""):'<div class="empty">No applicants match this documentation view; other applicants remain available under All applicants.</div>';
+ el.querySelectorAll("[data-id]").forEach(b=>b.addEventListener("click",()=>pickCandidate(b.dataset.id)));
+ $("total").textContent=state.items.length;
+ $("ready").textContent=state.results.size;
+ $("pending").textContent=state.items.filter(x=>!state.results.has(x.id)).length;
+ $("needs").textContent=state.items.filter(x=>needsReview(x)&&!state.decisions.has(x.id)).length;
+ $("reviewed").textContent=state.decisions.size;
+ $("next-review").disabled=!state.items.some(x=>state.results.has(x.id)&&!state.decisions.has(x.id));
+ updateQuickViews();coverageSummary();
+}
 function evidenceHtml(result){return result.requirements.map((x,i)=>{
 const quoteHtml=(x.evidence||[]).slice(0,4).map(e=>{
  const pg=Number(e.page);const label=Number.isInteger(pg)&&pg>=1&&pg<=20?'<a href="'+escapeHtml(result.source_url||'')+'#page='+pg+'" target="_blank" rel="noopener" title="Open original PDF on cited page">Page '+pg+' ↗</a>':"Page not verified";
