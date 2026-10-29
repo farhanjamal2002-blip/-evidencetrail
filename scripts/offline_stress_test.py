@@ -133,7 +133,6 @@ JOB = (
 )
 PYTHON_QUOTE = "Python experience: 8 years"
 AWS_QUOTE = "AWS certification expired"
-TEAM_QUOTE = "Led a team of 4 analysts at SampleCo"
 TIMELINE_DATE_QUOTE = "Procurement Analyst | 2020–2025"
 TIMELINE_SCOPE_QUOTE = "Managed procurement contracts and vendor bids."
 TIMELINE_CLAIM_QUOTE = "Profile: 8 years in procurement."
@@ -154,14 +153,12 @@ PDF = make_pdf(
     [
         PYTHON_QUOTE,
         AWS_QUOTE,
-        TEAM_QUOTE,
         "Built reporting workflows and documented operational controls.",
         TIMELINE_DATE_QUOTE,
         TIMELINE_SCOPE_QUOTE,
         TIMELINE_CLAIM_QUOTE,
     ]
 )
-DRAFT = "Led a team of 4 analysts. Owned a $50M quantum portfolio."
 
 
 @dataclass
@@ -184,13 +181,13 @@ class LocalUpload:
         return None
 
 
-async def analyze(pdf: bytes = PDF, job: str = JOB, draft: str = "") -> dict[str, Any]:
+async def analyze(pdf: bytes = PDF, job: str = JOB) -> dict[str, Any]:
     return await app.analyze(
         LocalRequest(),
         LocalUpload(pdf),
         job,
-        draft,
         True,
+        "",
     )
 
 
@@ -260,22 +257,6 @@ class FakeMuseCompletions:
                     "follow_up_question": "Can you describe your relevant education?",
                     "certainty": "clear",
                     "reason": "No degree passage is shown in this CV.",
-                    "evidence": [],
-                },
-            ],
-            "application_claims": [
-                {
-                    "claim": "Led a team of 4 analysts",
-                    "status": "supported",
-                    "certainty": "clear",
-                    "reason": "The CV contains a direct statement about the team.",
-                    "evidence": [{"quote": TEAM_QUOTE, "role": "supports", "page_hint": 1}],
-                },
-                {
-                    "claim": "Owned a $50M quantum portfolio",
-                    "status": "not_found",
-                    "certainty": "clear",
-                    "reason": "No direct support for this claim appears in the CV.",
                     "evidence": [],
                 },
             ],
@@ -444,7 +425,7 @@ def run_fake_muse_pipeline() -> None:
     app.OpenAI = FakeMuseClient
     FakeMuseCompletions.scenario = "clean"
     FakeMuseCompletions.calls.clear()
-    result = asyncio.run(analyze(draft=DRAFT))
+    result = asyncio.run(analyze())
     assert result["provider_mode"] == "muse"
     assert result["analysis_calls"] == 1
     assert result["timeline_audit"]["dated_employment_months"] == 60
@@ -459,8 +440,7 @@ def run_fake_muse_pipeline() -> None:
         "conflicting",
         "not_found",
     ]
-    claim_statuses = [item["status"] for item in result["application_claim_audit"]["results"]]
-    assert claim_statuses == ["supported", "not_found"], claim_statuses
+    assert "application_claim_audit" not in result
     assert all(request["store"] is False for request in FakeMuseCompletions.calls)
     assert FakeMuseCompletions.calls[0]["model"] == app.MODEL_ID
     muse_input = FakeMuseCompletions.calls[0]["messages"][1]["content"]
@@ -514,8 +494,7 @@ def run_input_attacks() -> None:
     expect_http_error(analyze(pdf=too_many_pages), 422)
 
     expect_http_error(analyze(job="x" * (app.MAX_JOB_CHARS + 1)), 400)
-    expect_http_error(analyze(draft="x" * (app.MAX_APPLICATION_DRAFT_CHARS + 1)), 400)
-    print("PASS boundary attacks: page count, job length, and draft length caps hold")
+    print("PASS boundary attacks: page count and job length caps hold")
 
 
 def main() -> None:
