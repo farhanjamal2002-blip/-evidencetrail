@@ -148,6 +148,31 @@ async def main():
                     review=await page.locator("#review").inner_text()
                     assert "Scope not established" in review
                     assert "Model: conflicting" in review
+                    assert "status override" in await page.locator("#inspect-audit").inner_text()
+                    assert await page.locator("#inspect-audit").get_attribute("aria-expanded")=="false"
+                    await page.locator("#inspect-audit").click()
+                    assert await page.locator("#inspect-audit").get_attribute("aria-expanded")=="true"
+                    receipt=await page.locator("#audit-drawer").inner_text()
+                    assert "Meta Muse proposal" in receipt
+                    assert "EvidenceTrail verifier" in receipt
+                    assert "conflicting → not_found" in receipt
+                    assert "explicit_scope_limit_not_contradiction" in receipt
+                    assert "Source quotation verified" in receipt
+                    assert "not recorded" in receipt.lower()
+                    assert "not a hiring recommendation" in receipt.lower() or "no candidate score" in receipt.lower()
+                    await page.keyboard.press("a")
+                    assert await page.locator("#inspect-audit").get_attribute("aria-expanded")=="false"
+                    assert await page.locator("#audit-drawer").count()==0
+                    # Image-only CV must identify the actual OCR path, not a guessed mode.
+                    await page.locator('#list [data-id="ET-019"]').click()
+                    assert "OCR" in await page.locator("#inspect-audit").inner_text()
+                    await page.keyboard.press("a")
+                    assert "Tesseract OCR" in await page.locator("#audit-drawer").inner_text()
+                    await page.locator('#list [data-id="ET-018"]').click()
+                    text=await page.locator("#audit-drawer").inner_text()
+                    assert "prompt injection scan: not_recorded" in text.lower().replace(" ","_") or "prompt injection scan: not recorded" in text.lower()
+                    assert "not establish that a detector fired" in text.lower()
+                    await page.keyboard.press("a")
                     assert "Used a warehouse management system, not SAP procurement." in review
                     await page.locator('#list [data-id="ET-015"]').click()
                     review=await page.locator("#review").inner_text()
