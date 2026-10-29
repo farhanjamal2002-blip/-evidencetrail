@@ -4,7 +4,7 @@ from copy import deepcopy
 from fastapi.testclient import TestClient
 import app
 import demo20_workflow as demo
-from semantic_review import clarify_verified_findings
+from semantic_review import clarify_verified_findings, reconcile_scope_context_page_marks
 
 
 def row(quotes, status="conflicting", evidence_type="conflicting", flags=None):
@@ -82,6 +82,25 @@ class SemanticCalibrationTests(unittest.TestCase):
               flags=[{"code":"independently_verified_duration_gap"}])
         clarify_verified_findings([f])
         self.assertEqual(f["status"],"conflicting")
+
+    def test_display_highlights_match_demoted_scope_evidence(self):
+        f=row([
+            ("The compliance officer signed it, while I prepared the paperwork.","contradicts"),
+            ("I never approved the final form.","contradicts"),
+        ])
+        for idx,cite in enumerate(f["evidence"],1):
+            cite["source_id"]=f"R1-Q{idx}"
+        page_marks={1:[
+            {"requirement_id":"R1","source_id":"R1-Q1","role":"contradicts"},
+            {"requirement_id":"R1","source_id":"R1-Q2","role":"contradicts"},
+            {"requirement_id":"R9","source_id":"R9-Q1","role":"contradicts"},
+        ]}
+        clarify_verified_findings([f])
+        self.assertEqual(f["status"],"not_found")
+        self.assertEqual(reconcile_scope_context_page_marks([f],page_marks),2)
+        self.assertEqual([m["role"] for m in page_marks[1]],
+                         ["scope_limitation","scope_limitation","contradicts"])
+        self.assertEqual(reconcile_scope_context_page_marks([f],page_marks),0)
 
     def test_local_timeline_flags_prevent_false_clearance(self):
         f=row([("Only documented role was 2022 to 2026.","contradicts")],flags=[{"code":"duration_gap"}])
