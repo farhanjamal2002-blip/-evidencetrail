@@ -42,7 +42,7 @@ async def main():
                 # First-minute judge proof uses the exact saved Muse source,
                 # opens the true correction, and highlights its original PDF.
                 await page.locator("#proof-correction").click()
-                await page.wait_for_function("document.querySelector('#pdf-geometry-badge')?.textContent.includes('scanned OCR')",timeout=20000)
+                await page.wait_for_function("document.querySelector('#pdf-geometry-badge')?.textContent.includes('Source located')",timeout=20000)
                 assert "ET-008" in await page.locator("#review .review-top .eyebrow").inner_text()
                 assert await page.locator("#audit-drawer").is_visible()
                 assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()>=1
