@@ -1,8 +1,10 @@
 # EvidenceTrail
 
+> **Meta Hackathon judge entry point (October 30, 2026):** Start with the [public 20-fictional-applicant demo](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20), [JUDGE_GUIDE.md](JUDGE_GUIDE.md), and [SUBMISSION_READY.md](SUBMISSION_READY.md). The separate free Render deployment runs the **hackathon feature branch**, not production `main`. It automatically loads 20 **previously recorded, genuine Meta Muse Spark 1.3 analyses** with authentic receipts. Browsing makes **zero new Meta calls**; new public analyses remain mock-only. The saved audit contains 76 historical quote verifications, 71 individually retained citations, 62 precise PDF highlights, and nine honest OCR page-only links. The submission cutoff is **November 4 at 9 PM US Eastern (November 5 at 7:30 AM IST)**.
+
 EvidenceTrail is a recruiter-first, no-score CV review workflow. A recruiter supplies one job description and up to five CVs, reviews a shared job checklist, checks each evidence label against its cited page, records Advance, Hold, or Do not advance, and exports an evidence pack. Candidates remain in upload order; EvidenceTrail does not score or rank them.
 
-**Current mode: local workflow simulation.** New reviews use deterministic heuristics only; they do not understand paraphrases, infer transferable skills, or make a hiring assessment. No model calls are made. The Muse integration is kept in the code but is disabled by default. The visible saved Muse replay contains historical results from real calls and makes no new request.
+**Default new analyses are local simulation, while the judge inbox automatically opens SAVED GENUINE MUSE RESULTS.** The 20 fictional CV responses have real provider receipts and original model-versus-verifier audit traces. The historical quote audit recorded 76 verified quotations; 71 individual citations were retained (62 exact geometry, nine OCR page-only). The saved replay is **not live inference**. Any fresh genuine Meta analysis requires explicitly configured server-side credentials, quotas, and consent and is intentionally disabled on the public host.
 
 The report describes supplied documents. It does not score or rank a candidate and it does not make a hiring decision.
 
@@ -13,6 +15,13 @@ Before CV analysis, the local role criteria checklist turns numbered and bullete
 Research and market findings that shaped the evidence-review workflow are in [RESEARCH_NOTES.md](RESEARCH_NOTES.md).
 
 See [HACKATHON_COMPLIANCE.md](HACKATHON_COMPLIANCE.md) for the rule-focused submission checklist.
+
+## Semantic accuracy regression evidence — October 30, 2026
+
+- [Development-set A/B on 20 genuine Muse-analyzed fictional CVs](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40932201249): the revised one-pass Muse instructions improved final agreement with 80 hand-authored criterion references from **68/80 to 80/80**. The examples informed the prompt revision, so this is *not an unseen accuracy estimate*.
+- [Post-freeze challenge on 16 new fictional two-page CVs](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40935108963): across four previously untested sectors, raw Muse matched **48/48** predeclared synthetic reference labels; the local verifier initially retained **46/48** because of two erroneous contradiction demotions.
+- [Zero-additional-API replay of all 16 authentic source responses](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40936416154): after a documented, source-grounded responsibility-verb fix, the full 48-case replay matched **48/48**, with the original model receipts and source quotations unchanged.
+- **Limits:** these are constructed, builder-authored CVs, not independently annotated real candidates or proof of general-population accuracy. The evidence also does **not** establish measured recruiter time savings or fairness across real applicants. No second Muse inference pass or weight fine-tuning was added.
 
 ## Analysis engines and open-source stack
 

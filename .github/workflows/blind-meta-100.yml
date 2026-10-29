@@ -1,0 +1,40 @@
+name: EvidenceTrail one hundred blind Meta semantic judgments
+on:
+  push:
+    branches: [eval/semantic-benchmark-oct29]
+    paths: [.github/workflows/blind-meta-100.yml]
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-blind-meta-100-oct29-once
+  cancel-in-progress: false
+jobs:
+  blind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eval/semantic-benchmark-oct29
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install model client
+        run: python -m pip install -r requirements.txt
+      - name: Ten capped Meta calls covering one hundred fictional job-CV cases
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then echo "No Meta key; refusing any call"; exit 2; fi
+          PYTHONPATH=. python scripts/blind_meta_adjudication_100.py
+      - name: Save source-free authenticated result metadata and errors
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-blind-meta-100-cases
+          path: artifacts/100-blind-meta/
+          retention-days: 14

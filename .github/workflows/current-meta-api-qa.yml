@@ -1,0 +1,55 @@
+name: EvidenceTrail fresh real Meta Muse API regression
+on:
+  push:
+    branches: [feat/recruiter-demo20-muse-inbox]
+    paths: [.github/workflows/current-meta-api-qa.yml]
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-real-muse-qa-once
+  cancel-in-progress: false
+jobs:
+  real-meta-muse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_PROCESS: '10'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '10'
+      MAX_CONCURRENT_ANALYSES: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/recruiter-demo20-muse-inbox
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install actual Meta Muse client and PDF OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Secret preflight — no Muse requests without working GitHub secret
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then
+            echo "MODEL_API_KEY is not available; no Muse request made."
+            exit 2
+          fi
+      - name: Exactly eight fictional CVs against real Meta Muse API
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python -m py_compile scripts/current_meta_api_qa.py
+          PYTHONPATH=. python scripts/current_meta_api_qa.py
+      - name: Keep actual provider receipt and failure report as GitHub artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-meta-muse-api-qa
+          path: artifacts/current-meta-api-qa/
+          retention-days: 14
+          if-no-files-found: warn

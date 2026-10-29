@@ -40,6 +40,8 @@ from muse_protocol import (
     validate_verification_result,
 )
 from timeline_audit import audit_employment_timeline
+from semantic_review import clarify_verified_findings
+from verification_receipt import build_verification_receipt
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -168,6 +170,11 @@ analysis_times_by_ip: dict[str, list[float]] = {}
 app = FastAPI(title="EvidenceTrail", docs_url=None, redoc_url=None)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+
+# Fictional recruiter inbox is explicitly separate from real applicant workflows.
+from demo20_workflow import router as demo20_router
+app.include_router(demo20_router)
+
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
@@ -438,12 +445,29 @@ evidence_type (direct, related, unsupported, or conflicting), evidence_strength
 follow_up_question when evidence is related, unsupported, conflicting, or
 ambiguous. Use supported only when you cite a relevant passage. Use not_found
 when no relevant passage is shown; this is not proof the candidate lacks it.
-Use conflicting only for explicit incompatible statements, not missing
-information. Related evidence must remain Related and must state what it does
-not establish. Keyword-only or title-only mentions must not be treated as
-supporting evidence. Local code will reject a citation that cannot be found on
-the source page, regardless of the label you return. Return at most two concise CV passages per requirement, normally one strongest
-passage and only a second when it adds distinct evidence.
+Use conflicting only for two explicit incompatible statements WITHIN
+the same CV about the applicant's actual responsibility. The job requirement
+disagreeing with a CV limitation is NOT an internal CV contradiction. Missing
+proof and negative experience disclosures use not_found, not conflicting.
+Related evidence must remain Related and must state what it does not establish.
+Keyword-only or title-only mentions must not be treated as supporting evidence.
+If the CV says "I prepared notes; the director led negotiations" against a
+requirement to personally lead negotiations, choose status=not_found and
+evidence_type=related; the note-taking is adjacent work, not a contradiction.
+If it says "I observed SIEM alerts; another team authored rules" against a
+requirement to deploy SIEM rules, choose status=not_found, evidence_type=related.
+If the CV says "I personally led negotiations" AND elsewhere "I never led
+negotiations" about the same role, choose conflicting with TWO different
+verbatim passages containing the affirmative and denial claims, using roles
+supports and contradicts respectively. The second passage MUST be incompatible
+with the first CV claim, not merely an explanation of what a director did.
+A course listing keywords without job duties is not_found, unsupported.
+When not_found, include a concise actual adjacent passage only if it
+describes work; omit generic keyword lists and absent experiences.
+Local code will reject a citation that cannot be found on the source page,
+regardless of the label you return. Return at most two concise CV passages
+per requirement, normally one strongest passage and only a second when it
+adds distinct evidence.
 
 Evidence strength records what text is present, separately from whether it
 supports the requirement: use keyword_only when only a matching skills-list
@@ -4320,7 +4344,16 @@ def render_job_source_html(job_source: Any, *, class_name: str = "job-source") -
 
 
 def judge_facing_evidence_status(finding: dict[str, Any]) -> str:
-    """Map semantic and deterministic outcomes to the five public evidence labels."""
+    """Map verified semantic outcomes to plain-English evidence labels."""
+    review_code = str(finding.get("review_reason_code", ""))
+    if review_code == "explicit_scope_limit_not_contradiction":
+        return "Scope not established"
+    if review_code == "document_absence_not_contradiction":
+        return "Not documented"
+    if review_code == "multi_claim_or_timeline_discrepancy":
+        return "Discrepancy to clarify"
+    if review_code == "related_evidence_exact_criterion_unproven":
+        return "Related"
     status = str(finding.get("status", ""))
     evidence_type = str(finding.get("evidence_type", ""))
     strength = str(finding.get("evidence_strength", "none"))
@@ -4393,6 +4426,9 @@ def build_report(
             "Direct": "direct",
             "Related": "related",
             "Conflict to clarify": "conflicting",
+            "Discrepancy to clarify": "conflicting",
+            "Scope not established": "not_found",
+            "Not documented": "not_found",
             "Unsupported": "unsupported",
             "Not found": "unsupported",
         }[public_status]
@@ -5877,6 +5913,12 @@ async def analyze(
         timeline_audit["requirement_links"] = attach_timeline_review_flags(
             findings, timeline_audit
         )
+        if MOCK_PROVIDER_ENABLED:
+            # Preserve the legacy deterministic simulation contract, which uses
+            # conflicting for a CV-vs-job mismatch rather than self-contradiction.
+            verification_audit["semantic_review_clarifications"] = {"skipped_legacy_mock": len(findings)}
+        else:
+            verification_audit["semantic_review_clarifications"] = clarify_verified_findings(findings)
         performance_ms["timeline_flag_linking_ms"] = max(
             0, round((time.perf_counter() - substage_started) * 1000)
         )
@@ -6018,6 +6060,7 @@ async def analyze(
         performance_ms["pipeline_ms"] = max(
             0, round((time.perf_counter() - pipeline_started) * 1000)
         )
+        response_payload["verification_receipt"] = build_verification_receipt(response_payload)
         return response_payload
     finally:
         analysis_semaphore.release()

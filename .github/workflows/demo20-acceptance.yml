@@ -1,0 +1,91 @@
+name: EvidenceTrail 20-CV recruiter inbox acceptance
+# Browser test waits for async reset before validating original four criteria.
+# Retest with properly multiline custom job description in browser acceptance.
+# Production-useful interaction gates: JD extraction, human decisions, true exports, source links.
+# Release gate: PDF-page citation links, edit safety, true source exports and replay protection.
+# Full acceptance of saved real Muse replay for all 20 fictional CVs, no new Meta calls.
+# Regression: editing a locked rubric clears stale evidence and human decisions.
+# Rerun with updated offline stress import shims for the new demo router.
+on:
+  push:
+    branches: [feat/recruiter-demo20-muse-inbox]
+    paths: [.github/workflows/demo20-acceptance.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '200'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '200'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install application and OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Python unit and integration tests
+        run: python -m unittest discover -s tests -v
+      - name: Existing JavaScript regression tests
+        run: node --test tests/test_interview_invite.js tests/test_recruiter_decision.js tests/test_requirement_coverage.js
+      - name: Invalid input stress and mock simulation
+        run: python scripts/offline_stress_test.py
+      - name: Python compile and Docker production image
+        run: |
+          python -m py_compile app.py demo20_workflow.py scripts/demo20_browser_smoke.py
+          docker build -t evidencetrail:demo20 .
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '100'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '100'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install app and Chromium
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt playwright
+          python -m playwright install --with-deps chromium
+      - name: Run actual browser through twenty fictional applicants and mock pipeline
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/demo20-browser
+          python -m uvicorn app:app --host 127.0.0.1 --port 8016 >artifacts/demo20-browser/server.log 2>&1 &
+          p=$!
+          trap 'kill "$p" 2>/dev/null || true' EXIT
+          ready=false
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8016/health >/dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          python scripts/demo20_browser_smoke.py
+      - name: Save source screenshots and server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-demo20-browser
+          path: artifacts/demo20-browser
+          retention-days: 14

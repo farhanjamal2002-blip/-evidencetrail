@@ -1,0 +1,66 @@
+name: EvidenceTrail fresh unseen CV holdout after semantic fix
+# Source corpus uses Python None for absent anchors; preflight before model calls.
+on:
+  push:
+    branches: [eval/fresh-four-sector-holdout-oct29]
+    paths: [.github/workflows/fresh-holdout-real-muse.yml]
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-unseen-holdout-oct29-once
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eval/fresh-four-sector-holdout-oct29
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install app dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Validate never-before-used gold and source PDFs before paid calls
+        run: PYTHONPATH=. python -m unittest tests.test_fresh_holdout_corpus -v
+  real-meta:
+    needs: [validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_PROCESS: '9'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '9'
+      MAX_CONCURRENT_ANALYSES: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eval/fresh-four-sector-holdout-oct29
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install source pipeline and OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Ensure existing Meta credential before chargeable work
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then echo "No Meta key; do not send requests"; exit 2; fi
+      - name: Eight capped real Meta analyses for truly new CVs, no retries
+        run: PYTHONPATH=. python scripts/fresh_holdout_live_eval.py
+      - name: Save separate baseline and holdout artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-unseen-four-sector-holdout
+          path: artifacts/fresh-holdout/
+          retention-days: 14
