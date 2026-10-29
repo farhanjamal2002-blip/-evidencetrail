@@ -71,6 +71,7 @@ def create_case(role_index:int,case_index:int,variant_index:int)->dict[str,Any]:
     opposing_text=f"{intro} personally {direct}. {ending}"
     denial_text=f"{intro} never personally {direct}. {ending}"
     label=CLASSES[case_index]
+    requirement=f"Must have {direct}."
     expected="not_found"
     status="not_found"
     evidence_type="unsupported"
@@ -105,7 +106,6 @@ def create_case(role_index:int,case_index:int,variant_index:int)->dict[str,Any]:
     elif label=="missed_direct":
         status="not_found";evidence_type="direct";evidence=[quote(direct_text)];expected="supported"
     else:raise ValueError(label)
-    requirement=locals().get("requirement",f"Must have {direct}.")
     cv_passages=[q["quote"] for q in evidence]
     if not cv_passages:cv_passages=[f"{intro} worked at a {role} workplace. {ending}"]
     return {
