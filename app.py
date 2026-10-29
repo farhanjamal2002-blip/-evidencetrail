@@ -40,6 +40,7 @@ from muse_protocol import (
     validate_verification_result,
 )
 from timeline_audit import audit_employment_timeline
+from semantic_review import clarify_verified_findings
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -4325,7 +4326,16 @@ def render_job_source_html(job_source: Any, *, class_name: str = "job-source") -
 
 
 def judge_facing_evidence_status(finding: dict[str, Any]) -> str:
-    """Map semantic and deterministic outcomes to the five public evidence labels."""
+    """Map verified semantic outcomes to plain-English evidence labels."""
+    review_code = str(finding.get("review_reason_code", ""))
+    if review_code == "explicit_scope_limit_not_contradiction":
+        return "Scope not established"
+    if review_code == "document_absence_not_contradiction":
+        return "Not documented"
+    if review_code == "multi_claim_or_timeline_discrepancy":
+        return "Discrepancy to clarify"
+    if review_code == "related_evidence_exact_criterion_unproven":
+        return "Related"
     status = str(finding.get("status", ""))
     evidence_type = str(finding.get("evidence_type", ""))
     strength = str(finding.get("evidence_strength", "none"))
@@ -4398,6 +4408,9 @@ def build_report(
             "Direct": "direct",
             "Related": "related",
             "Conflict to clarify": "conflicting",
+            "Discrepancy to clarify": "conflicting",
+            "Scope not established": "not_found",
+            "Not documented": "not_found",
             "Unsupported": "unsupported",
             "Not found": "unsupported",
         }[public_status]
@@ -5882,6 +5895,12 @@ async def analyze(
         timeline_audit["requirement_links"] = attach_timeline_review_flags(
             findings, timeline_audit
         )
+        if MOCK_PROVIDER_ENABLED:
+            # Preserve the legacy deterministic simulation contract, which uses
+            # conflicting for a CV-vs-job mismatch rather than self-contradiction.
+            verification_audit["semantic_review_clarifications"] = {"skipped_legacy_mock": len(findings)}
+        else:
+            verification_audit["semantic_review_clarifications"] = clarify_verified_findings(findings)
         performance_ms["timeline_flag_linking_ms"] = max(
             0, round((time.perf_counter() - substage_started) * 1000)
         )

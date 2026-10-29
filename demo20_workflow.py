@@ -9,6 +9,8 @@ from __future__ import annotations
 import io
 import os
 import re
+from copy import deepcopy
+from semantic_review import clarify_verified_findings
 import hashlib
 import json
 import textwrap
@@ -199,7 +201,18 @@ def _load_verified_recording() -> dict:
 @router.get("/demo20/recorded-muse")
 def recorded_muse_evidence():
     """Serve reproducible, frozen REAL Muse responses; never call the API here."""
-    data=_load_verified_recording()
+    data=deepcopy(_load_verified_recording())  # Never rewrite or mutate pinned model receipts.
+    totals={}
+    for candidate in data["results"]:
+        summary=clarify_verified_findings(candidate["requirements"])
+        for key,count in summary.items():
+            totals[key]=totals.get(key,0)+count
+    data["presentation_calibration"]={
+        "kind":"deterministic_local_evidence_interpretation",
+        "model_calls":0,
+        "source_recording_unchanged":True,
+        "counts":totals,
+    }
     return JSONResponse(data,headers={
         "Cache-Control":"public, max-age=300",
         "X-Robots-Tag":"noindex, nofollow",

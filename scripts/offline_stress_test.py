@@ -344,7 +344,7 @@ def run_mock_pipeline() -> None:
     }
     assert [item["status"] for item in result["requirements"]] == [
         "supported",
-        "conflicting",
+        "conflicting",  # Legacy local mock status contract remains unchanged.
         "not_found",
     ]
     assert [item["job_source"]["line"] for item in result["requirements"]] == [2, 3, 4]
@@ -443,9 +443,12 @@ def run_fake_muse_pipeline() -> None:
     assert len(FakeMuseCompletions.calls) == 1
     assert [item["status"] for item in result["requirements"]] == [
         "supported",
-        "conflicting",
+        "not_found",  # Verified lone scope-limiting claim is not a CV self-contradiction.
         "not_found",
     ]
+    assert result["requirements"][1]["raw_status"] == "conflicting"
+    assert result["requirements"][1]["review_reason_code"] == "explicit_scope_limit_not_contradiction"
+    assert result["verification_audit"]["semantic_review_clarifications"]["single_scope_limits_clarified"] >= 1
     assert "application_claim_audit" not in result
     assert all(request["store"] is False for request in FakeMuseCompletions.calls)
     assert FakeMuseCompletions.calls[0]["model"] == app.MODEL_ID
