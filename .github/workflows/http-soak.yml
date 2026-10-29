@@ -1,0 +1,55 @@
+name: EvidenceTrail 1000-request local HTTP soak
+on:
+  push:
+    branches: [fix/production-semantic-latency-gates-20261029]
+    paths: [.github/workflows/http-soak.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  soak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '2000'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '2000'
+      MAX_CONCURRENT_ANALYSES: '5'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install local app
+        run: python -m pip install -r requirements.txt
+      - name: Start app as a real HTTP server
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/http-soak
+          nohup python -m uvicorn app:app --host 127.0.0.1 --port 8020 > artifacts/http-soak/server.log 2>&1 &
+          echo $! > artifacts/http-soak/uvicorn.pid
+          up=false
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8020/health >/dev/null; then up=true; break; fi
+            sleep 1
+          done
+          test "$up" = true
+      - name: Memory before (RSS KB)
+        run: |
+          ps -o pid,rss,etime,args -p "$(cat artifacts/http-soak/uvicorn.pid)" | tee artifacts/http-soak/rss-before.txt
+      - name: One thousand real HTTP requests with twenty-four concurrent clients
+        run: python scripts/http_soak.py
+      - name: Memory after (RSS KB)
+        if: always()
+        run: |
+          ps -o pid,rss,etime,args -p "$(cat artifacts/http-soak/uvicorn.pid)" | tee artifacts/http-soak/rss-after.txt || true
+      - name: Save test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-1000-request-soak
+          path: artifacts/http-soak/
+          retention-days: 14
