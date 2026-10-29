@@ -14,6 +14,7 @@ import time
 from fastapi.testclient import TestClient
 import app
 from scripts.postfreeze_cv_corpus import cases as _cases, manifest as corpus_manifest, render_pdf
+from scripts.postfreeze_eval_format import format_criteria
 def build_all_cases():
     return [{**c,"sector":c["domain"],"archetype":c["style"],"job_title":c["job"]} for c in _cases()]
 
@@ -45,6 +46,16 @@ with TestClient(app.app) as client:
                  "http":resp.status_code,"seconds":round(time.monotonic()-t,3)}
             if resp.status_code==200:
                 data=resp.json()
+                # Persist the real model evidence before formatting; a local
+                # reporting exception must never erase a paid response.
+                archive={
+                    "provider_mode":data.get("provider_mode"),
+                    "analysis_calls":data.get("analysis_calls"),
+                    "requirements":data.get("requirements"),
+                    "quote_audit":data.get("quote_audit"),
+                    "analysis_pass":(data.get("usage") or {}).get("analysis_pass"),
+                }
+                (OUT/(cid+".response.json")).write_text(json.dumps(archive,indent=2)+"\n")
                 f=data.get("requirements") or []
                 usage=((data.get("usage") or {}).get("analysis_pass") or {})
                 quote=data.get("quote_audit") or {}
@@ -57,18 +68,9 @@ with TestClient(app.app) as client:
                     "model_calls":data.get("analysis_calls"),
                     "quote_audit":quote,
                     "ocr_pages":data.get("ocr_pages") or [],
-                    "requirements":[{
-                        "index":i+1,"reference":case["expected"][i],
-                        "raw":(f[i].get("raw_status") if i<len(f) else None),
-                        "final":(f[i].get("status") if i<len(f) else None),
-                        "evidence_type":(f[i].get("evidence_type") if i<len(f) else None),
-                        "citation_count":len((f[i].get("evidence") or [])) if i<len(f) else 0,
-                        "reason_code":f[i].get("review_reason_code") if i<len(f) else None,
-                        "raw_correct":i<len(f) and f[i].get("raw_status")==case["expected"][i],
-                        "final_correct":i<len(f) and f[i].get("status")==case["expected"][i],
-                    } for i in range(4)],
+                    "requirements":format_criteria(case,f),
                 })
-                if len(f)!=4 or data.get("provider_mode")!="muse" or data.get("analysis_calls")!=1 or not row["real_receipt"]:
+                if len(f)!=len(case["criteria"]) or data.get("provider_mode")!="muse" or data.get("analysis_calls")!=1 or not row["real_receipt"]:
                     failures.append({"id":cid,"reason":"incomplete genuine output or incorrect inference call count"})
             else:
                 failures.append({"id":cid,"reason":"API response","http":resp.status_code})
@@ -79,7 +81,7 @@ with TestClient(app.app) as client:
         except Exception as exc:
             failures.append({"id":cid,"reason":type(exc).__name__})
             rows.append({"id":cid,"error_type":type(exc).__name__})
-            print("HARD_CV_META_CASE="+json.dumps({"id":cid,"error_type":type(exc).__name__}),flush=True)
+            print("POSTFREEZE_CV_CASE="+json.dumps({"id":cid,"error_type":type(exc).__name__}),flush=True)
 
 all_f=[(row["sector"],row["archetype"],f) for row in rows
        for f in row.get("requirements",[])]
