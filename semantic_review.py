@@ -24,10 +24,9 @@ ABSENCE_ONLY = re.compile(
 def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
     """Separate one-sided scope limitations from multiple documented claims.
 
-    A *single* citation labeled contradicts is evidence against satisfying a
-    specific requirement, not proof that the person's CV contradicts itself.
-    Even two citations can be an ambiguous difference rather than a verified
-    logical contradiction. Keep the original Muse proposal in raw_status,
+    One or several scope-limiting citations are evidence against satisfying a
+    specific requirement, not proof that the CV contradicts itself. Two-sided
+    evidence is necessary before preserving a non-timeline discrepancy. Keep the original Muse proposal in raw_status,
     mark only possible multi-claim discrepancies for human clarification, and
     fail closed (no positive status can be created).
 
@@ -36,6 +35,7 @@ def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
     """
     counters = {
         "single_scope_limits_clarified": 0,
+        "multi_scope_limits_clarified": 0,
         "document_absences_clarified": 0,
         "multi_quote_discrepancies_retained": 0,
         "related_context_labeled": 0,
@@ -58,9 +58,8 @@ def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
         limiting = [q for q in citations if q["role"] == "contradicts"]
         has_timeline_issue = bool(finding.get("timeline_review_flags"))
 
-        if status == "conflicting" and len(limiting) == 1 and not support and not has_timeline_issue and len(citations) == 1:
-            quote = limiting[0]
-            document_absence = bool(ABSENCE_ONLY.search(str(quote["quote"])))
+        if status == "conflicting" and limiting and not support and not has_timeline_issue and len(citations) == len(limiting):
+            document_absence = all(ABSENCE_ONLY.search(str(q["quote"])) for q in limiting)
             code = "document_absence_not_contradiction" if document_absence else "explicit_scope_limit_not_contradiction"
             finding["status"] = "not_found"
             finding["effective_status"] = "not_found"
@@ -72,16 +71,16 @@ def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
                 else "Scope not established"
             )
             finding["review_explanation"] = (
-                "The CV reports that evidence is absent; no incompatible second CV claim was verified."
+                "The CV reports that evidence is absent; no verified positive claim opposes it."
                 if document_absence else
-                "The cited statement limits the documented role or task; no incompatible second CV claim was verified."
+                "The cited statements limit the documented role or task; no independently verified positive claim opposes them."
             )
             finding["note"] = (
                 str(finding.get("note", "")).strip()
                 + " Local clarification: this source is a limitation on the requirement, "
                 "not verified proof of self-contradictory CV claims."
             ).strip()
-            finding["status_policy"] = "unpaired_limiting_quote_cannot_establish_cv_self_contradiction"
+            finding["status_policy"] = "unpaired_limiting_quotes_cannot_establish_cv_self_contradiction"
             for item in limiting:
                 item["display_role"] = "scope_context"
                 item["evidence_type"] = "unsupported"
@@ -89,8 +88,9 @@ def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
             if isinstance(scope, dict):
                 scope["final_status"] = "not_found"
             counters[
-                "document_absences_clarified" if document_absence
-                else "single_scope_limits_clarified"
+                "document_absences_clarified" if document_absence else
+                "single_scope_limits_clarified" if len(limiting) == 1 else
+                "multi_scope_limits_clarified"
             ] += 1
         elif status == "conflicting":
             finding["review_reason_code"] = "multi_claim_or_timeline_discrepancy"
