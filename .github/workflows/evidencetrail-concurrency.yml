@@ -1,0 +1,45 @@
+name: EvidenceTrail concurrency abuse and hash-isolation probe
+on:
+  push:
+    branches: [ops/muse-frozen-8140662-20261029]
+    paths: [.github/workflows/evidencetrail-concurrency.yml]
+permissions:
+  contents: read
+jobs:
+  concurrency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '2000'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '2000'
+      MAX_CONCURRENT_ANALYSES: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: harness
+          ref: ops/muse-frozen-8140662-20261029
+      - uses: actions/checkout@v4
+        with:
+          path: product
+          ref: 8140662cae1e14fbae7b66f664a7d9d99b396674
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install frozen app
+        run: python -m pip install -r product/requirements.txt
+      - name: Fire 240 concurrent in-process HTTP requests across 24 workers
+        working-directory: product
+        env:
+          PYTHONPATH: .
+        run: python -m py_compile ../harness/ops-tests/concurrency_probe.py && python ../harness/ops-tests/concurrency_probe.py
+      - name: Save error and latency report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-concurrency-probe
+          path: product/artifacts/concurrency/
+          retention-days: 14
