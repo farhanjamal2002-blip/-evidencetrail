@@ -40,3 +40,44 @@ jobs:
           node --check static/recruiter-workflow.js
           node --check static/coverage_matrix.js
           git diff --check
+
+  recruiter-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      EVIDENCETRAIL_ENABLE_META_VISION: 'false'
+      MODEL_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install application and Chromium
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt playwright
+          python -m playwright install --with-deps chromium
+      - name: Test real browser UI and zero new Meta calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/recruiter-workflow-browser
+          python -m uvicorn app:app --host 127.0.0.1 --port 8017 >artifacts/recruiter-workflow-browser/server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8017/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8017/health >/dev/null
+          python scripts/recruiter_workflow_browser_smoke.py
+      - name: Attach screenshots and export
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recruiter-workflow-signed-out-browser
+          path: artifacts/recruiter-workflow-browser/
+          retention-days: 14
