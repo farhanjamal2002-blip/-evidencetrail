@@ -1,4 +1,5 @@
 name: EvidenceTrail concurrency abuse and hash-isolation probe
+# Valid busy responses may return 429 before invalid-PDF validation; repeat with correct contract.
 on:
   push:
     branches: [ops/muse-frozen-8140662-20261029]
