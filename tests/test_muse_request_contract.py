@@ -93,7 +93,6 @@ class MuseRequestContractTests(unittest.TestCase):
     def test_live_response_id_is_retained_only_when_provider_returns_it(self):
         payload = {
             "requirements": [],
-            "application_claims": [],
             "employment_episodes": [],
             "experience_claims": [],
         }
@@ -110,7 +109,6 @@ class MuseRequestContractTests(unittest.TestCase):
     def test_mapping_pass_uses_developer_prompt_and_json_schema(self):
         payload = {
             "requirements": [],
-            "application_claims": [],
             "employment_episodes": [],
             "experience_claims": [],
         }
@@ -139,6 +137,8 @@ class MuseRequestContractTests(unittest.TestCase):
             "role": "developer", "content": app.SYSTEM_PROMPT
         })
         self.assertEqual(request["response_format"], app.OUTPUT_SCHEMA)
+        self.assertNotIn("application_claims", app.OUTPUT_SCHEMA["json_schema"]["schema"]["properties"])
+        self.assertNotIn("application_draft", request["messages"][1]["content"])
         self.assertEqual(request["model"], app.MODEL_ID)
         self.assertEqual(request["reasoning_effort"], app.MUSE_REASONING_EFFORT)
         self.assertEqual(request["prompt_cache_key"], app.MUSE_ANALYSIS_CACHE_KEY)
@@ -210,7 +210,6 @@ class MuseRequestContractTests(unittest.TestCase):
                     "evidence": [{"quote": "Invented quote.", "role": "supports", "page_hint": 1}],
                 },
             ],
-            "application_claims": [],
             "employment_episodes": [],
             "experience_claims": [],
         }
@@ -219,7 +218,6 @@ class MuseRequestContractTests(unittest.TestCase):
             payload,
             self.sample_pages(),
             "Requirements:\n1. At least five years of Python experience\n2. Current AWS Solutions Architect certification",
-            "",
             rubric,
         )
 
@@ -253,9 +251,9 @@ class MuseRequestContractTests(unittest.TestCase):
         self.assertIn("name the exact system as unproven", app.VERIFIER_SYSTEM_PROMPT)
 
     def test_verification_pass_uses_developer_prompt_and_json_schema(self):
-        payload = {"reviews": [], "application_reviews": []}
+        payload = {"reviews": []}
         verification_input = {
-            "requirements": [], "application_claims": [], "source_spans": []
+            "requirements": [], "source_spans": []
         }
         result, usage, request = self.run_fake_request(
             app.call_muse_verification, payload, verification_input

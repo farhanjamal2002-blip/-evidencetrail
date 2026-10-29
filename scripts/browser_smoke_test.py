@@ -91,6 +91,11 @@ async def main() -> None:
             assert response and response.status == 200
             assert await page.locator("#model-status-title").inner_text() == "MUSE READY"
             assert await page.locator("#analyze-button").is_enabled()
+            page_text = await page.locator("body").inner_text()
+            assert "Gender Decoder" not in page_text
+            assert "Candidate statement" not in page_text
+            for stale_label in ("CV shows it", "Not mentioned", "Check both"):
+                assert stale_label not in page_text, f"Stale evidence label remains: {stale_label}"
 
             # Start from Analyze, then choose the saved result. Replay is consent-free.
             await page.locator("#analyze-button").click()
@@ -107,6 +112,23 @@ async def main() -> None:
             results = page.locator("#results")
             await results.wait_for(state="visible")
             assert await page.locator("#model-status-title").inner_text() == "SAVED META AI REPLAY"
+            glossary = page.locator(".status-key-glossary")
+            assert await glossary.is_visible()
+            glossary_text = await glossary.inner_text()
+            for label in (
+                "Layer 1 · Evidence status",
+                "Direct · Related · Conflict to clarify · Unsupported · Not found",
+                "Layer 2 · Source check",
+                "Verified (Page X) · Blocked (Quote not on page)",
+                "Layer 3 · Recruiter decision",
+                "Advance · Hold · Do not advance",
+            ):
+                assert label in glossary_text, f"Missing status glossary label: {label}"
+            assert await page.locator("#application-draft").count() == 0
+            assert await page.locator("#application-prep").is_visible() is False
+            assert await page.locator("#clarification-brief").is_visible() is False
+            assert await page.locator("#interview-invite-panel").is_visible() is False
+            assert "Gender Decoder" not in await page.locator("body").inner_text()
             assert await page.locator("#model-status-detail").inner_text() == (
                 expected_run_detail + " · no new API request"
             )

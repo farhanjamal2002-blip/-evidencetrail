@@ -53,7 +53,6 @@ def valid_mapping() -> dict[str, object]:
 def valid_verification() -> tuple[dict[str, object], dict[str, object]]:
     payload: dict[str, object] = {
         "requirements": [{"id": "R1", "text": "Python", "source_span_ids": ["S1"]}],
-        "application_claims": [],
         "source_spans": [{"id": "S1", "text": "Python experience: 8 years"}],
     }
     result: dict[str, object] = {
@@ -73,7 +72,6 @@ def valid_verification() -> tuple[dict[str, object], dict[str, object]]:
                 ],
             }
         ],
-        "application_reviews": [],
     }
     return result, payload
 

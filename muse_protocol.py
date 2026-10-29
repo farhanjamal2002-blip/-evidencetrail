@@ -282,28 +282,23 @@ def validate_single_pass_result(
         raise MuseProtocolError("Muse returned an invalid single-pass analysis object.")
     _require_exact_keys(
         result,
-        {"requirements", "application_claims", "employment_episodes", "experience_claims"},
+        {"requirements", "employment_episodes", "experience_claims"},
         context="single-pass analysis",
     )
 
     requirements = result.get("requirements")
-    claims = result.get("application_claims")
-    if not isinstance(requirements, list) or not isinstance(claims, list):
+    if not isinstance(requirements, list):
         raise MuseProtocolError("Muse returned invalid single-pass analysis lists.")
 
-    # Reuse the established strict limits for quotes, employment timelines,
-    # experience claims, and application-claim text.
+    # Reuse the established strict limits for requirement citations, timelines,
+    # and experience-duration evidence.
     mapping_shape = {
         "requirements": [
             {"requirement": item.get("requirement"), "evidence": item.get("evidence")}
             if isinstance(item, dict) else item
             for item in requirements
         ],
-        "application_claims": [
-            {"claim": item.get("claim")}
-            if isinstance(item, dict) else item
-            for item in claims
-        ],
+        "application_claims": [],
         "employment_episodes": result.get("employment_episodes"),
         "experience_claims": result.get("experience_claims"),
     }
@@ -356,42 +351,6 @@ def validate_single_pass_result(
         ):
             raise MuseProtocolError("Muse returned invalid unproven aspects.")
 
-    claim_fields = {"claim", "status", "certainty", "reason", "evidence"}
-    for item in claims:
-        if not isinstance(item, dict) or set(item) != claim_fields:
-            raise MuseProtocolError("Muse returned an invalid single-pass application claim shape.")
-        if not isinstance(item["status"], str) or item["status"] not in {"supported", "not_found", "conflicting"}:
-            raise MuseProtocolError("Muse returned an invalid application-claim status.")
-        if not isinstance(item["certainty"], str) or item["certainty"] not in {"clear", "ambiguous"}:
-            raise MuseProtocolError("Muse returned invalid application-claim certainty.")
-        if not isinstance(item["reason"], str) or len(item["reason"]) > MAX_REASON_CHARS:
-            raise MuseProtocolError("Muse returned an invalid application-claim reason.")
-        citations = _require_list(
-            item["evidence"],
-            context="application-claim evidence",
-            maximum=2,
-        )
-        for citation in citations:
-            if not isinstance(citation, dict):
-                raise MuseProtocolError("Muse returned invalid application-claim evidence.")
-            _require_exact_keys(
-                citation,
-                {"quote", "role", "page_hint"},
-                context="application-claim citation",
-            )
-            quote = citation["quote"]
-            role = citation["role"]
-            page_hint = citation["page_hint"]
-            if not isinstance(quote, str) or not quote.strip() or len(quote) > MAX_QUOTE_CHARS:
-                raise MuseProtocolError("Muse returned an invalid application-claim quote.")
-            if not isinstance(role, str) or role not in {"supports", "contradicts"}:
-                raise MuseProtocolError("Muse returned an invalid application-claim evidence role.")
-            if page_hint is not None and (
-                isinstance(page_hint, bool)
-                or not isinstance(page_hint, int)
-                or page_hint < 1
-            ):
-                raise MuseProtocolError("Muse returned an invalid application-claim page hint.")
     return result
 
 
@@ -402,23 +361,15 @@ def validate_verification_result(
     max_application_claims: int,
 ) -> dict[str, Any]:
     """Validate verifier shape, enums, count bounds, and one-to-one item IDs."""
-    _require_exact_keys(
-        result, {"reviews", "application_reviews"}, context="verification"
-    )
+    _require_exact_keys(result, {"reviews"}, context="verification")
     expected_requirements = verification_payload.get("requirements")
-    expected_claims = verification_payload.get("application_claims")
-    if not isinstance(expected_requirements, list) or not isinstance(expected_claims, list):
+    if not isinstance(expected_requirements, list):
         raise MuseProtocolError("The local verification request is invalid.")
-    if len(expected_requirements) > MAX_REQUIREMENTS or len(expected_claims) > max_application_claims:
+    if len(expected_requirements) > MAX_REQUIREMENTS:
         raise MuseProtocolError("The local verification request exceeds its limit.")
 
     reviews = _require_list(
         result["reviews"], context="verification reviews", maximum=MAX_REQUIREMENTS
-    )
-    application_reviews = _require_list(
-        result["application_reviews"],
-        context="application reviews",
-        maximum=max_application_claims,
     )
     citation_total = 0
 
@@ -542,11 +493,5 @@ def validate_verification_result(
         expected_items=expected_requirements,
         context="requirement review",
         semantic_fields=True,
-    )
-    validate_reviews(
-        application_reviews,
-        id_key="claim_id",
-        expected_items=expected_claims,
-        context="application review",
     )
     return result

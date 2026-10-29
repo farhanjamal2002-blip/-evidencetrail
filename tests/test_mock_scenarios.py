@@ -43,10 +43,6 @@ class RequirementProposal(StrictContract):
     evidence: list[CandidateQuote]
 
 
-class ApplicationClaimProposal(StrictContract):
-    claim: str
-
-
 class EmploymentEpisodeProposal(StrictContract):
     role: str
     company: str
@@ -66,7 +62,6 @@ class ExperienceDurationClaim(StrictContract):
 
 class FirstPassContract(StrictContract):
     requirements: list[RequirementProposal]
-    application_claims: list[ApplicationClaimProposal]
     employment_episodes: list[EmploymentEpisodeProposal]
     experience_claims: list[ExperienceDurationClaim]
 
@@ -90,17 +85,8 @@ class RequirementReview(StrictContract):
     evidence: list[SourceCitation]
 
 
-class ApplicationClaimReview(StrictContract):
-    claim_id: str
-    status: Literal["supported", "not_found", "conflicting"]
-    certainty: Literal["clear", "ambiguous"]
-    reason: str
-    evidence: list[SourceCitation]
-
-
 class SecondPassContract(StrictContract):
     reviews: list[RequirementReview]
-    application_reviews: list[ApplicationClaimReview]
 
 
 def make_pdf(*pages: str, password: str | None = None) -> bytes:
@@ -217,14 +203,12 @@ class MockScenarioTests(unittest.TestCase):
         job: str,
         *,
         consent: str = "true",
-        application_draft: str = "",
     ):
         return self.client.post(
             "/api/analyze",
             files={"cv": ("fictional-cv.pdf", pdf, "application/pdf")},
             data={
                 "job_description": job,
-                "application_draft": application_draft,
                 "consent": consent,
             },
         )
@@ -290,7 +274,11 @@ class MockScenarioTests(unittest.TestCase):
         self.assertEqual(landing.status_code, 200)
         self.assertIn("Review the evidence behind every requirement.", landing.text)
         self.assertIn('type="file" accept="application/pdf,.pdf" multiple', landing.text)
-        self.assertIn("Candidate statement", landing.text)
+        self.assertNotIn("Candidate statement", landing.text)
+        self.assertNotIn("Gender Decoder", landing.text)
+        self.assertIn("Layer 1 · Evidence status", landing.text)
+        self.assertIn("Layer 2 · Source check", landing.text)
+        self.assertIn("Layer 3 · Recruiter decision", landing.text)
         self.assertIn("Candidate evidence reviews", landing.text)
         self.assertIn("Recruiter shortlist decision", landing.text)
         self.assertIn("Job-related reason", landing.text)
@@ -330,7 +318,7 @@ class MockScenarioTests(unittest.TestCase):
         self.assertIn("observable", preview["role_clarity_audit"]["items"][0]["rewrite_prompt"])
         self.assertEqual(preview["role_clarity_audit"]["criteria_count"], 5)
         self.assertIn("Free role preflight", preview["report_html"])
-        self.assertIn("Draft interview question", preview["report_html"])
+        self.assertNotIn("Draft interview question", preview["report_html"])
         self.assertIn("Priority: Explicitly required", preview["report_html"])
         self.assertEqual(preview["clarification_brief"]["count"], 3)
         self.assertEqual(preview["application_prep"]["count"], 2)
@@ -428,7 +416,7 @@ class MockScenarioTests(unittest.TestCase):
         active = 0
         maximum_active = 0
 
-        async def fake_analysis(request, cv, job_description, application_draft, consent, locked_rubric_json):
+        async def fake_analysis(request, cv, job_description, consent, locked_rubric_json):
             nonlocal active, maximum_active
             active += 1
             maximum_active = max(maximum_active, active)
@@ -507,7 +495,6 @@ class MockScenarioTests(unittest.TestCase):
             files={"cv": ("retry.pdf", pdf, "application/pdf")},
             data={
                 "job_description": job,
-                "application_draft": "",
                 "consent": "true",
                 "locked_rubric_json": json.dumps(["Five years of Python experience"]),
             },
@@ -614,7 +601,10 @@ class MockScenarioTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200, response.text)
         payload = response.json()
-        self.assertGreater(payload["role_clarity_audit"]["count"], 0)
+        self.assertEqual(payload["role_clarity_audit"]["count"], 0)
+        self.assertEqual(payload["role_clarity_audit"]["items"], [])
+        self.assertGreater(payload["role_clarity_audit"]["criteria_count"], 0)
+        self.assertNotIn("Gender Decoder", payload["report_html"])
         self.assertIn("&lt;script&gt;", payload["report_html"])
         self.assertNotIn("<script>alert", payload["report_html"])
 
@@ -770,26 +760,10 @@ class MockScenarioTests(unittest.TestCase):
             "supported",
         )
         self.assertTrue(findings["Current AWS certification"]["evidence"] == [])
-        prep_items = {
-            item["requirement_id"]: item
-            for item in result["application_prep"]["items"]
-        }
-        self.assertEqual(set(prep_items), {"R1", "R2", "R3"})
-        self.assertIn("Otherwise, leave it unclaimed", prep_items["R2"]["action"])
-        clarification_items = {
-            item["requirement_id"]: item
-            for item in result["clarification_brief"]["items"]
-        }
-        self.assertEqual(set(clarification_items), {"R1", "R2", "R3"})
-        self.assertIn(
-            "does not establish whether the person has this experience",
-            clarification_items["R2"]["reason"],
-        )
-        self.assertTrue(clarification_items["R1"]["evidence"])
-        self.assertIn("may not align", clarification_items["R1"]["question"])
-        self.assertIn("Neutral follow-up prompts", result["report_html"])
-        self.assertIn("data-requirement-id='R1'", result["report_html"])
-        self.assertIn("Draft prompts for consistent", result["report_html"])
+        self.assertNotIn("application_prep", result)
+        self.assertNotIn("clarification_brief", result)
+        self.assertNotIn("application_claim_audit", result)
+        self.assertNotIn("Neutral follow-up prompts", result["report_html"])
         for finding in result["requirements"]:
             self.assertEqual(finding["certainty"], "ambiguous")
             self.assertIn("Local simulation only", finding["review_reason"])
@@ -819,65 +793,7 @@ class MockScenarioTests(unittest.TestCase):
         self.assertNotIn("href='https://", result["report_html"])
         self.assertTrue(result["report_html"].lstrip().lower().startswith("<!doctype html"))
 
-    def test_application_draft_claim_audit_distinguishes_support_missing_and_conflict(self) -> None:
-        cv = make_pdf(
-            "Python automations across 6 years of work.\n"
-            "Procurement experience: 8 years.\n"
-            "Procurement experience: five years total.\n"
-            "AWS Cloud Practitioner, awarded 2022."
-        )
-        draft = (
-            "I built Python automations across 6 years of work.\n"
-            "I have 8 years of procurement experience.\n"
-            "I hold a current AWS Solutions Architect Professional certification."
-        )
-        response = self.analyze(
-            cv,
-            "Requirements\n- At least 5 years of Python experience",
-            application_draft=draft,
-        )
-        self.assertEqual(response.status_code, 200, response.text)
-        result = response.json()
-        audit = result["application_claim_audit"]
-        claims = {item["claim"]: item for item in audit["results"]}
-        self.assertEqual(len(claims), 3)
-        self.assertEqual(
-            claims["I built Python automations across 6 years of work."]["status"],
-            "supported",
-        )
-        self.assertEqual(
-            claims["I have 8 years of procurement experience."]["status"],
-            "conflicting",
-        )
-        self.assertEqual(
-            claims[
-                "I hold a current AWS Solutions Architect Professional certification."
-            ]["status"],
-            "not_found",
-        )
-        conflict_quotes = {
-            item["quote"]
-            for item in claims["I have 8 years of procurement experience."]["evidence"]
-        }
-        self.assertIn("Procurement experience: 8 years.", conflict_quotes)
-        self.assertIn("Procurement experience: five years total.", conflict_quotes)
-        self.assertTrue(all(item["certainty"] == "ambiguous" for item in audit["results"]))
-        self.assertIn("Application draft claim check", result["report_html"])
-        self.assertEqual(result["analysis_calls"], 0)
 
-    def test_application_claim_proposals_must_be_present_in_the_user_draft(self) -> None:
-        claims, audit = app.ground_application_claims(
-            {
-                "application_claims": [
-                    {"claim": "I led a team of 8 engineers."},
-                    {"claim": "I invented this claim completely."},
-                ]
-            },
-            "I led a team of 8 engineers.",
-        )
-        self.assertEqual(len(claims), 1)
-        self.assertEqual(claims[0]["claim"], "I led a team of 8 engineers.")
-        self.assertEqual(audit, {"proposed": 2, "accepted": 1, "excluded": 1})
 
     def test_complex_multicolumn_cv_keeps_conflicts_and_grounded_evidence(self) -> None:
         cv = make_complex_cv_pdf()
@@ -1364,7 +1280,7 @@ class MockScenarioTests(unittest.TestCase):
         self.assertEqual(len(prep_items["R3"]["evidence"]), 2)
         self.assertEqual(prep["count"], 3)
 
-    def test_clarification_brief_report_escapes_untrusted_text(self) -> None:
+    def test_report_escapes_untrusted_text_without_clarification_module(self) -> None:
         finding = {
             "id": "R1",
             "requirement": "<img src=x onerror=alert(1)>",
@@ -1385,10 +1301,10 @@ class MockScenarioTests(unittest.TestCase):
             verification_audit={"proposed": 0, "verified": 0, "excluded": 0},
             evidence_graph=app.build_evidence_graph([finding]),
             created_at="2026-10-27T00:00:00+00:00",
-            clarification_brief=brief,
         )
         self.assertIn("&lt;img src=x onerror=alert(1)&gt;", report)
         self.assertNotIn("<img src=x onerror=alert(1)>", report)
+        self.assertNotIn("Neutral follow-up prompts", report)
 
     def test_multiple_pages_keep_citation_page_provenance(self) -> None:
         cv = make_pdf(
@@ -1492,14 +1408,6 @@ class MockScenarioTests(unittest.TestCase):
         self.assertEqual(self.analyze(cv, "   ").status_code, 400)
         self.assertEqual(
             self.analyze(cv, "x" * (app.MAX_JOB_CHARS + 1)).status_code, 400
-        )
-        self.assertEqual(
-            self.analyze(
-                cv,
-                job,
-                application_draft="x" * (app.MAX_APPLICATION_DRAFT_CHARS + 1),
-            ).status_code,
-            400,
         )
 
     def test_encrypted_empty_and_overlong_pdfs_are_rejected(self) -> None:
@@ -1947,7 +1855,6 @@ class FakeCompletions:
                     "page_hint": 1,
                 }],
             }],
-            "application_claims": [],
             "employment_episodes": [],
             "experience_claims": [],
         }

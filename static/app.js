@@ -2,10 +2,8 @@ const form = document.getElementById("analysis-form");
 form.noValidate = true;
 const cvInput = document.getElementById("cv");
 const jobInput = document.getElementById("job-description");
-const draftInput = document.getElementById("application-draft");
 const fileName = document.getElementById("file-name");
 const charCount = document.getElementById("char-count");
-const draftCharCount = document.getElementById("draft-char-count");
 const analyzeButton = document.getElementById("analyze-button");
 const roleAuditButton = document.getElementById("role-audit-button");
 const roleWorksheetButton = document.getElementById("role-worksheet-download");
@@ -120,11 +118,6 @@ const demoJob = [
   "3. At least seven years of procurement experience.",
   "4. Negotiate multi-year supply agreements with GCC manufacturers.",
   "5. At least three years of team leadership experience."
-].join("\n");
-const demoApplicationDraft = [
-  "I built Python automations across six years of work.",
-  "I have eight years of procurement experience.",
-  "I hold a current AWS Solutions Architect Professional certification."
 ].join("\n");
 
 function listedBatchRubricFromJob(description) {
@@ -323,13 +316,11 @@ roleAuditButton.addEventListener("click", async function () {
     renderRoleClarityAudit(audit);
     if (batchRubricEditorJob !== description) renderBatchRubricEditor();
     const total = Number(audit.criteria_count || 0);
-    const cues = Number(audit.count || 0);
     const shown = Array.isArray(audit.criteria) ? audit.criteria.length : 0;
     const omitted = Number(audit.criteria_truncated || 0);
     roleAuditStatus.textContent = shown
       ? "Found " + shown + " explicit job item(s). Review and edit the checklist below; no Muse call was made." +
-        (omitted ? " · " + omitted + " more omitted at the display limit" : "") +
-        (cues ? " Optional wording prompts are in the collapsed details." : "")
+        (omitted ? " · " + omitted + " more omitted at the display limit" : "")
       : "No numbered or bulleted requirements were detected. Add criteria manually below; this was a local check with no Muse call.";
   } catch (error) {
     if (requestId !== roleAuditRequestId) return;
@@ -410,11 +401,6 @@ jobInput.addEventListener("input", function () {
   useSharedBatchRubric.checked = false;
 });
 
-draftInput.addEventListener("input", function () {
-  clearCurrentResults(true);
-  draftCharCount.textContent = String(draftInput.value.length);
-});
-
 const loadDemoButton = document.getElementById("load-demo-case");
 const loadUnifiedDemoButton = document.getElementById("load-unified-demo");
 const loadUnifiedDemoButtonLabel = loadUnifiedDemoButton.textContent.trim();
@@ -468,8 +454,6 @@ loadUnifiedDemoButton.addEventListener("click", async function () {
     jobInput.value = manifest.job_description;
     jobInput.dispatchEvent(new Event("input"));
     renderBatchRubricEditor();
-    draftInput.value = "";
-    draftInput.dispatchEvent(new Event("input"));
     document.getElementById("consent").checked = false;
     loadUnifiedDemoButton.textContent = "Five CVs loaded · " + manifest.rubric_version;
     jobInput.focus();
@@ -535,8 +519,6 @@ loadUnifiedReplayButton.addEventListener("click", async function () {
     charCount.textContent = String(jobInput.value.length);
     batchRubricEditorJob = null;
     renderBatchRubricEditor();
-    draftInput.value = "";
-    draftCharCount.textContent = "0";
     document.getElementById("consent").checked = false;
     batchReports = prepared;
     batchReviewStates = prepared.map(function () { return {}; });
@@ -579,8 +561,6 @@ loadDemoButton.addEventListener("click", async function () {
     jobInput.value = demoJob;
     jobInput.dispatchEvent(new Event("input"));
     renderBatchRubricEditor();
-    draftInput.value = demoApplicationDraft;
-    draftInput.dispatchEvent(new Event("input"));
     jobInput.focus();
   } catch (error) {
     showError(error.message || "The sample could not be loaded. Download the synthetic CV and choose it manually.");
@@ -634,7 +614,7 @@ previewDemoButton.addEventListener("click", async function () {
   }
 });
 
-async function makeSessionCacheKey(file, jobDescription, rubric, applicationDraft) {
+async function makeSessionCacheKey(file, jobDescription, rubric) {
   if (!window.crypto || !window.crypto.subtle) return null;
   try {
     const digest = await window.crypto.subtle.digest("SHA-256", await file.arrayBuffer());
@@ -647,7 +627,6 @@ async function makeSessionCacheKey(file, jobDescription, rubric, applicationDraf
       hash,
       jobDescription,
       rubric || null,
-      applicationDraft || "",
     ]);
   } catch (_error) {
     return null;
@@ -792,11 +771,6 @@ form.addEventListener("submit", async function (event) {
     showError(selectionError);
     return;
   }
-  if (submittedFiles.length > 1 && draftInput.value.trim()) {
-    showError("Clear the optional candidate statement to run a batch. Batch review analyzes the job description against each CV.");
-    return;
-  }
-
   const isBatch = submittedFiles.length > 1;
   let lockedBatchRubric = null;
   try {
@@ -806,7 +780,6 @@ form.addEventListener("submit", async function (event) {
     return;
   }
   const jobDescription = jobInput.value.trim();
-  const applicationDraft = isBatch ? "" : draftInput.value.trim();
   const consent = document.getElementById("consent").checked;
   clearCurrentResults(false);
   if (selectedAnalysisMode === "live") {
@@ -825,7 +798,6 @@ form.addEventListener("submit", async function (event) {
   cvInput.disabled = true;
   setBatchRubricEditorDisabled(true);
   jobInput.readOnly = true;
-  draftInput.readOnly = true;
   document.getElementById("consent").disabled = true;
   loadDemoButton.disabled = true;
   previewDemoButton.disabled = true;
@@ -856,7 +828,6 @@ form.addEventListener("submit", async function (event) {
       const formData = new FormData();
       formData.append("cv", submittedFiles[0], submittedFiles[0].name);
       formData.append("job_description", jobDescription);
-      formData.append("application_draft", applicationDraft);
       formData.append("consent", consent ? "true" : "false");
       if (lockedBatchRubric) formData.append("locked_rubric_json", JSON.stringify(lockedBatchRubric));
       const response = await fetch("/api/analyze", {
@@ -916,7 +887,7 @@ form.addEventListener("submit", async function (event) {
         updateAnalysisStatus();
         try {
           const cacheKey = mockMode ? null : await makeSessionCacheKey(
-            file, jobDescription, lockedBatchRubric, applicationDraft
+            file, jobDescription, lockedBatchRubric
           );
           if (generation !== batchReviewGeneration || requestController.signal.aborted) return;
           let payload = getSessionCachedAnalysis(cacheKey);
@@ -931,7 +902,6 @@ form.addEventListener("submit", async function (event) {
                 const formData = new FormData();
                 formData.append("cv", file, file.name);
                 formData.append("job_description", jobDescription);
-                formData.append("application_draft", "");
                 formData.append("consent", consent ? "true" : "false");
                 if (lockedBatchRubric) formData.append("locked_rubric_json", JSON.stringify(lockedBatchRubric));
                 const response = await fetch("/api/analyze", {
@@ -1024,7 +994,6 @@ form.addEventListener("submit", async function (event) {
       cvInput.disabled = false;
       setBatchRubricEditorDisabled(false);
       jobInput.readOnly = false;
-      draftInput.readOnly = false;
       document.getElementById("consent").disabled = false;
       loadDemoButton.disabled = false;
       previewDemoButton.disabled = false;
@@ -1182,19 +1151,6 @@ function renderBatchRequirementMatrix(root) {
     root.appendChild(warning);
   }
 
-  const strengthLegend = document.createElement("div");
-  strengthLegend.className = "batch-matrix-strength-legend";
-  strengthLegend.setAttribute("aria-label", "Evidence strength legend");
-  strengthLegend.setAttribute("role", "group");
-  const strengthLegendTitle = document.createElement("strong");
-  strengthLegendTitle.textContent = "Evidence detail";
-  strengthLegend.appendChild(strengthLegendTitle);
-  ["specific", "stated", "keyword_only", "none"].forEach(function (value) {
-    const chip = createEvidenceStrengthChip(value);
-    strengthLegend.appendChild(chip);
-  });
-  root.appendChild(strengthLegend);
-
   const scroller = document.createElement("div");
   scroller.className = "batch-matrix-scroll";
   const table = document.createElement("table");
@@ -1239,18 +1195,6 @@ function renderBatchRequirementMatrix(root) {
   table.appendChild(head);
 
   const body = document.createElement("tbody");
-  const statusLabels = {
-    direct: "Direct evidence",
-    related: "Related experience",
-    unsupported: "Not mentioned in CV",
-    conflicting: "Details differ",
-  };
-  const strengthLabels = {
-    specific: "Specific detail",
-    stated: "Stated only",
-    keyword_only: "Keyword only",
-    none: "No passage",
-  };
   rows.forEach(function (row) {
     const tableRow = document.createElement("tr");
     const requirementCell = document.createElement("th");
@@ -1297,22 +1241,21 @@ function renderBatchRequirementMatrix(root) {
         return;
       }
 
-      const type = Object.prototype.hasOwnProperty.call(statusLabels, finding.evidence_type)
-        ? finding.evidence_type
-        : "unsupported";
-      const timelineNeedsReview = Array.isArray(finding.timeline_review_flags) &&
-        finding.timeline_review_flags.length > 0;
-      const displayType = timelineNeedsReview ? "conflicting" : type;
-      const displayLabel = timelineNeedsReview
-        ? "Conflict to clarify"
-        : statusLabels[type];
+      const state = plainFindingState(finding);
+      const displayType = {
+        direct: "direct",
+        related: "related",
+        conflict_to_clarify: "conflicting",
+        unsupported: "unsupported",
+        not_found: "unsupported",
+      }[state];
+      const displayLabel = plainFindingLabel(finding);
       const evidenceList = Array.isArray(finding.evidence) ? finding.evidence : [];
       const evidence = evidenceList.find(function (item) {
         return item && (item.display_role === "supports" || item.role === "supports");
       }) || evidenceList[0] || null;
       const pageNumber = evidence ? Number(evidence.page) : 0;
       const page = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 0;
-      const quote = evidence && typeof evidence.quote === "string" ? evidence.quote : "";
       const verificationAudit = candidate.entry.result.verification_audit || {};
       const rejectedForFinding = Array.isArray(verificationAudit.rejected_citations) &&
         verificationAudit.rejected_citations.some(function (record) {
@@ -1320,60 +1263,40 @@ function renderBatchRequirementMatrix(root) {
         });
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "batch-matrix-cell batch-matrix-" + displayType +
-        (finding.certainty === "ambiguous" ? " batch-matrix-ambiguous" : "");
+      button.className = "batch-matrix-cell batch-matrix-" + displayType;
       button.dataset.matrixReportIndex = String(candidate.reportIndex);
       button.setAttribute(
         "aria-label",
         "Candidate " + (candidate.order + 1) + ", " + row.requirement + ": " +
-          (timelineNeedsReview ? "Conflict to clarify. " + timelineSourceLabel(finding, candidate.entry.result.provider_mode) : displayLabel) +
-          (page ? ", CV page " + page + ". Open source." : ". Open candidate review.")
+          displayLabel + ". " + sourceCheckLabel(finding, candidate.entry.result) +
+          (page ? ". Open source." : ". Open candidate review.")
       );
       button.dataset.matrixAriaBase = button.getAttribute("aria-label");
       const status = document.createElement("strong");
-      status.textContent = timelineNeedsReview
-        ? "Conflict to clarify"
-        : finding.certainty === "ambiguous" ? "Needs review" : statusLabels[type];
+      status.textContent = displayLabel;
       const source = document.createElement("span");
       source.className = "batch-matrix-source";
       source.textContent = page
         ? "CV page " + page + " · Open source"
-        : finding.evidence_strength === "keyword_only"
-          ? "Keyword mention · no support accepted"
-          : "Open candidate review";
+        : "Open candidate review";
       button.dataset.matrixFindingId = String(finding.id || "");
       button.append(status, source);
-      if (timelineNeedsReview) {
+      const provenanceText = gateProvenanceLabel(finding, candidate.entry.result.provider_mode);
+      if (provenanceText) {
         const provenance = document.createElement("span");
         provenance.className = "batch-matrix-timeline-provenance";
-        provenance.textContent = timelineSourceLabel(finding, candidate.entry.result.provider_mode);
+        provenance.textContent = provenanceText;
         button.appendChild(provenance);
       }
       const quoteCheck = document.createElement("span");
-      quoteCheck.className = "batch-matrix-check " + (page
-        ? "batch-matrix-check-passed"
-        : rejectedForFinding ? "batch-matrix-check-rejected"
-          : finding.evidence_strength === "keyword_only" ? "batch-matrix-check-weak"
-            : "batch-matrix-check-none");
-      quoteCheck.textContent = page
-        ? "Quote/page checked"
-        : rejectedForFinding ? "Proposed quote rejected"
-          : finding.evidence_strength === "keyword_only" ? "Keyword only · not evidence"
-            : "No verified quote";
+      const sourceCheck = sourceCheckLabel(finding, candidate.entry.result);
+      quoteCheck.className = "batch-matrix-check " + (
+        page ? "batch-matrix-check-passed"
+          : rejectedForFinding ? "batch-matrix-check-rejected"
+            : "batch-matrix-check-none"
+      );
+      quoteCheck.textContent = sourceCheck;
       button.appendChild(quoteCheck);
-      const strength = Object.prototype.hasOwnProperty.call(strengthLabels, finding.evidence_strength)
-        ? finding.evidence_strength
-        : (evidence ? "stated" : "none");
-      button.appendChild(createEvidenceStrengthChip(strength));
-      const review = candidate.reviewEntries[String(finding.id || "")];
-      const reviewLabel = review && batchMatrixReviewLabels[review.status];
-      if (reviewLabel) {
-        const reviewerState = document.createElement("span");
-        reviewerState.className = "batch-matrix-review-state batch-matrix-review-" + review.status;
-        reviewerState.textContent = "Recruiter: " + reviewLabel;
-        button.appendChild(reviewerState);
-        button.setAttribute("aria-label", button.dataset.matrixAriaBase + ", recruiter: " + reviewLabel);
-      }
       if (quote) {
         const snippet = document.createElement("span");
         snippet.className = "batch-matrix-quote";
@@ -1456,19 +1379,19 @@ function renderBatchReview() {
     const entry = row.entry;
     const index = row.reportIndex;
     const requirements = Array.isArray(entry.result.requirements) ? entry.result.requirements : [];
-    const counts = { direct: 0, related: 0, unsupported: 0, conflicting: 0 };
+    const counts = { direct: 0, related: 0, conflict_to_clarify: 0, unsupported: 0, not_found: 0 };
     requirements.forEach(function (finding) {
-      const type = finding.evidence_type || "unsupported";
-      if (Object.prototype.hasOwnProperty.call(counts, type)) counts[type] += 1;
+      const state = plainFindingState(finding);
+      counts[state] = (counts[state] || 0) + 1;
     });
     const card = document.createElement("article");
     card.className = "batch-candidate" + (index === activeBatchIndex ? " is-active" : "");
     const title = document.createElement("strong");
     title.textContent = (entry.candidateId || "C" + (index + 1)) + " · " + entry.filename;
     const detail = document.createElement("span");
-    detail.textContent = counts.direct + " direct · " + counts.related + " related · " +
-      counts.unsupported + " not shown · " + counts.conflicting + " conflict" +
-      (counts.conflicting === 1 ? "" : "s");
+    detail.textContent = counts.direct + " Direct · " + counts.related + " Related · " +
+      counts.conflict_to_clarify + " Conflict to clarify · " +
+      counts.unsupported + " Unsupported · " + counts.not_found + " Not found";
     const openButton = document.createElement("button");
     openButton.type = "button";
     openButton.className = "batch-open-candidate";
@@ -1538,7 +1461,6 @@ async function retryFailedBatchCandidate(uploadIndex) {
   const formData = new FormData();
   formData.append("cv", failure.file, failure.filename);
   formData.append("job_description", failure.jobDescription || jobInput.value.trim());
-  formData.append("application_draft", "");
   formData.append("consent", failure.consent ? "true" : "false");
   if (failure.lockedRequirements && failure.lockedRequirements.length) {
     formData.append("locked_rubric_json", JSON.stringify(failure.lockedRequirements));
@@ -1604,7 +1526,7 @@ function recruiterDecisionLabel(value) {
   return {
     undecided: "Not decided",
     advance: "Advance",
-    hold: "Hold for follow-up",
+    hold: "Hold",
     do_not_advance: "Do not advance",
   }[value] || "Not decided";
 }
@@ -1639,26 +1561,28 @@ function renderRecruiterDecisionPanel() {
       : "") + ". Not sent or scheduled."
     : "";
 
-  const counts = { direct: 0, related: 0, unsupported: 0, conflicting: 0, review: 0 };
+  const counts = {
+    direct: 0,
+    related: 0,
+    conflict_to_clarify: 0,
+    unsupported: 0,
+    not_found: 0,
+  };
   const requirements = entry.result && Array.isArray(entry.result.requirements)
     ? entry.result.requirements
     : [];
   requirements.forEach(function (finding) {
     const state = plainFindingState(finding);
-    if (state === "shown") counts.direct += 1;
-    else if (state === "related") counts.related += 1;
-    else if (state === "not_mentioned") counts.unsupported += 1;
-    else if (state === "details_differ") counts.conflicting += 1;
-    else counts.review += 1;
+    counts[state] = (counts[state] || 0) + 1;
   });
   const parts = [];
-  if (counts.direct) parts.push(counts.direct + " direct evidence");
-  if (counts.related) parts.push(counts.related + " related");
-  if (counts.unsupported) parts.push(counts.unsupported + " not mentioned");
-  if (counts.conflicting) parts.push(counts.conflicting + " details differ");
-  if (counts.review) parts.push(counts.review + " need a closer look");
+  if (counts.direct) parts.push(counts.direct + " Direct");
+  if (counts.related) parts.push(counts.related + " Related");
+  if (counts.conflict_to_clarify) parts.push(counts.conflict_to_clarify + " Conflict to clarify");
+  if (counts.unsupported) parts.push(counts.unsupported + " Unsupported");
+  if (counts.not_found) parts.push(counts.not_found + " Not found");
   document.getElementById("recruiter-decision-evidence-summary").textContent =
-    "CV evidence summary · " + (parts.length ? parts.join(" · ") : "no requirements returned") +
+    "CV evidence status · " + (parts.length ? parts.join(" · ") : "no requirements returned") +
     ". These are document findings, not a candidate score.";
 
   const status = document.getElementById("recruiter-decision-status");
@@ -1939,13 +1863,10 @@ document.getElementById("batch-review-download").addEventListener("click", funct
       decision_linked_requirements: linkedRequirements,
       decision_note: entry.decisionNote || "",
       decision_recorded_at: entry.decisionUpdatedAt || null,
-      interview_invite_draft: entry.interviewInviteDraft || "",
-      interview_invite_prepared_at: entry.interviewInvitePreparedAt || null,
       evidence_counts: evidenceCounts,
       requirement_reviews: itemReviews,
       requirement_evidence: requirements,
       evidence_graph: entry.result.evidence_graph || {},
-      clarification_brief: entry.result.clarification_brief || { items: [] },
       timeline_audit: entry.result.timeline_audit || {},
       verification_audit: entry.result.verification_audit || {},
       job_item_coverage: entry.result.job_item_coverage || {},
@@ -2025,11 +1946,8 @@ function clearCurrentResults(showNotice) {
   currentRoleAudit = null;
   roleWorksheetButton.disabled = true;
   document.getElementById("role-clarity-audit").hidden = true;
-  document.getElementById("role-clarity-audit-items").replaceChildren();
-  document.getElementById("role-clarity-audit-limit").hidden = true;
   document.getElementById("role-criteria-items").replaceChildren();
   document.getElementById("role-criteria-limit").hidden = true;
-  document.getElementById("role-language-reference").hidden = true;
   roleAuditStatus.textContent = "";
   roleAuditStatus.hidden = true;
   roleAuditButton.disabled = false;
@@ -2063,9 +1981,6 @@ function clearCurrentResults(showNotice) {
   sourcePdfPage.hidden = true;
   sourcePdfHighlights.replaceChildren();
   document.getElementById("findings-list").replaceChildren();
-  document.getElementById("application-claim-audit").hidden = true;
-  document.getElementById("application-claim-audit-summary").textContent = "";
-  document.getElementById("application-claim-audit-items").replaceChildren();
   document.getElementById("source-pages").replaceChildren();
   document.getElementById("evidence-graph").replaceChildren();
   document.getElementById("job-list-coverage").hidden = true;
@@ -2184,7 +2099,7 @@ function renderResults(payload, analyzedFile, savedState) {
       : "";
   renderVerifierChip(payload);
   const findingsList = document.getElementById("findings-list");
-  const counts = { shown: 0, related: 0, not_mentioned: 0, details_differ: 0, needs_review: 0 };
+  const counts = { direct: 0, related: 0, conflict_to_clarify: 0, unsupported: 0, not_found: 0 };
   const roleCriteriaByLine = Object.create(null);
   const roleCriteria = payload.role_clarity_audit && Array.isArray(payload.role_clarity_audit.criteria)
     ? payload.role_clarity_audit.criteria
@@ -2204,9 +2119,13 @@ function renderResults(payload, analyzedFile, savedState) {
     copyRecord(restoredState.applicationPrepChecks)
   );
   findingsList.replaceChildren();
-  const findingsToReview = [];
-  const relatedFindings = [];
-  const findingsWithEvidence = [];
+  const findingsByState = {
+    direct: [],
+    related: [],
+    conflict_to_clarify: [],
+    unsupported: [],
+    not_found: [],
+  };
   document.getElementById("source-pages").replaceChildren();
   if (currentPdfRenderTask) {
     currentPdfRenderTask.cancel();
@@ -2232,17 +2151,21 @@ function renderResults(payload, analyzedFile, savedState) {
       ? finding.job_source.line
       : null;
     const criterion = sourceLine === null ? null : roleCriteriaByLine[sourceLine] || null;
-    const row = { finding: finding, criterion: criterion };
-    if (state === "shown") findingsWithEvidence.push(row);
-    else if (state === "related") relatedFindings.push(row);
-    else findingsToReview.push(row);
+    findingsByState[state].push({ finding: finding, criterion: criterion });
   });
-  const appendFindingGroup = function (titleText, helpText, rows) {
+  const appendFindingGroup = function (state, helpText) {
+    const rows = findingsByState[state];
     if (!rows.length) return;
     const group = document.createElement("section");
     group.className = "finding-group";
     const heading = document.createElement("h3");
-    heading.textContent = titleText;
+    heading.textContent = {
+      direct: "Direct",
+      related: "Related",
+      conflict_to_clarify: "Conflict to clarify",
+      unsupported: "Unsupported",
+      not_found: "Not found",
+    }[state];
     const help = document.createElement("p");
     help.textContent = helpText;
     const cards = document.createElement("div");
@@ -2254,26 +2177,26 @@ function renderResults(payload, analyzedFile, savedState) {
     findingsList.appendChild(group);
   };
   appendFindingGroup(
-    "Needs your attention first",
-    "Start with missing, conflicting, or unclear evidence. Check the job wording and CV passages before drawing a conclusion.",
-    findingsToReview
+    "direct",
+    "The cited CV passage addresses the job requirement. Open it to check the source text."
   );
   appendFindingGroup(
-    "Related experience to review",
-    payload.provider_mode === "mock"
-      ? "The local simulation flagged a possible connection. It cannot judge whether experience transfers; inspect the source and what remains unproven."
-      : "Muse sees a possible connection to the job need. Review what may transfer and what the CV still does not establish.",
-    relatedFindings
+    "related",
+    "The CV shows potentially transferable work, but not the exact requirement."
   );
   appendFindingGroup(
-    "CV passages found",
-    "These passages directly describe the job need. Open each one to inspect the exact wording in context.",
-    findingsWithEvidence
+    "conflict_to_clarify",
+    "A source or deterministic check surfaced conflicting details. Review the cited pages."
   );
-  renderApplicationClaimAudit(payload.application_claim_audit || {});
+  appendFindingGroup(
+    "unsupported",
+    "The CV mentions material that does not establish the requirement. This does not prove the person lacks it."
+  );
+  appendFindingGroup(
+    "not_found",
+    "No relevant passage was found. This does not prove the person lacks the experience."
+  );
   renderTimelineAudit(payload.timeline_audit || {});
-  renderApplicationPrep(payload.application_prep || null);
-  renderClarificationBrief(payload.clarification_brief || { items: [] });
   updateReviewSummary();
   renderEvidenceGraph(payload.evidence_graph || { requirements: [] });
   renderJobListCoverage(payload.job_item_coverage || {});
@@ -2281,36 +2204,32 @@ function renderResults(payload, analyzedFile, savedState) {
 
   const countsNode = document.getElementById("summary-counts");
   countsNode.replaceChildren();
-  addCount(countsNode, counts.shown, "direct evidence", "supported");
-  addCount(countsNode, counts.related, "related experience", "related");
-  addCount(countsNode, counts.not_mentioned, "not mentioned", "not_found");
-  addCount(countsNode, counts.details_differ, "details differ", "conflicting");
-  addCount(countsNode, counts.needs_review, "check this", "needs_review");
+  addCount(countsNode, counts.direct, "Direct", "supported");
+  addCount(countsNode, counts.related, "Related", "related");
+  addCount(countsNode, counts.conflict_to_clarify, "Conflict to clarify", "conflicting");
+  addCount(countsNode, counts.unsupported, "Unsupported", "not_found");
+  addCount(countsNode, counts.not_found, "Not found", "not_found");
 
   const totalRequirements = payload.requirements.length;
-  const evidenceFound = counts.shown + counts.related;
+  const evidenceFound = counts.direct + counts.related;
   const summaryTitle = document.getElementById("plain-summary-title");
   const summaryDetail = document.getElementById("plain-summary-detail");
   const coverageSummary = document.getElementById("job-coverage-summary");
   summaryTitle.textContent = totalRequirements
-    ? "We found direct or potentially related CV evidence for " + evidenceFound + " of " + totalRequirements + " job requirements."
+    ? "Direct or related evidence appears for " + evidenceFound + " of " + totalRequirements + " job requirements."
     : "We couldn't identify any job requirements.";
   const evidenceNotes = [];
-  if (counts.shown) evidenceNotes.push(counts.shown + " with direct evidence");
-  if (counts.related) evidenceNotes.push(counts.related + " with possible related experience");
-  if (counts.not_mentioned) {
-    evidenceNotes.push(counts.not_mentioned + " not mentioned in the CV");
+  if (counts.direct) evidenceNotes.push(counts.direct + " Direct");
+  if (counts.related) evidenceNotes.push(counts.related + " Related");
+  if (counts.conflict_to_clarify) {
+    evidenceNotes.push(counts.conflict_to_clarify + " Conflict to clarify");
   }
-  if (counts.details_differ) {
-    evidenceNotes.push(counts.details_differ + " where CV details differ");
-  }
-  if (counts.needs_review) {
-    evidenceNotes.push(counts.needs_review + " that need a closer look");
-  }
+  if (counts.unsupported) evidenceNotes.push(counts.unsupported + " Unsupported");
+  if (counts.not_found) evidenceNotes.push(counts.not_found + " Not found");
   summaryDetail.textContent = totalRequirements
-    ? (evidenceNotes.length ? evidenceNotes.join(" · ") + ". " : "No unclear or conflicting details were flagged. ") +
-      "Related experience may transfer but does not prove the exact requirement. This only describes what appears in this CV; if something isn't mentioned, that doesn't prove the person lacks it."
-    : "Check the job description and try again. This review does not decide whether someone is suitable for the role.";
+    ? (evidenceNotes.length ? evidenceNotes.join(" · ") + ". " : "No findings were returned. ") +
+      "Related experience may transfer but does not prove the exact requirement. A Not found result does not prove the person lacks the experience."
+    : "Check the job description and try again. The recruiter makes the hiring decision.";
   renderRecruiterDecisionPanel();
 
   const coverage = payload.job_item_coverage || {};
@@ -2335,9 +2254,9 @@ function renderResults(payload, analyzedFile, savedState) {
     const legend = document.createElement("p");
     legend.className = "source-legend";
     [
-      ["supporting", "Teal highlight: direct evidence"],
-      ["related", "Violet highlight: related experience"],
-      ["conflicting", "Red highlight: conflicting statement"],
+      ["supporting", "Teal highlight: Direct"],
+      ["related", "Violet highlight: Related"],
+      ["conflicting", "Red highlight: Conflict to clarify"],
     ].forEach(function (item) {
       const legendItem = document.createElement("span");
       legendItem.className = "source-legend-item";
@@ -2603,28 +2522,19 @@ function renderRoleClarityAudit(audit) {
   const disclosure = document.getElementById("role-clarity-audit-disclosure");
   const criteriaList = document.getElementById("role-criteria-items");
   const criteriaLimitNote = document.getElementById("role-criteria-limit");
-  const cuesList = document.getElementById("role-clarity-audit-items");
-  const cuesLimitNote = document.getElementById("role-clarity-audit-limit");
-  const languageReference = document.getElementById("role-language-reference");
   const worksheetButton = document.getElementById("role-worksheet-download");
   const criteria = Array.isArray(audit.criteria) ? audit.criteria : [];
-  const items = Array.isArray(audit.items) ? audit.items : [];
   criteriaList.replaceChildren();
-  cuesList.replaceChildren();
-  languageReference.hidden = !items.length;
-  languageReference.open = false;
   worksheetButton.disabled = !criteria.length;
-  panel.hidden = !items.length && !criteria.length;
+  panel.hidden = !criteria.length;
   panel.open = false;
   if (panel.hidden) return;
 
-  const count = Number(audit.count || 0);
   const criterionCount = Number(audit.criteria_count || criteria.length);
-  summary.textContent = "Free role preflight · " + criterionCount + " criterion" +
-    (criterionCount === 1 ? "" : "s") + " · " + count + " optional wording cue" +
-    (count === 1 ? "" : "s");
+  summary.textContent = "Role criteria checklist · " + criterionCount + " criterion" +
+    (criterionCount === 1 ? "" : "s");
   disclosure.textContent = String(audit.disclosure ||
-    "Keyword-based drafting prompts only. Review them before use; no criterion is rated.");
+    "Review and edit the job criteria before analyzing CVs.");
   criteria.forEach(function (entry) {
     const item = document.createElement("li");
     const heading = document.createElement("strong");
@@ -2639,51 +2549,20 @@ function renderRoleClarityAudit(audit) {
     priorityBasis.textContent = entry.priority_basis
       ? "The job post says: " + String(entry.priority_basis)
       : "The job post doesn't say whether this is required.";
-    const reviewer = document.createElement("span");
-    reviewer.className = "role-audit-prompt";
-    reviewer.textContent = "Before reviewing applications: " + String(entry.reviewer_prompt || "");
-    const interview = document.createElement("span");
-    interview.className = "role-audit-interview";
-    interview.textContent = "Draft interview question: " + String(entry.interview_question || "");
-    const candidate = document.createElement("span");
-    candidate.className = "role-audit-candidate";
-    candidate.textContent = "For a candidate: " + String(entry.candidate_prompt || "");
-    const rewrite = document.createElement("span");
-    rewrite.className = "role-audit-rewrite";
-    rewrite.textContent = "Possible tightening: " + String(entry.rewrite_prompt || "");
-    item.append(heading, source, priorityBasis, reviewer, interview, candidate, rewrite);
+    item.append(heading, source, priorityBasis);
     if (entry.possible_exact_duplicate_of) {
       const duplicate = document.createElement("span");
       duplicate.className = "role-audit-duplicate";
-      duplicate.textContent = "Exact duplicate of " + String(entry.possible_exact_duplicate_of) + " · check whether both lines are needed.";
+      duplicate.textContent = "Exact duplicate of " + String(entry.possible_exact_duplicate_of) +
+        " · check whether both lines are needed.";
       item.appendChild(duplicate);
     }
     criteriaList.appendChild(item);
-  });
-  items.forEach(function (entry) {
-    const item = document.createElement("li");
-    const label = document.createElement("strong");
-    label.textContent = String(entry.category || "Wording cue") + " · “" +
-      String(entry.cue || "") + "”";
-    const excerpt = document.createElement("blockquote");
-    excerpt.textContent = String(entry.excerpt || "");
-    const question = document.createElement("span");
-    question.className = "role-audit-prompt";
-    question.textContent = "Reviewer prompt: " + String(entry.review_question || "");
-    const rewrite = document.createElement("span");
-    rewrite.className = "role-audit-rewrite";
-    rewrite.textContent = "Tighten it: " + String(entry.rewrite_prompt || "");
-    item.append(label, excerpt, question, rewrite);
-    cuesList.appendChild(item);
   });
   const criteriaTruncated = Number(audit.criteria_truncated || 0);
   criteriaLimitNote.hidden = criteriaTruncated < 1;
   criteriaLimitNote.textContent = criteriaTruncated +
     " additional requirement(s) were omitted from this view.";
-  const cuesTruncated = Number(audit.truncated || 0);
-  cuesLimitNote.hidden = cuesTruncated < 1;
-  cuesLimitNote.textContent = cuesTruncated +
-    " additional language cue(s) were omitted from this view.";
 }
 
 function escapeRoleWorksheetHtml(value) {
@@ -2762,19 +2641,10 @@ function renderEvidenceGraph(graph) {
     const requirement = document.createElement("div");
     requirement.className = "graph-requirement";
     const meta = document.createElement("span");
-    const timelineNeedsReview = Array.isArray(row.timeline_review_flags) && row.timeline_review_flags.length > 0;
-    const relationLabel = timelineNeedsReview
-      ? "Conflict to clarify · " + timelineSourceLabel(row, currentResultPayload && currentResultPayload.provider_mode)
-      : row.evidence_type === "related"
-        ? "related experience"
-        : row.evidence_type === "direct"
-          ? "direct evidence"
-          : String(row.status || "not_found").replaceAll("_", " ");
-    meta.className = "graph-meta status-" + (timelineNeedsReview
-      ? "needs_review"
-      : row.evidence_type === "related" ? "related" : String(row.status || "not_found"));
-    meta.textContent = String(row.id || "") + " · " + relationLabel +
-      (row.certainty === "ambiguous" && !timelineNeedsReview ? " · ambiguous" : "");
+    const state = plainFindingState(row);
+    const relationLabel = plainFindingLabel(row);
+    meta.className = "graph-meta status-" + findingStatusClass(row);
+    meta.textContent = String(row.id || "") + " · " + relationLabel;
     const title = document.createElement("strong");
     title.textContent = String(row.requirement || "");
     requirement.append(meta, title);
@@ -2847,43 +2717,101 @@ function addCount(parent, value, label, status) {
 }
 
 function plainFindingState(finding) {
-  if (Array.isArray(finding.timeline_review_flags) && finding.timeline_review_flags.length) return "needs_review";
-  if (finding.status === "conflicting") return "details_differ";
-  if (finding.certainty === "ambiguous") return "needs_review";
-  if (finding.evidence_type === "related") return "related";
-  if (finding.status === "supported") return "shown";
-  if (finding.status === "not_found") return "not_mentioned";
-  return "needs_review";
+  const type = String(finding && finding.evidence_type || "");
+  const status = String(finding && finding.status || "");
+  const strength = evidenceStrengthValue(finding);
+  const hasEvidence = Array.isArray(finding && finding.evidence) && finding.evidence.length > 0;
+  if (
+    (Array.isArray(finding && finding.timeline_review_flags) && finding.timeline_review_flags.length) ||
+    status === "conflicting" ||
+    type === "conflicting" ||
+    Boolean(finding && finding.evidence_conflict_review)
+  ) return "conflict_to_clarify";
+  if (type === "related") return "related";
+  if (type === "unsupported" && (strength !== "none" || hasEvidence)) return "unsupported";
+  if (status === "not_found" && strength === "none" && !hasEvidence) return "not_found";
+  if (type === "unsupported") return "unsupported";
+  if (type === "direct" || status === "supported") return "direct";
+  return "unsupported";
 }
 
 function plainFindingLabel(finding) {
-  if (Array.isArray(finding.timeline_review_flags) && finding.timeline_review_flags.length) {
-    return "Conflict to clarify";
-  }
-  const state = plainFindingState(finding);
   return {
-    shown: "Shown in CV",
-    related: "Related experience",
-    not_mentioned: "Not mentioned",
-    details_differ: "Details differ",
-    needs_review: "Needs a closer look"
-  }[state];
+    direct: "Direct",
+    related: "Related",
+    conflict_to_clarify: "Conflict to clarify",
+    unsupported: "Unsupported",
+    not_found: "Not found",
+  }[plainFindingState(finding)];
+}
+
+function findingStatusClass(finding) {
+  return {
+    direct: "supported",
+    related: "related",
+    conflict_to_clarify: "conflicting",
+    unsupported: "not_found",
+    not_found: "not_found",
+  }[plainFindingState(finding)];
+}
+
+function gateProvenanceLabel(finding, providerMode) {
+  const flags = Array.isArray(finding && finding.timeline_review_flags) &&
+    finding.timeline_review_flags.length > 0;
+  const hasScopeGate = Boolean(finding && finding.scope_boundary_review);
+  const hasConflictGate = Boolean(finding && finding.evidence_conflict_review);
+  const hasRawType = Boolean(finding && (finding.muse_evidence_type || finding.proposed_evidence_type));
+  const rawType = String(finding && (
+    finding.muse_evidence_type || finding.proposed_evidence_type || finding.evidence_type
+  ) || "");
+  const finalType = String(finding && finding.evidence_type || "");
+  const hasRawStatus = Boolean(finding && finding.muse_status);
+  const rawStatus = String(finding && finding.muse_status || "");
+  const finalStatus = String(finding && finding.status || "");
+  const adjusted = flags || hasScopeGate || hasConflictGate ||
+    (hasRawType && rawType !== finalType) ||
+    (hasRawStatus && rawStatus !== finalStatus);
+  if (!adjusted) return "";
+  const typeLabels = {
+    direct: "Direct",
+    related: "Related",
+    conflicting: "Conflict to clarify",
+    unsupported: "Unsupported",
+  };
+  const rawLabel = rawStatus === "conflicting" || rawType === "conflicting"
+    ? "Conflict to clarify"
+    : (typeLabels[rawType] || "Not found");
+  const engine = providerMode === "muse" ? "Muse" : "Local simulation";
+  return engine + ": " + rawLabel + " → Gate: " + plainFindingLabel(finding);
+}
+
+function sourceCheckClass(label) {
+  if (String(label || "").startsWith("Verified")) return "source-check-verified";
+  if (String(label || "").startsWith("Blocked")) return "source-check-blocked";
+  return "source-check-none";
+}
+
+function sourceCheckLabel(finding, payload) {
+  const evidence = Array.isArray(finding && finding.evidence) ? finding.evidence : [];
+  const verified = evidence.find(function (entry) {
+    const page = Number(entry && entry.page);
+    return Number.isInteger(page) && page > 0 && String(entry.quote || "").trim();
+  });
+  if (verified) return "Verified (Page " + Number(verified.page) + ")";
+  const audit = payload && payload.verification_audit || {};
+  const rejected = Array.isArray(audit.rejected_citations)
+    ? audit.rejected_citations.find(function (record) {
+        return String(record.requirement_id || "") === String(finding && finding.id || "");
+      })
+    : null;
+  if (!rejected) return "No quote to check";
+  return rejected.reason === "quote_not_found_on_cited_page"
+    ? "Blocked (Quote not on page)"
+    : "Blocked (Source check failed)";
 }
 
 function timelineSourceLabel(finding, providerMode) {
-  const originalType = String(
-    finding && (finding.muse_evidence_type || finding.evidence_type) || ""
-  );
-  const labels = {
-    direct: "Direct",
-    related: "Related",
-    unsupported: "Unsupported",
-    conflicting: "Conflicting",
-  };
-  const source = evidenceEngineLabel(
-    providerMode ? { provider_mode: providerMode } : currentResultPayload
-  );
-  return source + ": " + (labels[originalType] || "Needs review") + " · Timeline check: conflict";
+  return gateProvenanceLabel(finding, providerMode) || "Date check: Conflict to clarify";
 }
 
 function evidenceStrengthValue(finding) {
@@ -2974,11 +2902,13 @@ function buildFindingCard(finding, criterion) {
   }
   const status = document.createElement("span");
   const displayState = plainFindingState(finding);
-  status.className = "status-badge status-" + displayState;
+  status.className = "status-badge status-" + findingStatusClass(finding);
   status.textContent = plainFindingLabel(finding);
   badges.appendChild(status);
-  const strengthValue = evidenceStrengthValue(finding);
-  badges.appendChild(createEvidenceStrengthChip(strengthValue));
+  const sourceStatus = document.createElement("span");
+  sourceStatus.textContent = sourceCheckLabel(finding, currentResultPayload);
+  sourceStatus.className = "source-check-badge " + sourceCheckClass(sourceStatus.textContent);
+  badges.appendChild(sourceStatus);
   header.append(id, badges);
 
   const title = document.createElement("h3");
@@ -3001,7 +2931,7 @@ function buildFindingCard(finding, criterion) {
         ? "The CV includes a passage that may support this job need. Open it to review the wording."
       : finding.status === "not_found"
           ? "This CV doesn't mention this job need. The person may still have this experience."
-          : "This result needs a closer look.";
+          : "Review the CV wording before relying on this result.";
   body.append(header, title);
   if (finding.certainty === "ambiguous") {
     const ambiguity = document.createElement("p");
@@ -3010,25 +2940,14 @@ function buildFindingCard(finding, criterion) {
     body.appendChild(ambiguity);
   }
   body.appendChild(note);
-  if (Array.isArray(finding.timeline_review_flags) && finding.timeline_review_flags.length) {
-    const provenance = document.createElement("p");
-    provenance.className = "timeline-provenance";
-    provenance.textContent = timelineSourceLabel(finding, currentResultPayload && currentResultPayload.provider_mode);
-    body.appendChild(provenance);
-  }
-  if (finding.scope_boundary_review) {
+  const provenanceText = gateProvenanceLabel(
+    finding,
+    currentResultPayload && currentResultPayload.provider_mode
+  );
+  if (provenanceText) {
     const provenance = document.createElement("p");
     provenance.className = "scope-provenance";
-    provenance.textContent = "Muse: Direct · Local scope check: Related · recruiter review";
-    body.appendChild(provenance);
-  }
-  if (finding.evidence_conflict_review) {
-    const review = finding.evidence_conflict_review;
-    const provenance = document.createElement("p");
-    provenance.className = "scope-provenance";
-    provenance.textContent = "Muse: " + String(review.muse_evidence_type || "Needs review") +
-      " · Mixed citation roles: " + String(review.final_evidence_type || "Needs review") +
-      " · recruiter review";
+    provenance.textContent = provenanceText;
     body.appendChild(provenance);
   }
 
@@ -3090,15 +3009,6 @@ function buildFindingCard(finding, criterion) {
     }
     transferCard.appendChild(unproven);
 
-    if (finding.follow_up_question) {
-      const questionLabel = document.createElement("strong");
-      questionLabel.className = "finding-follow-up-label";
-      questionLabel.textContent = "Suggested follow-up question";
-      const question = document.createElement("blockquote");
-      question.className = "finding-follow-up-question";
-      question.textContent = String(finding.follow_up_question);
-      transferCard.append(questionLabel, question);
-    }
     body.appendChild(transferCard);
   }
 
@@ -3146,16 +3056,15 @@ function buildFindingCard(finding, criterion) {
       role.className = "quote-role";
       const timelineNeedsReview = Array.isArray(finding.timeline_review_flags) && finding.timeline_review_flags.length > 0;
       const evidenceLabel = displayRole === "scope_context"
-        ? "Scope passage · review candidate's role"
-        : evidence.role === "contradicts"
-        ? "Potential conflicting statement · review"
-        : timelineNeedsReview
-          ? "CV passage · timeline needs review"
-        : finding.evidence_type === "related"
-          ? "Related CV passage"
-          : "Direct CV passage";
+        ? "Scope passage · review role context"
+        : plainFindingLabel(finding) + " · source quote";
       role.textContent = evidenceLabel +
         (evidence.source_id ? " · " + evidence.source_id : "");
+      const sourceCheck = document.createElement("span");
+      sourceCheck.textContent = Number(evidence.page) > 0
+        ? "Verified (Page " + Number(evidence.page) + ")"
+        : "Blocked (Source check failed)";
+      sourceCheck.className = "source-check-badge " + sourceCheckClass(sourceCheck.textContent);
       const text = document.createElement("div");
       text.className = "quote-text";
       text.textContent = "“" + evidence.quote + "”";
@@ -3165,16 +3074,22 @@ function buildFindingCard(finding, criterion) {
       anchor.dataset.page = String(evidence.page);
       anchor.dataset.quote = evidence.quote;
       anchor.textContent = "Open this page in the CV · page " + evidence.page + " →";
-      quote.append(role, text, anchor);
+      quote.append(role, sourceCheck, text, anchor);
       quoteList.appendChild(quote);
     });
     proofBody.appendChild(quoteList);
   } else {
     const noQuote = document.createElement("p");
     noQuote.className = "finding-detail-note";
-    noQuote.textContent = finding.evidence_strength === "keyword_only"
-      ? "A keyword or title mention was found, but no described task or example supported this requirement. The mention wasn't counted as supporting evidence."
-      : "We couldn't find a checked passage in this CV. That doesn't tell us whether the person has this experience.";
+    const sourceCheck = document.createElement("span");
+    sourceCheck.className = "source-check-badge";
+    sourceCheck.textContent = sourceCheckLabel(finding, currentResultPayload);
+    noQuote.appendChild(sourceCheck);
+    noQuote.appendChild(document.createTextNode(
+      finding.evidence_strength === "keyword_only"
+        ? " A keyword or title mention was found, but no described task or example supported this requirement."
+        : " No checked passage was found in this CV. That doesn't tell us whether the person has this experience."
+    ));
     proofBody.appendChild(noQuote);
   }
   proof.append(proofSummary, proofBody);
@@ -3418,56 +3333,6 @@ function renderTimelineAudit(audit) {
   });
 }
 
-function renderApplicationClaimAudit(audit) {
-  const panel = document.getElementById("application-claim-audit");
-  const summary = document.getElementById("application-claim-audit-summary");
-  const root = document.getElementById("application-claim-audit-items");
-  root.replaceChildren();
-  const claims = Array.isArray(audit.results) ? audit.results : [];
-  panel.hidden = !claims.length;
-  if (!claims.length) return;
-
-  const counts = { supported: 0, not_found: 0, conflicting: 0 };
-  claims.forEach(function (claim) { counts[claim.status] = (counts[claim.status] || 0) + 1; });
-  summary.textContent = counts.supported + " supported by the CV · " + counts.not_found +
-    " not mentioned · " + counts.conflicting + " with details that differ";
-
-  claims.forEach(function (claim) {
-    const card = document.createElement("article");
-    card.className = "application-claim-card";
-    const head = document.createElement("div");
-    head.className = "application-claim-card-head";
-    const id = document.createElement("span");
-    id.textContent = claim.id || "Claim";
-    const status = document.createElement("span");
-    status.className = "status-badge status-" + claim.status;
-    status.textContent = claim.status === "supported"
-      ? "CV shows support"
-      : claim.status === "conflicting" ? "Details differ" : "Not mentioned in CV";
-    head.append(id, status);
-
-    const text = document.createElement("blockquote");
-    text.textContent = "“" + String(claim.claim || "") + "”";
-    const note = document.createElement("p");
-    note.textContent = String(claim.note || "");
-    card.append(head, text, note);
-
-    (Array.isArray(claim.evidence) ? claim.evidence : []).forEach(function (evidence) {
-      const source = document.createElement("button");
-      source.type = "button";
-      source.className = "claim-source" + (evidence.role === "contradicts" ? " is-conflict" : "");
-      source.dataset.page = String(evidence.page || "");
-      source.dataset.quote = String(evidence.quote || "");
-      const label = document.createElement("strong");
-      label.textContent = (evidence.role === "contradicts" ? "Different CV passage" : "CV passage") +
-        " · page " + String(evidence.page || "—");
-      source.append(label, document.createTextNode("“" + String(evidence.quote || "") + "” · Open source ↗"));
-      card.appendChild(source);
-    });
-    root.appendChild(card);
-  });
-}
-
 function applicationPrepText() {
   const lines = [
     "EvidenceTrail · before-you-apply checklist",
@@ -3653,51 +3518,113 @@ function updateReviewSummary() {
 
 function buildReviewedReport(reportHtml) {
   const reportDocument = new DOMParser().parseFromString(reportHtml, "text/html");
-  const labels = {
-    not_reviewed: "Not reviewed",
-    reviewed: "Evidence reviewed",
-    follow_up: "Needs follow-up",
-    related_accepted: "Related experience accepted for this role",
-    related_rejected: "Related experience does not meet this requirement",
-  };
-
-  reportDocument.querySelectorAll(".finding[data-finding-id]").forEach(function (finding) {
-    const findingId = finding.dataset.findingId;
-    const entry = reviewEntries[findingId] || { status: "not_reviewed", note: "" };
-    const record = reportDocument.createElement("section");
-    record.className = "human-review-record";
-    const title = reportDocument.createElement("h3");
-    title.textContent = "Human review record";
-    const status = reportDocument.createElement("p");
-    status.textContent = "Review status: " + (labels[entry.status] || labels.not_reviewed);
-    record.append(title, status);
-    if (entry.note) {
-      const note = reportDocument.createElement("p");
-      note.textContent = "Reviewer note: " + entry.note;
-      record.appendChild(note);
-    }
-    finding.appendChild(record);
-  });
-
-  reportDocument.querySelectorAll(".clarification-item[data-requirement-id]").forEach(function (item) {
-    const response = currentCandidateResponses[item.dataset.requirementId];
-    if (!response) return;
-    const record = reportDocument.createElement("section");
-    record.className = "candidate-response-record";
-    const title = reportDocument.createElement("h4");
-    title.textContent = "Candidate-provided follow-up · not independently verified";
-    const recorded = reportDocument.createElement("p");
-    recorded.textContent = "Recorded in this browser session (UTC): " + response.recordedAt;
-    const boundary = reportDocument.createElement("p");
-    boundary.textContent = "This statement was added after CV analysis. It is separate from the CV, was not sent for model analysis, and did not change the evidence status.";
-    const reply = reportDocument.createElement("blockquote");
-    reply.textContent = response.text;
-    record.append(title, recorded, boundary, reply);
-    item.appendChild(record);
-  });
-
   const activeEntry = activeCandidateEntry();
   const result = currentResultPayload || (activeEntry && activeEntry.result) || {};
+  const requirements = Array.isArray(result.requirements) ? result.requirements : [];
+
+  reportDocument.querySelectorAll(
+    ".application-claims, .application-prep, .clarification-brief, " +
+    ".interview-invite-panel, .recruiter-interview-invite, .candidate-response-record"
+  ).forEach(function (section) {
+    section.remove();
+  });
+  reportDocument.querySelectorAll("details").forEach(function (section) {
+    const summary = section.querySelector("summary");
+    if (summary && /gender decoder|optional wording cues/i.test(summary.textContent || "")) {
+      section.remove();
+    }
+  });
+  reportDocument.querySelectorAll(".finding-follow-up-question").forEach(function (node) {
+    node.remove();
+  });
+
+  const findingById = Object.create(null);
+  requirements.forEach(function (finding) {
+    findingById[String(finding.id || "")] = finding;
+  });
+  reportDocument.querySelectorAll(".finding[data-finding-id]").forEach(function (card) {
+    const finding = findingById[card.dataset.findingId];
+    if (!finding) return;
+    const state = plainFindingState(finding);
+    const statusClass = {
+      direct: "supported",
+      related: "related",
+      conflict_to_clarify: "conflict_to_clarify",
+      unsupported: "unsupported",
+      not_found: "not_found",
+    }[state];
+    const status = card.querySelector(".finding-head .status");
+    if (status) {
+      status.className = "status " + statusClass;
+      status.textContent = plainFindingLabel(finding);
+    }
+    const relationship = card.querySelector(".finding-head .relationship");
+    if (relationship) {
+      relationship.className = "relationship " + statusClass;
+      relationship.textContent = plainFindingLabel(finding);
+    }
+
+    const provenanceText = gateProvenanceLabel(finding, result.provider_mode);
+    const provenanceNodes = Array.from(
+      card.querySelectorAll(".timeline-provenance, .scope-provenance")
+    );
+    if (provenanceText) {
+      const provenance = provenanceNodes.shift() || reportDocument.createElement("p");
+      provenance.className = "timeline-provenance";
+      provenance.textContent = provenanceText;
+      const heading = card.querySelector("h2");
+      if (heading) heading.insertAdjacentElement("afterend", provenance);
+      provenanceNodes.forEach(function (node) { node.remove(); });
+    } else {
+      provenanceNodes.forEach(function (node) { node.remove(); });
+    }
+
+    const evidence = Array.isArray(finding.evidence) ? finding.evidence : [];
+    const evidenceBlocks = Array.from(card.querySelectorAll(".evidence"));
+    evidenceBlocks.forEach(function (block, index) {
+      const citation = evidence[index] || evidence[0];
+      const meta = block.querySelector(".evidence-meta");
+      if (!citation || !meta) return;
+      const page = Number(citation.page);
+      const sourceId = String(citation.source_id || "source");
+      const checkLabel = Number.isInteger(page) && page > 0
+        ? "Verified (Page " + page + ")"
+        : "Blocked (Source check failed)";
+      const badge = reportDocument.createElement("span");
+      badge.className = "source-check-badge " + sourceCheckClass(checkLabel);
+      badge.textContent = checkLabel;
+      meta.replaceChildren(
+        reportDocument.createTextNode(plainFindingLabel(finding) + " · "),
+        badge,
+        reportDocument.createTextNode(" · source " + sourceId)
+      );
+    });
+    if (!evidence.length) {
+      const empty = card.querySelector(".empty");
+      if (empty) {
+        const checkLabel = sourceCheckLabel(finding, result);
+        const badge = reportDocument.createElement("span");
+        badge.className = "source-check-badge " + sourceCheckClass(checkLabel);
+        badge.textContent = checkLabel;
+        empty.replaceChildren(
+          badge,
+          reportDocument.createTextNode(" No verified source passage.")
+        );
+      }
+    }
+    const certainty = card.querySelector(".certainty");
+    if (certainty) certainty.textContent = "Review source context";
+
+    const note = reviewEntries[String(finding.id || "")] &&
+      String(reviewEntries[String(finding.id || "")].note || "").trim();
+    if (note) {
+      const reviewerNote = reportDocument.createElement("p");
+      reviewerNote.className = "reviewer-note";
+      reviewerNote.textContent = "Reviewer note: " + note;
+      card.appendChild(reviewerNote);
+    }
+  });
+
   if (activeEntry) {
     const handoff = reportDocument.createElement("section");
     handoff.className = "recruiter-handoff";
@@ -3721,12 +3648,11 @@ function buildReviewedReport(reportHtml) {
         window.EvidenceTrailRecruiterDecision.reasonLabel(activeEntry.decisionReason);
       handoff.appendChild(decisionReason);
     }
-
     const decisionRequirementIds = Array.isArray(activeEntry.decisionRequirementIds)
       ? activeEntry.decisionRequirementIds
       : [];
     const linkedRequirements = window.EvidenceTrailRecruiterDecision.selectLinkedRequirements(
-      Array.isArray(result.requirements) ? result.requirements : [],
+      requirements,
       decisionRequirementIds
     );
     if (linkedRequirements.length) {
@@ -3736,76 +3662,30 @@ function buildReviewedReport(reportHtml) {
       linkedRequirements.forEach(function (finding) {
         const item = reportDocument.createElement("li");
         item.textContent = String(finding.id || "") + " · " +
-          String(finding.requirement || "Job requirement") + " (" + plainFindingLabel(finding) + ")";
+          String(finding.requirement || "Job requirement") + " · " +
+          plainFindingLabel(finding);
         linkedList.appendChild(item);
       });
       handoff.append(linkedHeading, linkedList);
     }
 
-    if (activeEntry.interviewInviteDraft) {
-      const invite = reportDocument.createElement("section");
-      invite.className = "recruiter-interview-invite";
-      const inviteHeading = reportDocument.createElement("h3");
-      inviteHeading.textContent = "Interview invitation draft · not sent";
-      const inviteBoundary = reportDocument.createElement("p");
-      inviteBoundary.textContent = "Recruiter-edited text. EvidenceTrail has not contacted the candidate or scheduled an interview.";
-      const inviteText = reportDocument.createElement("pre");
-      inviteText.textContent = activeEntry.interviewInviteDraft;
-      invite.append(inviteHeading, inviteBoundary, inviteText);
-      handoff.appendChild(invite);
-    }
-
-    const requirements = Array.isArray(result.requirements) ? result.requirements : [];
-    const categories = { shown: 0, related: 0, not_mentioned: 0, details_differ: 0, needs_review: 0 };
+    const categories = {
+      direct: 0,
+      related: 0,
+      conflict_to_clarify: 0,
+      unsupported: 0,
+      not_found: 0,
+    };
     requirements.forEach(function (finding) {
       const state = plainFindingState(finding);
       categories[state] = (categories[state] || 0) + 1;
     });
     const evidenceSummary = reportDocument.createElement("p");
-    evidenceSummary.textContent = "CV evidence summary: " + categories.shown + " direct · " +
-      categories.related + " related · " + categories.not_mentioned + " not mentioned · " +
-      categories.details_differ + " details differ · " + categories.needs_review + " need a closer look. " +
-      "These are document findings, not a candidate score.";
+    evidenceSummary.textContent = "CV evidence status: " + categories.direct + " Direct · " +
+      categories.related + " Related · " + categories.conflict_to_clarify +
+      " Conflict to clarify · " + categories.unsupported + " Unsupported · " +
+      categories.not_found + " Not found.";
     handoff.appendChild(evidenceSummary);
-
-    const acceptedRelated = requirements.filter(function (finding) {
-      return finding.evidence_type === "related" && reviewEntries[finding.id] &&
-        reviewEntries[finding.id].status === "related_accepted";
-    });
-    const acceptedHeading = reportDocument.createElement("h3");
-    acceptedHeading.textContent = "Related evidence the recruiter accepted for this role";
-    handoff.appendChild(acceptedHeading);
-    if (acceptedRelated.length) {
-      const acceptedList = reportDocument.createElement("ul");
-      acceptedRelated.forEach(function (finding) {
-        const item = reportDocument.createElement("li");
-        const review = reviewEntries[finding.id] || {};
-        item.textContent = String(finding.id || "") + " · " + String(finding.requirement || "") +
-          (review.note ? " · Reviewer note: " + review.note : "");
-        acceptedList.appendChild(item);
-      });
-      handoff.appendChild(acceptedList);
-    } else {
-      const noneAccepted = reportDocument.createElement("p");
-      noneAccepted.textContent = "No related evidence was marked as accepted.";
-      handoff.appendChild(noneAccepted);
-    }
-
-    const followUps = result.clarification_brief && Array.isArray(result.clarification_brief.items)
-      ? result.clarification_brief.items
-      : [];
-    if (followUps.length) {
-      const followUpHeading = reportDocument.createElement("h3");
-      followUpHeading.textContent = "Questions to carry forward";
-      const followUpList = reportDocument.createElement("ul");
-      followUps.forEach(function (entry) {
-        const item = reportDocument.createElement("li");
-        item.textContent = String(entry.requirement_id || "") + " · " +
-          String(entry.question || entry.requirement || "Review this requirement");
-        followUpList.appendChild(item);
-      });
-      handoff.append(followUpHeading, followUpList);
-    }
 
     if (activeEntry.decisionNote) {
       const noteHeading = reportDocument.createElement("h3");
@@ -3821,7 +3701,8 @@ function buildReviewedReport(reportHtml) {
 
     const reportStyle = reportDocument.querySelector("style");
     if (reportStyle) {
-      reportStyle.textContent += "\n.recruiter-handoff{margin:18px 0 24px;padding:16px 18px;border:1px solid #c9d9f1;border-radius:12px;background:#f7faff}.recruiter-handoff h2{margin:0 0 8px}.recruiter-handoff h3{margin:14px 0 6px;font-size:14px}.recruiter-handoff p,.recruiter-handoff li{font-size:12px;line-height:1.55}.recruiter-handoff-decision{font-weight:750;color:#26364d}.recruiter-handoff-boundary{padding-top:8px;border-top:1px solid #dfe7f2;color:#68778d}.recruiter-interview-invite{margin-top:14px;padding:12px;border:1px solid #d7e1ef;border-radius:8px;background:#fff}.recruiter-interview-invite pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:12px;line-height:1.55}";
+      reportStyle.textContent +=
+        "\n.recruiter-handoff{margin:18px 0 24px;padding:16px 18px;border:1px solid #c9d9f1;border-radius:12px;background:#f7faff}.recruiter-handoff h2{margin:0 0 8px}.recruiter-handoff h3{margin:14px 0 6px;font-size:14px}.recruiter-handoff p,.recruiter-handoff li{font-size:12px;line-height:1.55}.recruiter-handoff-decision{font-weight:750;color:#26364d}.recruiter-handoff-boundary{padding-top:8px;border-top:1px solid #dfe7f2;color:#68778d}.source-check-badge{display:inline-block;padding:2px 7px;border:1px solid #dce5ef;border-radius:99px;font-size:10px;font-weight:700}.source-check-verified{border-color:#bfdfd0;background:#f2faf5;color:#236342}.source-check-blocked{border-color:#edc5c2;background:#fff4f2;color:#963d39}";
     }
     const introForHandoff = reportDocument.querySelector("main .sub");
     if (introForHandoff) introForHandoff.insertAdjacentElement("afterend", handoff);
@@ -3830,7 +3711,7 @@ function buildReviewedReport(reportHtml) {
 
   const disclosure = reportDocument.createElement("p");
   disclosure.className = "sub review-disclosure";
-  disclosure.textContent = "Human review records were entered by the reviewer and are separate from generated evidence findings. They do not represent a hiring decision.";
+  disclosure.textContent = "The recruiter entered the decisions and notes. They are separate from generated evidence findings and do not represent a model decision.";
   const intro = reportDocument.querySelector("main .sub");
   if (intro) intro.insertAdjacentElement("afterend", disclosure);
   return "<!doctype html>\n" + reportDocument.documentElement.outerHTML;
@@ -3913,14 +3794,6 @@ document.getElementById("copy-clarification-brief").addEventListener("click", fu
 document.getElementById("application-prep-items").addEventListener("click", function (event) {
   const target = event.target instanceof Element
     ? event.target.closest(".application-prep-source")
-    : null;
-  if (!target || !sourcePdfFile || !sourcePdfPayload) return;
-  void openInteractivePdf(Number(target.dataset.page), target.dataset.quote || "");
-});
-
-document.getElementById("application-claim-audit-items").addEventListener("click", function (event) {
-  const target = event.target instanceof Element
-    ? event.target.closest(".claim-source")
     : null;
   if (!target || !sourcePdfFile || !sourcePdfPayload) return;
   void openInteractivePdf(Number(target.dataset.page), target.dataset.quote || "");
@@ -4121,7 +3994,7 @@ async function renderInteractivePdfPage(pageNumber) {
       marker.style.width = ((x1 - x0) / pageWidth * 100) + "%";
       marker.style.height = ((y1 - y0) / pageHeight * 100) + "%";
       marker.title = entry.finding.id + " · " +
-        (evidence.role === "contradicts" ? "conflicting statement" : evidence.evidence_type === "related" ? "related CV passage" : "direct CV passage") +
+        (evidence.role === "contradicts" ? "Conflict to clarify" : evidence.evidence_type === "related" ? "Related" : "Direct") +
         " · " + entry.finding.requirement;
       sourcePdfHighlights.appendChild(marker);
       highlightCount += 1;

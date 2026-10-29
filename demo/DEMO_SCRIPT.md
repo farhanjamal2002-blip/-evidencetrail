@@ -2,62 +2,58 @@
 
 ## Recording setup
 
-- Review `calibration/iteration_review_20261028_strength_ladder.md`, the five-case JSON, and the one-time paired strength-ladder result before recording. The five-case set used 10 Muse requests; Muse alone matched 16/18 labels and the deterministic timeline gate resolves the two flagged date findings to **Conflict to clarify** (18/18 combined labels). The paired keyword-only/specific example used four requests with no retries. Do not rerun either set for the recording.
-- Use fictional CVs only. The five calibration cases span four industries, including a deliberately messy image-only scan and date discrepancies.
-- Keep `MODEL_API_KEY` in the server environment, out of the browser, repository, and recording.
-- The app can review one CV or up to five against the same job description. Batch results stay in upload order and do not create a candidate score or automatic ranking.
-- The saved five-case and paired reports omit response bodies and accepted CV quotes. The targeted scanned-CV report now retains the two actual rejected quote snippets, cited page, and failure reason. Use that saved trace for the amber catch; do not imply the report is a replayable full CV session.
-- Finish the real analyses before recording and begin with the actual results visible; this keeps the video moving without substituting mock output for a live result. Keep each case clearly identified because the timeline example and scanned-CV verifier catch are separate candidates and roles.
-- Record at readable zoom. Keep the source-check chip, evidence labels, and cited page legible at normal playback size.
+- Record the P1 build only after the canonical five-CV Muse replay has been regenerated against the frozen UI and payload schema.
+- Use fictional CVs. Keep candidates in upload order.
+- Keep the server-side MODEL_API_KEY out of the browser, repository, and recording.
+- Do not present the checked-in pre-P1 replay as the current canonical run. Add the new run's actual request count, timing, source-check counts, and result limitations after it completes.
 
 ## Two-minute walkthrough
 
 ### 0:00–0:12 — The promise
 
-**Show:** Start on completed results with the role and reviewer decision controls visible.
+**Show:** Start on the completed review.
 
-**Say:** “A match score hides the reason. EvidenceTrail shows CV evidence, gaps, and the recruiter’s decision; it does not rank applicants.”
+**Say:** “A match score hides why a CV appears to fit. EvidenceTrail shows the requirement, the source passage, and the recruiter’s decision. It does not rank candidates.”
 
-### 0:12–0:28 — Compare by requirement
+### 0:12–0:30 — Compare the evidence
 
-**Show:** Open the two-CV strength-ladder batch in matrix view. Point to the same requirement across the two candidates, then the Specific and Keyword only labels.
+**Show:** Open the batch matrix. Point out the candidates remain in upload order and select one requirement across the CVs.
 
-**Say:** “The matrix compares requirements across candidates in upload order. One CV shows specific work; the other has keywords only.”
+**Say:** “Evidence status uses five labels: Direct, Related, Conflict to clarify, Unsupported, and Not found. Every candidate stays in the order they were uploaded.”
 
-### 0:28–0:48 — Explain related experience
+### 0:30–0:50 — Verify the source
 
-**Show:** Open the public-procurement candidate dossier. Show the related finding, source passage, transfer explanation, and remaining gap.
+**Show:** Open a finding and its cited page. Show a verified quote and, if present in the canonical run, a blocked quote.
 
-**Say:** “This candidate’s internal audit work may transfer to public procurement, but GFR, CVC, and GeM are unproven. Muse explains the link; the recruiter decides whether it counts.”
+**Say:** “The source check is deterministic. A quote is marked Verified with its page, or Blocked when it cannot be found on the cited page.”
 
-### 0:48–1:05 — Clarify the date discrepancy
+### 0:50–1:08 — Show the gate audit
 
-**Show:** Open the 10-year experience finding. Point to **Conflict to clarify** and “Muse: Direct · Timeline check: conflict.”
+**Show:** Open the finding with the seeded explicit denial or date discrepancy. Point to the raw/effective pill, for example, “Muse: Direct → Gate: Conflict to clarify.”
 
-**Say:** “The profile claims 12 years; dated roles cover about eight. The date gate marks Conflict to clarify and preserves Muse’s original label.”
+**Say:** “The audit keeps Muse’s original label and shows the deterministic gate’s final evidence status. The recruiter can inspect the source before deciding.”
 
-### 1:05–1:25 — Show the real scan catch
+### 1:08–1:30 — Make the human decision
 
-**Show:** Switch to the separate image-only scan result. Show the MCIPS finding, then the amber source-check chip, then expand the rejection ledger for the exact reason and quote, and finish on scanned page 1.
+**Show:** Record Advance, Hold, or Do not advance for the selected fictional candidate. Keep the decision and reason tied to the role criteria.
 
-**Say:** “The amber chip shows two of five quotes rejected. The ledger says each could not be found on page 1. Both stay out of the evidence.”
+**Say:** “The recruiter owns the decision. EvidenceTrail does not score or automatically rank the candidate.”
 
-### 1:25–1:45 — Advance and prepare the hand-off
+### 1:30–1:48 — Export the evidence pack
 
-**Show:** Return to the candidate review, prepare an interview invitation, edit one placeholder, then open the HTML evidence pack.
+**Show:** Open the per-CV evidence pack and point to the decision, evidence labels, verified citations, and page highlights.
 
-**Say:** “The recruiter chooses to advance and gets an editable invitation draft grounded only in clear, verified evidence. Nothing is sent or scheduled. The hand-off carries the decision, draft, accepted related findings, gaps, and next questions.”
+**Say:** “The export carries the evidence trail and the recruiter’s recorded action. The workflow ends here.”
 
-### 1:45–2:00 — Give the measured result and boundary
+### 1:48–2:00 — State the measured result
 
-**Show:** Finish on the calibration summary, with the two result sets visibly separated.
+**Show:** Finish on the canonical five-CV run receipt and the source-check totals.
 
-**Say:** “Five-case calibration: Muse, 16 of 18; with the timeline gate, 18 of 18 combined. Separate scan: 3 of 3 labels; 3 of 5 quotes verified, 2 blocked. Muse interprets; the recruiter decides.”
+**Say:** “This is the result from the recorded five-CV run. The labels and quote checks are shown separately; this small fictional set is a calibration example, not a general accuracy claim.”
 
 ## Before submission
 
-- State the metrics as separate layers: **Muse alone: 16/18**; **after the deterministic timeline gate: 18/18 on this same set**; **23/24 proposed quotes passed local checks in the five-case run**. In one separate image-only scanned-CV rerun, **3/3 expected labels matched, 3/5 proposed quotes passed local checks, and the other 2/5 were blocked because they were not found on cited page 1**. Do not merge those quote denominators. The 18/18 figure is a derived, combined label result for the two flagged duration discrepancies, not Muse accuracy and not a general accuracy rate.
-- The paired strength-ladder run matched both prewritten focal category and strength labels, used four Muse requests, and had an estimated $0.0483815 token cost. Call it a two-candidate demonstration, not a benchmark.
-- Confirm that the live recording matches the submitted app build and the actual model output.
-- Keep the fictional data and server-side key disclosure visible.
+- Fill this script's final line only from the canonical post-freeze replay artifact. Keep Muse’s raw labels separate from deterministic gate outcomes, and quote verification separate from semantic labels.
+- Do not combine counts from separate runs or describe a small fictional calibration as a general accuracy rate.
+- Confirm that the public app, repository, replay receipt, and video all reflect the same schema.
 - Check the public app, repository, and video links from a signed-out browser before submission.

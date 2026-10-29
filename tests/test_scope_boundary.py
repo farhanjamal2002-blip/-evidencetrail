@@ -99,7 +99,6 @@ class ExplicitScopeBoundaryTests(unittest.TestCase):
                 "reason": "Adjacent procurement activities support the requirement.",
                 "evidence": [{"quote": support, "role": "supports", "page_hint": 1}],
             }],
-            "application_claims": [],
         }
 
         findings, page_marks, usage, audit = app.verify_single_pass_proposals_locally(
@@ -109,7 +108,7 @@ class ExplicitScopeBoundaryTests(unittest.TestCase):
                 "status": "not_found",
                 "note": "",
                 "evidence": [],
-            }], [], [page]
+            }], [page]
         )
 
         self.assertEqual(findings[0]["evidence_type"], "related")

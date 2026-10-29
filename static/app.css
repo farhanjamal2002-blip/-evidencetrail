@@ -934,3 +934,23 @@ textarea::placeholder { color: #8793a3; }
 }
 
 .ambiguity-flag { margin: 11px 0 0; padding: 8px 10px; border: 1px solid #f0d79a; border-radius: 7px; background: #fff6df; color: #79570c; font-size: 11px; line-height: 1.5; }
+
+
+/* Three-layer review vocabulary: semantic evidence, deterministic source check, human action. */
+.source-check-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 8px;
+  border: 1px solid #dce5ef;
+  border-radius: 99px;
+  background: #f7f9fc;
+  color: #526177;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.source-check-verified { border-color: #bfdfd0; background: #f2faf5; color: #236342; }
+.source-check-blocked { border-color: #edc5c2; background: #fff4f2; color: #963d39; }
+.source-check-none { border-color: #dce5ef; background: #f7f9fc; color: #526177; }
+.status-badge.status-conflicting { background: #fff0ed; color: #8f3833; }

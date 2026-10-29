@@ -91,12 +91,6 @@
               <h3 id="role-criteria-title">Role criteria evidence plan</h3>
               <ol id="role-criteria-items" class="role-criteria-items"></ol>
               <p id="role-criteria-limit" hidden></p>
-              <details id="role-language-reference" class="role-language-reference" hidden>
-                <summary id="role-cues-title">Optional wording cues · exploratory only</summary>
-                <ol id="role-clarity-audit-items"></ol>
-                <p id="role-clarity-audit-limit" hidden></p>
-                <p class="role-audit-source">The optional language reference adapts a word list from <a href="https://github.com/lovedaybrooke/gender-decoder" target="_blank" rel="noopener noreferrer">Gender Decoder (MIT)</a>. Matches are context-dependent prompts, not a bias score or discrimination finding.</p>
-              </details>
             </details>
 
             <section id="batch-rubric-editor" class="batch-rubric-editor" aria-labelledby="batch-rubric-title" hidden>
@@ -128,22 +122,9 @@
               <span class="browse-link">Browse</span>
             </label>
 
-            <details class="application-draft-field">
-              <summary>Optional: check a candidate statement against one CV</summary>
-              <div class="application-draft-body">
-                <div class="field-row">
-                  <label class="field-label" for="application-draft">Candidate statement <span>(single CV only)</span></label>
-                  <span class="char-count"><span id="draft-char-count">0</span> / 8,000</span>
-                </div>
-                <textarea id="application-draft" name="application_draft" maxlength="8000" rows="4"
-                  placeholder="Paste a cover-letter paragraph or application answer. We’ll check its factual claims against the CV and show the source—or flag that the CV doesn’t show it."></textarea>
-                <p class="field-help">If the CV doesn't mention a claim, that doesn't mean the claim is false.</p>
-              </div>
-            </details>
-
             <label class="consent-row" {% if not analysis_ready %}hidden{% endif %}>
               <input id="consent" name="consent" type="checkbox" value="true" required {% if not analysis_ready %}disabled{% endif %}>
-              <span>{% if mock_mode %}I understand this is a local heuristic simulation. No external model call is made. Results exercise the document workflow only and must not be used for a hiring assessment.{% else %}I understand that page-labelled text extracted locally from the selected CVs, the job description, and any supplied candidate statement are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. The original PDF is kept for local quote and page checks. Uploads may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models; its terms allow processing to provide the service and address policy, safety, and security concerns.{% endif %}</span>
+              <span>{% if mock_mode %}I understand this is a local heuristic simulation. No external model call is made. Results exercise the document workflow only and must not be used for a hiring assessment.{% else %}I understand that page-labelled text extracted locally from the selected CVs, the job description, and the job criteria are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. The original PDF is kept for local quote and page checks. Uploads may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models; its terms allow processing to provide the service and address policy, safety, and security concerns.{% endif %}</span>
             </label>
 
             <div id="error-box" class="error-box" role="alert" hidden></div>
@@ -197,15 +178,16 @@
             <a class="text-link demo-download" href="/demo/cv.pdf" download>Download the synthetic CV separately <span>↓</span></a>
             <div class="demo-divider"></div>
             <div class="demo-state-list">
-              <div><span class="state-dot supported-dot"></span><span>A passage was found</span><b>CV shows it</b></div>
-              <div><span class="state-dot related-dot"></span><span>A nearby task may transfer</span><b>Review the link</b></div>
-              <div><span class="state-dot missing-dot"></span><span>No passage was found</span><b>Not mentioned</b></div>
-              <div><span class="state-dot conflict-dot"></span><span>CV details don't agree</span><b>Check both</b></div>
+              <div><span class="state-dot supported-dot"></span><span>The same task and level are documented</span><b>Direct</b></div>
+              <div><span class="state-dot related-dot"></span><span>Transferable work; exact scope remains unproven</span><b>Related</b></div>
+              <div><span class="state-dot conflict-dot"></span><span>An explicit statement needs review</span><b>Conflict to clarify</b></div>
+              <div><span class="state-dot missing-dot"></span><span>A mention does not substantiate the requirement</span><b>Unsupported</b></div>
+              <div><span class="state-dot missing-dot"></span><span>No relevant passage appears</span><b>Not found</b></div>
             </div>
             <ol class="demo-walkthrough" aria-label="What to do in the sample review">
               <li>Open the sample report</li>
               <li>Select a quote to see its CV page</li>
-              <li>Open the candidate checklist or review follow-up questions</li>
+              <li>Record a human decision</li>
               <li>Download the evidence pack</li>
             </ol>
             <div class="sample-tip">{% if mock_mode %}This static preview is separate from the local simulation. The simulation uses deterministic heuristics and is not Muse output.{% elif model_ready %}This preview is synthetic and makes no API call. For a live run, load the sample inputs and use Analyze.{% else %}The saved Muse replay above is the default review: historical model output on five fictional CVs. Replaying it makes no API call. It is a small calibration demo, not a hiring recommendation or general accuracy estimate.{% endif %}</div>
@@ -273,28 +255,13 @@
               <ol id="timeline-episodes"></ol>
             </details>
           </section>
-          <section id="application-claim-audit" class="application-claim-audit" hidden aria-labelledby="application-claim-audit-title">
-            <div class="application-claim-audit-head">
-              <div>
-                <div class="step-label">APPLICATION CLAIM CHECK</div>
-                <h3 id="application-claim-audit-title">Before you send this</h3>
-              </div>
-              <p id="application-claim-audit-summary"></p>
-            </div>
-            <p class="application-claim-disclosure">This checks whether the supplied CV supports what the draft says. It cannot verify real-world truth; “not found” does not mean false.</p>
-            <div id="application-claim-audit-items" class="application-claim-audit-items"></div>
-          </section>
+          
           <p id="ocr-review-warning" class="ocr-review-warning" role="status" aria-live="polite" hidden></p>
-          <details class="status-key-details">
-            <summary>About these results</summary>
-            <section class="status-key" aria-label="About the CV findings">
-              <div><strong class="status-supported">Direct evidence</strong><span>The CV describes the job need in a sufficiently similar context. Check the original passage.</span></div>
-              <div><strong class="status-related">Related experience</strong><span>A passage may describe a nearby task. A reviewer must judge whether it transfers and what remains unproven.</span></div>
-              <div><strong class="status-not_found">Not mentioned</strong><span>This CV doesn't show it. The person may still have the experience.</span></div>
-              <div><strong class="status-conflicting">Details differ</strong><span>Two parts of the CV say different things. Check both passages.</span></div>
-              <div><strong class="status-needs_review">Needs a closer look</strong><span>The wording or source is unclear, so a person should review it.</span></div>
-            </section>
-          </details>
+          <section class="status-key status-key-glossary" aria-label="EvidenceTrail status glossary">
+            <div><strong>Layer 1 · Evidence status</strong><span>Direct · Related · Conflict to clarify · Unsupported · Not found</span></div>
+            <div><strong>Layer 2 · Source check</strong><span>Verified (Page X) · Blocked (Quote not on page)</span></div>
+            <div><strong>Layer 3 · Recruiter decision</strong><span>Advance · Hold · Do not advance</span></div>
+          </section>
           <details class="technical-audit">
             <summary id="technical-audit-summary">Open verification details</summary>
             <div class="run-meta" id="run-meta"></div>
@@ -367,7 +334,7 @@
               </div>
               <p id="recruiter-decision-candidate" class="recruiter-decision-candidate"></p>
             </div>
-            <p class="recruiter-decision-disclosure">This is your decision. It does not change the evidence findings or reorder candidates. Review the source passages and follow-up items before recording it.</p>
+            <p class="recruiter-decision-disclosure">This is your decision. It does not change the evidence findings or reorder candidates. Review the source passages before recording it.</p>
             <p id="recruiter-decision-evidence-summary" class="recruiter-decision-evidence-summary"></p>
             <div class="recruiter-decision-fields">
               <div>
@@ -375,7 +342,7 @@
                 <select id="recruiter-decision-select" class="recruiter-decision-select">
                   <option value="undecided">Not decided</option>
                   <option value="advance">Advance</option>
-                  <option value="hold">Hold for follow-up</option>
+                  <option value="hold">Hold</option>
                   <option value="do_not_advance">Do not advance</option>
                 </select>
               </div>
@@ -400,7 +367,7 @@
                 <textarea id="recruiter-decision-note" class="recruiter-decision-note" maxlength="400" rows="3" placeholder="What should the hiring manager know or check next?"></textarea>
               </div>
             </div>
-            <div class="interview-invite-actions">
+            <div class="interview-invite-actions" hidden aria-hidden="true">
               <div>
                 <strong>Interview follow-up</strong>
                 <span>Prepare an editable invitation using only clear, specific CV evidence where available.</span>
@@ -480,7 +447,7 @@
               <span>Historical result from real Muse calls · instant · no new API call</span>
             </button>
           </div>
-          <p class="analysis-mode-privacy">Live analysis sends locally extracted, page-labelled CV text, the job description, and any optional candidate statement to Meta after consent. Replay replaces the selected inputs with fictional CVs and sends no data.</p>
+          <p class="analysis-mode-privacy">Live analysis sends locally extracted, page-labelled CV text and job criteria to Meta after consent. Replay uses fictional CVs and sends no data.</p>
           <button id="cancel-analysis-mode" class="analysis-mode-cancel" type="button">Cancel</button>
         </div>
       </dialog>
@@ -490,7 +457,6 @@
         <span>Reports what the supplied files say. It does not score, rank, or make a hiring decision about a person.</span>
       </footer>
     </div>
-    <script src="/static/interview-invite.js?v=20261028-1"></script>
     <script src="/static/recruiter-decision.js?v=20261028-1"></script>
     <script src="/static/requirement-coverage.js?v=20261028-1"></script>
     <script src="/static/app.js?v=20261029-29"></script>
