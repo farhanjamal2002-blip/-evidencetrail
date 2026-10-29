@@ -5,6 +5,7 @@ import atexit
 import base64
 import hashlib
 import html
+import ipaddress
 import io
 import json
 import math
@@ -67,6 +68,9 @@ MAX_BATCH_PDF_BYTES = MAX_PDF_BYTES * 3
 MAX_ANALYSES_PER_PROCESS = int(os.getenv("MAX_ANALYSES_PER_PROCESS", "20"))
 MAX_ANALYSES_PER_HOUR_PER_IP = int(os.getenv("MAX_ANALYSES_PER_HOUR_PER_IP", "5"))
 MAX_CONCURRENT_ANALYSES = max(1, int(os.getenv("MAX_CONCURRENT_ANALYSES", "5")))
+TRUST_CF_CONNECTING_IP = os.getenv("EVIDENCETRAIL_TRUST_CF_CONNECTING_IP", "false").strip().casefold() in {
+    "1", "true", "yes", "on"
+}
 MODEL_ID = "muse-spark-1.3"
 API_BASE_URL = "https://api.meta.ai/v1"
 MUSE_ANALYSIS_CACHE_KEY = "evidencetrail-analysis-v1"
@@ -4178,6 +4182,18 @@ def ground_application_claims(
     }
 
 
+def client_ip_for_rate_limit(request: Request) -> str:
+    """Use Cloudflare's edge-supplied client IP only when explicitly deployed behind it."""
+    if TRUST_CF_CONNECTING_IP:
+        forwarded_ip = request.headers.get("cf-connecting-ip", "").strip()
+        try:
+            return ipaddress.ip_address(forwarded_ip).compressed
+        except ValueError:
+            # Do not trust a malformed header; retain the socket peer as a safe fallback.
+            pass
+    return request.client.host if request.client else "unknown"
+
+
 def reserve_analysis_slot(client_ip: str, *, cost: int = 1) -> None:
     """Apply a small in-memory cap before any paid model call."""
     global analysis_count
@@ -5747,7 +5763,7 @@ async def analyze(
                 detail=f"Keep the CV PDF under {MAX_PDF_MB} MB.",
             )
 
-        client_ip = request.client.host if request.client else "unknown"
+        client_ip = client_ip_for_rate_limit(request)
         batch_reservation_lock = getattr(request_state, "batch_rate_lock", None)
         if batch_reservation_lock is None:
             if not getattr(request_state, "batch_rate_reserved", False):

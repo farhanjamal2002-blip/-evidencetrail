@@ -108,7 +108,7 @@ After consent, EvidenceTrail sends page-labelled text extracted locally from the
 
 ## Hosting
 
-The repository includes a Render Blueprint at `render.yaml`. It defines a Docker web service in Singapore, uses the existing `/health` endpoint, and sets analysis concurrency to one. Deploying it with the default settings opens the local workflow simulation and saved replay. A server key alone does not enable live Muse calls.
+The repository includes a Render Blueprint at `render.yaml`. It defines a Docker web service in Singapore, uses the existing `/health` endpoint, sets analysis concurrency to one, and opts into strict IP parsing of Cloudflare's `CF-Connecting-IP` header for the per-IP demo request cap. That header is trusted only in this Render deployment; local development uses the socket peer address. The per-IP and process-wide caps are in-memory demo controls and must move to a shared store before running multiple instances. Deploying it with the default settings opens the local workflow simulation and saved replay. A server key alone does not enable live Muse calls.
 
 To activate live Muse requests, set `EVIDENCETRAIL_PROVIDER=muse`, `EVIDENCETRAIL_ENABLE_MUSE=true`, and `MODEL_API_KEY` in the Render service's Environment page, then redeploy. The current default remains local-only. Never commit the key to GitHub or put it in browser code. The Dockerfile installs the OCR dependencies and binds Uvicorn to Render's `PORT`.
 
