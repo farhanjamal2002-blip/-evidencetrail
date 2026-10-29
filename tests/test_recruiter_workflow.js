@@ -60,3 +60,13 @@ test("review stages preserve received order and do not rank people", () => {
   assert.equal(summary.needs_clarification,1);
   assert.equal(Object.values(summary).reduce((a,b)=>a+b,0),2);
 });
+
+test("interview prep is criteria-first and never scores or rejects applicants", () => {
+  const kit=wf.buildInterviewKit("ET-005","Procurement Lead",result);
+  assert.equal(kit.questions.length,2);
+  assert.equal(kit.questions[0].source_pages[0],2);
+  assert.match(kit.questions[0].question,/personal role/);
+  assert.match(wf.interviewKitText(kit),/HUMAN INTERVIEW PREP/);
+  assert.equal(wf.buildInterviewKit("ET-005","Role",null),null);
+  assert.equal(kit.questions.some(q => "score" in q || "rank" in q),false);
+});
