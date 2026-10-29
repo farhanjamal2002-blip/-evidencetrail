@@ -1908,6 +1908,75 @@ def mock_clause_negates_requirement(clause: str, requirement_terms: set[str]) ->
     return False
 
 
+MOCK_DATE_RANGE = re.compile(
+    r"(?P<start>(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+    r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|"
+    r"Dec(?:ember)?\.?\s+\d{4}|\d{4}(?:[-/]\d{1,2})?))\s*"
+    r"(?:–|—|-|\bto\b|\bthrough\b)\s*"
+    r"(?P<end>(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+    r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|"
+    r"Dec(?:ember)?\.?\s+\d{4}|\d{4}(?:[-/]\d{1,2})?|present|current))",
+    re.IGNORECASE,
+)
+
+
+def mock_extract_employment_episodes(pages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Small local-only extractor to exercise deterministic timeline handling."""
+    episodes: list[dict[str, Any]] = []
+    for page in pages:
+        lines = [line.strip() for line in str(page.get("text", "")).splitlines() if line.strip()]
+        for index, line in enumerate(lines):
+            match = MOCK_DATE_RANGE.search(line)
+            if not match or re.search(r"\b(?:profile|summary|earlier note|experience covers)\b", line, re.I):
+                continue
+            role = line[: match.start()].strip(" |·:,-")
+            if not role and index:
+                role = lines[index - 1][:160]
+            if not role or len(role.split()) > 12:
+                continue
+            date_quote = line[:1200]
+            if not line[: match.start()].strip():
+                candidate_quote = (role + " " + line).strip()
+                if locate_quote(candidate_quote, [page], int(page["number"])):
+                    date_quote = candidate_quote[:1200]
+            episodes.append({
+                "role": role[:160],
+                "company": "",
+                "start_date": match.group("start"),
+                "end_date": match.group("end"),
+                "date_quote": date_quote,
+                "scope_quote": None,
+                "experience_areas": [],
+                "page_hint": int(page["number"]),
+            })
+            if len(episodes) >= 40:
+                return episodes
+    return episodes
+
+
+def mock_extract_experience_claims(pages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Find explicit self-reported year counts in mock mode; never calls Muse."""
+    pattern = re.compile(
+        r"\b(?P<number>\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|"
+        r"eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\s*"
+        r"(?:\+\s*)?(?:years?|yrs?)\s+(?:in|of)\s+(?P<topic>[^.;\n]+)",
+        re.IGNORECASE,
+    )
+    claims: list[dict[str, Any]] = []
+    for page in pages:
+        for line in str(page.get("text", "")).splitlines():
+            match = pattern.search(line)
+            if not match:
+                continue
+            claims.append({
+                "topic": match.group("topic").strip()[:120],
+                "claim_quote": line.strip()[:1200],
+                "page_hint": int(page["number"]),
+            })
+            if len(claims) >= 20:
+                return claims
+    return claims
+
 def mock_map_requirements(
     pages: list[dict[str, Any]],
     job_description: str,
@@ -4747,8 +4816,7 @@ def build_report(
             f"Single-pass Muse Spark analysis via Meta Model API · Model {MODEL_ID}"
         )
         report_privacy_note = (
-            "Page-labelled text extracted from the uploaded CV, the job description, "
-            "and any supplied application draft are sent to Meta Model API for this analysis. "
+            "Page-labelled CV text and job criteria from the job description are sent to Meta Model API for this analysis. "
             "The original PDF is used locally for quote and page verification. "
             "EvidenceTrail does not write uploaded files to persistent application storage; "
             "temporary handling depends on the request runtime."

@@ -335,7 +335,7 @@ class SemanticCalibrationTests(unittest.TestCase):
         )
 
         self.assertIn("Conflict to clarify", report)
-        self.assertIn("Muse: Direct · Timeline check: conflict", report)
+        self.assertIn("Muse: Direct → Gate: Conflict to clarify", report)
         self.assertIn("cited page 1", report)
         self.assertIn("Minimum 10 years of procurement experience.", report)
         self.assertIn("Quote could not be located on the cited PDF page", report)
