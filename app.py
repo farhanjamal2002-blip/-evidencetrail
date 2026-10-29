@@ -1297,7 +1297,7 @@ def call_muse(
     # the exact same independent PDF page verifier.
     if visual_parts:
         developer_prompt += (
-            "\\nUse the attached page images only to understand layout and context. "
+            "\nUse the attached page images only to understand layout and context. "
             "Every exact quoted passage and cited page MUST be grounded in the "
             "PAGE-LABELLED CV TEXT. Do not infer undocumented work from images."
         )
@@ -6210,6 +6210,7 @@ async def analyze_batch(
                     job_description.strip(),
                     True,
                     "",
+                    False,  # Explicit: batch analysis does not opt in to Meta vision.
                 )
                 return {"candidate_id": f"C{index}", "filename": filename, "result": payload}
             except HTTPException as exc:
