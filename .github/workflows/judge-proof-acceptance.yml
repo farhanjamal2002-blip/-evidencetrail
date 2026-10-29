@@ -1,4 +1,5 @@
 name: EvidenceTrail first-minute judge proof acceptance
+# OCR snap tests wait until the page image handler reports its final geometry status.
 # Reset transient inspector and await actual source highlight, not cached image pixels.
 # Unique candidate heading selector when inspector audit drawer is open.
 # Fixed receipt expectation and overlapping evidence-grid click targets; no Muse calls.
