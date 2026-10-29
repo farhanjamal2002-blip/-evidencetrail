@@ -55,7 +55,8 @@ async def main():
                 assert await page.locator("#list .item").count()==20
                 assert await page.locator("#criteria input").count()==4
                 assert await page.locator("#ready").inner_text()=="0"
-                assert sum(int(await page.locator("#coverage-"+k+"-count").inner_text()) for k in ("complete","partial","attention"))==0
+                reset_counts=[int(await page.locator("#coverage-"+k+"-count").inner_text()) for k in ("complete","partial","attention")]
+                assert sum(reset_counts)==0,reset_counts
                 assert await page.locator("#analyze-one").is_disabled()
                 # Editing a criterion must survive a control refresh or candidate selection.
                 first=page.locator("#criteria input").first
