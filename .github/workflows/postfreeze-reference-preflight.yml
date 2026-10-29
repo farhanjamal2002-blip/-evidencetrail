@@ -1,4 +1,4 @@
-name: EvidenceTrail postfreeze reference preflight
+name: EvidenceTrail postfreeze generalization evaluation
 on:
   push:
     branches: [eval/postfreeze-16-cv-generalization-oct30]
@@ -8,6 +8,7 @@ permissions:
 jobs:
   corpus:
     runs-on: ubuntu-latest
+    timeout-minutes: 14
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -15,3 +16,21 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt
       - run: PYTHONPATH=. python -m unittest tests.test_postfreeze_corpus -v
+      - name: Sixteen real Meta CV assessments, no retries
+        env:
+          EVIDENCETRAIL_PROVIDER: muse
+          EVIDENCETRAIL_ENABLE_MUSE: 'true'
+          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+          MUSE_REASONING_EFFORT: minimal
+          MAX_ANALYSES_PER_PROCESS: '18'
+          MAX_ANALYSES_PER_HOUR_PER_IP: '18'
+          MAX_CONCURRENT_ANALYSES: '1'
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then echo 'API configuration unavailable'; exit 2; fi
+          PYTHONPATH=. python scripts/postfreeze_live_muse_eval.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidencetrail-postfreeze-16-report
+          path: artifacts/postfreeze-cv-evaluation/
+          retention-days: 14
