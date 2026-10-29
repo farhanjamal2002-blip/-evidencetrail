@@ -1,4 +1,5 @@
 name: EvidenceTrail first-minute judge proof acceptance
+# Reset transient inspector and await actual source highlight, not cached image pixels.
 # Unique candidate heading selector when inspector audit drawer is open.
 # Fixed receipt expectation and overlapping evidence-grid click targets; no Muse calls.
 # Regression: 41 total raw-to-final deltas, including 33 scope clarifications, and honest unknown security states.
