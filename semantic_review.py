@@ -53,7 +53,7 @@ SCOPE_NEGATIVE = re.compile(
 )
 FIRST_PERSON = re.compile(r"\b(?:I|my|personally)\b", re.IGNORECASE)
 EXPLICIT_SELF_DENIAL = re.compile(
-    r"\b(?:I (?:did not|never|have never|was not)|"
+    r"\b(?:I (?:did not|never|have never|had never|was not)|"
     r"my (?:role|duties) did not|"
     r"no (?:direct|personal) (?:responsibility|authority|experience))\b",
     re.IGNORECASE,
