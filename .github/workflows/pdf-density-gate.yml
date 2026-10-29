@@ -27,7 +27,7 @@ jobs:
           sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
           python -m pip install -r requirements.txt
       - name: Run 5 concurrent 20-page CVs and 3 concurrent multi-page OCR scans
-        run: python scripts/pdf_density_stress.py
+        run: PYTHONPATH=. python scripts/pdf_density_stress.py
       - name: Save performance and resident-memory evidence
         if: always()
         uses: actions/upload-artifact@v4
