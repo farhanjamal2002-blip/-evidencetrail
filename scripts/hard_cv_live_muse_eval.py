@@ -61,6 +61,15 @@ with TestClient(app.app) as client:
                         "final":(f[i].get("status") if i<len(f) else None),
                         "evidence_type":(f[i].get("evidence_type") if i<len(f) else None),
                         "citation_count":len((f[i].get("evidence") or [])) if i<len(f) else 0,
+                        # Synthetic fixtures only: preserve the evidence needed
+                        # to audit false-positive double citations offline.
+                        "verified_citations":[{
+                            "role":cite.get("role"),
+                            "page":cite.get("page"),
+                            "quote":cite.get("quote"),
+                            "source_id":cite.get("source_id"),
+                        } for cite in ((f[i].get("evidence") or []) if i<len(f) else [])
+                          if isinstance(cite,dict)],
                         "reason_code":f[i].get("review_reason_code") if i<len(f) else None,
                         "raw_correct":i<len(f) and f[i].get("raw_status")==case["expected"][i],
                         "final_correct":i<len(f) and f[i].get("status")==case["expected"][i],
@@ -73,6 +82,12 @@ with TestClient(app.app) as client:
             rows.append(row)
             # Source-free published CI logs, full provider IDs in retained artifact only.
             public={k:v for k,v in row.items() if k!="receipt_id"}
+            # Do not put complete quotes or other detail in public CI logs.
+            if "requirements" in public:
+                public["requirements"]=[
+                    {k:v for k,v in r.items() if k!="verified_citations"}
+                    for r in public["requirements"]
+                ]
             print("HARD_CV_META_CASE="+json.dumps(public),flush=True)
         except Exception as exc:
             failures.append({"id":cid,"reason":type(exc).__name__})
