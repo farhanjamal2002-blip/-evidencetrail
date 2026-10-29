@@ -5895,7 +5895,12 @@ async def analyze(
         timeline_audit["requirement_links"] = attach_timeline_review_flags(
             findings, timeline_audit
         )
-        verification_audit["semantic_review_clarifications"] = clarify_verified_findings(findings)
+        if MOCK_PROVIDER_ENABLED:
+            # Preserve the legacy deterministic simulation contract, which uses
+            # conflicting for a CV-vs-job mismatch rather than self-contradiction.
+            verification_audit["semantic_review_clarifications"] = {"skipped_legacy_mock": len(findings)}
+        else:
+            verification_audit["semantic_review_clarifications"] = clarify_verified_findings(findings)
         performance_ms["timeline_flag_linking_ms"] = max(
             0, round((time.perf_counter() - substage_started) * 1000)
         )
