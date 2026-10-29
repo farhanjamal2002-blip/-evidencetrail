@@ -1,4 +1,5 @@
 name: EvidenceTrail 20-CV recruiter inbox acceptance
+# Rerun with updated offline stress import shims for the new demo router.
 on:
   push:
     branches: [feat/recruiter-demo20-muse-inbox]
