@@ -42,7 +42,7 @@ function resetModeBadge() {
   } else if (museDisabled) {
     setModeBadge("unavailable", "MUSE DISABLED", "Server opt-in is off · no new API calls");
   } else {
-    setModeBadge("unavailable", "MUSE NOT CONFIGURED", "Server API key required · analysis paused");
+    setModeBadge("unavailable", "MUSE NOT CONFIGURED", "server key required · analysis paused");
   }
 }
 

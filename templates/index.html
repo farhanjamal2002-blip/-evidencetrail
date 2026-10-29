@@ -19,7 +19,7 @@
           <span class="model-symbol" aria-hidden="true">✦</span>
           <span class="model-copy">
             <strong id="model-status-title">{{ 'LOCAL SIMULATION' if mock_mode else ('MUSE DISABLED' if muse_disabled else ('MUSE READY' if model_ready else 'MUSE NOT CONFIGURED')) }}</strong>
-            <small id="model-status-detail">{{ 'Deterministic heuristics · no model calls' if mock_mode else ('Server opt-in is off · no new API calls' if muse_disabled else ('Server key present · API connection not verified' if model_ready else 'Server API key required · analysis paused')) }}</small>
+            <small id="model-status-detail">{{ 'Deterministic heuristics · no model calls' if mock_mode else ('Server opt-in is off · no new API calls' if muse_disabled else ('Server key present · API connection not verified' if model_ready else 'server key required · analysis paused')) }}</small>
           </span>
           <span class="config-dot" aria-hidden="true"></span>
         </div>
