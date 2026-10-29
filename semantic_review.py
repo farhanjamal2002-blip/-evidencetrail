@@ -72,6 +72,52 @@ def _first_action_synonyms(requirement: str) -> tuple[str, ...]:
     return min(hits,key=lambda x:x[0])[1] if hits else ()
 
 
+# Use complete verbal forms when interpreting personal ownership. Substring
+# matching incorrectly treated "negotiation notes" as "negotiated" and the
+# word "handled" as "led". Neither establishes the applicant's requested act.
+VERB_FORM_PATTERNS = {
+    "negotiat": r"\b(?:negotiat(?:e|ed|es|ing)|negotiator)\b",
+    "led": r"\b(?:led|lead|leads|leading|leader)\b",
+    "lead": r"\b(?:led|lead|leads|leading|leader)\b",
+    "command": r"\b(?:command|commanded|commanding)\b",
+    "author": r"\b(?:author|authored|authoring)\b",
+    "wrote": r"\bwrote\b",
+    "configur": r"\b(?:configure|configured|configures|configuring)\b",
+    "perform": r"\b(?:perform|performed|performing)\b",
+    "review": r"\b(?:review|reviewed|reviewing)\b",
+    "approv": r"\b(?:approve|approved|approving)\b",
+    "sign": r"\b(?:sign|signed|signing)\b",
+    "deplo": r"\b(?:deploy|deployed|deploying)\b",
+    "develop": r"\b(?:develop|developed|developing)\b",
+    "creat": r"\b(?:create|created|creating)\b",
+    "built": r"\b(?:built|build|building)\b",
+    "enter": r"\b(?:entered|enter|entering)\b",
+    "clear": r"\b(?:cleared|clearing|clear)\b",
+    "optimiz": r"\b(?:optimize|optimized|optimizing)\b",
+    "tuned": r"\b(?:tune|tuned|tuning)\b",
+    "coordinat": r"\b(?:coordinate|coordinated|coordinating)\b",
+    "manag": r"\b(?:manage|managed|managing)\b",
+    "owned": r"\b(?:owned|owning|own)\b",
+    "chaired": r"\b(?:chaired|chairing|chair)\b",
+    "facilitat": r"\b(?:facilitate|facilitated|facilitating)\b",
+    "deliver": r"\b(?:deliver|delivered|delivering)\b",
+    "designed": r"\b(?:design|designed|designing)\b",
+}
+def _contains_applicant_action(clause: str, stem: str) -> bool:
+    pattern = VERB_FORM_PATTERNS.get(stem)
+    if pattern is None:
+        # An unknown action alias is *not* sufficient to certify two
+        # opposing personally owned claims. Keep source evidence available.
+        return False
+    if not re.search(pattern, clause, flags=re.IGNORECASE):
+        return False
+    if stem == "wrote":
+        # "Wrote incident notes" does not establish authorship of SIEM
+        # detections or production code; insist on a named technical object.
+        return bool(re.search(r"\bwrote\b.{0,70}\b(?:rules?|detections?|pipelines?|python|etl|applications?|software|code)\b", clause, flags=re.IGNORECASE))
+    return True
+
+
 def _asserts_requested_personal_action(quote: str, action_words: tuple[str, ...]) -> bool:
     """Require a candidate-owned verb, not the same verb in a manager clause."""
     if not action_words:
@@ -85,10 +131,13 @@ def _asserts_requested_personal_action(quote: str, action_words: tuple[str, ...]
         cleaned = clause.strip().casefold()
         # Real CV bullet points often omit "I": "led all negotiations".
         first_person = bool(FIRST_PERSON.search(clause))
-        verb_led_bullet = any(cleaned.startswith(stem) for stem in action_words)
+        verb_led_bullet = any(
+            re.match(VERB_FORM_PATTERNS[stem], cleaned, flags=re.IGNORECASE)
+            for stem in action_words if stem in VERB_FORM_PATTERNS
+        )
         if not first_person and not verb_led_bullet:
             continue
-        if any(stem in cleaned for stem in action_words):
+        if any(_contains_applicant_action(cleaned, stem) for stem in action_words):
             return True
     return False
 
