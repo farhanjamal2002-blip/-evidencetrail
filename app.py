@@ -41,6 +41,7 @@ from muse_protocol import (
 )
 from timeline_audit import audit_employment_timeline
 from semantic_review import clarify_verified_findings, reconcile_scope_context_page_marks
+from multimodal_intake import prepare_cv, media_kind
 from verification_receipt import build_verification_receipt
 
 
@@ -5692,16 +5693,20 @@ async def analyze(
         performance_ms["upload_read_ms"] = max(
             0, round((time.perf_counter() - stage_started) * 1000)
         )
-        if not pdf_bytes.startswith(b"%PDF-"):
-            raise HTTPException(
-                status_code=400,
-                detail="The uploaded file is not a readable PDF.",
-            )
         if len(pdf_bytes) > MAX_PDF_BYTES:
             raise HTTPException(
                 status_code=413,
-                detail=f"Keep the CV PDF under {MAX_PDF_MB} MB.",
+                detail=f"Keep the CV under {MAX_PDF_MB} MB.",
             )
+        try:
+            prepared_cv = await run_in_threadpool(
+                prepare_cv, pdf_bytes, max_bytes=MAX_PDF_BYTES
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        # PNG/JPEG are normalized locally into a one-page image-only PDF.
+        # OCR and independent citation/page checks remain authoritative.
+        pdf_bytes = prepared_cv.pdf_bytes
 
         client_ip = client_ip_for_rate_limit(request)
         batch_reservation_lock = getattr(request_state, "batch_rate_lock", None)
@@ -6046,6 +6051,14 @@ async def analyze(
         performance_ms["pipeline_ms"] = max(
             0, round((time.perf_counter() - pipeline_started) * 1000)
         )
+        response_payload["input_document"] = {
+            "original_media_type": prepared_cv.input_media_type,
+            "original_sha256": prepared_cv.original_sha256,
+            "normalized_pdf_sha256": prepared_cv.normalized_sha256,
+            "locally_converted_image": prepared_cv.converted_image_to_pdf,
+            "vision_model_calls": 0,
+            "quote_verification": "existing_page_checked_pdf_ocr_pipeline",
+        }
         response_payload["verification_receipt"] = build_verification_receipt(response_payload)
         return response_payload
     finally:
@@ -6095,11 +6108,13 @@ async def analyze_batch(
                 status_code=413,
                 detail=f"Each CV PDF must be under {MAX_PDF_MB} MB.",
             )
-        if not data.startswith(b"%PDF-"):
+        try:
+            media_kind(data)
+        except ValueError as exc:
             raise HTTPException(
                 status_code=400,
-                detail="Every selected file must be a readable PDF. No CV in the batch was analyzed.",
-            )
+                detail="Every selected CV must be a PDF, PNG or JPEG. No CV in the batch was analyzed.",
+            ) from exc
         total_bytes += len(data)
         await cv.seek(0)
     if total_bytes > MAX_BATCH_PDF_BYTES:
