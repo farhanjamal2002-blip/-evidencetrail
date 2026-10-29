@@ -40,7 +40,7 @@ from muse_protocol import (
     validate_verification_result,
 )
 from timeline_audit import audit_employment_timeline
-from semantic_review import clarify_verified_findings
+from semantic_review import clarify_verified_findings, reconcile_scope_context_page_marks
 from verification_receipt import build_verification_receipt
 
 
@@ -5902,6 +5902,9 @@ async def analyze(
             verification_audit["semantic_review_clarifications"] = {"skipped_legacy_mock": len(findings)}
         else:
             verification_audit["semantic_review_clarifications"] = clarify_verified_findings(findings)
+            verification_audit["semantic_review_page_marks_reconciled"] = reconcile_scope_context_page_marks(
+                findings, page_marks
+            )
         performance_ms["timeline_flag_linking_ms"] = max(
             0, round((time.perf_counter() - substage_started) * 1000)
         )
