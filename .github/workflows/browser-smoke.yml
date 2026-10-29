@@ -1,0 +1,81 @@
+name: EvidenceTrail browser smoke
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feat/evidencetrail-review-workflow]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install app dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Install headless Chromium
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Run replay, no-key, and consent browser checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/browser-smoke
+          ready_log="$RUNNER_TEMP/evidencetrail-ready.log"
+          no_key_log="$RUNNER_TEMP/evidencetrail-no-key.log"
+
+          EVIDENCETRAIL_PROVIDER=muse EVIDENCETRAIL_ENABLE_MUSE=true MODEL_API_KEY=evidencetrail-ci-dummy-key MAX_CONCURRENT_ANALYSES=1 \
+            python -m uvicorn app:app --host 127.0.0.1 --port 8000 >"$ready_log" 2>&1 &
+          ready_pid=$!
+          MODEL_API_KEY= EVIDENCETRAIL_PROVIDER=muse EVIDENCETRAIL_ENABLE_MUSE=true MAX_CONCURRENT_ANALYSES=1 \
+            python -m uvicorn app:app --host 127.0.0.1 --port 8001 >"$no_key_log" 2>&1 &
+          no_key_pid=$!
+          cleanup() {
+            kill "$ready_pid" "$no_key_pid" 2>/dev/null || true
+            wait "$ready_pid" "$no_key_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for port in 8000 8001; do
+            ready=false
+            for attempt in $(seq 1 45); do
+              if curl --fail --silent "http://127.0.0.1:$port/health" >/dev/null; then
+                ready=true
+                break
+              fi
+              sleep 1
+            done
+            if [ "$ready" != true ]; then
+              cat "$ready_log" "$no_key_log" > artifacts/browser-smoke/server-start-failure.txt
+              echo "EvidenceTrail server on port $port did not become healthy."
+              exit 1
+            fi
+          done
+
+          EVIDENCETRAIL_READY_URL=http://127.0.0.1:8000 \
+          EVIDENCETRAIL_NO_KEY_URL=http://127.0.0.1:8001 \
+            python scripts/browser_smoke_test.py
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-browser-smoke
+          path: artifacts/browser-smoke
+          if-no-files-found: warn
+          retention-days: 7

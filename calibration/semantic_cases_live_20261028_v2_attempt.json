@@ -1,0 +1,23 @@
+{
+  "run_id": "semantic_cases_live_20261028_v2",
+  "status": "completed_with_case_failures",
+  "started_at_utc": "2026-10-28T13:38:35.731636+00:00",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "case_ids": [
+    "india_public_procurement_manager",
+    "uae_contract_supplier_manager",
+    "semiconductor_supplier_operations_manager",
+    "nhs_procurement_director_credential_boundary",
+    "scanned_cv_procurement_credential_boundary"
+  ],
+  "expected_live_requests": 10,
+  "automatic_retries": 0,
+  "output_file": "calibration/semantic_cases_live_20261028_v2.json",
+  "note": "Only run after a clean zero-call preflight; if interrupted, usage is unknown and do not rerun until checking provider usage.",
+  "finished_at_utc": "2026-10-28T13:44:01.123622+00:00",
+  "failed_cases": 1,
+  "successful_calls_reported": 8,
+  "failed_case_request_usage": "unknown; no automatic retry was made",
+  "successful_result_cost_estimate_usd": 0.18360025
+}

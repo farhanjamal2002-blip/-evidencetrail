@@ -1,0 +1,37 @@
+{
+  "run_id": "targeted_career_switcher_medium_20261029",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "medium",
+  "http_status": 200,
+  "api_latency_ms": 23221,
+  "end_to_end_seconds": 23.373,
+  "analysis_calls": 1,
+  "expected_requirements": 2,
+  "strict_correct": 2,
+  "timeline_adjudicated_correct": 2,
+  "related_to_direct_overclaims": 0,
+  "missed_related_transfers": 0,
+  "requirement_results": [
+    {
+      "requirement_index": 1,
+      "evidence_type": "related",
+      "evidence_strength": "stated",
+      "certainty": "clear",
+      "final_evidence_type": null,
+      "evidence_count": 2,
+      "cited_explicit_negation": false
+    },
+    {
+      "requirement_index": 2,
+      "evidence_type": "related",
+      "evidence_strength": "stated",
+      "certainty": "clear",
+      "final_evidence_type": null,
+      "evidence_count": 2,
+      "cited_explicit_negation": false
+    }
+  ],
+  "automatic_retries": 0,
+  "report_contains_cv_text": false,
+  "report_contains_evidence_quotes": false
+}

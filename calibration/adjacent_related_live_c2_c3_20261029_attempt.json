@@ -1,0 +1,18 @@
+{
+  "status": "completed",
+  "run_at_utc": "2026-10-29T05:07:04.354330+00:00",
+  "case_ids": [
+    "unified_c2_keyword_only",
+    "unified_c3_career_switcher"
+  ],
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "medium",
+  "expected_live_requests": 2,
+  "automatic_retries": 0,
+  "retry_policy": "One batch request; no automatic or manual retry.",
+  "api_key_value_saved": false,
+  "finished_at_utc": "2026-10-29T05:07:36.507967+00:00",
+  "elapsed_seconds": 32.14,
+  "live_calls_reported": 2,
+  "result_file": "calibration/adjacent_related_live_c2_c3_20261029.json"
+}

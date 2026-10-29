@@ -1,0 +1,74 @@
+{
+  "status": "completed",
+  "run_at_utc": "2026-10-28T08:02:23.394177+00:00",
+  "run_label": "two_candidate_strength_ladder_demo",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "candidate_count": 2,
+  "expected_live_requests": 4,
+  "live_calls_reported": 4,
+  "automatic_retries": 0,
+  "failed_candidates": 0,
+  "candidates": [
+    {
+      "candidate_id": "keyword_only_filler",
+      "status": "completed",
+      "returned_finding_count": 3,
+      "expected_evidence_type": "unsupported",
+      "actual_evidence_type": "unsupported",
+      "adjudicated_evidence_type": "unsupported",
+      "expected_evidence_strength": "keyword_only",
+      "actual_evidence_strength": "keyword_only",
+      "expected_label_matched": true,
+      "expected_strength_matched": true,
+      "first_returned_finding_verified_quote_count": 0,
+      "first_returned_finding_rejected_quote_count": 0,
+      "strength_distribution": {
+        "specific": 0,
+        "stated": 0,
+        "keyword_only": 3,
+        "none": 0,
+        "not_reported": 0
+      },
+      "provider_reported_input_tokens": 5294,
+      "provider_reported_output_tokens": 4595
+    },
+    {
+      "candidate_id": "specific_contract_example",
+      "status": "completed",
+      "returned_finding_count": 3,
+      "expected_evidence_type": "direct",
+      "actual_evidence_type": "direct",
+      "adjudicated_evidence_type": "direct",
+      "expected_evidence_strength": "specific",
+      "actual_evidence_strength": "specific",
+      "expected_label_matched": true,
+      "expected_strength_matched": true,
+      "first_returned_finding_verified_quote_count": 1,
+      "first_returned_finding_rejected_quote_count": 0,
+      "strength_distribution": {
+        "specific": 3,
+        "stated": 0,
+        "keyword_only": 0,
+        "none": 0,
+        "not_reported": 0
+      },
+      "provider_reported_input_tokens": 5725,
+      "provider_reported_output_tokens": 3548
+    }
+  ],
+  "overall": {
+    "expected_strength_labels_matched": 2,
+    "expected_category_labels_matched": 2,
+    "first_returned_finding_verified_quotes": 1,
+    "first_returned_finding_rejected_quotes": 0,
+    "provider_reported_input_tokens": 11019,
+    "provider_reported_output_tokens": 8143,
+    "estimated_standard_token_cost_usd": 0.0483815,
+    "cost_note": "Token-based estimate at the saved Muse Spark Standard rates; not a provider billing record."
+  },
+  "fixture": "strength_ladder_demo.json",
+  "observation_scope": "Strength distributions cover all three returned findings per CV. Per-candidate evidence type and quote counts refer to the first returned finding; expected category match counts use the requirement aligner.",
+  "disclosure": "Both CVs are fictional; the requirement is from the linked public job posting. Results are one small demonstration run, not an accuracy estimate.",
+  "report_contains_cv_or_model_quotes": false
+}

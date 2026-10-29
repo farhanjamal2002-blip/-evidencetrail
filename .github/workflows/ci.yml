@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, feat/evidencetrail-review-workflow]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install OCR runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes tesseract-ocr tesseract-ocr-eng tesseract-ocr-ara
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run Python suite
+        run: python -m unittest discover -s tests -v
+
+      - name: Run browser logic checks
+        run: node --test tests/test_interview_invite.js tests/test_recruiter_decision.js tests/test_requirement_coverage.js
+
+      - name: Run offline stress scenarios
+        run: python scripts/offline_stress_test.py
+
+      - name: Check syntax and patch whitespace
+        run: |
+          python -m py_compile app.py role_audit.py muse_protocol.py timeline_audit.py scripts/*.py
+          node --check static/app.js
+          node --check static/recruiter-decision.js
+          node --check static/interview-invite.js
+          git diff --check
+
+      - name: Build deployment container
+        run: docker build --tag evidencetrail:ci .

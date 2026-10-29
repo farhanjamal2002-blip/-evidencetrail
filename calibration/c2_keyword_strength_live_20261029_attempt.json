@@ -1,0 +1,34 @@
+{
+  "status": "completed",
+  "started_at_utc": "2026-10-29T05:27:08.397999+00:00",
+  "case_id": "unified_c2_keyword_only",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "medium",
+  "analysis_prompt_sha256": "dd0999d1daf970b49e50065176cd81c50ecea81db180bc4f18625d8759f4cb4d",
+  "expected_live_requests": 1,
+  "automatic_retries": 0,
+  "api_key_value_saved": false,
+  "purpose": "Check keyword-only strength reporting stays separate from whether a criterion is supported.",
+  "finished_at_utc": "2026-10-29T05:27:42.570613+00:00",
+  "elapsed_seconds": 34.169,
+  "live_calls_reported": 1,
+  "raw_label_matches": 2,
+  "raw_label_count": 2,
+  "strength_labels": [
+    {
+      "gold_item": 1,
+      "expected": "specific",
+      "predicted": "specific",
+      "matched": true,
+      "finding_index": 1
+    },
+    {
+      "gold_item": 2,
+      "expected": "keyword_only",
+      "predicted": "keyword_only",
+      "matched": true,
+      "finding_index": 2
+    }
+  ]
+}

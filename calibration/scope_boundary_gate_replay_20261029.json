@@ -1,0 +1,75 @@
+{
+  "status": "completed_offline_replay",
+  "created_at_utc": "2026-10-29T04:57:35.188857+00:00",
+  "source_run": "calibration/unified_demo_replay_20261029_live_latency.json",
+  "source_run_at_utc": "2026-10-29T04:40:05.600991+00:00",
+  "model_run_reused": true,
+  "new_muse_requests": 0,
+  "method": "Reapplied the new deterministic explicit-scope limitation guard to the saved findings and original fictional PDFs; preserved the saved Muse labels and timeline flags.",
+  "candidates": [
+    {
+      "candidate_id": "C1",
+      "fixture_id": "unified_c1_specific",
+      "expected_findings": 2,
+      "matches_before_scope_gate": 2,
+      "matches_after_scope_gate": 2,
+      "scope_gate_adjustments": 0,
+      "adjustments": []
+    },
+    {
+      "candidate_id": "C2",
+      "fixture_id": "unified_c2_keyword_only",
+      "expected_findings": 2,
+      "matches_before_scope_gate": 1,
+      "matches_after_scope_gate": 1,
+      "scope_gate_adjustments": 0,
+      "adjustments": []
+    },
+    {
+      "candidate_id": "C3",
+      "fixture_id": "unified_c3_career_switcher",
+      "expected_findings": 2,
+      "matches_before_scope_gate": 1,
+      "matches_after_scope_gate": 2,
+      "scope_gate_adjustments": 1,
+      "adjustments": [
+        {
+          "requirement": "Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+          "expected": "related",
+          "saved_label": "direct",
+          "final_label": "related",
+          "scope_quotes": [
+            {
+              "quote": "I did not own supplier negotiations or contract sign-off.",
+              "page": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "candidate_id": "C4",
+      "fixture_id": "unified_c4_date_overlap",
+      "expected_findings": 2,
+      "matches_before_scope_gate": 1,
+      "matches_after_scope_gate": 1,
+      "scope_gate_adjustments": 0,
+      "adjustments": []
+    },
+    {
+      "candidate_id": "C5",
+      "fixture_id": "unified_c5_scanned_two_column",
+      "expected_findings": 2,
+      "matches_before_scope_gate": 2,
+      "matches_after_scope_gate": 2,
+      "scope_gate_adjustments": 0,
+      "adjustments": []
+    }
+  ],
+  "totals": {
+    "expected_findings": 10,
+    "matches_before_scope_gate": 7,
+    "matches_after_scope_gate": 8,
+    "scope_gate_adjustments": 1
+  }
+}

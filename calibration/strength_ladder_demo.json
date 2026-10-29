@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "disclosure": "Both candidate profiles are fictional. The job requirement is reproduced from the linked public posting.",
+  "job_description": "Role: Supplier and Operations Manager\nRequirement: Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+  "job_source": {
+    "organization": "GlobalFoundries",
+    "title": "OSAT Supplier and Operations Manager",
+    "url": "https://globalfoundries.wd1.myworkdayjobs.com/en-US/External/job/OSAT-Supplier-and-Operations-Manager_JR-2605085"
+  },
+  "candidates": [
+    {
+      "id": "keyword_only_filler",
+      "display_name": "Candidate 1 · keyword-only",
+      "cv_layout": ["single_column"],
+      "cv_pages": [
+        "FICTIONAL CV — Candidate 1\nContracts professional\nCORE SKILLS\nSupplier negotiations\nPricing analysis\nCommercial contract implementation\nResults-driven contracts professional with a proven track record of delivering value through strategic procurement excellence."
+      ],
+      "expected_evidence_type": "unsupported",
+      "expected_evidence_strength": "keyword_only"
+    },
+    {
+      "id": "specific_contract_example",
+      "display_name": "Candidate 2 · specific example",
+      "cv_layout": ["single_column"],
+      "cv_pages": [
+        "FICTIONAL CV — Candidate 2\nSupplier Contracts\nCompared supplier quotations, negotiated a three-year supply agreement with two component manufacturers, drafted pricing terms, and coordinated commercial contract implementation."
+      ],
+      "expected_evidence_type": "direct",
+      "expected_evidence_strength": "specific"
+    }
+  ]
+}

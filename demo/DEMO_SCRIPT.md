@@ -1,55 +1,59 @@
-# EvidenceTrail — Muse Spark three-minute demo
+# EvidenceTrail — recruiter workflow demo
 
 ## Recording setup
 
-- The prepared case uses a synthetic two-page CV and three focused requirements: one supported, one not found, and one conflicting.
-- To inspect the interface before the key is configured, click “Open the sample review.” This is a hand-authored preview using fictional data; no model request runs, and it is not proof of a live model analysis.
-- For the competition recording, click “Load sample inputs for a real run.” The fictional CV and job description are prepared locally.
-- Confirm the Meta data-sharing checkbox and run the two-pass live analysis. Loading either preview/input does not use API credits; the live run makes two model requests.
-- Keep the API key out of the browser, screen recording, repository, and submission video.
-- Record the full screen at readable zoom. Have the result page ready to scroll smoothly after the live request.
+- Record the P1 build only after the canonical five-CV Muse replay has been regenerated against the frozen UI and payload schema.
+- Use fictional CVs. Keep candidates in upload order.
+- Keep the server-side MODEL_API_KEY out of the browser, repository, and recording.
+- Do not present the checked-in pre-P1 replay as the current canonical run. Add the new run's actual request count, timing, source-check counts, and result limitations after it completes.
 
-## Shot list and voiceover
+## Two-minute walkthrough
 
-### 0:00–0:25 — The problem and plain-language product pitch
+### 0:00–0:12 — The promise
 
-**Show:** The three-step review path, then the job description and clearly fictional CV.
+**Show:** Start on the completed review.
 
-**Say:** “A hiring reviewer has to compare every job requirement with a long CV. EvidenceTrail lines up each requirement with the words that support it and shows the page those words came from. It helps people review documents; it never decides who gets hired.”
+**Say:** “A match score hides why a CV appears to fit. EvidenceTrail shows the requirement, the source passage, and the recruiter’s decision. It does not rank candidates.”
 
-### 0:25–0:45 — The product
+### 0:12–0:30 — Compare the evidence
 
-**Show:** Open the sample review, then point to the labels for supported, not found, and conflicting. Explain that the data is fictional and the preview made no Meta call.
+**Show:** Open the batch matrix. Point out the candidates remain in upload order and select one requirement across the CVs.
 
-**Say:** “This sample has one requirement supported by the CV, one with no direct evidence, and one where the CV contradicts itself. ‘Not found’ only means this document did not show it; it is not a judgement about the person.”
+**Say:** “Evidence status uses five labels: Direct, Related, Conflict to clarify, Unsupported, and Not found. Every candidate stays in the order they were uploaded.”
 
-### 0:45–1:20 — Muse Spark 1.3 analysis via Meta Model API
+### 0:30–0:50 — Verify the source
 
-**Show:** Scroll to the form, load the sample inputs, confirm the data-sharing checkbox, and click “Analyze with Muse Spark.” Keep the two-pass loading state visible briefly, then show the model name, two real Muse passes, token usage, and source-check counts.
+**Show:** Open a finding and its cited page. Show a verified quote and, if present in the canonical run, a blocked quote.
 
-**Say:** “Muse Spark reads the job and CV to identify requirements and relevant claims. EvidenceTrail then finds nearby source passages and asks Muse Spark to review those passages. Before anything appears as evidence, the app checks that the quote is really in the CV and points to the right page.”
+**Say:** “The source check is deterministic. A quote is marked Verified with its page, or Blocked when it cannot be found on the cited page.”
 
-### 1:20–2:15 — Inspect and review the evidence
+### 0:50–1:08 — Show the gate audit
 
-**Show:** Point to the evidence graph: each job requirement connects to its retrieved, verified source quote. Show one supported result, the not-found certification, and the conflicting procurement-years result. Open a supporting and conflicting graph link in the zoomable original PDF. Use the color key: teal supports; red conflicts. Mark the certification as “Needs follow-up” and add a reviewer note.
+**Show:** Open the finding with the seeded explicit denial or date discrepancy. Point to the raw/effective pill, for example, “Muse: Direct → Gate: Conflict to clarify.”
 
-**Say:** “Follow the line from this requirement to the exact quote and page. The green passage appears to support the requirement; the red passage disagrees with another statement in the same CV. A quote being present does not prove the claim is true, so a person still checks the context.”
+**Say:** “The audit keeps Muse’s original label and shows the deterministic gate’s final evidence status. The recruiter can inspect the source before deciding.”
 
-### 2:15–2:45 — Export the evidence pack
+### 1:08–1:30 — Make the human decision
 
-**Show:** Download the standalone HTML report. Scroll through the quote, highlighted page, reviewer note, and CV and job-description fingerprints.
+**Show:** Record Advance, Hold, or Do not advance for the selected fictional candidate. Keep the decision and reason tied to the role criteria.
 
-**Say:** “The evidence pack keeps the requirements, source quotes, highlighted pages, and the reviewer’s notes together. That makes it easier for another reviewer to see why something needs follow-up.”
+**Say:** “The recruiter owns the decision. EvidenceTrail does not score or automatically rank the candidate.”
 
-### 2:45–3:00 — Close
+### 1:30–1:48 — Export the evidence pack
 
-**Show:** Return to the evidence map and end on the product name.
+**Show:** Open the per-CV evidence pack and point to the decision, evidence labels, verified citations, and page highlights.
 
-**Say:** “Muse Spark interprets the documents. EvidenceTrail checks the citations against the CV. The reviewer makes the decision. That’s the whole point: every finding has a trail a person can inspect.”
+**Say:** “The export carries the evidence trail and the recruiter’s recorded action. The workflow ends here.”
 
-## Before submitting
+### 1:48–2:00 — State the measured result
 
-- Use the same build shown in the video and linked from the public repository.
-- Confirm the deployed demo works without showing or exposing the API key.
-- Make sure the video link and repository are publicly accessible to judges.
-- Review the final report once more for the three expected outcomes and the PDF highlights.
+**Show:** Finish on the canonical five-CV run receipt and the source-check totals.
+
+**Say:** “This is the result from the recorded five-CV run. The labels and quote checks are shown separately; this small fictional set is a calibration example, not a general accuracy claim.”
+
+## Before submission
+
+- Fill this script's final line only from the canonical post-freeze replay artifact. Keep Muse’s raw labels separate from deterministic gate outcomes, and quote verification separate from semantic labels.
+- Do not combine counts from separate runs or describe a small fictional calibration as a general accuracy rate.
+- Confirm that the public app, repository, replay receipt, and video all reflect the same schema.
+- Check the public app, repository, and video links from a signed-out browser before submission.

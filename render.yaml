@@ -10,3 +10,9 @@ services:
     envVars:
       - key: MAX_CONCURRENT_ANALYSES
         value: "1"
+      - key: EVIDENCETRAIL_PROVIDER
+        value: muse
+      - key: EVIDENCETRAIL_ENABLE_MUSE
+        value: "true"
+      - key: EVIDENCETRAIL_TRUST_CF_CONNECTING_IP
+        value: "true"
