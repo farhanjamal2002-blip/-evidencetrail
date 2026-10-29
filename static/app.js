@@ -1,4 +1,5 @@
 const form = document.getElementById("analysis-form");
+form.noValidate = true;
 const cvInput = document.getElementById("cv");
 const jobInput = document.getElementById("job-description");
 const draftInput = document.getElementById("application-draft");
@@ -20,6 +21,32 @@ const museDisabled = form.dataset.museDisabled === "true";
 const analysisReady = modelReady || mockMode;
 const maxConcurrentAnalyses = Math.max(1, Number(form.dataset.maxConcurrent) || 1);
 const maxPdfBytes = Number(cvInput.dataset.maxBytes) || 12 * 1024 * 1024;
+const modelBadge = document.getElementById("model-pill");
+const modelBadgeTitle = document.getElementById("model-status-title");
+const modelBadgeDetail = document.getElementById("model-status-detail");
+const analysisModeDialog = document.getElementById("analysis-mode-dialog");
+let confirmedAnalysisMode = "";
+
+function setModeBadge(mode, title, detail) {
+  modelBadge.className = "model-pill mode-" + mode;
+  modelBadgeTitle.textContent = title;
+  modelBadgeDetail.textContent = detail;
+  modelBadge.setAttribute("aria-label", title + ". " + detail);
+}
+
+function resetModeBadge() {
+  if (mockMode) {
+    setModeBadge("simulation", "LOCAL SIMULATION", "Deterministic heuristics · no model calls");
+  } else if (modelReady) {
+    setModeBadge("ready", "MUSE READY", "Server key present · API connection not verified");
+  } else if (museDisabled) {
+    setModeBadge("unavailable", "MUSE DISABLED", "Server opt-in is off · no new API calls");
+  } else {
+    setModeBadge("unavailable", "MUSE NOT CONFIGURED", "Server API key required · analysis paused");
+  }
+}
+
+resetModeBadge();
 let currentReport = "";
 let currentResultPayload = null;
 const sourcePageImageCache = new WeakMap();
@@ -393,6 +420,30 @@ const loadUnifiedDemoButton = document.getElementById("load-unified-demo");
 const loadUnifiedDemoButtonLabel = loadUnifiedDemoButton.textContent.trim();
 const loadUnifiedReplayButton = document.getElementById("load-unified-replay");
 const loadUnifiedReplayButtonLabel = loadUnifiedReplayButton.textContent.trim();
+const liveModeChoice = document.getElementById("choose-live-analysis");
+const simulationModeChoice = document.getElementById("choose-local-simulation");
+const replayModeChoice = document.getElementById("choose-verified-replay");
+const cancelAnalysisModeButton = document.getElementById("cancel-analysis-mode");
+
+liveModeChoice.addEventListener("click", function () {
+  chooseAnalysisMode("live");
+});
+simulationModeChoice.addEventListener("click", function () {
+  chooseAnalysisMode("simulation");
+});
+replayModeChoice.addEventListener("click", function () {
+  analysisModeDialog.close();
+  loadUnifiedReplayButton.click();
+});
+cancelAnalysisModeButton.addEventListener("click", function () {
+  analysisModeDialog.close();
+});
+
+function chooseAnalysisMode(mode) {
+  analysisModeDialog.close();
+  confirmedAnalysisMode = mode;
+  form.requestSubmit(analyzeButton);
+}
 loadUnifiedDemoButton.addEventListener("click", async function () {
   loadUnifiedDemoButton.disabled = true;
   loadUnifiedDemoButton.textContent = "Loading five fictional CVs…";
@@ -692,9 +743,34 @@ function addCompletedBatchReport(entry, generation) {
   renderBatchReview();
 }
 
+form.addEventListener("invalid", function () {
+  confirmedAnalysisMode = "";
+}, true);
+
 form.addEventListener("submit", async function (event) {
   event.preventDefault();
   hideError();
+  if (!confirmedAnalysisMode) {
+    if (!analysisReady) {
+      showError(museDisabled
+        ? "Muse analysis is disabled on this server. Your files were not submitted."
+        : "Real analysis is paused until a valid server API key is configured. Your files were not submitted.");
+      return;
+    }
+    analysisModeDialog.showModal();
+    return;
+  }
+  const selectedAnalysisMode = confirmedAnalysisMode;
+  confirmedAnalysisMode = "";
+  if (
+    (selectedAnalysisMode === "live" && !modelReady) ||
+    (selectedAnalysisMode === "simulation" && !mockMode)
+  ) {
+    resetModeBadge();
+    showError("That analysis mode is not available on this server. No files were submitted.");
+    return;
+  }
+  if (!form.reportValidity()) return;
   if (!analysisReady) {
     showError(museDisabled
       ? "Muse analysis is disabled on this server. Your files were not submitted."
@@ -728,6 +804,11 @@ form.addEventListener("submit", async function (event) {
   const applicationDraft = isBatch ? "" : draftInput.value.trim();
   const consent = document.getElementById("consent").checked;
   clearCurrentResults(false);
+  if (selectedAnalysisMode === "live") {
+    setModeBadge("running", "LIVE MUSE REQUEST IN PROGRESS", "A real Meta API response has not arrived yet");
+  } else {
+    setModeBadge("simulation", "LOCAL SIMULATION RUNNING", "Deterministic heuristics · no model call");
+  }
   const generation = batchReviewGeneration;
   const requestController = new AbortController();
   activeAnalysisController = requestController;
@@ -907,6 +988,9 @@ form.addEventListener("submit", async function (event) {
       ));
       if (generation !== batchReviewGeneration || requestController.signal.aborted) return;
       if (!batchReports.length) {
+        if (selectedAnalysisMode === "live") {
+          setModeBadge("failed", "LIVE MUSE CALL FAILED", "No completed Muse result was received");
+        }
         activeBatchIndex = -1;
         results.classList.add("batch-failures-only");
         results.hidden = false;
@@ -917,6 +1001,9 @@ form.addEventListener("submit", async function (event) {
     }
   } catch (error) {
     if (!requestController.signal.aborted && generation === batchReviewGeneration) {
+      if (selectedAnalysisMode === "live") {
+        setModeBadge("failed", "LIVE MUSE CALL FAILED", "No verified result was received");
+      }
       showError(error.message || "Analysis failed. No result was generated.");
     }
   } finally {
@@ -1915,6 +2002,7 @@ function clearCurrentResults(showNotice) {
   batchRetryInProgress = false;
   activeBatchIndex = -1;
   currentResultPayload = null;
+  resetModeBadge();
   batchReviewMode = "dossier";
   batchRubricInfo = { mode: "", criteria: [] };
   results.classList.remove("batch-failures-only");
@@ -2047,6 +2135,17 @@ function renderVerifierChip(payload) {
 function renderResults(payload, analyzedFile, savedState) {
   results.classList.remove("batch-failures-only");
   currentResultPayload = payload;
+  if (payload.frozen_replay) {
+    setModeBadge("replay", "VERIFIED REPLAY", "Saved output from real Muse calls · no new API request");
+  } else if (payload.preview_mode) {
+    setModeBadge("preview", "SAMPLE PREVIEW", "Hand-authored fictional result · no model call");
+  } else if (payload.provider_mode === "mock") {
+    setModeBadge("simulation", "LOCAL SIMULATION", "Deterministic heuristics · no semantic model call");
+  } else if (payload.session_cache) {
+    setModeBadge("cached", "CACHED MUSE RESULT", "Completed result reused in this tab · no new API request");
+  } else if (payload.provider_mode === "muse") {
+    setModeBadge("live", "LIVE · META MUSE SPARK 1.3", "Real model response received · source checks are shown separately");
+  }
   const previewNotice = document.getElementById("preview-notice");
   previewNotice.hidden = !payload.preview_mode && payload.provider_mode !== "mock" && !payload.frozen_replay;
   previewNotice.textContent = payload.preview_mode
