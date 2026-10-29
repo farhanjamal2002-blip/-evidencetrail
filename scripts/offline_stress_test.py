@@ -49,6 +49,9 @@ def install_import_shims() -> None:
         def add_middleware(self, *_args: Any, **_kwargs: Any) -> None:
             pass
 
+        def include_router(self, *_args: Any, **_kwargs: Any) -> None:
+            pass
+
         def get(self, *_args: Any, **_kwargs: Any):
             return lambda function: function
 
@@ -56,6 +59,7 @@ def install_import_shims() -> None:
             return lambda function: function
 
     fastapi.FastAPI = FastAPI
+    fastapi.APIRouter = FastAPI
     fastapi.File = lambda default=None, **_kwargs: default
     fastapi.Form = lambda default=None, **_kwargs: default
     fastapi.HTTPException = LocalHTTPException
@@ -65,6 +69,8 @@ def install_import_shims() -> None:
     response_module = types.ModuleType("fastapi.responses")
     response_module.HTMLResponse = type("HTMLResponse", (), {})
     response_module.Response = type("Response", (), {})
+    response_module.FileResponse = type("FileResponse", (), {})
+    response_module.JSONResponse = type("JSONResponse", (), {})
     static_module = types.ModuleType("fastapi.staticfiles")
     static_module.StaticFiles = type(
         "StaticFiles", (), {"__init__": lambda self, *_a, **_k: None}
