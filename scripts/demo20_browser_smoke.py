@@ -14,9 +14,28 @@ async def main():
                 page=await browser.new_page(viewport={"width":width,"height":height})
                 errors=[]
                 page.on("pageerror",lambda err: errors.append(str(err)))
+                paid_calls=[]
+                page.on("request",lambda req: paid_calls.append(req.url) if "/api/analyze" in req.url else None)
                 res=await page.goto("http://127.0.0.1:8016/demo20",wait_until="domcontentloaded")
                 assert res.status==200
                 await page.locator("#total").get_by_text("20",exact=True).wait_for()
+                await page.wait_for_function("document.querySelector('#ready').textContent==='20'",timeout=25000)
+                assert await page.locator("#list .item").count()==20
+                assert await page.locator("#list").get_by_text("Recorded Muse").count()==20
+                assert not paid_calls,"Instant evidence replay must incur zero new Muse calls"
+                await page.locator("#quickviews [data-view='all_direct']").click()
+                count=await page.locator("#list .item").count()
+                assert 0<count<20
+                await page.locator("#quickviews [data-view='awaiting_decision']").click()
+                assert await page.locator("#list .item").count()==20
+                # Keyboard stepping through the currently visible human review queue.
+                first_id=await page.locator("#review .eyebrow").inner_text()
+                await page.keyboard.press("j")
+                assert await page.locator("#review .eyebrow").inner_text()!=first_id
+                await page.keyboard.press("k")
+                assert await page.locator("#review .eyebrow").inner_text()==first_id
+                await page.locator("#load").click()
+                await page.wait_for_function("document.querySelector('#ready').textContent==='0'",timeout=15000)
                 assert await page.locator("#list .item").count()==20
                 assert await page.locator("#criteria input").count()==4
                 assert await page.locator("#ready").inner_text()=="0"
@@ -63,6 +82,13 @@ async def main():
                     await page.locator("#review-note").fill("Clarify source scope with the applicant.")
                     await page.locator("#save-decision").click()
                     assert "Hold" in await page.locator("#review").inner_text()
+                    await page.locator("#filter").select_option("reviewed")
+                    assert await page.locator("#list .item").count()==1
+                    await page.locator("#filter").select_option("all")
+                    assert await page.locator("#reviewed").inner_text()=="1"
+                    assert await page.locator("#next-review").is_disabled(), "No more analyzed applicants awaiting a human decision"
+                    # Return to reviewed CV before testing rubric invalidation.
+                    await page.locator('#list [data-id="ET-019"]').click()
                     await page.screenshot(path=str(OUT/"review-selected.png"),full_page=True)
                     # Editing an approved rubric must invalidate old findings and decisions.
                     page.once("dialog",lambda dialog: asyncio.create_task(dialog.accept()))
@@ -77,6 +103,10 @@ async def main():
                     assert await page.locator("#list").get_by_text("Recorded Muse").count()==20
                     assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
                     assert "Authentic Meta response" in await page.locator("#review").inner_text()
+                    start_id=await page.locator("#review .eyebrow").inner_text()
+                    await page.locator("#next-review").click()
+                    assert await page.locator("#review .eyebrow").inner_text()!=start_id, "Next pending reviewer action must navigate"
+                    await page.locator('#list [data-id="ET-005"]').click()
                     assert await page.locator("#review .quote a[href*='#page=']").count()>=1
                     async with page.expect_download() as download_info:
                         await page.locator("#export-report").click()
@@ -99,6 +129,7 @@ async def main():
                     await page.locator("#filter").select_option("related")
                     assert 0 < await page.locator("#list .item").count() <= 20
                     assert not calls, "Viewing recorded evidence must not make paid API calls"
+                    assert len(paid_calls)==1, "Only the one deliberately triggered mock analysis may call /api/analyze; saved Muse replays must not"
                     await page.screenshot(path=str(OUT/"real-muse-recorded-evidence.png"),full_page=True)
                 assert not errors,errors
                 await page.close()
