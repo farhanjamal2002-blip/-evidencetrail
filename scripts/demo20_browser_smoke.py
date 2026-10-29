@@ -45,6 +45,11 @@ async def main():
                     await page.locator("#save-decision").click()
                     assert "Hold" in await page.locator("#review").inner_text()
                     await page.screenshot(path=str(OUT/"review-selected.png"),full_page=True)
+                    # Editing an approved rubric must invalidate old findings and decisions.
+                    page.once("dialog",lambda dialog: asyncio.create_task(dialog.accept()))
+                    await page.locator("#unlock").click()
+                    assert await page.locator("#ready").inner_text()=="0"
+                    assert "No decision" in await page.locator("#decision").inner_text()
                 assert not errors,errors
                 await page.close()
         finally:
