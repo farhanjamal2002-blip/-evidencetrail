@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import io
+import base64
 
 import pymupdf as fitz
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -90,3 +91,43 @@ def prepare_cv(data: bytes, *, max_bytes: int) -> PreparedCv:
     if len(pdf) > max_bytes:
         raise ValueError("Converted image CV is too large for the analysis limit.")
     return PreparedCv(pdf, kind, original, hashlib.sha256(pdf).hexdigest(), True)
+
+
+def optional_meta_vision_parts(
+    pdf_bytes: bytes, ocr_page_numbers: list[int], *,
+    max_pages: int = 2, max_edge: int = 1180
+) -> list[dict]:
+    """Build bounded, source-page-labelled Meta image content parts.
+
+    Vision parts are supplementary layout context, not verified quotations.
+    Only OCR pages are eligible; never include a full CV if the server did
+    not explicitly request visual inspection after consent.
+    """
+    if not ocr_page_numbers or max_pages < 1:
+        return []
+    parts = []
+    with fitz.open(stream=pdf_bytes, filetype="pdf") as document:
+        for page_number in sorted(set(ocr_page_numbers))[:min(max_pages, 2)]:
+            if type(page_number) is not int or not (1 <= page_number <= len(document)):
+                continue
+            page = document[page_number - 1]
+            if page.rect.width <= 0 or page.rect.height <= 0:
+                continue
+            pix = page.get_pixmap(matrix=fitz.Matrix(1.45, 1.45),
+                                  alpha=False, colorspace=fitz.csRGB)
+            with Image.open(io.BytesIO(pix.tobytes("png"))) as im:
+                im.thumbnail((max_edge, max_edge), Image.Resampling.LANCZOS)
+                out = io.BytesIO()
+                im.convert("RGB").save(out, format="JPEG", quality=76, optimize=True)
+                jpg = out.getvalue()
+            if len(jpg) > 900_000:
+                continue
+            parts.extend([
+                {"type": "text",
+                 "text": f"Visual layout reference only: original CV PDF page {page_number}. "
+                         "Use locally extracted page-labelled text for every exact quotation."},
+                {"type": "image_url",
+                 "image_url": {"url": "data:image/jpeg;base64," +
+                                      base64.b64encode(jpg).decode("ascii")}},
+            ])
+    return parts
