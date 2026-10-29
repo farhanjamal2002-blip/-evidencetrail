@@ -1,4 +1,5 @@
 name: EvidenceTrail 20-CV recruiter inbox acceptance
+# Retest with properly multiline custom job description in browser acceptance.
 # Production-useful interaction gates: JD extraction, human decisions, true exports, source links.
 # Release gate: PDF-page citation links, edit safety, true source exports and replay protection.
 # Full acceptance of saved real Muse replay for all 20 fictional CVs, no new Meta calls.
