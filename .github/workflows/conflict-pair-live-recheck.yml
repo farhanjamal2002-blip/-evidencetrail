@@ -1,0 +1,66 @@
+name: EvidenceTrail 20 CV conflict-pair post-fix real Muse regression
+on:
+  push:
+    branches: [eval/conflict-pair-postfix-live-20-oct29]
+    paths: [.github/workflows/conflict-pair-live-recheck.yml]
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-postfix-20-oct29-once
+  cancel-in-progress: false
+jobs:
+  corpus-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eval/conflict-pair-postfix-live-20-oct29
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install application
+        run: python -m pip install -r requirements.txt
+      - name: Check PDFs and the 80 pre-declared oracle references before any Meta calls
+        run: PYTHONPATH=. python -m unittest tests.test_hard_cv_corpus -v
+  real-muse-analysis:
+    needs: [corpus-preflight]
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_PROCESS: '22'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '22'
+      MAX_CONCURRENT_ANALYSES: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eval/conflict-pair-postfix-live-20-oct29
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Meta SDK and OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Require existing paid-credit configuration
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then echo "No Meta API credential; abort before calls"; exit 2; fi
+      - name: Twenty genuine one-pass Muse analyses, no retries
+        run: PYTHONPATH=. python scripts/hard_cv_live_muse_eval.py
+      - name: Save locked reference and true per-criterion confusion matrices
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-postfix-real-muse-20
+          path: artifacts/hard-cv-evaluation/
+          retention-days: 14
