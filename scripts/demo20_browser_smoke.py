@@ -85,9 +85,8 @@ async def main():
                     await page.locator("#filter").select_option("reviewed")
                     assert await page.locator("#list .item").count()==1
                     await page.locator("#filter").select_option("all")
-                    await page.locator("#next-review").click()
-                    assert "ET-019" not in await page.locator("#review .eyebrow").inner_text()
                     assert await page.locator("#reviewed").inner_text()=="1"
+                    assert await page.locator("#next-review").is_disabled(), "No more analyzed applicants awaiting a human decision"
                     # Return to reviewed CV before testing rubric invalidation.
                     await page.locator('#list [data-id="ET-019"]').click()
                     await page.screenshot(path=str(OUT/"review-selected.png"),full_page=True)
@@ -104,6 +103,10 @@ async def main():
                     assert await page.locator("#list").get_by_text("Recorded Muse").count()==20
                     assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
                     assert "Authentic Meta response" in await page.locator("#review").inner_text()
+                    start_id=await page.locator("#review .eyebrow").inner_text()
+                    await page.locator("#next-review").click()
+                    assert await page.locator("#review .eyebrow").inner_text()!=start_id, "Next pending reviewer action must navigate"
+                    await page.locator('#list [data-id="ET-005"]').click()
                     assert await page.locator("#review .quote a[href*='#page=']").count()>=1
                     async with page.expect_download() as download_info:
                         await page.locator("#export-report").click()
