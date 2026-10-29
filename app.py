@@ -4326,7 +4326,16 @@ def render_job_source_html(job_source: Any, *, class_name: str = "job-source") -
 
 
 def judge_facing_evidence_status(finding: dict[str, Any]) -> str:
-    """Map semantic and deterministic outcomes to the five public evidence labels."""
+    """Map verified semantic outcomes to plain-English evidence labels."""
+    review_code = str(finding.get("review_reason_code", ""))
+    if review_code == "explicit_scope_limit_not_contradiction":
+        return "Scope not established"
+    if review_code == "document_absence_not_contradiction":
+        return "Not documented"
+    if review_code == "multi_claim_or_timeline_discrepancy":
+        return "Discrepancy to clarify"
+    if review_code == "related_evidence_exact_criterion_unproven":
+        return "Related"
     status = str(finding.get("status", ""))
     evidence_type = str(finding.get("evidence_type", ""))
     strength = str(finding.get("evidence_strength", "none"))
