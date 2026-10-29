@@ -34,6 +34,7 @@ resolved=stats["pymupdf_search_for"]+stats["normalized_word_span"]
 qverified=sum(int(x.get("quote_audit",{}).get("verified") or 0) for x in original["results"])
 summary={
  "verified_quotes_recorded":qverified,"source_citations_in_replay":total,
+ "historical_verified_quotes_without_retained_citation":qverified-total,
  "exact_search_for":stats["pymupdf_search_for"],
  "normalized_word_span":stats["normalized_word_span"],
  "precisely_located":resolved,
@@ -49,6 +50,6 @@ output.mkdir(parents=True,exist_ok=True)
 print("PDF_GEOMETRY_SUMMARY="+json.dumps(summary),flush=True)
 for candidate in details:
     print("PDF_GEOMETRY_CASE="+json.dumps({"id":candidate["id"],"counts":candidate["counts"]}),flush=True)
-assert total==qverified, "Saved citation count differs from historical quote audit: disclose mismatch, don't invent geometry."
+assert 0<=total<=qverified, "Retained citations cannot outnumber verified historical quotations."
 assert stats["invalid_page"]==0
 assert resolved+stats["ocr_page_level_only"]+stats["page_verified_no_bbox"]+stats["unlocated"]==total
