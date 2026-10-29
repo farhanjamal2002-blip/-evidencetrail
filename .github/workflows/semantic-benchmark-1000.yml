@@ -1,0 +1,37 @@
+name: EvidenceTrail 1000 synthetic semantic guard benchmark
+on:
+  push:
+    branches: [eval/semantic-benchmark-oct29]
+    paths: [.github/workflows/semantic-benchmark-1000.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eval/semantic-benchmark-oct29
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run all thousand controlled cross-domain cases against real semantic guard code
+        run: PYTHONPATH=. python scripts/semantic_policy_benchmark_1000.py
+      - name: Verify safety, ground-truth fixture and honest false-negative disclosure
+        run: python -m unittest tests.test_semantic_policy_benchmark -v
+      - name: Upload scenario-level confusion and failure cases
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-policy-1000-results
+          path: artifacts/semantic-benchmark/
+          retention-days: 14
