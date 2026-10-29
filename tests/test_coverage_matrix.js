@@ -69,7 +69,7 @@ test("sort groups deterministically and preserve original arrival order within e
  assert.deepEqual(incoming.map(x=>x.id),["F","A","P1","C2","P2","C1","U"]);
 });
 test("classification does not modify raw provider source or invent model calls",()=>{
- const input=r({status:"conflicting",raw_status:"supported",evidence_type:"related"},direct,missing,missing);
+ const input=r({status:"not_found",raw_status:"conflicting",evidence_type:"related"},direct,missing,missing);
  const original=JSON.stringify(input);
  const v=coverage(input);
  assert.equal(v.group,"partial");
