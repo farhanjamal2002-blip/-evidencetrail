@@ -75,7 +75,7 @@
 }
 \`\`\`
 
-**Example scope:** the excerpted requirement is ET-008/R3 from the real saved fictional Muse replay; other numeric fields illustrate the schema at the single-requirement level. A complete result has one entry per criterion. Never present an illustrative receipt ID or model reasoning as an actual provider message.
+**Example scope:** the excerpted requirement is ET-008/R3 from the real saved fictional Muse replay; other numeric fields illustrate the schema at the single-requirement level. A complete result has one entry per criterion. Never present an illustrative receipt ID or model reasoning as an actual provider message. The illustrative null geometry above is still valid for fresh uploads where no original-PDF geometry has been computed, whereas the **saved fictional replay now provides measured boxes**, as documented in [PDF_QUOTE_GEOMETRY.md](PDF_QUOTE_GEOMETRY.md).
 
 ## Semantics and limitations
 
@@ -84,7 +84,7 @@
 - **OCR** is reported from the actual server \`ocr_pages\` list. \`pdf_text_no_ocr_reported\` means OCR pages were not recorded; it does not establish that every page has a complete searchable text layer.
 - **Prompt injection, hidden text, input sanitation**: the historical replay does not include a per-document authoritative pass/fail signal. These are deliberately \`not_recorded\` even for synthetic adversarial fixture ET-018. The presence of that CV does not demonstrate a specific scanner triggered.
 - **Model reasoning**: not present in the recorded payload as a separately attributable field. Show original Muse status, not fabricated chain-of-thought or an unverified "Muse explanation."
-- **Geometry and offsets**: \`match_method\`, \`char_span\`, and \`bounding_boxes\` remain null until instrumented with actual source coordinate spans. Browser links open the cited PDF page today; a bounding-box snap is a *future feature*.
+- **Geometry and offsets (Upgrade #3):** The genuine 20-CV saved replay now adds source-derived `match_method`, `page_dimensions`, `char_span` (only for an exact extracted-text substring) and `bounding_boxes` (PDF points plus normalized 0..1 rectangles) **only when a source quote was deterministically located**. Across 71 retained citations, 62 have precise rectangles and nine scanned-OCR citations remain `ocr_page_level_only` with `bounding_boxes: null`. The historical 76 verified-quote count includes five individual quotations not retained in the replay (ET-010: one; ET-017: four); no geometry is fabricated for those. New arbitrary uploaded CV analyses still use null geometry until generalized.
 - **Timelines**: new live results may include a structured \`timeline_audit\`; the frozen replay omits that field, so the receipt is \`not_recorded\` for the saved 20.
 - **No extra provider work**: receipt derivation is deterministic Python from the recorded/local analysis payload; 0 new Meta calls, and the UI inspector only reads the current result.
 

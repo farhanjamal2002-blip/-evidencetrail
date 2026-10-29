@@ -107,6 +107,27 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
 .audit-change{font-weight:750;color:#9b641b}
 .audit-drawer a{overflow-wrap:anywhere}
 @media(min-width:1100px){.audit-stat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* In-app source viewer: image pixels and normalized geometry share one stage. */
+.pdf-viewer-panel{border:1px solid #c9dfd4;background:#f8fbf9;border-radius:12px;padding:12px;margin:12px 0 20px}
+.pdf-viewer-panel[hidden]{display:none}
+.pdf-viewer-toolbar{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+.pdf-viewer-toolbar strong{font-size:12px;color:#1f5d4f}
+.pdf-viewer-toolbar a{font-size:11px}
+.pdf-viewer-badge{font-size:11px;color:#795320;background:#fff2d8;border:1px solid #e6ce9b;border-radius:7px;padding:5px 8px}
+.pdf-page-stage{position:relative;width:100%;max-width:730px;margin:0 auto;border:1px solid #d0dcd5;border-radius:8px;overflow:hidden;background:#fff}
+.pdf-page-stage img{display:block;width:100%;height:auto}
+.pdf-highlight-layer{position:absolute;inset:0;pointer-events:none}
+.pdf-bbox-highlight{position:absolute;background:rgba(255,199,12,.33);border:2px solid #ce7700;border-radius:3px;box-shadow:0 0 0 2px rgba(206,119,0,.22);animation:evidence-pulse 1.1s ease-out}
+@keyframes evidence-pulse{0%{transform:scale(1.025);background:rgba(255,190,0,.67)}100%{transform:scale(1);background:rgba(255,199,12,.33)}}
+@media(prefers-reduced-motion:reduce){.pdf-bbox-highlight{animation:none}}
+.source-snap{font-size:11px;font-weight:650;color:#116d60;background:#e7f5ee;border:1px solid #baded0;border-radius:6px;padding:4px 7px;margin:5px 4px 2px 0;cursor:pointer}
+.source-snap:hover{background:#cfeddf}
+/* Prevent long verifier status tokens from expanding the auto-width grid
+   column over source buttons, which blocked real pointer clicks in Chromium. */
+.matrix{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.matrix .cell{overflow-wrap:anywhere}
+.matrix .source-snap{position:relative;z-index:2;max-width:100%;white-space:normal}
 </style>
 </head>
 <body>
@@ -230,9 +251,9 @@ function renderList(){
  updateQuickViews();coverageSummary();
 }
 function evidenceHtml(result){return result.requirements.map((x,i)=>{
-const quoteHtml=(x.evidence||[]).slice(0,4).map(e=>{
+const quoteHtml=(x.evidence||[]).slice(0,4).map((e,quoteIndex)=>{
  const pg=Number(e.page);const label=Number.isInteger(pg)&&pg>=1&&pg<=20?'<a href="'+escapeHtml(result.source_url||'')+'#page='+pg+'" target="_blank" rel="noopener" title="Open original PDF on cited page">Page '+pg+' ↗</a>':"Page not verified";
- return '<div class="quote">'+label+': “'+escapeHtml(e.quote)+'” · '+escapeHtml(e.role||'')+' · locally checked source</div>';
+ return '<div class="quote">'+label+': “'+escapeHtml(e.quote)+'” · '+escapeHtml(e.role||'')+' · locally checked source '+(result.verification_receipt?.requirements?.[i]?.quote_citations?.[quoteIndex]?.source_verified===true?sourceSnapButton(i,quoteIndex,'📍 Highlight on CV'):'')+'</div>';
 }).join("");
 const outcome=x.review_label|| (x.evidence_type==="related"?"Related — exact criterion unproven":x.status==="supported"?"Direct evidence":x.status==="conflicting"?"Discrepancy to clarify":x.status==="not_found"?"Not documented":x.evidence_type||x.status);
 const details="Final: "+escapeHtml(x.effective_status||x.status)+" · Model: "+escapeHtml(x.raw_status||x.muse_status||"not exposed")+" · "+escapeHtml(x.certainty||"")+(x.review_explanation?" · "+escapeHtml(x.review_explanation):"");
@@ -256,16 +277,16 @@ function auditHtml(row,result){
  ];
  const panel=stats.map(([label,value])=>'<div class="audit-stat"><span class="label">'+escapeHtml(label)+'</span><strong>'+escapeHtml(value)+'</strong></div>').join("");
  const reasons=(audit.requirements||[]).map(q=>{
-  const citations=(q.quote_citations||[]).map(item=>{
+  const citations=(q.quote_citations||[]).map((item,quoteIndex)=>{
    const pg=Number(item.page);
    const pageRef=Number.isInteger(pg)&&pg>0?'<a href="'+escapeHtml(row.file_url)+'#page='+pg+'" target="_blank" rel="noopener">Open PDF page '+pg+' ↗</a>':"Page not recorded";
    const verified=item.source_verified===true?"Source quotation verified": "Individual grounding unconfirmed";
-   return '<div class="audit-step local"><b>'+escapeHtml(verified)+'</b> · '+pageRef+'<div>“'+escapeHtml(item.quote||"")+'”</div><span class="muted">Match method: '+escapeHtml(item.match_method||"not recorded")+' · Character span: '+escapeHtml(item.char_span?"recorded":"not recorded")+'</span></div>';
+   return '<div class="audit-step local"><b>'+escapeHtml(verified)+'</b> · '+pageRef+'<div>“'+escapeHtml(item.quote||"")+'”</div>'+(item.source_verified===true?sourceSnapButton(q.requirement_index-1,quoteIndex,'📍 Highlight on CV'):'')+'<span class="muted">Match method: '+escapeHtml(item.match_method||"not recorded")+' · Character span: '+escapeHtml(item.char_span?"recorded":"not recorded")+'</span></div>';
   }).join("");
   const reason=q.override_applied?'<div class="audit-change">Status override: '+escapeHtml(q.raw_muse_status||"unknown")+' → '+escapeHtml(q.verified_status||"unknown")+' · '+escapeHtml(q.override_reason_code||"reason not recorded")+'</div>':'<div class="muted">No status change recorded</div>';
   return '<section class="audit-diff"><h4>R'+escapeHtml(q.requirement_index)+'. '+escapeHtml(q.requirement||"")+'</h4><div class="audit-step"><strong>1 · Meta Muse proposal</strong><div>Original label: '+escapeHtml(q.raw_muse_status||"not recorded")+'</div><div class="muted">Original model reasoning: not separately recorded</div></div><div class="audit-step local"><strong>2 · EvidenceTrail verifier</strong><div>Final label: '+escapeHtml(q.verified_status||"not recorded")+'</div>'+reason+(q.verification_explanation?'<div>'+escapeHtml(q.verification_explanation)+'</div>':"")+citations+'</div></section>';
  }).join("");
- return '<section id="audit-drawer" class="audit-drawer" aria-label="Verification audit" tabindex="-1"><div class="eyebrow">EvidenceTrail audit receipt v1</div><h3>What Muse proposed. What the verifier established.</h3><div class="audit-stat-grid">'+panel+'</div><div class="audit-warning">Security instrumentation: '+escapeHtml(stateForSecurity)+'. A fictional injection-test CV does not establish that a detector fired. No source bounding boxes or exact character spans were recorded in this replay.</div><p class="small muted">Authentic Meta response: '+escapeHtml(provider.response_id||"not recorded")+' · '+escapeHtml(provider.source||"")+' · Additional Meta calls for this receipt: 0.</p>'+reasons+'<p class="small muted">Verified source text is not proof that a CV claim is factually true. No candidate score or hiring recommendation.</p></section>';
+ return '<section id="audit-drawer" class="audit-drawer" aria-label="Verification audit" tabindex="-1"><div class="eyebrow">EvidenceTrail audit receipt v1</div><h3>What Muse proposed. What the verifier established.</h3><div class="audit-stat-grid">'+panel+'</div><div class="audit-warning">Security instrumentation: '+escapeHtml(stateForSecurity)+'. A fictional injection-test CV does not establish that a detector fired. PDF highlight coordinates are derived from the source PDF after recording; scanned OCR evidence remains page-only unless its geometry is verified.</div><p class="small muted">Authentic Meta response: '+escapeHtml(provider.response_id||"not recorded")+' · '+escapeHtml(provider.source||"")+' · Additional Meta calls for this receipt: 0.</p>'+reasons+'<p class="small muted">Verified source text is not proof that a CV claim is factually true. No candidate score or hiring recommendation.</p></section>';
 }
 function toggleAudit(){
  const row=state.items.find(x=>x.id===state.selected);
@@ -274,6 +295,51 @@ function toggleAudit(){
  renderReview();
  if(state.auditOpen){const drawer=$("audit-drawer");if(drawer)drawer.focus({preventScroll:true})}
 }
+function sourceSnapButton(reqIndex,quoteIndex,caption){
+ return '<button type="button" class="source-snap" data-req="'+reqIndex+'" data-quote="'+quoteIndex+'">'+escapeHtml(caption||"Locate on PDF")+'</button>';
+}
+function sourceViewerHtml(){
+ return '<section id="pdf-evidence-viewer" class="pdf-viewer-panel" aria-label="In-app PDF evidence viewer" hidden><div class="pdf-viewer-toolbar"><strong id="pdf-viewer-caption">Verified CV source</strong><span class="pdf-viewer-badge" id="pdf-geometry-badge" role="status">Loading source page…</span><a id="pdf-raw-link" target="_blank" rel="noopener">Open original PDF ↗</a><button class="secondary" id="pdf-close" type="button">Close</button></div><div id="pdf-page-stage" class="pdf-page-stage"><img id="pdf-page-img" alt="Rendered original fictional CV page"/><div id="pdf-highlight-layer" class="pdf-highlight-layer"></div></div></section>';
+}
+function showQuoteOnPdfPage(row,reqIndex,quoteIndex){
+ const source=state.results.get(row.id)?.verification_receipt?.requirements?.[reqIndex]?.quote_citations?.[quoteIndex];
+ if(!source||source.source_verified!==true||!Number.isInteger(source.page)||source.page<1){
+  notice("Page geometry is unavailable: this citation has no recorded source-verification receipt.","warn");return;
+ }
+ const viewer=$("pdf-evidence-viewer"),img=$("pdf-page-img"),layer=$("pdf-highlight-layer"),badge=$("pdf-geometry-badge");
+ if(!viewer||!img)return;
+ const page=source.page;
+ viewer.hidden=false;layer.replaceChildren();
+ $("pdf-viewer-caption").textContent=row.id+" · PDF page "+page+" · source-verified quote";
+ $("pdf-raw-link").href=row.file_url+"#page="+page;
+ badge.textContent="Loading original PDF page…";
+ const boxes=Array.isArray(source.bounding_boxes)?source.bounding_boxes:[];
+ const method=source.match_method||"not_recorded";
+ img.onload=()=>{
+  if(state.selected!==row.id||viewer.hidden)return;
+  layer.replaceChildren();
+  let valid=0;
+  if(boxes.length){
+   for(const b of boxes){
+    const coords=[b.norm_x,b.norm_y,b.norm_w,b.norm_h];
+    if(coords.some(v=>typeof v!=="number"||!Number.isFinite(v)||v<0||v>1)||b.norm_x+b.norm_w>1.01||b.norm_y+b.norm_h>1.01)continue;
+    const div=document.createElement("div");div.className="pdf-bbox-highlight";
+    div.style.left=(b.norm_x*100).toFixed(3)+"%";
+    div.style.top=(b.norm_y*100).toFixed(3)+"%";
+    div.style.width=(b.norm_w*100).toFixed(3)+"%";
+    div.style.height=(b.norm_h*100).toFixed(3)+"%";
+    layer.append(div);valid++;
+   }
+  }
+  badge.textContent=valid?("Source located · "+valid+" precise highlight"+(valid===1?"":"s")+" · "+method):
+    method==="ocr_page_level_only"?"Verified page · scanned OCR (no word geometry)":
+    "Verified page · exact highlight unavailable";
+  viewer.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
+ };
+ img.onerror=()=>{badge.textContent="Page image unavailable · use original PDF link";layer.replaceChildren()};
+ img.removeAttribute("src");
+ img.src="/demo20/cv/"+encodeURIComponent(row.id)+"/page/"+page+".png?dpi=135";
+}
 function renderReview(){const row=state.items.find(x=>x.id===state.selected), el=$("review");if(!row){el.innerHTML='<div class="empty">Select an applicant.</div>';return}
 const result=state.results.get(row.id),decision=state.decisions.get(row.id);
 const activeStatus=result?(result.saved_replay?"Recorded genuine Muse response · verified PDF quotes · NO new API call":result.provider_mode==="muse"?"Live Muse · page verified":"Local simulation · no model calls"):"Awaiting analysis";
@@ -281,8 +347,10 @@ if(result)result.source_url=row.file_url;const receipt=result?.verification_rece
 const provenance=result?'<div class="status">'+escapeHtml(activeStatus)+' · '+escapeHtml(result.model||"")+' · '+escapeHtml(result.analysis_calls||0)+' Muse API call(s) reported · '+escapeHtml((result.quote_audit||{}).verified||0)+' source quotations verified'+(result.saved_replay?' · Authentic Meta response '+escapeHtml((result.receipt||'').slice(0,24))+'…':'')+'.</div>':'<div class="status warn">No model results for this applicant. Never interpret the fictional reference key as a Muse evaluation.</div>';
 let reference='<details id="qa-key" class="small"><summary>Show fictional reference expectations (QA only)</summary>'+Object.entries(row.reference_only).map(([key,val])=>'<p>'+escapeHtml(key)+" · "+escapeHtml(val)+'</p>').join("")+'<p>These are human-authored test expectations, not model predictions or hiring recommendations.</p></details>';
 if(!referenceValid())reference='<p class="small muted">The job criteria were edited; the old fictional evaluation key is no longer applicable.</p>';
-el.innerHTML='<div class="review-top"><div><div class="eyebrow">Source / '+escapeHtml(row.id)+'</div><div class="title">'+escapeHtml(row.role)+'</div><div class="sub">'+escapeHtml(row.period)+' · '+escapeHtml(row.scenario)+'</div></div><a class="secondary" id="openpdf" target="_blank" rel="noopener" href="'+encodeURI(row.file_url)+'">Open PDF ↗</a></div><div class="divider"></div><div class="result-caption">Documented requirement evidence</div><div class="matrix">'+criteriaTable+'</div>'+provenance+auditButton+(state.auditOpen&&result?auditHtml(row,result):'')+'<div class="divider"></div><div class="result-caption">Fictional source lines</div>'+row.fixture_lines.map(line=>'<div class="quote">'+escapeHtml(line)+'</div>').join("")+'<div class="divider"></div>'+reference+'<div class="divider"></div><div class="result-caption">Recruiter decision · never automatic</div><select id="decision" aria-label="Human review decision"><option value="">No decision</option><option>Advance</option><option>Hold</option><option>Do not advance</option></select><textarea id="review-note" style="min-height:66px;margin-top:8px" maxlength="1000" placeholder="Record a factual review reason; optional"></textarea><div class="action"><button type="button" class="secondary" id="save-decision">Record locally</button><button type="button" class="secondary" id="export-decision">Export review record</button>'+(result?'<button type="button" class="secondary" id="export-report">Export evidence report</button>':"")+'</div><p class="small muted">Local browser memory only; not a production ATS or persistent audit store.</p>';
+el.innerHTML='<div class="review-top"><div><div class="eyebrow">Source / '+escapeHtml(row.id)+'</div><div class="title">'+escapeHtml(row.role)+'</div><div class="sub">'+escapeHtml(row.period)+' · '+escapeHtml(row.scenario)+'</div></div><a class="secondary" id="openpdf" target="_blank" rel="noopener" href="'+encodeURI(row.file_url)+'">Open PDF ↗</a></div><div class="divider"></div><div class="result-caption">Documented requirement evidence</div><div class="matrix">'+criteriaTable+'</div>'+provenance+sourceViewerHtml()+auditButton+(state.auditOpen&&result?auditHtml(row,result):'')+'<div class="divider"></div><div class="result-caption">Fictional source lines</div>'+row.fixture_lines.map(line=>'<div class="quote">'+escapeHtml(line)+'</div>').join("")+'<div class="divider"></div>'+reference+'<div class="divider"></div><div class="result-caption">Recruiter decision · never automatic</div><select id="decision" aria-label="Human review decision"><option value="">No decision</option><option>Advance</option><option>Hold</option><option>Do not advance</option></select><textarea id="review-note" style="min-height:66px;margin-top:8px" maxlength="1000" placeholder="Record a factual review reason; optional"></textarea><div class="action"><button type="button" class="secondary" id="save-decision">Record locally</button><button type="button" class="secondary" id="export-decision">Export review record</button>'+(result?'<button type="button" class="secondary" id="export-report">Export evidence report</button>':"")+'</div><p class="small muted">Local browser memory only; not a production ATS or persistent audit store.</p>';
 if(result)$("inspect-audit").onclick=toggleAudit;
+ if(result)el.querySelectorAll(".source-snap").forEach(b=>b.onclick=()=>showQuoteOnPdfPage(row,Number(b.dataset.req),Number(b.dataset.quote)));
+ $("pdf-close").onclick=()=>{$("pdf-evidence-viewer").hidden=true};
  $("decision").value=decision?.action||"";$("review-note").value=decision?.note||"";
 $("save-decision").onclick=()=>{if(!$("decision").value){state.decisions.delete(row.id)}else{state.decisions.set(row.id,{action:$("decision").value,note:$("review-note").value,reviewed_at:new Date().toISOString(),candidate_id:row.id})}renderList();renderReview()};
 $("export-decision").onclick=()=>download(JSON.stringify({fictional:true,candidate_id:row.id,job_description:$("job").value,criteria:state.criteria,review:state.decisions.get(row.id)||null,evidence:result?{provider_mode:result.provider_mode,requirements:result.requirements,verification_audit:result.verification_audit,cv_sha256:result.cv_sha256}:null},null,2),row.id+"-review.json","application/json");
