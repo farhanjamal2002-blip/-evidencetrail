@@ -7,7 +7,7 @@ import pymupdf as fitz
 from PIL import Image
 from fastapi.testclient import TestClient
 
-from multimodal_intake import prepare_cv, media_kind
+from multimodal_intake import prepare_cv, media_kind, optional_meta_vision_parts
 import app
 import demo20_workflow
 
@@ -35,6 +35,28 @@ class MultimodalIntakeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 prepare_cv(blob,max_bytes=3_000_000)
         self.assertEqual(media_kind(b"%PDF-1.7\n"),"application/pdf")
+
+    def test_meta_visual_parts_are_bounded_and_page_labelled(self):
+        with fitz.open(stream=demo20_workflow.make_cv_pdf("ET-019"),filetype="pdf") as doc:
+            self.assertEqual(len(doc),1)
+        pdf=demo20_workflow.make_cv_pdf("ET-019")
+        parts=optional_meta_vision_parts(pdf,[1,1,999,True])
+        self.assertEqual([x["type"] for x in parts],["text","image_url"])
+        self.assertIn("PDF page 1",parts[0]["text"])
+        self.assertTrue(parts[1]["image_url"]["url"].startswith("data:image/jpeg;base64,"))
+        self.assertLess(len(parts[1]["image_url"]["url"]),1_300_000)
+        self.assertEqual(optional_meta_vision_parts(pdf,[]),[])
+
+    def test_vision_fails_closed_without_flag_and_still_requires_consent(self):
+        if app.ANALYSIS_PROVIDER!="mock":
+            self.skipTest("This fails closed in mock mode")
+        with TestClient(app.app) as client:
+            response=client.post("/api/analyze",data={
+                "job_description":"Position: Supply Lead",
+                "consent":"true","visual_review":"true",
+            },files={"cv":("sample.pdf",demo20_workflow.make_cv_pdf("ET-019"),"application/pdf")})
+        self.assertEqual(response.status_code,400)
+        self.assertIn("disabled",response.json()["detail"])
 
     def test_pdf_normalization_preserves_original_hash_and_bytes(self):
         sample=demo20_workflow.make_cv_pdf("ET-001")
