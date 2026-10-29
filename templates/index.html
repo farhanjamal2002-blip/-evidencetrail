@@ -114,10 +114,10 @@
             <div class="step-label candidate-upload-step">03 / ADD CANDIDATES</div>
             <label class="field-label" for="cv">Candidate CVs <span>(up to 5)</span></label>
             <label class="upload-zone" for="cv">
-              <input id="cv" name="cv" type="file" accept="application/pdf,.pdf" multiple data-max-bytes="{{ max_pdf_bytes }}" data-max-files="5" required>
+              <input id="cv" name="cv" type="file" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" multiple data-max-bytes="{{ max_pdf_bytes }}" data-max-files="5" required>
               <span class="upload-icon">↑</span>
               <span class="upload-copy">
-                <strong id="file-name">Choose CV PDFs or drop them here</strong>
+                <strong id="file-name">Choose PDF, PNG or JPEG CVs or drop them here</strong>
                 <small>Up to 5 searchable or scanned CVs · {{ max_pdf_mb }} MB each · max 20 pages each</small>
               </span>
               <span class="browse-link">Browse</span>
