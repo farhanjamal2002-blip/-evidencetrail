@@ -1,4 +1,5 @@
 name: EvidenceTrail fresh unseen CV holdout after semantic fix
+# Source corpus uses Python None for absent anchors; preflight before model calls.
 on:
   push:
     branches: [eval/fresh-four-sector-holdout-oct29]
