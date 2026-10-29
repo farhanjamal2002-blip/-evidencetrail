@@ -338,7 +338,7 @@ cvInput.addEventListener("change", function () {
   renderBatchRubricEditor();
   const resultsWereCleared = clearCurrentResults(true);
   if (!files.length) {
-    fileName.textContent = "Choose CV PDFs or drop them here";
+    fileName.textContent = "Choose PDF, PNG or JPEG CVs or drop them here";
     if (!resultsWereCleared) hideError();
     return;
   }
@@ -346,7 +346,7 @@ cvInput.addEventListener("change", function () {
   if (fileError) {
     cvInput.value = "";
     renderBatchRubricEditor();
-    fileName.textContent = "Choose CV PDFs or drop them here";
+    fileName.textContent = "Choose PDF, PNG or JPEG CVs or drop them here";
     showError(fileError);
     return;
   }
@@ -763,7 +763,7 @@ form.addEventListener("submit", async function (event) {
   }
   const submittedFiles = Array.from(cvInput.files || []);
   if (!submittedFiles.length) {
-    showError("Choose one or more candidate CV PDFs first.");
+    showError("Choose one or more CV PDFs or images first.");
     return;
   }
   const selectionError = getSelectionError(submittedFiles);
@@ -1016,16 +1016,16 @@ function hideError() {
 
 function getPdfFileError(file) {
   if (!/\.pdf$/i.test(file.name || "")) return "Choose a PDF file.";
-  if (!file.size) return "That PDF is empty. Choose another file.";
+  if (!file.size) return "That CV file is empty. Choose another file.";
   if (file.size > maxPdfBytes) {
     const limitMb = Math.max(1, Math.round(maxPdfBytes / (1024 * 1024)));
-    return "Keep the PDF under " + limitMb + " MB.";
+    return "Keep the CV under " + limitMb + " MB.";
   }
   return "";
 }
 
 function getSelectionError(files) {
-  if (!files.length) return "Choose one or more candidate CV PDFs first.";
+  if (!files.length) return "Choose one or more CV PDFs or images first.";
   if (files.length > maxBatchFiles) return "Choose no more than " + maxBatchFiles + " CVs in one batch.";
   let totalBytes = 0;
   for (const file of files) {
@@ -3910,6 +3910,16 @@ async function loadSourcePdf() {
 
 async function openInteractivePdf(pageNumber, quote) {
   if (!sourcePdfFile || !sourcePdfPayload) return;
+  // Image CVs were safely normalized to an OCR PDF on the server; the
+  // original image is not a PDF.js document. Keep using the source-backed
+  // server-rendered page preview instead of attempting to parse it as PDF.
+  if (/\\.(png|jpe?g)$/i.test(sourcePdfFile.name || "")) {
+    const page = document.getElementById("page-" + pageNumber);
+    if (page) page.scrollIntoView({behavior:"smooth",block:"start"});
+    sourceViewerStatus.textContent =
+      "Original image CV: use the server page preview and quote audit below. No fabricated geometry.";
+    return;
+  }
   sourceViewer.hidden = false;
   sourceViewerStatus.textContent = "Opening the original CV in the interactive viewer…";
   sourceViewer.scrollIntoView({
