@@ -1,0 +1,35 @@
+name: EvidenceTrail real Meta 16-CV zero-call replay
+on:
+  push:
+    branches: [eval/real-muse-16-offline-replay-oct30]
+    paths: [.github/workflows/postfreeze-offline-replay.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download prior authentic Muse receipt artifact, no new inference
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p artifacts/postfreeze-16-report
+          gh run download 40935108963 --repo farhanjamal2002-blip/-evidencetrail --name evidencetrail-postfreeze-16-report --dir artifacts/postfreeze-16-report
+      - name: Replay all 48 reference judgments against patched deterministic verifier
+        run: PYTHONPATH=. python scripts/replay_postfreeze_meta_receipts.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidencetrail-patched-offline-16-replay
+          path: artifacts/postfreeze-offline-replay/
+          retention-days: 14
