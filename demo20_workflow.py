@@ -144,6 +144,9 @@ def fictional_manifest():
         "job_description":JOB,"criteria":dict(zip(("R1","R2","R3","R4"),CRITERIA)),
         "candidates":candidates,"total":len(candidates),
         "live_muse_configured":live_ready,"provider_mode":mode,
+        "multimodal_vision_available": live_ready and
+            os.getenv("EVIDENCETRAIL_ENABLE_META_VISION","false").strip().lower()
+            in {"true","1","yes","on"},
         "disclosure":"Synthetic fixtures and author-written test expectations; not actual Muse outcomes.",
         "applicant_order":"received","automatic_hiring_decisions":False,
     },headers={"Cache-Control":"no-store","X-Robots-Tag":"noindex, nofollow"})
