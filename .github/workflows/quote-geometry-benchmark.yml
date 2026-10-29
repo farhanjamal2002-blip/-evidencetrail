@@ -1,4 +1,5 @@
 name: EvidenceTrail deterministic PDF quote geometry benchmark
+# Report historic audited 76 quotes versus 71 surviving citations without inventing locations.
 on:
   push:
     branches: [feat/pdf-quote-geometry-snap-20261029]
