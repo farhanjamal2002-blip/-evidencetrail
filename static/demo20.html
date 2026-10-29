@@ -128,6 +128,13 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
 .matrix{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
 .matrix .cell{overflow-wrap:anywhere}
 .matrix .source-snap{position:relative;z-index:2;max-width:100%;white-space:normal}
+.workflow-tools{margin:12px 0 3px;padding:12px;border:1px solid #d7e5dc;border-radius:10px;background:#f9fcfa}
+.workflow-tools label{display:block;font-size:11px;color:#355d55;font-weight:700;margin:8px 0 5px}
+.workflow-tools textarea{min-height:90px}
+.workflow-tools p{font-size:11px;line-height:1.5}
+.workflow-task-summary{padding:10px 12px;border-bottom:1px solid #e5ece8;background:#f9fcfa;font-size:11px;line-height:1.55;color:#376056}
+.workflow-task-summary button{margin-top:8px}
+.workflow-status{font-size:11px;color:#286953;font-weight:650}
 </style>
 </head>
 <body>
@@ -173,9 +180,10 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
 <button type="button" class="coverage-action" data-coverage="coverage_partial" title="Some relevant CV evidence and unresolved requirements"><strong id="coverage-partial-count">0</strong><span>Partial / scope questions</span></button>
 <button type="button" class="coverage-action" data-coverage="coverage_attention" title="Gaps or discrepancies; never automatic rejection"><strong id="coverage-attention-count">0</strong><span>Gaps / discrepancies</span></button>
 </div>
+<div class="workflow-task-summary"><div id="workflow-summary">Review tasks appear after evidence loads.</div><button type="button" class="secondary" id="export-workflow">Export workflow CSV</button><p class="small muted">Draft questions and stage updates stay in this browser tab. Export before reset; no automatic emails or applicant decisions.</p></div>
 <div class="coverage-legend">Each square = one job requirement. 🟩 Direct · 🟨 Related/limited · ⬜ Not documented · 🟥 Discrepancy. These describe CV documentation, not candidate ability.</div>
 <div class="queue-help">Grouped by CV evidence; original received order within each group. J next · K previous. No scores or automatic rejection.</div>
- <div class="toolbar"><input id="search" class="text-input" aria-label="Search applications" placeholder="Search ID, role, or CV text…"><select id="filter" aria-label="Filter applications"><option value="all">All applicants</option><option value="not_analyzed">Not analyzed</option><option value="ready">Evidence ready</option><option value="coverage_complete">All directly documented</option><option value="coverage_partial">Partial / scope questions</option><option value="coverage_attention">Gaps / discrepancies</option><option value="all_direct">All criteria directly documented</option><option value="direct">Any direct evidence</option><option value="related">Related evidence</option><option value="conflicting">Multiple-claim discrepancies</option><option value="scope_limit">Scope limitations</option><option value="not_found">Missing / unproven</option><option value="failed">Failed analysis</option><option value="human_review">Needs clarification</option><option value="awaiting_decision">Awaiting human decision</option><option value="reviewed">Human-reviewed</option><option value="no_direct">No directly documented requirements</option></select></div>
+ <div class="toolbar"><input id="search" class="text-input" aria-label="Search applications" placeholder="Search ID, role, or CV text…"><select id="filter" aria-label="Filter applications"><option value="all">All applicants</option><option value="not_analyzed">Not analyzed</option><option value="ready">Evidence ready</option><option value="coverage_complete">All directly documented</option><option value="coverage_partial">Partial / scope questions</option><option value="coverage_attention">Gaps / discrepancies</option><option value="all_direct">All criteria directly documented</option><option value="direct">Any direct evidence</option><option value="related">Related evidence</option><option value="conflicting">Multiple-claim discrepancies</option><option value="scope_limit">Scope limitations</option><option value="not_found">Missing / unproven</option><option value="failed">Failed analysis</option><option value="human_review">Needs clarification</option><option value="awaiting_decision">Awaiting human decision</option><option value="reviewed">Human-reviewed</option><option value="follow_up_draft">Follow-up drafted</option><option value="waiting_external">Awaiting clarification response</option><option value="clarification_received">Clarification recorded</option><option value="no_direct">No directly documented requirements</option></select></div>
  <div class="list" id="list"><div class="empty">Loading 20 fictional applicants and the saved Muse evidence…</div></div>
 </section>
 <section class="panel review-panel">
@@ -186,11 +194,12 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
 <p class="footer">EvidenceTrail is a document evidence layer, not a hiring-decision engine. This demo does not store decisions or CVs in a tenant database. Never use these fictional reference labels as applicant assessments.</p>
 </main>
 <script src="/static/coverage_matrix.js"></script>
+<script src="/static/recruiter-workflow.js"></script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
 const escapeHtml=s=>String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
-const state={manifest:null,items:[],selected:null,confirmed:false,criteria:[],busy:false,results:new Map(),decisions:new Map(),jobDefault:"",criteriaDefault:[],mode:"unknown",canAnalyze:false,auditOpen:false};
+const state={manifest:null,items:[],selected:null,confirmed:false,criteria:[],busy:false,results:new Map(),decisions:new Map(),followups:new Map(),jobDefault:"",criteriaDefault:[],mode:"unknown",canAnalyze:false,auditOpen:false};
 function notice(message,kind=""){const el=$("apistatus");el.className="status"+(kind?" "+kind:"");el.textContent=message}
 function setJobMessage(message,kind=""){const el=$("jobstatus");el.className="status"+(kind?" "+kind:"");el.textContent=message}
 function criteriaValues(){return Array.from($("criteria").querySelectorAll("input")).map(x=>x.value.trim()).filter(Boolean)}
@@ -220,7 +229,9 @@ function visibleRows(){const q=$("search").value.trim().toLowerCase(),f=$("filte
 function pickCandidate(id){if(!state.items.some(x=>x.id===id))return;state.selected=id;renderList();renderReview();updateControls()}
 function nextCandidate(step=1,pending=false){let rows=visibleRows();if(pending)rows=rows.filter(x=>state.results.has(x.id)&&!state.decisions.has(x.id));if(!rows.length){notice("No applicants in this view need a decision. Select another evidence view.");return}const current=rows.findIndex(x=>x.id===state.selected);const index=(current<0?(step>0?0:rows.length-1):(current+step+rows.length)%rows.length);pickCandidate(rows[index].id)}
 function updateQuickViews(){for(const b of $("quickviews").querySelectorAll("[data-view]")){b.classList.toggle("active",b.dataset.view===$("filter").value);b.setAttribute("aria-pressed",String(b.dataset.view===$("filter").value))}}
-function matchesFilter(row,filter){const result=state.results.get(row.id);if(filter==="all")return true;if(filter.startsWith("coverage_"))return EvidenceCoverage.groupFor(row,result,state.criteria.length)===filter.slice(9);if(filter==="not_analyzed")return !result&&row.state!=="failed";if(filter==="ready")return !!result;if(filter==="failed")return row.state==="failed";if(filter==="human_review")return needsReview(row)&&!state.decisions.has(row.id);if(filter==="awaiting_decision")return !!result&&!state.decisions.has(row.id);if(filter==="reviewed")return state.decisions.has(row.id);if(filter==="no_direct")return !!result&&directCount(result)===0;if(filter==="scope_limit")return !!result&&result.requirements.some(x=>x.review_reason_code==="explicit_scope_limit_not_contradiction"||x.review_reason_code==="document_absence_not_contradiction");if(filter==="all_direct")return !!result&&result.requirements.length===state.criteria.length&&result.requirements.every(x=>x.status==="supported"&&x.evidence_type==="direct");return !!result&&result.requirements.some(x=>filter==="direct"?x.evidence_type==="direct"&&x.status==="supported":filter==="related"?x.evidence_type==="related":filter==="conflicting"?x.status==="conflicting":x.status==="not_found")}
+function matchesFilter(row,filter){const result=state.results.get(row.id);if(filter==="all")return true;if(filter.startsWith("coverage_"))return EvidenceCoverage.groupFor(row,result,state.criteria.length)===filter.slice(9);if(filter==="not_analyzed")return !result&&row.state!=="failed";if(filter==="ready")return !!result;if(filter==="failed")return row.state==="failed";if(filter==="human_review")return needsReview(row)&&!state.decisions.has(row.id);if(filter==="awaiting_decision")return !!result&&!state.decisions.has(row.id);if(filter==="reviewed")return state.decisions.has(row.id);
+if(["follow_up_draft","waiting_external","clarification_received"].includes(filter))
+ return EvidenceWorkflow.reviewStage(row.id,result,state.decisions.get(row.id),state.followups.get(row.id))===filter;if(filter==="no_direct")return !!result&&directCount(result)===0;if(filter==="scope_limit")return !!result&&result.requirements.some(x=>x.review_reason_code==="explicit_scope_limit_not_contradiction"||x.review_reason_code==="document_absence_not_contradiction");if(filter==="all_direct")return !!result&&result.requirements.length===state.criteria.length&&result.requirements.every(x=>x.status==="supported"&&x.evidence_type==="direct");return !!result&&result.requirements.some(x=>filter==="direct"?x.evidence_type==="direct"&&x.status==="supported":filter==="related"?x.evidence_type==="related":filter==="conflicting"?x.status==="conflicting":x.status==="not_found")}
 function statusTag(text,type=""){return '<span class="pill '+escapeHtml(type)+'">'+escapeHtml(text)+'</span>'}
 function updateControls(){const allowed=state.confirmed&&state.canAnalyze&&state.items.length>0&&!state.busy&&$("consent").checked;
 $("analyze-one").disabled=!allowed||!state.selected;$("analyze-five").disabled=!allowed||state.items.every(row=>state.results.has(row.id)||row.state==="failed");
@@ -238,8 +249,10 @@ function renderList(){
   lastGroup=group;
   const badge=result?statusTag(result.saved_replay?"Recorded Muse":result.provider_mode==="muse"?"Live Muse":"Simulation",result.provider_mode==="muse"?"live":"sim"):row.state==="failed"?statusTag("Failed","error"):row.state==="processing"?statusTag("Analyzing…"):statusTag("Not analyzed");
   const counts=result?statusTag("Direct evidence: "+directCount(result)+"/"+state.criteria.length,"proof"):"";
+  const task=state.followups.get(row.id);
+  const taskBadge=task?statusTag("Follow-up: "+task.status.replaceAll("_"," ")):"";
   const clarification=result?.requirements?.some(x=>x.review_reason_code==="explicit_scope_limit_not_contradiction"||x.review_reason_code==="document_absence_not_contradiction")?statusTag("Scope clarification","related"):"";
-  return header+'<button class="item '+(row.id===state.selected?"selected":"")+'" data-id="'+escapeHtml(row.id)+'"><span class="avatar">'+escapeHtml(row.id.slice(-2))+'</span><span><span class="name">'+escapeHtml(row.id)+" · "+escapeHtml(row.role)+'</span><div class="meta">'+escapeHtml(row.period)+" · "+(row.scan?"Image-only PDF":"Text PDF")+'</div>'+coverageSquares(result)+'<span class="pills">'+badge+counts+clarification+(decision?statusTag("Human: "+decision.action):"")+'</span></span></button>';
+  return header+'<button class="item '+(row.id===state.selected?"selected":"")+'" data-id="'+escapeHtml(row.id)+'"><span class="avatar">'+escapeHtml(row.id.slice(-2))+'</span><span><span class="name">'+escapeHtml(row.id)+" · "+escapeHtml(row.role)+'</span><div class="meta">'+escapeHtml(row.period)+" · "+(row.scan?"Image-only PDF":"Text PDF")+'</div>'+coverageSquares(result)+'<span class="pills">'+badge+counts+clarification+taskBadge+(decision?statusTag("Human: "+decision.action):"")+'</span></span></button>';
  }).join(""):'<div class="empty">No applicants match this documentation view; other applicants remain available under All applicants.</div>';
  el.querySelectorAll("[data-id]").forEach(b=>b.addEventListener("click",()=>pickCandidate(b.dataset.id)));
  $("total").textContent=state.items.length;
@@ -249,6 +262,10 @@ function renderList(){
  $("reviewed").textContent=state.decisions.size;
  $("next-review").disabled=!state.items.some(x=>state.results.has(x.id)&&!state.decisions.has(x.id));
  updateQuickViews();coverageSummary();
+ const summary=EvidenceWorkflow.reviewSummary(state.items,state.results,state.decisions,state.followups);
+ $("workflow-summary").textContent="Workflow · "+summary.ready_for_human_review+" ready · "+
+   summary.needs_clarification+" need clarification · "+summary.follow_up_draft+" drafts · "+
+   summary.waiting_external+" awaiting external reply · "+summary.human_decided+" human decisions";
 }
 function evidenceHtml(result){return result.requirements.map((x,i)=>{
 const quoteHtml=(x.evidence||[]).slice(0,4).map((e,quoteIndex)=>{
@@ -347,14 +364,69 @@ if(result)result.source_url=row.file_url;const receipt=result?.verification_rece
 const provenance=result?'<div class="status">'+escapeHtml(activeStatus)+' · '+escapeHtml(result.model||"")+' · '+escapeHtml(result.analysis_calls||0)+' Muse API call(s) reported · '+escapeHtml((result.quote_audit||{}).verified||0)+' source quotations verified'+(result.saved_replay?' · Authentic Meta response '+escapeHtml((result.receipt||'').slice(0,24))+'…':'')+'.</div>':'<div class="status warn">No model results for this applicant. Never interpret the fictional reference key as a Muse evaluation.</div>';
 let reference='<details id="qa-key" class="small"><summary>Show fictional reference expectations (QA only)</summary>'+Object.entries(row.reference_only).map(([key,val])=>'<p>'+escapeHtml(key)+" · "+escapeHtml(val)+'</p>').join("")+'<p>These are human-authored test expectations, not model predictions or hiring recommendations.</p></details>';
 if(!referenceValid())reference='<p class="small muted">The job criteria were edited; the old fictional evaluation key is no longer applicable.</p>';
-el.innerHTML='<div class="review-top"><div><div class="eyebrow">Source / '+escapeHtml(row.id)+'</div><div class="title">'+escapeHtml(row.role)+'</div><div class="sub">'+escapeHtml(row.period)+' · '+escapeHtml(row.scenario)+'</div></div><a class="secondary" id="openpdf" target="_blank" rel="noopener" href="'+encodeURI(row.file_url)+'">Open PDF ↗</a></div><div class="divider"></div><div class="result-caption">Documented requirement evidence</div><div class="matrix">'+criteriaTable+'</div>'+provenance+sourceViewerHtml()+auditButton+(state.auditOpen&&result?auditHtml(row,result):'')+'<div class="divider"></div><div class="result-caption">Fictional source lines</div>'+row.fixture_lines.map(line=>'<div class="quote">'+escapeHtml(line)+'</div>').join("")+'<div class="divider"></div>'+reference+'<div class="divider"></div><div class="result-caption">Recruiter decision · never automatic</div><select id="decision" aria-label="Human review decision"><option value="">No decision</option><option>Advance</option><option>Hold</option><option>Do not advance</option></select><textarea id="review-note" style="min-height:66px;margin-top:8px" maxlength="1000" placeholder="Record a factual review reason; optional"></textarea><div class="action"><button type="button" class="secondary" id="save-decision">Record locally</button><button type="button" class="secondary" id="export-decision">Export review record</button>'+(result?'<button type="button" class="secondary" id="export-report">Export evidence report</button>':"")+'</div><p class="small muted">Local browser memory only; not a production ATS or persistent audit store.</p>';
+el.innerHTML='<div class="review-top"><div><div class="eyebrow">Source / '+escapeHtml(row.id)+'</div><div class="title">'+escapeHtml(row.role)+'</div><div class="sub">'+escapeHtml(row.period)+' · '+escapeHtml(row.scenario)+'</div></div><a class="secondary" id="openpdf" target="_blank" rel="noopener" href="'+encodeURI(row.file_url)+'">Open PDF ↗</a></div><div class="divider"></div><div class="result-caption">Documented requirement evidence</div><div class="matrix">'+criteriaTable+'</div>'+provenance+sourceViewerHtml()+auditButton+(state.auditOpen&&result?auditHtml(row,result):'')+'<div class="divider"></div><div class="result-caption">Fictional source lines</div>'+row.fixture_lines.map(line=>'<div class="quote">'+escapeHtml(line)+'</div>').join("")+'<div class="divider"></div>'+reference+'<div class="divider"></div>'+followUpHtml(row,result)+'<div class="divider"></div><div class="result-caption">Recruiter decision · never automatic</div><select id="decision" aria-label="Human review decision"><option value="">No decision</option><option>Advance</option><option>Hold</option><option>Do not advance</option></select><textarea id="review-note" style="min-height:66px;margin-top:8px" maxlength="1000" placeholder="Record a factual review reason; optional"></textarea><div class="action"><button type="button" class="secondary" id="save-decision">Record locally</button><button type="button" class="secondary" id="export-decision">Export review record</button>'+(result?'<button type="button" class="secondary" id="export-report">Export evidence report</button>':"")+'</div><p class="small muted">Local browser memory only; not a production ATS or persistent audit store.</p>';
 if(result)$("inspect-audit").onclick=toggleAudit;
  if(result)el.querySelectorAll(".source-snap").forEach(b=>b.onclick=()=>showQuoteOnPdfPage(row,Number(b.dataset.req),Number(b.dataset.quote)));
  $("pdf-close").onclick=()=>{$("pdf-evidence-viewer").hidden=true};
+ if(result){
+   const task=state.followups.get(row.id),statusEl=$("followup-status");
+   if(statusEl)statusEl.value=task?.status||"draft";
+   const generate=$("generate-followup"),save=$("save-followup"),copy=$("copy-followup");
+   if(generate)generate.onclick=()=>{
+     const index=Number($("followup-criterion")?.value||0);
+     const task=EvidenceWorkflow.createFollowUp(row.id,result,index,new Date().toISOString());
+     if(!task){notice("No unresolved source evidence requires clarification.","warn");return}
+     state.followups.set(row.id,task);renderList();renderReview();
+   };
+   if(save)save.onclick=()=>{
+     const previous=state.followups.get(row.id);if(!previous)return;
+     try{
+       const updated=EvidenceWorkflow.updateFollowUp(previous,{
+         question:$("followup-question").value,
+         comment:$("followup-comment").value,
+         status:$("followup-status").value,
+       },new Date().toISOString());
+       state.followups.set(row.id,updated);renderList();renderReview();
+       notice(updated.status==="waiting_external"?
+         "Marked manually as sent. EvidenceTrail did NOT send a message.":
+         "Follow-up saved locally. No external message sent.");
+     }catch(e){notice(e.message,"bad")}
+   };
+   if(copy)copy.onclick=async()=>{
+     const previous=state.followups.get(row.id);if(!previous)return;
+     try{
+       const draft=EvidenceWorkflow.updateFollowUp(previous,{
+         question:$("followup-question").value,comment:$("followup-comment").value,
+       },new Date().toISOString());
+       const text=EvidenceWorkflow.messageFor(draft, state.manifest?.job_title||"the advertised role");
+       if(!navigator.clipboard?.writeText)throw Error("Clipboard unavailable");
+       await navigator.clipboard.writeText(text);
+       state.followups.set(row.id,draft);
+       notice("Message draft copied. Not sent to the applicant.");
+     }catch(e){notice("Clipboard copy unavailable. Use the editable follow-up question above. "+e.message,"warn")}
+   };
+ }
  $("decision").value=decision?.action||"";$("review-note").value=decision?.note||"";
 $("save-decision").onclick=()=>{if(!$("decision").value){state.decisions.delete(row.id)}else{state.decisions.set(row.id,{action:$("decision").value,note:$("review-note").value,reviewed_at:new Date().toISOString(),candidate_id:row.id})}renderList();renderReview()};
-$("export-decision").onclick=()=>download(JSON.stringify({fictional:true,candidate_id:row.id,job_description:$("job").value,criteria:state.criteria,review:state.decisions.get(row.id)||null,evidence:result?{provider_mode:result.provider_mode,requirements:result.requirements,verification_audit:result.verification_audit,cv_sha256:result.cv_sha256}:null},null,2),row.id+"-review.json","application/json");
+$("export-decision").onclick=()=>download(JSON.stringify({fictional:true,candidate_id:row.id,job_description:$("job").value,criteria:state.criteria,review:state.decisions.get(row.id)||null,follow_up:state.followups.get(row.id)||null,evidence:result?{provider_mode:result.provider_mode,requirements:result.requirements,verification_audit:result.verification_audit,cv_sha256:result.cv_sha256}:null},null,2),row.id+"-review.json","application/json");
 if(result)$("export-report").onclick=()=>download(result.report_html||standaloneEvidenceReport(row,result,decision),row.id+"-evidence.html","text/html");
+}
+function followUpHtml(row,result){
+ if(!result)return '<section class="workflow-tools"><b>Clarification workflow</b><p class="muted">Load verified evidence before drafting a targeted question. No automated communication.</p></section>';
+ const task=state.followups.get(row.id),suggested=EvidenceWorkflow.clarificationFor(result);
+ const option=EvidenceWorkflow.unresolvedFindings(result).map(({finding,index})=>
+   '<option value="'+index+'">R'+(index+1)+' · '+escapeHtml(String(finding.requirement||"").slice(0,120))+'</option>').join("");
+ return '<section class="workflow-tools" aria-label="Recruiter clarification tasks"><div class="result-caption">Next step · human-controlled clarification</div>'+
+ '<p class="muted">Generate a job-related follow-up from unresolved evidence. Nothing is sent automatically. Do not record a reply unless you actually received one.</p>'+
+ (suggested?'<label for="followup-criterion">Unresolved criterion</label><select id="followup-criterion">'+option+'</select>':'<p>No unresolved criteria. Human review can still proceed.</p>')+
+ '<label for="followup-question">Editable follow-up question</label><textarea id="followup-question" maxlength="1200" placeholder="Prepare a question linked to the evidence…">'+escapeHtml(task?.question||"")+'</textarea>'+
+ '<label for="followup-comment">Recruiter note (optional)</label><textarea id="followup-comment" maxlength="1000" style="min-height:52px">'+escapeHtml(task?.comment||"")+'</textarea>'+
+ '<label for="followup-status">Follow-up stage</label><select id="followup-status"><option value="draft">Draft (not sent)</option><option value="waiting_external">Manually marked as sent — awaiting reply</option><option value="resolved">Human recorded reply / resolved</option></select>'+
+ '<div class="action"><button type="button" class="secondary" id="generate-followup" '+(!suggested?'disabled':'')+'>Prepare evidence question</button>'+
+ '<button type="button" class="secondary" id="save-followup" '+(!task?'disabled':'')+'>Save follow-up locally</button>'+
+ '<button type="button" class="secondary" id="copy-followup" '+(!task?'disabled':'')+'>Copy message draft</button></div>'+
+ '<p class="workflow-status">'+(task?'Current: '+escapeHtml(task.status.replaceAll("_"," "))+' · '+escapeHtml(task.requirement_id):'No follow-up created')+'</p>'+
+ '</section>';
 }
 function standaloneEvidenceReport(row,result,decision){
  // Offline, standalone file built only from source-verified recorded findings.
@@ -371,7 +443,7 @@ function standaloneEvidenceReport(row,result,decision){
  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EvidenceTrail · '+escapeHtml(row.id)+' evidence</title><style>body{font:16px/1.55 system-ui,sans-serif;max-width:900px;margin:36px auto;padding:0 20px;color:#143d39}section{border-top:1px solid #d6e5dd;padding:14px 0}blockquote{border-left:3px solid #347d6b;background:#f3f8f5;padding:12px 16px;margin:12px 0}small{color:#59786a}a{color:#086b61}</style></head><body><h1>EvidenceTrail · fictional evidence pack</h1><p><b>'+escapeHtml(row.id)+'</b> — '+escapeHtml(row.role)+'</p><p>Recorded real Muse output: '+(result.saved_replay?"yes, previously recorded":"no, current analysis")+' · '+escapeHtml(result.model||"")+' · Response receipt: '+escapeHtml(result.receipt||"not in this export")+'</p><p>All quoted passages must be interpreted by a human. This verifies PDF text, not truth of the CV claim. No scoring or automated hiring.</p>'+fields+'<section><h2>Human reviewer action</h2><p>'+escapeHtml(decision?.action||"No decision")+'</p><p>'+escapeHtml(decision?.note||"")+'</p></section><small>Exported from EvidenceTrail. Fictional test data, not a real hiring recommendation.</small></body></html>';
 }
 function download(contents,filename,mime){const blob=new Blob([contents],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)}
-async function load(autoReplay=false){if(state.decisions.size&&!window.confirm("Resetting the inbox will discard your unsaved local review decisions. Continue?"))return;try{const r=await fetch("/demo20/manifest",{cache:"no-store"});if(!r.ok)throw Error("Manifest unavailable ("+r.status+")");const m=await r.json();if(m.total!==20||m.candidates.length!==20)throw Error("Fictional manifest incomplete");$("search").value="";$("filter").value="all";state.manifest=m;state.items=m.candidates.map(x=>({...x,state:"not_analyzed"}));state.selected=state.items[0].id;state.criteria=Object.values(m.criteria);state.criteriaDefault=[...state.criteria];state.jobDefault=m.job_description;$("job").value=m.job_description;state.confirmed=false;state.results.clear();state.decisions.clear();state.canAnalyze=m.live_muse_configured||m.provider_mode==="mock";state.mode=m.provider_mode;$("consent-copy").textContent=m.live_muse_configured?"I authorize sending this fictional CV and job description to Meta for a new Muse analysis.":"I acknowledge this is a local simulation (NOT Muse). No CV text is sent to Meta.";$("recorded").disabled=false;$("analyze-one").textContent=m.live_muse_configured?"Analyze selected with Muse":"Simulate selected (NOT Muse)";$("analyze-five").textContent=m.live_muse_configured?"Analyze next 5 with Muse":"Simulate 5 (NOT Muse)";renderCriteria();updateControls();renderList();renderReview();notice(m.live_muse_configured?"Muse is configured on this server. Confirm criteria and consent before analyzing.":"Muse is not enabled on this server. You can inspect all 20 fictional CVs; real AI analysis is unavailable here.",m.live_muse_configured?"":"warn");setJobMessage("Job rubric loaded from the fictional role. Review and confirm it before analysis.");if(autoReplay)await showRecordedMuse();}catch(e){notice("Unable to load the fictional dataset: "+String(e.message),"bad")}}
+async function load(autoReplay=false){if(state.decisions.size&&!window.confirm("Resetting the inbox will discard your unsaved local review decisions. Continue?"))return;try{const r=await fetch("/demo20/manifest",{cache:"no-store"});if(!r.ok)throw Error("Manifest unavailable ("+r.status+")");const m=await r.json();if(m.total!==20||m.candidates.length!==20)throw Error("Fictional manifest incomplete");$("search").value="";$("filter").value="all";state.manifest=m;state.items=m.candidates.map(x=>({...x,state:"not_analyzed"}));state.selected=state.items[0].id;state.criteria=Object.values(m.criteria);state.criteriaDefault=[...state.criteria];state.jobDefault=m.job_description;$("job").value=m.job_description;state.confirmed=false;state.results.clear();state.decisions.clear();state.followups.clear();state.canAnalyze=m.live_muse_configured||m.provider_mode==="mock";state.mode=m.provider_mode;$("consent-copy").textContent=m.live_muse_configured?"I authorize sending this fictional CV and job description to Meta for a new Muse analysis.":"I acknowledge this is a local simulation (NOT Muse). No CV text is sent to Meta.";$("recorded").disabled=false;$("analyze-one").textContent=m.live_muse_configured?"Analyze selected with Muse":"Simulate selected (NOT Muse)";$("analyze-five").textContent=m.live_muse_configured?"Analyze next 5 with Muse":"Simulate 5 (NOT Muse)";renderCriteria();updateControls();renderList();renderReview();notice(m.live_muse_configured?"Muse is configured on this server. Confirm criteria and consent before analyzing.":"Muse is not enabled on this server. You can inspect all 20 fictional CVs; real AI analysis is unavailable here.",m.live_muse_configured?"":"warn");setJobMessage("Job rubric loaded from the fictional role. Review and confirm it before analysis.");if(autoReplay)await showRecordedMuse();}catch(e){notice("Unable to load the fictional dataset: "+String(e.message),"bad")}}
 async function showRecordedMuse(){
   if(state.busy||!state.items.length)return;
   if($("job").value.trim()!==state.jobDefault.trim()||JSON.stringify(criteriaValues())!==JSON.stringify(state.criteriaDefault)){
@@ -391,7 +463,7 @@ async function showRecordedMuse(){
       throw Error("Duplicated candidate IDs in saved replay");
     if(!payload.results.every(x=>x.receipt&&x.provider_mode==="muse"&&x.analysis_calls===1&&x.requirements?.length===4))
       throw Error("Saved results have missing Muse receipts or requirements");
-    state.results.clear();state.decisions.clear();state.items.forEach(x=>x.state="not_analyzed");
+    state.results.clear();state.decisions.clear();state.followups.clear();state.items.forEach(x=>x.state="not_analyzed");
     state.criteria=[...state.criteriaDefault];state.confirmed=true;
     for(const saved of payload.results){
       const row=state.items.find(x=>x.id===saved.id);
@@ -427,7 +499,7 @@ async function checkJob(){
  }catch(e){setJobMessage("Could not extract criteria: "+e.message,"bad")}
 }
 function lockJob(){const items=criteriaValues(),job=$("job").value.trim();if(!state.items.length){setJobMessage("Load the fictional applicants first.","warn");return}if(!job||job.length>18000||items.length<1||items.length>20||items.some(x=>x.length>1200)){setJobMessage("Provide a JD under 18,000 characters and 1–20 readable criteria.","bad");return}if(new Set(items.map(x=>x.toLowerCase())).size!==items.length){setJobMessage("Duplicate criteria need to be removed.","bad");return}state.criteria=items;state.confirmed=true;updateControls();renderReview();setJobMessage("Criteria confirmed for this browser session. Live analysis uses exactly this shared checklist.") }
-async function analyze(row){row.state="processing";renderList();renderReview();let r;try{const pdf=await fetch(row.file_url,{cache:"no-store"});if(!pdf.ok)throw Error("Unable to open fictional PDF ("+pdf.status+")");const bytes=await pdf.blob();const form=new FormData();form.append("job_description",$("job").value.trim());form.append("consent","true");form.append("locked_rubric_json",JSON.stringify(state.criteria));form.append("rubric_mode","recruiter_locked");form.append("cv",bytes,row.id+"-fictional.pdf");r=await fetch("/api/analyze",{method:"POST",body:form});const data=await r.json();if(!r.ok)throw Error((typeof data.detail==="string"?data.detail:"Analysis failed")+" (HTTP "+r.status+")");if(!Array.isArray(data.requirements)||!data.verification_audit||!data.cv_sha256)throw Error("Missing structured source verification");if(data.provider_mode!=="muse"&&data.provider_mode!=="mock")throw Error("Unexpected provider mode");state.results.set(row.id,{...data,source_url:row.file_url});row.state="ready";notice(row.id+" complete · "+data.provider_mode+" · "+(data.quote_audit?.verified||0)+" verified source quotations.")}catch(e){row.state="failed";notice(row.id+" failed: "+e.message+" — No automatic retries or fabricated result.", "bad")}renderList();renderReview()}
+async function analyze(row){row.state="processing";renderList();renderReview();let r;try{const pdf=await fetch(row.file_url,{cache:"no-store"});if(!pdf.ok)throw Error("Unable to open fictional PDF ("+pdf.status+")");const bytes=await pdf.blob();const form=new FormData();form.append("job_description",$("job").value.trim());form.append("consent","true");form.append("locked_rubric_json",JSON.stringify(state.criteria));form.append("rubric_mode","recruiter_locked");form.append("cv",bytes,row.id+"-fictional.pdf");r=await fetch("/api/analyze",{method:"POST",body:form});const data=await r.json();if(!r.ok)throw Error((typeof data.detail==="string"?data.detail:"Analysis failed")+" (HTTP "+r.status+")");if(!Array.isArray(data.requirements)||!data.verification_audit||!data.cv_sha256)throw Error("Missing structured source verification");if(data.provider_mode!=="muse"&&data.provider_mode!=="mock")throw Error("Unexpected provider mode");state.results.set(row.id,{...data,source_url:row.file_url});state.followups.delete(row.id);state.decisions.delete(row.id);row.state="ready";notice(row.id+" complete · "+data.provider_mode+" · "+(data.quote_audit?.verified||0)+" verified source quotations.")}catch(e){row.state="failed";notice(row.id+" failed: "+e.message+" — No automatic retries or fabricated result.", "bad")}renderList();renderReview()}
 async function runBatch(count){if(state.busy||!state.confirmed||!state.canAnalyze||!$("consent").checked)return;
 if(count===1&&state.results.has(state.selected)){notice("Reused the existing analyzed evidence for "+state.selected+". No new Muse call or charge. To deliberately reprocess, reset and reconfirm the job checklist.");renderReview();return;}if(state.results.size&&Array.from(state.results.values()).some(x=>x.saved_replay)){
   if(!window.confirm("This will replace the authentic recorded Muse evidence for the selected CV(s) with "+(state.mode==="mock"?"a local simulation (NOT Muse).":"fresh live analysis.")+" Continue?"))return;
@@ -435,6 +507,10 @@ if(count===1&&state.results.has(state.selected)){notice("Reused the existing ana
 $("load").onclick=()=>load(false);$("recorded").onclick=showRecordedMuse;$("prepare").onclick=checkJob;
 $("lock").onclick=lockJob;$("unlock").onclick=()=>{if(state.results.size&&!window.confirm("Editing the confirmed rubric invalidates the existing analysis and review records in this temporary demo. Clear these results and edit?"))return;state.results.clear();state.decisions.clear();state.items.forEach(x=>x.state="not_analyzed");state.confirmed=false;updateControls();renderList();renderReview();setJobMessage("Criteria unlocked; existing evidence was cleared to avoid showing findings against the wrong rubric. Reconfirm before analysis.","warn")};
 $("consent").onchange=updateControls;$("analyze-one").onclick=()=>runBatch(1);$("analyze-five").onclick=()=>runBatch(5);
+$("export-workflow").onclick=()=>download(
+  EvidenceWorkflow.exportWorkflowCsv(state.items,state.results,state.decisions,state.followups),
+  "evidencetrail-fictional-workflow.csv","text/csv;charset=utf-8"
+);
 $("search").oninput=renderList;$("filter").onchange=renderList;
 $("quickviews").querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>{$("filter").value=b.dataset.view;renderList()}));
 $("coverage-summary").querySelectorAll("[data-coverage]").forEach(b=>b.addEventListener("click",()=>{$("filter").value=$("filter").value===b.dataset.coverage?"all":b.dataset.coverage;renderList()}));
