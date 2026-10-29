@@ -89,8 +89,15 @@ def create_case(role_index:int,case_index:int,variant_index:int)->dict[str,Any]:
     elif label=="opposing_cv_claims":
         status="conflicting";evidence_type="conflicting";evidence=[quote(opposing_text),quote(denial_text,"contradicts")];expected="conflicting"
     elif label=="explicit_timeline_discrepancy":
-        status="conflicting";evidence_type="conflicting";evidence=[quote(denial_text,"contradicts")]
-        flags=[{"code":"duration_discrepancy","source":"independent_date_audit"}];expected="conflicting"
+        # Two verifiable and mutually incompatible dates, not a single scope
+        # denial masquerading as an employment-history contradiction.
+        requirement=f"At least five years of {direct}."
+        longer=f"Career summary: More than five years of {direct} at the same employer from 2018 to 2025."
+        shorter=f"Employment detail: Only one year of {direct} at that same employer from 2024 to 2025."
+        status="conflicting";evidence_type="conflicting"
+        evidence=[quote(longer,"supports"),quote(shorter,"contradicts")]
+        flags=[{"code":"duration_discrepancy","source":"synthetic_independent_date_oracle"}]
+        expected="conflicting"
     elif label=="related_context_unproven":
         status="not_found";evidence_type="related";evidence=[quote(adjacent_text)]
     elif label=="missing_no_evidence":
@@ -98,7 +105,7 @@ def create_case(role_index:int,case_index:int,variant_index:int)->dict[str,Any]:
     elif label=="missed_direct":
         status="not_found";evidence_type="direct";evidence=[quote(direct_text)];expected="supported"
     else:raise ValueError(label)
-    requirement=f"Must have {direct}."
+    requirement=locals().get("requirement",f"Must have {direct}.")
     cv_passages=[q["quote"] for q in evidence]
     if not cv_passages:cv_passages=[f"{intro} worked at a {role} workplace. {ending}"]
     return {
