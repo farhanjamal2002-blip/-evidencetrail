@@ -3347,6 +3347,57 @@ def verify_findings_with_muse(
     return verified, page_marks, usage, audit
 
 
+def enforce_evidence_status_invariants(
+    findings: list[dict[str, Any]],
+    raw_requirements: list[dict[str, Any]],
+) -> dict[str, int]:
+    """Never conflate verified adjacent evidence with proof of a job criterion.
+
+    A page-correct quotation proves only that the document contains the quote.
+    Preserve the model's original label separately from the effective, more
+    conservative criterion outcome. This changes no citation or source box.
+    """
+    raw_by_requirement = {
+        tuple(tokenize(str(item.get("requirement", "")))): item
+        for item in raw_requirements
+        if isinstance(item, dict) and str(item.get("requirement", "")).strip()
+    }
+    demoted_related = 0
+    demoted_unsupported = 0
+    for finding in findings:
+        key = tuple(tokenize(str(finding.get("requirement", ""))))
+        raw = raw_by_requirement.get(key)
+        if not MOCK_PROVIDER_ENABLED and isinstance(raw, dict):
+            original_status = raw.get("status")
+            if original_status in {"supported", "not_found", "conflicting"}:
+                finding["raw_status"] = original_status
+                finding["muse_status"] = original_status
+        old_status = str(finding.get("status", "not_found"))
+        evidence_type = str(finding.get("evidence_type", "unsupported"))
+        if old_status == "supported" and evidence_type in {"related", "unsupported"}:
+            # Related experience is useful review context, but cannot establish
+            # a material industry, scope, duration or authority qualifier.
+            finding["status"] = "not_found"
+            finding["certainty"] = "ambiguous"
+            finding["status_policy"] = "only_direct_verified_evidence_establishes_support"
+            finding["note"] = (
+                str(finding.get("note", "")).strip()
+                + " A verified related passage does not prove this exact criterion."
+            ).strip()
+            if evidence_type == "related":
+                demoted_related += 1
+            else:
+                demoted_unsupported += 1
+            scope_review = finding.get("scope_boundary_review")
+            if isinstance(scope_review, dict):
+                scope_review["final_status"] = finding["status"]
+        finding["effective_status"] = str(finding.get("status", "not_found"))
+    return {
+        "related_supported_demoted": demoted_related,
+        "unsupported_supported_demoted": demoted_unsupported,
+    }
+
+
 def verify_single_pass_proposals_locally(
     model_result: dict[str, Any],
     findings: list[dict[str, Any]],
@@ -3455,6 +3506,9 @@ def verify_single_pass_proposals_locally(
     )
     audit["scope_boundary_review"] = apply_explicit_scope_boundary_guard(
         verified, pages, page_marks
+    )
+    audit["status_invariants"] = enforce_evidence_status_invariants(
+        verified, raw_requirements
     )
     audit["locally_anchored_source_spans"] = len(source_by_id)
     audit["verification_mode"] = "local_deterministic"
@@ -5912,6 +5966,10 @@ async def analyze(
             0, round((time.perf_counter() - stage_started) * 1000)
         )
         substage_started = time.perf_counter()
+        for finding in findings:
+            # Timeline adjudication runs after the initial semantic pass.
+            # The exported effective label must match the final report.
+            finding["effective_status"] = str(finding.get("status", "not_found"))
         response_payload = {
             "requirements": findings,
             "evidence_graph": evidence_graph,
