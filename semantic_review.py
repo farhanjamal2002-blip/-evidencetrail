@@ -21,6 +21,92 @@ ABSENCE_ONLY = re.compile(
 )
 
 
+# Minimal, auditable polarity check. A *job* criterion and a CV sentence
+# disagreeing do not by themselves constitute two incompatible CV claims.
+# This is intentionally conservative and never promotes a candidate to
+# 'supported'. Ambiguous examples remain visible for human clarification.
+REQUIREMENT_ACTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("negotiat", ("negotiat",)),
+    ("led", ("led", "lead", "command")),
+    ("lead", ("led", "lead", "command")),
+    ("develop", ("develop", "deplo", "built", "wrote")),
+    ("deploy", ("deplo", "shipp", "released")),
+    ("configur", ("configur", "set up")),
+    ("author", ("author", "wrote")),
+    ("perform", ("perform", "conduct")),
+    ("optimiz", ("optimiz", "tuned")),
+    ("created", ("creat", "built", "entered")),
+    ("approv", ("approv", "signed", "sign")),
+    ("sign", ("sign", "approv")),
+    ("coordinat", ("coordinat", "clear")),
+    ("manag", ("manag", "owned", "chaired")),
+    ("review", ("review", "audited")),
+    ("delivered", ("deliver", "facilitat")),
+    ("built", ("built", "designed", "creat")),
+)
+SCOPE_NEGATIVE = re.compile(
+    r"\b(?:never|did not|didn't|not personally|not directly|"
+    r"no (?:permission|authority|responsibility)|without|"
+    r"director (?:led|approved)|manager (?:led|approved)|"
+    r"a different team|another (?:colleague|person|team))\b",
+    re.IGNORECASE,
+)
+FIRST_PERSON = re.compile(r"\b(?:I|my|personally)\b", re.IGNORECASE)
+EXPLICIT_SELF_DENIAL = re.compile(
+    r"\b(?:I (?:did not|never|have never|had never|was not)|"
+    r"my (?:role|duties) did not|"
+    r"no (?:direct|personal) (?:responsibility|authority|experience)|"
+    r"never|did not|not the (?:negotiator|owner|lead)|"
+    r"without (?:direct|personal) (?:responsibility|authority))\b",
+    re.IGNORECASE,
+)
+
+
+def _first_action_synonyms(requirement: str) -> tuple[str, ...]:
+    # The first action in the requirement is usually the required ownership.
+    # "Personally LED supplier price NEGOTIATIONS" tests leadership, not just
+    # proximity to a later noun containing the negotiation root.
+    words = requirement.casefold()
+    hits = [(words.index(stem),equivalents)
+            for stem,equivalents in REQUIREMENT_ACTIONS if stem in words]
+    return min(hits,key=lambda x:x[0])[1] if hits else ()
+
+
+def _asserts_requested_personal_action(quote: str, action_words: tuple[str, ...]) -> bool:
+    """Require a candidate-owned verb, not the same verb in a manager clause."""
+    if not action_words:
+        return False
+    # Split clauses so 'I assembled notes; the director negotiated' cannot
+    # turn into the applicant saying they personally negotiated.
+    clauses = re.split(r"[;.!?]|\b(?:but|whereas|while)\b", quote, flags=re.IGNORECASE)
+    for clause in clauses:
+        if SCOPE_NEGATIVE.search(clause):
+            continue
+        cleaned = clause.strip().casefold()
+        # Real CV bullet points often omit "I": "led all negotiations".
+        first_person = bool(FIRST_PERSON.search(clause))
+        verb_led_bullet = any(cleaned.startswith(stem) for stem in action_words)
+        if not first_person and not verb_led_bullet:
+            continue
+        if any(stem in cleaned for stem in action_words):
+            return True
+    return False
+
+
+def _clear_internal_opposition(finding: dict[str, Any],
+                               support: list[dict[str, Any]],
+                               limiting: list[dict[str, Any]]) -> bool:
+    actions = _first_action_synonyms(str(finding.get("requirement") or ""))
+    if not actions:
+        # Absence of a parsed criterion is not evidence it is safe to clear an
+        # existing discrepancy; keep for human attention.
+        return bool(support and limiting)
+    affirmative = any(_asserts_requested_personal_action(str(q["quote"]), actions)
+                      for q in support)
+    denial = any(EXPLICIT_SELF_DENIAL.search(str(q["quote"])) for q in limiting)
+    return bool(affirmative and denial)
+
+
 def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
     """Separate one-sided scope limitations from multiple documented claims.
 
@@ -38,6 +124,7 @@ def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
         "single_scope_limits_clarified": 0,
         "document_absences_clarified": 0,
         "multi_quote_discrepancies_retained": 0,
+        "multi_quote_scope_clarifications": 0,
         "related_context_labeled": 0,
         "unchanged": 0,
     }
@@ -92,6 +179,25 @@ def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
                 "document_absences_clarified" if document_absence
                 else "single_scope_limits_clarified"
             ] += 1
+        elif status == "conflicting" and not has_timeline_issue and len(citations) > 1 and not _clear_internal_opposition(finding, support, limiting):
+            # Multiple notes describing someone's boundaries do not establish
+            # two incompatible CV claims. Preserve both original quotes and
+            # the raw Meta label; do not manufacture a positive qualification.
+            finding["status"] = "not_found"
+            finding["effective_status"] = "not_found"
+            finding["evidence_type"] = "related" if support else "unsupported"
+            finding["certainty"] = "ambiguous"
+            finding["review_reason_code"] = "multi_quote_scope_not_internal_contradiction"
+            finding["review_label"] = "Scope or responsibility to clarify"
+            finding["review_explanation"] = (
+                "Multiple citations describe adjacent or limited work; no clear "
+                "opposing claims by the applicant were verified."
+            )
+            finding["status_policy"] = "require_two_explicit_opposing_personal_claims"
+            scope = finding.get("scope_boundary_review")
+            if isinstance(scope, dict):
+                scope["final_status"] = "not_found"
+            counters["multi_quote_scope_clarifications"] += 1
         elif status == "conflicting":
             finding["review_reason_code"] = "multi_claim_or_timeline_discrepancy"
             finding["review_label"] = "Discrepancy to clarify"
@@ -100,7 +206,7 @@ def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
                 "This does not establish that the CV claim is false."
             )
             counters["multi_quote_discrepancies_retained"] += 1
-        elif status == "not_found" and evidence_type == "related":
+        elif status == "not_found" and evidence_type == "related" and not finding.get("review_reason_code"):
             finding["review_reason_code"] = "related_evidence_exact_criterion_unproven"
             finding["review_label"] = "Related evidence — exact requirement unproven"
             finding["review_explanation"] = (
