@@ -170,7 +170,7 @@ async def main():
                     assert "Tesseract OCR" in await page.locator("#audit-drawer").inner_text()
                     await page.locator('#list [data-id="ET-018"]').click()
                     text=await page.locator("#audit-drawer").inner_text()
-                    assert "prompt injection scan: not_recorded" in text.lower().replace(" ","_") or "prompt injection scan: not recorded" in text.lower()
+                    assert "prompt injection scan" in text.lower() and "not_recorded" in text.lower()
                     assert "not establish that a detector fired" in text.lower()
                     await page.keyboard.press("a")
                     assert "Used a warehouse management system, not SAP procurement." in review
