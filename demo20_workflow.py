@@ -12,6 +12,7 @@ import re
 from copy import deepcopy
 from semantic_review import clarify_verified_findings
 from verification_receipt import build_verification_receipt
+from pdf_quote_geometry import locate_quote_geometry
 import hashlib
 import json
 import textwrap
@@ -161,6 +162,47 @@ def fictional_cv(candidate_id: str):
     )
 
 
+@lru_cache(maxsize=12)
+def _render_fictional_page(candidate_id: str, page_number: int, dpi: int) -> bytes:
+    with fitz.open(stream=make_cv_pdf(candidate_id),filetype="pdf") as doc:
+        if not 1 <= page_number <= len(doc):
+            raise HTTPException(404, "PDF page number out of range.")
+        pix=doc[page_number-1].get_pixmap(dpi=dpi,alpha=False,colorspace=fitz.csRGB)
+        return pix.tobytes("png")
+
+@router.get("/demo20/cv/{candidate_id}/page/{page_number}.png")
+def fictional_cv_page_png(candidate_id: str,page_number: int,dpi: int=135):
+    get_item(candidate_id) # Only the allowlisted fictional CVs can be viewed.
+    # Bound server CPU/RAM even if a public visitor supplies a huge DPI.
+    bounded_dpi=max(96,min(160,dpi))
+    return Response(_render_fictional_page(candidate_id,page_number,bounded_dpi),
+        media_type="image/png",headers={
+            "Cache-Control":"public, max-age=3600",
+            "X-Robots-Tag":"noindex, nofollow",
+        })
+
+@lru_cache(maxsize=20)
+def _candidate_quote_geometry(candidate_id: str):
+    """Precompute only the source-grounded verified quote positions once per CV."""
+    original=next((x for x in _load_verified_recording()["results"]
+                   if x["id"]==candidate_id),None)
+    if original is None:raise HTTPException(404,"Unknown fictional applicant.")
+    ocr=original.get("ocr_pages") or []
+    locations=[]
+    with fitz.open(stream=make_cv_pdf(candidate_id),filetype="pdf") as doc:
+        for finding in original["requirements"]:
+            row=[]
+            for ev in finding.get("evidence") or []:
+                p=ev.get("page")
+                if not isinstance(p,int) or isinstance(p,bool) or not 1<=p<=len(doc):
+                    row.append({"match_method":"invalid_page","char_span":None,
+                                "page_dimensions":None,"bounding_boxes":None})
+                else:
+                    row.append(locate_quote_geometry(doc[p-1],ev.get("quote",""),
+                                      is_ocr_page=p in ocr))
+            locations.append(row)
+    return locations
+
 @lru_cache(maxsize=1)
 def _load_verified_recording() -> dict:
     """Expose only genuine fictional Muse outcomes saved by the one-time recorder.
@@ -206,7 +248,14 @@ def recorded_muse_evidence():
     totals={}
     for candidate in data["results"]:
         summary=clarify_verified_findings(candidate["requirements"])
-        candidate["verification_receipt"]=build_verification_receipt(candidate, recorded=True)
+        receipt=build_verification_receipt(candidate, recorded=True)
+        positions=_candidate_quote_geometry(candidate["id"])
+        for audit_row, geometry_row in zip(receipt["requirements"],positions):
+            for ev, geometry in zip(audit_row["quote_citations"],geometry_row):
+                # Only an independently source-grounded citation gets geometry.
+                if ev["source_verified"] is True:
+                    ev.update(geometry)
+        candidate["verification_receipt"]=receipt
         for key,count in summary.items():
             totals[key]=totals.get(key,0)+count
     data["presentation_calibration"]={
