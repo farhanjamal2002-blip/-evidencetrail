@@ -2533,10 +2533,12 @@ function renderResults(payload, analyzedFile, savedState) {
       : "Open any finding to see the source quote and page. EvidenceTrail checks document text; a person decides what it means.";
 
   const provenance = document.getElementById("provenance-details");
-  const usage = payload.usage || {};
-  const analysisUsage = usage.analysis_pass || usage.first_pass || {};
+  const receiptUsage = payload.usage || {};
+  const receiptAnalysisPass = receiptUsage.analysis_pass || receiptUsage.first_pass || {};
   const providerResponseId = payload.provider_mode === "muse"
-    ? String(analysisUsage.provider_response_id || usage.provider_response_id || "").trim()
+    ? String(
+      receiptAnalysisPass.provider_response_id || receiptUsage.provider_response_id || ""
+    ).trim()
     : "";
   provenance.replaceChildren();
   [

@@ -3928,6 +3928,7 @@ def apply_explicit_scope_boundary_guard(
                 finding.get("muse_evidence_type", finding.get("evidence_type", "")),
             )
         )
+        raw_status = str(finding.get("muse_status", finding.get("status", "")))
         if (
             model_label != "direct"
             or finding.get("evidence_type") != "direct"
@@ -3984,6 +3985,7 @@ def apply_explicit_scope_boundary_guard(
             effective_status = "not_found"
 
         finding["muse_evidence_type"] = model_label
+        finding["muse_status"] = raw_status
         finding["status"] = effective_status
         finding["evidence_type"] = effective_type
         finding["final_evidence_type"] = effective_type
@@ -4045,6 +4047,7 @@ def apply_explicit_scope_boundary_guard(
         finding["scope_boundary_review"] = {
             "rule": "explicit_scope_limit_with_no_matching_direct_action",
             "muse_evidence_type": model_label,
+            "muse_status": raw_status,
             "final_evidence_type": effective_type,
             "final_status": effective_status,
             "review_required": True,
@@ -4077,6 +4080,7 @@ def apply_explicit_scope_boundary_guard(
         adjusted.append({
             "requirement_id": str(finding.get("id", "")),
             "muse_evidence_type": model_label,
+            "muse_status": raw_status,
             "final_evidence_type": effective_type,
             "final_status": effective_status,
             "missing_actions": missing_direct_actions,

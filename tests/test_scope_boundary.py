@@ -68,6 +68,8 @@ class ExplicitScopeBoundaryTests(unittest.TestCase):
 
         self.assertEqual(finding["evidence_type"], "related")
         self.assertEqual(finding["muse_evidence_type"], "direct")
+        self.assertEqual(finding["muse_status"], "supported")
+        self.assertEqual(finding["scope_boundary_review"]["muse_status"], "supported")
         self.assertEqual(finding["final_evidence_type"], "related")
         self.assertEqual(finding["certainty"], "ambiguous")
         self.assertEqual(finding["scope_limitations"][0]["quote"], limitation)
@@ -193,6 +195,8 @@ class ExplicitScopeBoundaryTests(unittest.TestCase):
         self.assertEqual(finding["status"], "conflicting")
         self.assertEqual(finding["evidence_type"], "conflicting")
         self.assertEqual(finding["muse_evidence_type"], "direct")
+        self.assertEqual(finding["muse_status"], "supported")
+        self.assertEqual(finding["scope_boundary_review"]["muse_status"], "supported")
         self.assertEqual(finding["scope_boundary_review"]["final_evidence_type"], "conflicting")
         self.assertEqual(audit["direct_to_conflict_adjustments"], 1)
 
