@@ -39,6 +39,22 @@ async def main():
                 legend=await page.locator("#list .coverage-dots").first.get_attribute("aria-label")
                 assert "Requirement 1:" in legend and "Requirement 4:" in legend,legend
                 assert not paid_calls,"Instant evidence replay must incur zero new Muse calls"
+                # First-minute judge proof uses the exact saved Muse source,
+                # opens the true correction, and highlights its original PDF.
+                await page.locator("#proof-correction").click()
+                await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                assert "ET-008" in await page.locator("#review .eyebrow").inner_text()
+                assert await page.locator("#audit-drawer").is_visible()
+                assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()>=1
+                assert "Source located" in await page.locator("#pdf-geometry-badge").inner_text()
+                assert "previously recorded genuine Muse" in (await page.locator("#proof-result").inner_text())
+                await page.screenshot(path=str(OUT/f"judge-proof-scope-{width}.png"),full_page=True)
+                await page.locator("#proof-scan").click()
+                await page.wait_for_function("document.querySelector('#pdf-page-img')?.naturalWidth>0",timeout=20000)
+                assert "ET-019" in await page.locator("#review .eyebrow").inner_text()
+                assert "scanned OCR" in await page.locator("#pdf-geometry-badge").inner_text()
+                assert await page.locator("#pdf-highlight-layer .pdf-bbox-highlight").count()==0
+                assert not paid_calls,"Judge walkthrough must never call the Meta inference API"
                 await page.locator("#quickviews [data-view='all_direct']").click()
                 count=await page.locator("#list .item").count()
                 assert 0<count<20
