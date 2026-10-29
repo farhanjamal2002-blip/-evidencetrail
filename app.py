@@ -40,6 +40,7 @@ from muse_protocol import (
     validate_verification_result,
 )
 from timeline_audit import audit_employment_timeline
+from semantic_review import clarify_verified_findings
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -4398,6 +4399,9 @@ def build_report(
             "Direct": "direct",
             "Related": "related",
             "Conflict to clarify": "conflicting",
+            "Discrepancy to clarify": "conflicting",
+            "Scope not established": "not_found",
+            "Not documented": "not_found",
             "Unsupported": "unsupported",
             "Not found": "unsupported",
         }[public_status]
@@ -5882,6 +5886,7 @@ async def analyze(
         timeline_audit["requirement_links"] = attach_timeline_review_flags(
             findings, timeline_audit
         )
+        verification_audit["semantic_review_clarifications"] = clarify_verified_findings(findings)
         performance_ms["timeline_flag_linking_ms"] = max(
             0, round((time.perf_counter() - substage_started) * 1000)
         )
