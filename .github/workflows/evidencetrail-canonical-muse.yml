@@ -1,4 +1,5 @@
 name: EvidenceTrail canonical Muse 5-CV verification
+# Intentional rerun after MODEL_API_KEY secret was added on 2026-10-29.
 
 on:
   push:
