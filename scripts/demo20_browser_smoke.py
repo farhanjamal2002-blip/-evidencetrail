@@ -22,6 +22,22 @@ async def main():
                 await page.wait_for_function("document.querySelector('#ready').textContent==='20'",timeout=25000)
                 assert await page.locator("#list .item").count()==20
                 assert await page.locator("#list").get_by_text("Recorded Muse").count()==20
+                # Three explanatory documentation groups: no opaque score or automatic rejection.
+                counts=[int(await page.locator("#coverage-"+kind+"-count").inner_text())
+                        for kind in ("complete","partial","attention")]
+                assert sum(counts)==20,counts
+                assert await page.locator("#list .coverage-dot").count()==80
+                assert 1<=await page.locator("#list .coverage-group").count()<=3
+                assert not await page.locator("#list").get_by_text("92% match").count()
+                await page.locator("#coverage-summary [data-coverage='coverage_complete']").click()
+                assert 0<await page.locator("#list .item").count()<20
+                assert await page.locator("#filter").input_value()=="coverage_complete"
+                await page.locator("#coverage-summary [data-coverage='coverage_complete']").click()
+                assert await page.locator("#filter").input_value()=="all"
+                assert await page.locator("#list .item").count()==20
+                # Four signals per CV are accessible even without distinguishing colors.
+                legend=await page.locator("#list .coverage-dots").first.get_attribute("aria-label")
+                assert "Requirement 1:" in legend and "Requirement 4:" in legend,legend
                 assert not paid_calls,"Instant evidence replay must incur zero new Muse calls"
                 await page.locator("#quickviews [data-view='all_direct']").click()
                 count=await page.locator("#list .item").count()
@@ -39,6 +55,8 @@ async def main():
                 assert await page.locator("#list .item").count()==20
                 assert await page.locator("#criteria input").count()==4
                 assert await page.locator("#ready").inner_text()=="0"
+                reset_counts=[int(await page.locator("#coverage-"+k+"-count").inner_text()) for k in ("complete","partial","attention")]
+                assert sum(reset_counts)==0,reset_counts
                 assert await page.locator("#analyze-one").is_disabled()
                 # Editing a criterion must survive a control refresh or candidate selection.
                 first=page.locator("#criteria input").first
