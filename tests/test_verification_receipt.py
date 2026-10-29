@@ -37,9 +37,17 @@ class ReceiptTests(unittest.TestCase):
                 self.assertEqual(criterion["raw_muse_status"],source["raw_status"])
                 for citation in criterion["quote_citations"]:
                     self.assertTrue(citation["source_verified"])
-                    self.assertIsNone(citation["match_method"])
-                    self.assertIsNone(citation["char_span"])
-                    self.assertIsNone(citation["bounding_boxes"])
+                    self.assertIn(citation["match_method"],(
+                        "pymupdf_search_for","normalized_word_span","ocr_page_level_only"
+                    ))
+                    if citation["match_method"]=="ocr_page_level_only":
+                        self.assertIsNone(citation["char_span"])
+                        self.assertIsNone(citation["bounding_boxes"])
+                    else:
+                        self.assertTrue(citation["bounding_boxes"])
+                    self.assertEqual(citation["page_dimensions"],{
+                        "width":612.0,"height":792.0
+                    })
                     self.assertTrue(citation["page"]>=1)
         # 33 new scope-only clarifications + 8 pre-existing verifier gates.
         # Both are genuine raw-to-final deltas; never claim all 41 are the same rule.
