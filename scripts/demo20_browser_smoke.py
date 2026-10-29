@@ -129,7 +129,7 @@ async def main():
                     await page.locator("#filter").select_option("related")
                     assert 0 < await page.locator("#list .item").count() <= 20
                     assert not calls, "Viewing recorded evidence must not make paid API calls"
-                    assert not paid_calls, "Initial evidence preload must not make paid API calls"
+                    assert len(paid_calls)==1, "Only the one deliberately triggered mock analysis may call /api/analyze; saved Muse replays must not"
                     await page.screenshot(path=str(OUT/"real-muse-recorded-evidence.png"),full_page=True)
                 assert not errors,errors
                 await page.close()
