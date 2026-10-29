@@ -1,4 +1,5 @@
 name: EvidenceTrail semantic accuracy acceptance
+# Real Muse evidence is calibrated; legacy mock classifications remain unchanged.
 # Browser test waits for async reset before validating original four criteria.
 # Retest with properly multiline custom job description in browser acceptance.
 # Production-useful interaction gates: JD extraction, human decisions, true exports, source links.
