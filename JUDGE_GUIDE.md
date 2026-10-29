@@ -9,11 +9,22 @@
 
 ## What judges should open
 
-1. **Start with the [public fictional recruiter inbox](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20)** (verified live October 29) running the feature branch. One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. Nothing is falsely marked as AI-reviewed when first loaded.
+1. **Start with the [public fictional recruiter inbox](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20)** (verified live October 29) running the feature branch. One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. The genuine 20-CV recorded Muse results load automatically, distinctly labeled as a **saved real recording**, not new inference.
 2. **Confirm the role checklist** and inspect the applicants in upload/received order. Search for `ET-018` (injected prompt), `ET-019` (OCR scan), or `ET-005` (related-vs-direct negotiation) to show hard cases.
 3. **Click “Explore genuine Muse-reviewed applicants.”** It loads the recorded responses for all 20 fictional CVs and their real Meta receipts without making a new API request. No login, key, credits or wait. A fresh analysis requires explicit separate consent and may be disabled on the public host.
-4. Open one requirement and its exact CV page citation; show how **verified quote ≠ proven job requirement**, and how a related quote cannot silently become Direct support.
+4. Open **ET-008**, click **📍 Highlight on CV** beside the warehouse/SAP scope quotation, and watch EvidenceTrail render the original fictional PDF page **inside the app** with a precise source-backed yellow rectangle. Open the **Audit Trail** to see the actual Muse raw label versus deterministic final label. Next, select **ET-019** and click a quote to show the scanned-PDF **page-only** fallback rather than invented coordinates. **Verified quote ≠ proven job qualification.**
 5. Record a *human* Hold decision with a reason, then export the review/evidence. This is a demo browser-state record, not a durable database.
+
+## Source quote geometry benchmark — October 29, 2026
+
+The [zero-API PDF geometry benchmark](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40914988326) checked every retained quote against the **20 original fictional PDF files**:
+
+- **62/71** retained verified citations mapped to precise PyMuPDF source rectangles, all via direct \`search_for()\`; normalized word fallback was implemented but not needed on this dataset.
+- **9/71** citation texts belong to scanned documents and correctly display the verified **PDF page without fabricated word boxes**.
+- **0/71** retained citations remain unlocated or invalid.
+- Historical source verification was **76**, but five verified quotations were not persisted individually in the saved replay: ET-010 (one) and ET-017 (four). We cannot create geometry for unretained text and do **not** claim 76 exact highlights.
+- Raw Meta receipts, original quote text, per-requirement status and any human decisions are preserved, with **zero new Meta model calls** to browse geometry.
+- [Full quote-snap acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40915423957): backend Python, source geometry, JS, Docker and real Chromium desktop/mobile PDF-click flows passed. A native **Open original PDF** link remains available.
 
 ## Actual Meta Muse demonstration receipts — recorded October 29, 2026
 
