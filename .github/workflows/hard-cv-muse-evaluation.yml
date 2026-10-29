@@ -1,12 +1,12 @@
-name: EvidenceTrail held-out difficult CV accuracy validation
+name: EvidenceTrail controlled prompt comparison
 on:
   push:
-    branches: [eval/hard-unseen-cv-benchmark-oct29]
+    branches: [experiment/muse-scope-prompt-ab-oct30]
     paths: [.github/workflows/hard-cv-muse-evaluation.yml]
 permissions:
   contents: read
 concurrency:
-  group: evidencetrail-hard-cv-20-oct29-once
+  group: evidencetrail-prompt-comparison-oct30-once
   cancel-in-progress: false
 jobs:
   corpus-preflight:
@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: eval/hard-unseen-cv-benchmark-oct29
+          ref: experiment/muse-scope-prompt-ab-oct30
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: eval/hard-unseen-cv-benchmark-oct29
+          ref: experiment/muse-scope-prompt-ab-oct30
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
