@@ -31,6 +31,14 @@ async def main():
                 assert await first.input_value()=="Five years managing cross-border supplier operations."
                 await first.fill(original)
                 await page.locator("#consent").uncheck()
+                assert "NOT Muse" in await page.locator("#consent-copy").inner_text()
+                # A custom JD must produce genuinely editable criteria, not merely a count.
+                await page.locator("#job").fill("Role: Supply Analyst\\nRequirements:\\n1. Five years purchasing experience.\\n2. Managed supplier contracts.")
+                await page.locator("#prepare").click()
+                await page.wait_for_function("document.querySelector('#jobstatus').textContent.includes('Extracted')",timeout=10000)
+                assert await page.locator("#criteria input").count()>=1
+                await page.locator("#load").click()
+                assert await page.locator("#criteria input").count()==4
                 # No fabricated 'Muse done' cards on initial load
                 assert await page.locator("#list").get_by_text("Not analyzed").count()==20
                 small=await page.evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})")
@@ -83,6 +91,10 @@ async def main():
                     await page.locator("#analyze-one").click()
                     assert await page.locator("#ready").inner_text()=="20"
                     assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
+                    await page.locator("#filter").select_option("all_direct")
+                    assert 0 < await page.locator("#list .item").count() < 20
+                    await page.locator("#filter").select_option("direct")
+                    assert 0 < await page.locator("#list .item").count() <= 20
                     await page.locator("#filter").select_option("related")
                     assert 0 < await page.locator("#list .item").count() <= 20
                     assert not calls, "Viewing recorded evidence must not make paid API calls"
