@@ -9,7 +9,7 @@
 
 ## What judges should open
 
-1. **Start with the demo recruiter inbox**: `/demo20` in a running build from branch `feat/recruiter-demo20-muse-inbox`. One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. Nothing is falsely marked as AI-reviewed when first loaded.
+1. **Start with the [public fictional recruiter inbox](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20)** (verified live October 29) running the feature branch. One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. Nothing is falsely marked as AI-reviewed when first loaded.
 2. **Confirm the role checklist** and inspect the applicants in upload/received order. Search for `ET-018` (injected prompt), `ET-019` (OCR scan), or `ET-005` (related-vs-direct negotiation) to show hard cases.
 3. **Run a selected candidate only when Muse is configured, consented, and quota allows**, or open the existing clearly labeled **saved five-CV Muse replay** from the main workbench. A simulation is never presented as a live model result.
 4. Open one requirement and its exact CV page citation; show how **verified quote ≠ proven job requirement**, and how a related quote cannot silently become Direct support.
@@ -49,6 +49,8 @@ For a live Muse demonstration, place `MODEL_API_KEY` on the **server only**, set
 This hackathon demo **does not** yet offer real ATS webhooks, durable queues for 20 incoming CVs, employer authentication, multi-tenancy, persistent review records, interviewer scheduling, or a production hiring deployment. The existing route processes at most five uploads per batch; the 20-applicant inbox can send a small explicit subset to that route. It does not automatically sort applicants by worth or recommend a hiring decision.
 
 **“Not found” means not supported by the supplied document; it is not proof that a person lacks a qualification.** Real employment uses require privacy, legal and fairness evaluation beyond this demo.
+
+**Hosting:** The isolated free Render demo has intentionally disabled live Muse to avoid anonymous paid API abuse. It may cold-start; the recorded real Muse runs above are authoritative for model evidence. The older `https://evidencetrail.onrender.com` is **not** this build.
 
 **Official event:** https://cerebralvalley.ai/e/meta-ai-developer-hackathon . The organizer's accepted-participant rules and portal control the actual required submission fields, IP/eligibility terms and deadline.
 
