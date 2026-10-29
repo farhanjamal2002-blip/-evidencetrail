@@ -1,4 +1,5 @@
 name: EvidenceTrail recruiter fastlane acceptance
+# Next-to-review button is only enabled if a different analyzed applicant needs action.
 # Reset button must never pass click event as autoReplay boolean.
 # Verify reset clears previously selected queue filters and quick views.
 # Browser test waits for async reset before validating original four criteria.
