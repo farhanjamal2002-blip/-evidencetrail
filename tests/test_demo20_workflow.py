@@ -52,6 +52,18 @@ class TwentyApplicantDemoTests(unittest.TestCase):
                     self.assertIn(id,pdf[0].get_text())
         self.assertEqual(scans,["ET-019","ET-020"])
 
+    def test_pdf_fingerprint_deterministic_across_cache_resets(self):
+        # A recorded Muse result must match an independently generated
+        # fictional source file in another server process.
+        import hashlib
+        from demo20_workflow import make_cv_pdf
+        for candidate_id in ("ET-001","ET-019","ET-020"):
+            make_cv_pdf.cache_clear()
+            first=hashlib.sha256(make_cv_pdf(candidate_id)).hexdigest()
+            make_cv_pdf.cache_clear()
+            second=hashlib.sha256(make_cv_pdf(candidate_id)).hexdigest()
+            self.assertEqual(first,second,candidate_id)
+
     def test_invalid_id_paths_fail_closed(self):
         for id in ("../app.py","ET-021","ET-1","ET-000","ET-999","ET-018.pdf","%2E%2E%2Fapp.py"):
             response=self.client.get(f"/demo20/cv/{id}")
