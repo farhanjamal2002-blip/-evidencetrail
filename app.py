@@ -6064,7 +6064,6 @@ async def analyze_batch(
                     request,
                     cv,
                     job_description.strip(),
-                    "",
                     True,
                     "",
                 )
