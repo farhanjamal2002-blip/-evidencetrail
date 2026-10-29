@@ -128,6 +128,16 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
 .matrix{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
 .matrix .cell{overflow-wrap:anywhere}
 .matrix .source-snap{position:relative;z-index:2;max-width:100%;white-space:normal}
+
+/* Two intentional, source-backed judge moments; not new model inference. */
+.proof-demo{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:13px 15px;margin:13px 0 17px;border:1px solid #b6d8c9;background:#edf8f2;border-radius:12px}
+.proof-demo .proof-copy{flex:1 1 235px;min-width:0;font-size:12px;line-height:1.45;color:#215449}
+.proof-demo .proof-copy strong{display:block;font-size:13px}
+.proof-demo button{border:1px solid #3b9078;border-radius:8px;background:#167460;color:#fff;font-size:11px;font-weight:750;padding:10px 12px;cursor:pointer}
+.proof-demo button.secondary-proof{background:#fff;color:#256f5c}
+.proof-demo button:focus-visible{outline:2px solid #174b40;outline-offset:2px}
+.proof-result{font-size:11px;line-height:1.4;color:#496c5e;flex-basis:100%;min-height:16px}
+@media(max-width:650px){.proof-demo button{flex:1 1 160px}}
 </style>
 </head>
 <body>
@@ -135,7 +145,12 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
 <main class="app">
 <div class="eyebrow">Recruiter workspace / simulated applicants</div>
 <h1>One job. An organized evidence inbox.</h1>
-<p class="intro">20 fictional CVs open with previously recorded, genuine Meta Muse analysis and page-checked evidence. Browsing makes no new Meta API call. All applicants remain visible; no candidate scores or automated hiring decisions.</p>
+<p class="intro">20 fictional CVs open with previously recorded, genuine Meta Muse analysis and page-checked evidence. Browsing makes no new Meta API call. All applicants remain visible; no candidate scores or automated hiring decisions.</p><section class="proof-demo" aria-label="Try source verification in thirty seconds">
+ <div class="proof-copy"><strong>Try the evidence in one click</strong>Watch a genuine saved Meta Muse interpretation corrected and highlighted on its original CV. Then inspect the scanned-PDF limitation. Neither action makes a new model request.</div>
+ <button type="button" id="proof-correction">1 · See correction + PDF proof</button>
+ <button type="button" id="proof-scan" class="secondary-proof">2 · Inspect scanned CV</button>
+ <div id="proof-result" class="proof-result" role="status" aria-live="polite">Saved Meta Muse replay · fictional documents · zero new API calls</div>
+</section>
 <div class="layout">
 <section class="panel">
  <div class="panel-head"><h2>01 · Job & criteria</h2><span class="pill">Fictional</span></div>
@@ -340,6 +355,43 @@ function showQuoteOnPdfPage(row,reqIndex,quoteIndex){
  img.removeAttribute("src");
  img.src="/demo20/cv/"+encodeURIComponent(row.id)+"/page/"+page+".png?dpi=135";
 }
+
+async function showJudgeProof(kind){
+ if(state.busy){$("proof-result").textContent="The demo is still loading its saved source evidence.";return}
+ if(!state.results.has("ET-008")||!state.results.has("ET-019")){
+   await showRecordedMuse();
+ }
+ const id=kind==="scope"?"ET-008":"ET-019";
+ const result=state.results.get(id);
+ if(!result?.saved_replay||result.provider_mode!=="muse"){
+   $("proof-result").textContent="The authentic recorded Muse results are not available for this rubric. Reset to the original demo criteria; no simulation will be presented as live Muse.";
+   return;
+ }
+ const row=state.items.find(x=>x.id===id);
+ const audit=result.verification_receipt?.requirements||[];
+ let found=null;
+ for(let ri=0;ri<audit.length;ri++){
+   const f=audit[ri];
+   for(let qi=0;qi<(f.quote_citations||[]).length;qi++){
+     const q=f.quote_citations[qi];
+     if(q.source_verified!==true)continue;
+     if(kind==="scope"&&f.override_applied&&Array.isArray(q.bounding_boxes)&&q.bounding_boxes.length){found={ri,qi};break}
+     if(kind==="scan"&&q.match_method==="ocr_page_level_only"){found={ri,qi};break}
+   }
+   if(found)break;
+ }
+ if(!found){
+   $("proof-result").textContent="The selected recorded case has no independently located source for this demonstration. No highlight will be invented.";
+   return;
+ }
+ $("filter").value="all";$("search").value="";
+ state.auditOpen=true;pickCandidate(id);
+ $("proof-result").textContent=(kind==="scope"?
+   "ET-008: original Muse label and corrected scope interpretation; source passage highlighted in the real PDF.":
+   "ET-019: verified scanned CV page; no unsupported word-level highlight.")+
+   " This is previously recorded genuine Muse analysis, not a new inference.";
+ showQuoteOnPdfPage(row,found.ri,found.qi);
+}
 function renderReview(){const row=state.items.find(x=>x.id===state.selected), el=$("review");if(!row){el.innerHTML='<div class="empty">Select an applicant.</div>';return}
 const result=state.results.get(row.id),decision=state.decisions.get(row.id);
 const activeStatus=result?(result.saved_replay?"Recorded genuine Muse response · verified PDF quotes · NO new API call":result.provider_mode==="muse"?"Live Muse · page verified":"Local simulation · no model calls"):"Awaiting analysis";
@@ -432,6 +484,8 @@ async function runBatch(count){if(state.busy||!state.confirmed||!state.canAnalyz
 if(count===1&&state.results.has(state.selected)){notice("Reused the existing analyzed evidence for "+state.selected+". No new Muse call or charge. To deliberately reprocess, reset and reconfirm the job checklist.");renderReview();return;}if(state.results.size&&Array.from(state.results.values()).some(x=>x.saved_replay)){
   if(!window.confirm("This will replace the authentic recorded Muse evidence for the selected CV(s) with "+(state.mode==="mock"?"a local simulation (NOT Muse).":"fresh live analysis.")+" Continue?"))return;
 }const targets=(count===1?[state.items.find(x=>x.id===state.selected)]:state.items.filter(x=>!state.results.has(x.id)&&x.state!=="failed").slice(0,5)).filter(Boolean);if(!targets.length)return;if(targets.length>1&&!window.confirm("Analyze "+targets.length+" fictional PDFs? This sends "+targets.length+" separate requests and may consume Meta credits when Muse is enabled."))return;state.busy=true;updateControls();notice("Processing "+targets.length+" fictional CV(s), up to two concurrently. Failed items stay visible.");let next=0;const workers=Array.from({length:Math.min(2,targets.length)},async()=>{while(next<targets.length){const row=targets[next++];await analyze(row)}});try{await Promise.all(workers)}finally{state.busy=false;updateControls();renderList();renderReview()}}
+$("proof-correction").onclick=()=>showJudgeProof("scope");
+$("proof-scan").onclick=()=>showJudgeProof("scan");
 $("load").onclick=()=>load(false);$("recorded").onclick=showRecordedMuse;$("prepare").onclick=checkJob;
 $("lock").onclick=lockJob;$("unlock").onclick=()=>{if(state.results.size&&!window.confirm("Editing the confirmed rubric invalidates the existing analysis and review records in this temporary demo. Clear these results and edit?"))return;state.results.clear();state.decisions.clear();state.items.forEach(x=>x.state="not_analyzed");state.confirmed=false;updateControls();renderList();renderReview();setJobMessage("Criteria unlocked; existing evidence was cleared to avoid showing findings against the wrong rubric. Reconfirm before analysis.","warn")};
 $("consent").onchange=updateControls;$("analyze-one").onclick=()=>runBatch(1);$("analyze-five").onclick=()=>runBatch(5);
