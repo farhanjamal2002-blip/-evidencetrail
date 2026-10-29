@@ -19,20 +19,20 @@ Recruiters often receive dozens of CVs but cannot quickly tell which claims actu
 
 ## What the judge should see (one smooth story)
 
-1. **0:00–0:20**: 100 CVs create a real review burden; percentages hide why. Show EvidenceTrail's 20 **fictional** received-order CVs.
+1. **0:00–0:20**: 100 CVs create a real review burden; percentages hide why. Open EvidenceTrail's 20 **fictional** CVs and click **Explore genuine Muse-reviewed applicants** to reveal their saved real evidence instantly.
 2. **0:20–0:42**: Employer writes a procurement job and confirms four criteria. Show search/filters; nothing starts as “AI analyzed.”
 3. **0:42–1:10**: Select `ET-005` and show **related experience is not proof** of direct negotiations. The raw Muse label is preserved; the final status is grounded.
 4. **1:10–1:30**: Open `ET-019`: scanned CV → OCR → exact page-verified quote. Then `ET-018`: malicious instructions on CV did not yield a supported qualification.
 5. **1:30–1:50**: Human recruiter records Hold with a reason, opens the original PDF, exports an evidence pack.
-6. **1:50–2:00**: Real Meta receipt: five genuine Muse calls, 21/21 page-verified quotes, median 5.94 seconds/CV in this **specific small test**. No score, no automatic hiring.
+6. **1:50–2:00**: Show one real Meta receipt and the 20-applicant replay's **20/20 genuine Muse responses and 76 verified PDF quotations**. No score or automated hiring. These figures apply only to the fictional demonstration.
 
-If live Muse is unavailable on the public service, explicitly use the *saved* authentic run as the model evidence and demonstrate the inbox UI in clearly labelled simulation mode; **never** present local simulation as a live model run.
+The public service deliberately disables new paid Muse calls. Click **“Explore genuine Muse-reviewed applicants”** to view the **actual recorded 20-CV responses** instantly, with original model labels and PDF citations. This is a saved real recording, **not live inference**. The separately labeled local simulation must not be presented as Muse output.
 
 ## Required final deliverables
 
 - [x] Public GitHub project exists and feature branch has recruiter inbox.
 - [x] Source-linked code and frozen synthetic 20-CV fixture generator.
-- [x] Real Muse integration exercised and authentic provider IDs captured on five fictional cases: [action log](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40888203979).
+- [x] **All 20 fictional CVs analyzed by genuine Muse Spark:** 20/20 authentic responses and **76 locally verified quotations** in the [completed recording](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40892660190); no invented outcomes.
 - [x] 143 Python / 13 JS, Chromium (desktop + mobile), Docker acceptance: [action log](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40888555124).
 - [x] Judge-facing README: [JUDGE_GUIDE.md](JUDGE_GUIDE.md).
 - [ ] **Judges' build:** choose **one commit** after final PR review, pin its SHA and share a working runnable/deployed version.
