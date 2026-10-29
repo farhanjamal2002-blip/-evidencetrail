@@ -140,6 +140,48 @@
     return lines.join("\r\n") + "\r\n";
   }
 
+  function buildInterviewKit(candidateId, jobTitle, result) {
+    if (!result || !Array.isArray(result.requirements)) return null;
+    const questions = result.requirements.map((finding, index) => {
+      const unresolved = unresolvedFindings({requirements:[finding]}).length > 0;
+      const requirement = String(finding.requirement || "").slice(0,600);
+      const existing = (finding.evidence || []).filter(c => c && 
+        Number.isInteger(c.page) && c.page >= 1 && String(c.quote || "").trim());
+      return {
+        requirement_id: String(finding.id || "R" + (index + 1)),
+        requirement,
+        evidence_status: String(finding.status || "not_found"),
+        question: unresolved ?
+          "Can you explain your responsibilities for this requirement, including your personal role and a concrete example? " + requirement :
+          "Please walk through one concrete example of this experience, your exact contributions and the outcome. " + requirement,
+        source_pages: Array.from(new Set(existing.map(c => c.page))).sort((a,b) => a-b),
+        // Citation existence is not external truth or a candidate qualification.
+        source_claims: existing.slice(0,3).map(c => String(c.quote).slice(0,500)),
+      };
+    });
+    return {
+      applicant_id: String(candidateId),
+      role: String(jobTitle || "Recruiter-approved job"),
+      generated_by: "EvidenceTrail deterministic interview checklist, no new AI requests",
+      decision_policy: "Human interviewer asks and evaluates; no score or automatic selection",
+      questions,
+    };
+  }
+
+  function interviewKitText(kit) {
+    if (!kit) throw Error("Verified evidence is required before creating an interview kit");
+    const lines = ["EVIDENCETRAIL — HUMAN INTERVIEW PREP", "Applicant: " + kit.applicant_id,
+      "Role: " + kit.role, kit.decision_policy, "", "RECRUITER-APPROVED CRITERIA"];
+    for (const [index, item] of kit.questions.entries()) {
+      lines.push("", (index + 1) + ". " + item.requirement,
+        "CV documentation status: " + item.evidence_status,
+        "Suggested question: " + item.question,
+        "CV page references: " + (item.source_pages.join(", ") || "Not established"));
+    }
+    lines.push("", "Questions are drafts. Verify all applicant claims independently.");
+    return lines.join("\\n") + "\\n";
+  }
+
   return { unresolvedFindings, clarificationFor, createFollowUp, updateFollowUp,
-    reviewStage, reviewSummary, messageFor, safeCsvValue, exportWorkflowCsv };
+    reviewStage, reviewSummary, messageFor, safeCsvValue, exportWorkflowCsv, buildInterviewKit, interviewKitText };
 });
