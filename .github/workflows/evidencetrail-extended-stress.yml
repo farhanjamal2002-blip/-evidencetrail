@@ -1,0 +1,160 @@
+name: EvidenceTrail extended stress and Muse edge cases
+on:
+  push:
+    branches: [ops/muse-frozen-8140662-20261029]
+    paths: [.github/workflows/evidencetrail-extended-stress.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-extended-stress-8140662
+  cancel-in-progress: false
+jobs:
+  offline-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '500'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '500'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: harness
+          ref: ops/muse-frozen-8140662-20261029
+      - uses: actions/checkout@v4
+        with:
+          path: product
+          ref: 8140662cae1e14fbae7b66f664a7d9d99b396674
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install frozen dependencies and OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r product/requirements.txt
+      - name: Security, request-boundary, malformed PDF, five-CV batch tests
+        working-directory: product
+        env:
+          PYTHONPATH: .
+        run: python ../harness/ops-tests/stress_matrix.py offline
+      - name: Save offline stress report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extended-offline-stress
+          path: product/artifacts/extended-stress/
+          retention-days: 14
+
+  live-novel-cases:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: medium
+      MAX_ANALYSES_PER_PROCESS: '50'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '50'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: harness
+          ref: ops/muse-frozen-8140662-20261029
+      - uses: actions/checkout@v4
+        with:
+          path: product
+          ref: 8140662cae1e14fbae7b66f664a7d9d99b396674
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install frozen dependencies
+        run: python -m pip install -r product/requirements.txt
+      - name: Key presence gate
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then echo 'Muse key unavailable; no calls'; exit 2; fi
+      - name: Four live synthetic edge cases with zero automatic retries
+        working-directory: product
+        env:
+          PYTHONPATH: .
+        run: python ../harness/ops-tests/stress_matrix.py live
+      - name: Save model diagnostics and attempt records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extended-live-muse-stress
+          path: product/artifacts/extended-stress/
+          retention-days: 14
+
+  responsive-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MODEL_API_KEY: ci-dummy-key
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: product
+          ref: 8140662cae1e14fbae7b66f664a7d9d99b396674
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser and app
+        run: |
+          python -m pip install -r product/requirements.txt playwright
+          python -m playwright install --with-deps chromium
+      - name: Four viewport smoke checks and overflow audit
+        working-directory: product
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/viewport-stress
+          python -m uvicorn app:app --host 127.0.0.1 --port 8010 > artifacts/viewport-stress/server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          ready=false
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8010/health >/dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then exit 1; fi
+          python - <<'PY'
+          import asyncio,json
+          from pathlib import Path
+          from playwright.async_api import async_playwright
+          OUT=Path('artifacts/viewport-stress')
+          async def main():
+              checks=[]
+              async with async_playwright() as p:
+                  browser=await p.chromium.launch()
+                  for label,w,h in [('phone_small',320,720),('phone',375,812),('tablet',768,1024),('desktop',1440,900)]:
+                      page=await browser.new_page(viewport={'width':w,'height':h},reduced_motion='reduce')
+                      errors=[]
+                      page.on('pageerror',lambda err:errors.append(str(err)[:200]))
+                      r=await page.goto('http://127.0.0.1:8010',wait_until='networkidle')
+                      await page.screenshot(path=str(OUT/f'{label}.png'),full_page=True)
+                      size=await page.evaluate('({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})')
+                      checks.append({'viewport':label,'http':r.status,'scrollWidth':size['scroll'],
+                       'clientWidth':size['client'],'horizontal_overflow':size['scroll']>size['client']+3,
+                       'missing_img_alt':await page.locator('img:not([alt])').count(),'runtime_errors':errors})
+                      await page.close()
+                  await browser.close()
+              (OUT/'viewport-summary.json').write_text(json.dumps(checks,indent=2)+'\n')
+              print('RESPONSIVE_SUMMARY='+json.dumps(checks))
+              assert all(x['http']==200 and not x['runtime_errors'] and not x['horizontal_overflow'] for x in checks)
+          asyncio.run(main())
+          PY
+      - name: Preserve screenshot and measurement artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extended-viewport-stress
+          path: product/artifacts/viewport-stress/
+          retention-days: 14
