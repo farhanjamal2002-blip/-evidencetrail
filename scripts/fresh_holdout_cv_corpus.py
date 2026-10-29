@@ -32,7 +32,7 @@ CASES=[
 "I signed off distribution deviation CAPA plans after reviewing the evidence and risk assessment.",
 "Note: these descriptions distinguish work performed from systems I merely observed."],
 ],
-"anchors":["I personally investigated temperature excursions","I led WHO Good Distribution Practice inspection-readiness walkthroughs",null,"I signed off distribution deviation CAPA plans"],
+"anchors":["I personally investigated temperature excursions","I led WHO Good Distribution Practice inspection-readiness walkthroughs",None,"I signed off distribution deviation CAPA plans"],
 },
 {
 "id":"HOLD-PH-2","sector":"pharmaceutical distribution",
@@ -56,7 +56,7 @@ CASES=[
 "CAPA approvals were signed by the responsible pharmacist; I did not review or approve deviation action plans.",
 "The CV summary and responsibility declaration give incompatible accounts of my ERP recall duties."],
 ],
-"anchors":[null,null,["I personally used our ERP batch tracing records","I never had ERP access"],null],
+"anchors":[None,None,["I personally used our ERP batch tracing records","I never had ERP access"],None],
 },
 {
 "id":"HOLD-RE-1","sector":"renewable power",
@@ -80,7 +80,7 @@ CASES=[
 "Additional modules completed: SCADA programming, change management, commissioning and safety law.",
 "Training does not establish personal responsibility for those other tasks."],
 ],
-"anchors":["I personally energized and commissioned grid-tied solar inverters",null,"I was the designated approver for HV electrical lockout-tagout isolation procedures",null],
+"anchors":["I personally energized and commissioned grid-tied solar inverters",None,"I was the designated approver for HV electrical lockout-tagout isolation procedures",None],
 },
 {
 "id":"HOLD-RE-2","sector":"renewable power",
@@ -104,7 +104,7 @@ CASES=[
 "Separately, I personally negotiated and settled an EPC contractor change-order pricing amendment, documenting the agreed terms.",
 "These two SCADA descriptions are mutually inconsistent in the source document."],
 ],
-"anchors":[null,["I wrote and deployed SCADA telemetry points","I never configured SCADA telemetry"],null,"I personally negotiated and settled an EPC contractor change-order"],
+"anchors":[None,["I wrote and deployed SCADA telemetry points","I never configured SCADA telemetry"],None,"I personally negotiated and settled an EPC contractor change-order"],
 },
 {
 "id":"HOLD-LE-1","sector":"legal operations",
@@ -128,7 +128,7 @@ CASES=[
 "Training included software licensing, court procedure and arbitration drafting.",
 "Responsibility boundaries apply to this same period of employment."],
 ],
-"anchors":["I drafted the statement of claim and written submissions","I led the e-discovery collection process",null,null],
+"anchors":["I drafted the statement of claim and written submissions","I led the e-discovery collection process",None,None],
 },
 {
 "id":"HOLD-LE-2","sector":"legal operations",
@@ -152,7 +152,7 @@ CASES=[
 "The licence responsibility summary and signed attestation are incompatible claims.",
 "Certificates attended: e-discovery, arbitration, software procurement."],
 ],
-"anchors":[null,null,["I personally negotiated and finalized SaaS vendor pricing","I have never negotiated any software licence terms"],"I completed Dubai court electronic filing of civil pleadings"],
+"anchors":[None,None,["I personally negotiated and finalized SaaS vendor pricing","I have never negotiated any software licence terms"],"I completed Dubai court electronic filing of civil pleadings"],
 },
 {
 "id":"HOLD-ED-1","sector":"education technology",
@@ -176,7 +176,7 @@ CASES=[
 "Familiar with external grading benchmarks and standardization; completed a webinar.",
 "Assessment review leadership differs from performing exam moderation audits."],
 ],
-"anchors":["personally published the courses on the staff training LMS","I led the curriculum assessment review meetings","I wrote and implemented individual student education support plans",null],
+"anchors":["personally published the courses on the staff training LMS","I led the curriculum assessment review meetings","I wrote and implemented individual student education support plans",None],
 },
 {
 "id":"HOLD-ED-2","sector":"education technology",
@@ -200,7 +200,7 @@ CASES=[
 "I booked rooms, printed examination rosters and attended briefing sessions.",
 "These are two mutually incompatible claims about exam-audit ownership."],
 ],
-"anchors":[null,null,null,["I personally audited external exam moderation","I never performed any examination moderation audit"]],
+"anchors":[None,None,None,["I personally audited external exam moderation","I never performed any examination moderation audit"]],
 },
 ]
 
