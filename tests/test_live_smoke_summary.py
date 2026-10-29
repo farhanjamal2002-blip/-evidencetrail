@@ -13,7 +13,7 @@ class LiveSmokeSummaryTests(unittest.TestCase):
         result = {
             "provider_mode": "muse",
             "model": "muse-spark-1.3",
-            "analysis_calls": 2,
+            "analysis_calls": 1,
             "requirements": [
                 {
                     "id": "R1",
@@ -73,13 +73,33 @@ class LiveSmokeSummaryTests(unittest.TestCase):
             "usage": {
                 "input_tokens": 1800,
                 "output_tokens": 700,
-                "first_pass": {"input_tokens": 1000, "output_tokens": 400},
-                "verification_pass": {"input_tokens": 800, "output_tokens": 300},
+                "analysis_pass": {
+                    "input_tokens": 1800,
+                    "output_tokens": 700,
+                    "cached_input_tokens": 1200,
+                    "reasoning_tokens": 450,
+                    "api_latency_ms": 1250,
+                    "cv_text_characters": 920,
+                    "cv_page_count": 2,
+                    "cv_ocr_page_count": 1,
+                },
+                "local_verification": {
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "mode": "local_deterministic",
+                },
+            },
+            "performance_ms": {
+                "pdf_extract_and_ocr_ms": 240,
+                "pdf_ocr_execution_ms": None,
+                "muse_api_ms": 18000,
+                "muse_prompt_build_ms": 4,
+                "local_quote_verification_ms": 3,
             },
             "ocr_pages": [],
         }
 
-        summary, warnings = safe_live_summary(result)
+        summary, warnings = safe_live_summary(result, "medium")
         serialized = json.dumps(summary)
 
         self.assertEqual(warnings, [])
@@ -88,8 +108,17 @@ class LiveSmokeSummaryTests(unittest.TestCase):
             "not_found": 1,
             "conflicting": 1,
         })
+        self.assertEqual(summary["reasoning_effort"], "medium")
         self.assertEqual(summary["evidence_type_coverage"]["related"], 1)
-        self.assertEqual(summary["usage_by_pass"]["verification_pass"]["input_tokens"], 800)
+        self.assertEqual(summary["usage_by_stage"]["muse_analysis"]["input_tokens"], 1800)
+        self.assertEqual(summary["usage_by_stage"]["muse_analysis"]["cached_input_tokens"], 1200)
+        self.assertEqual(summary["usage_by_stage"]["muse_analysis"]["reasoning_tokens"], 450)
+        self.assertEqual(summary["usage_by_stage"]["muse_analysis"]["api_latency_ms"], 1250)
+        self.assertEqual(summary["usage_by_stage"]["muse_analysis"]["cv_text_characters"], 920)
+        self.assertEqual(summary["usage_by_stage"]["muse_analysis"]["cv_ocr_page_count"], 1)
+        self.assertEqual(summary["performance_ms"]["muse_api_ms"], 18000)
+        self.assertIsNone(summary["performance_ms"]["pdf_ocr_execution_ms"])
+        self.assertEqual(summary["usage_by_stage"]["local_verification"]["mode"], "local_deterministic")
         self.assertEqual(summary["quote_audit"]["verification_excluded"], 0)
         self.assertEqual(summary["rejected_quote_details"], [{
             "requirement_id": "R2",
@@ -106,7 +135,7 @@ class LiveSmokeSummaryTests(unittest.TestCase):
         result = {
             "provider_mode": "muse",
             "model": "muse-spark-1.3",
-            "analysis_calls": 2,
+            "analysis_calls": 1,
             "requirements": [
                 {
                     "id": "R1",

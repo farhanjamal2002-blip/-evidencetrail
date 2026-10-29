@@ -1,0 +1,32 @@
+{
+  "run_id": "semantic_cases_live_20261028_wonder1_full",
+  "status": "completed_with_case_failures",
+  "started_at_utc": "2026-10-28T14:20:59.623786+00:00",
+  "provider": "muse",
+  "model": "muse-wonder-1.0",
+  "reasoning_effort": "omitted; model default",
+  "prompt_profile": "named_system_transfer_boundary_v2",
+  "mapping_prompt_sha256": "ba3a3d6624367c5ee2bd64d6d8f9e20dc3d31bd39dcdaa39ca9f8c2eefcf0df9",
+  "verification_prompt_sha256": "1ab39f71e695310ad88058447a6d05471e06070f0e2950ad57a07f8bc5699e28",
+  "dataset_sha256": "2f4fbd447c3c8e56c42df2eb1a7971fd39d5369b1fd630bb6665133065761fc4",
+  "selected_cases": [
+    "india_public_procurement_manager",
+    "uae_contract_supplier_manager",
+    "semiconductor_supplier_operations_manager",
+    "nhs_procurement_director_credential_boundary",
+    "scanned_cv_procurement_credential_boundary"
+  ],
+  "expected_live_requests": 10,
+  "automatic_retries": 0,
+  "planning_estimate_usd_at_previous_spark_token_volume": 0.987084,
+  "prior_interrupted_wonder_attempt_usage": "unknown; recorded separately",
+  "report_contains_cv_text": false,
+  "report_contains_accepted_quote_text": false,
+  "report_contains_rejected_quote_text": true,
+  "finished_at_utc": "2026-10-28T14:26:56.993277+00:00",
+  "successful_calls_reported": 8,
+  "failed_cases": 1,
+  "actual_provider_request_count": "unknown for failed candidate calls; no automatic retries were configured",
+  "successful_result_token_estimate_usd": 0.739764,
+  "provider_usage": "successful response token usage is in result JSON; failed requests may have unknown usage"
+}

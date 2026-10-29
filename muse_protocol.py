@@ -102,9 +102,17 @@ def decode_chat_json_response(
         raise MuseProtocolError(f"Muse returned an invalid {response_name} object.")
 
     usage = getattr(response, "usage", None)
+    prompt_details = getattr(usage, "prompt_tokens_details", None)
+    completion_details = getattr(usage, "completion_tokens_details", None)
     usage_summary = {
         "input_tokens": _token_count(getattr(usage, "prompt_tokens", None)),
         "output_tokens": _token_count(getattr(usage, "completion_tokens", None)),
+        "cached_input_tokens": _token_count(
+            getattr(prompt_details, "cached_tokens", None)
+        ),
+        "reasoning_tokens": _token_count(
+            getattr(completion_details, "reasoning_tokens", None)
+        ),
     }
     return result, usage_summary
 
@@ -259,6 +267,131 @@ def validate_mapping_result(
             isinstance(page_hint, bool) or not isinstance(page_hint, int) or page_hint < 1
         ):
             raise MuseProtocolError("Muse returned an invalid experience claim page hint.")
+    return result
+
+
+def validate_single_pass_result(
+    result: dict[str, Any], *, max_application_claims: int
+) -> dict[str, Any]:
+    """Validate the combined semantic and citation proposal in one model reply.
+
+    Citation text and page hints still require local PDF verification. This
+    validator only checks that the response is bounded and structurally usable.
+    """
+    if not isinstance(result, dict):
+        raise MuseProtocolError("Muse returned an invalid single-pass analysis object.")
+    _require_exact_keys(
+        result,
+        {"requirements", "application_claims", "employment_episodes", "experience_claims"},
+        context="single-pass analysis",
+    )
+
+    requirements = result.get("requirements")
+    claims = result.get("application_claims")
+    if not isinstance(requirements, list) or not isinstance(claims, list):
+        raise MuseProtocolError("Muse returned invalid single-pass analysis lists.")
+
+    # Reuse the established strict limits for quotes, employment timelines,
+    # experience claims, and application-claim text.
+    mapping_shape = {
+        "requirements": [
+            {"requirement": item.get("requirement"), "evidence": item.get("evidence")}
+            if isinstance(item, dict) else item
+            for item in requirements
+        ],
+        "application_claims": [
+            {"claim": item.get("claim")}
+            if isinstance(item, dict) else item
+            for item in claims
+        ],
+        "employment_episodes": result.get("employment_episodes"),
+        "experience_claims": result.get("experience_claims"),
+    }
+    validate_mapping_result(
+        mapping_shape, max_application_claims=max_application_claims
+    )
+
+    semantic_fields = {
+        "requirement", "status", "evidence_type", "evidence_strength",
+        "transfer_explanation", "unproven_aspects", "follow_up_question",
+        "certainty", "reason", "evidence",
+    }
+    for item in requirements:
+        if not isinstance(item, dict) or set(item) != semantic_fields:
+            raise MuseProtocolError("Muse returned an invalid single-pass requirement shape.")
+        if not isinstance(item["status"], str) or item["status"] not in {"supported", "not_found", "conflicting"}:
+            raise MuseProtocolError("Muse returned an invalid requirement status.")
+        if not isinstance(item["evidence_type"], str) or item["evidence_type"] not in {"direct", "related", "unsupported", "conflicting"}:
+            raise MuseProtocolError("Muse returned an invalid requirement evidence type.")
+        if not isinstance(item["evidence_strength"], str) or item["evidence_strength"] not in {"specific", "stated", "keyword_only", "none"}:
+            raise MuseProtocolError("Muse returned an invalid requirement evidence strength.")
+        if not isinstance(item["certainty"], str) or item["certainty"] not in {"clear", "ambiguous"}:
+            raise MuseProtocolError("Muse returned invalid requirement certainty.")
+        if len(item["evidence"]) > 2:
+            raise MuseProtocolError("Muse returned too many citations for one requirement.")
+        if not isinstance(item["reason"], str) or len(item["reason"]) > MAX_REASON_CHARS:
+            raise MuseProtocolError("Muse returned an invalid requirement reason.")
+        transfer = item["transfer_explanation"]
+        if transfer is not None and (
+            not isinstance(transfer, str)
+            or len(transfer) > MAX_TRANSFER_EXPLANATION_CHARS
+        ):
+            raise MuseProtocolError("Muse returned an invalid transfer explanation.")
+        question = item["follow_up_question"]
+        if question is not None and (
+            not isinstance(question, str)
+            or len(question) > MAX_FOLLOW_UP_QUESTION_CHARS
+        ):
+            raise MuseProtocolError("Muse returned an invalid follow-up question.")
+        aspects = _require_list(
+            item["unproven_aspects"],
+            context="requirement unproven aspects",
+            maximum=MAX_UNPROVEN_ASPECTS,
+        )
+        if any(
+            not isinstance(aspect, str)
+            or not aspect.strip()
+            or len(aspect) > MAX_UNPROVEN_ASPECT_CHARS
+            for aspect in aspects
+        ):
+            raise MuseProtocolError("Muse returned invalid unproven aspects.")
+
+    claim_fields = {"claim", "status", "certainty", "reason", "evidence"}
+    for item in claims:
+        if not isinstance(item, dict) or set(item) != claim_fields:
+            raise MuseProtocolError("Muse returned an invalid single-pass application claim shape.")
+        if not isinstance(item["status"], str) or item["status"] not in {"supported", "not_found", "conflicting"}:
+            raise MuseProtocolError("Muse returned an invalid application-claim status.")
+        if not isinstance(item["certainty"], str) or item["certainty"] not in {"clear", "ambiguous"}:
+            raise MuseProtocolError("Muse returned invalid application-claim certainty.")
+        if not isinstance(item["reason"], str) or len(item["reason"]) > MAX_REASON_CHARS:
+            raise MuseProtocolError("Muse returned an invalid application-claim reason.")
+        citations = _require_list(
+            item["evidence"],
+            context="application-claim evidence",
+            maximum=2,
+        )
+        for citation in citations:
+            if not isinstance(citation, dict):
+                raise MuseProtocolError("Muse returned invalid application-claim evidence.")
+            _require_exact_keys(
+                citation,
+                {"quote", "role", "page_hint"},
+                context="application-claim citation",
+            )
+            quote = citation["quote"]
+            role = citation["role"]
+            page_hint = citation["page_hint"]
+            if not isinstance(quote, str) or not quote.strip() or len(quote) > MAX_QUOTE_CHARS:
+                raise MuseProtocolError("Muse returned an invalid application-claim quote.")
+            if not isinstance(role, str) or role not in {"supports", "contradicts"}:
+                raise MuseProtocolError("Muse returned an invalid application-claim evidence role.")
+            if page_hint is not None and (
+                isinstance(page_hint, bool)
+                or not isinstance(page_hint, int)
+                or page_hint < 1
+            ):
+                raise MuseProtocolError("Muse returned an invalid application-claim page hint.")
     return result
 
 

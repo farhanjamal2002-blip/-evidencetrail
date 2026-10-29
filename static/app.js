@@ -16,16 +16,27 @@ const results = document.getElementById("results");
 const uploadZone = document.querySelector(".upload-zone");
 const modelReady = form.dataset.modelReady === "true";
 const mockMode = form.dataset.mockMode === "true";
+const museDisabled = form.dataset.museDisabled === "true";
 const analysisReady = modelReady || mockMode;
+const maxConcurrentAnalyses = Math.max(1, Number(form.dataset.maxConcurrent) || 1);
 const maxPdfBytes = Number(cvInput.dataset.maxBytes) || 12 * 1024 * 1024;
 let currentReport = "";
 let currentResultPayload = null;
+const sourcePageImageCache = new WeakMap();
 let reviewEntries = Object.create(null);
 let currentClarificationBrief = { items: [] };
 let currentCandidateResponses = Object.create(null);
 let currentApplicationPrep = { items: [] };
 let applicationPrepChecks = Object.create(null);
 let analysisTimer = null;
+let activeAnalysisController = null;
+const sessionAnalysisCache = new Map();
+const analysisCacheVersion = "muse-text-first-20261028-2";
+const analysisCacheTtlMs = 15 * 60 * 1000;
+const analysisCacheMaxEntries = 5;
+const analysisCacheMaxBytes = 16 * 1024 * 1024;
+let analysisCacheBytes = 0;
+const sessionAnalysisInFlight = new Map();
 let roleAuditRequestId = 0;
 let currentRoleAudit = null;
 let sourcePdfFile = null;
@@ -52,6 +63,16 @@ const maxBatchFiles = Number(cvInput.dataset.maxFiles) || 5;
 let batchReports = [];
 let batchReviewStates = [];
 let batchFailures = [];
+let batchRetryInProgress = false;
+let batchReviewGeneration = 0;
+let batchRubricInfo = { mode: "", criteria: [] };
+const batchRubricEditor = document.getElementById("batch-rubric-editor");
+const batchRubricItems = document.getElementById("batch-rubric-items");
+const batchRubricCount = document.getElementById("batch-rubric-count");
+const batchRubricEditorStatus = document.getElementById("batch-rubric-editor-status");
+const useSharedBatchRubric = document.getElementById("use-shared-batch-rubric");
+const addBatchRubricItem = document.getElementById("add-batch-rubric-item");
+let batchRubricEditorJob = null;
 let activeBatchIndex = -1;
 let batchReviewMode = "dossier";
 const batchMatrixReviewLabels = Object.freeze({
@@ -79,6 +100,172 @@ const demoApplicationDraft = [
   "I hold a current AWS Solutions Architect Professional certification."
 ].join("\n");
 
+function listedBatchRubricFromJob(description) {
+  const items = [];
+  const seen = new Set();
+  description.split(/\r?\n/).forEach(function (line) {
+    const match = line.match(/^\s*(?:\d+[.)]\s*|[-*•‣]\s*)(.+?)\s*$/);
+    if (!match) return;
+    const text = match[1].trim();
+    const key = batchRubricKey(text);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    if (items.length < 20) items.push(text);
+  });
+  return items;
+}
+
+function batchRubricKey(value) {
+  return String(value || "").normalize("NFKC").toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+}
+
+function evidenceEngineLabel(payload) {
+  if (payload && payload.preview_mode) return "Prepared sample";
+  return payload && payload.provider_mode === "mock" ? "Local heuristic" : "Muse";
+}
+
+function sourcePageImages(payload) {
+  if (payload && typeof payload === "object" && sourcePageImageCache.has(payload)) {
+    return sourcePageImageCache.get(payload);
+  }
+  const supplied = payload && payload.pages;
+  if (supplied && typeof supplied === "object" && Object.keys(supplied).length) {
+    if (payload && typeof payload === "object") sourcePageImageCache.set(payload, supplied);
+    return supplied;
+  }
+
+  const reportHtml = payload && typeof payload.report_html === "string"
+    ? payload.report_html
+    : "";
+  if (!reportHtml) {
+    const empty = Object.create(null);
+    if (payload && typeof payload === "object") sourcePageImageCache.set(payload, empty);
+    return empty;
+  }
+
+  const reportDocument = new DOMParser().parseFromString(reportHtml, "text/html");
+  const images = Object.create(null);
+  reportDocument.querySelectorAll("figure[id^='page-'] img[src^='data:image/']")
+    .forEach(function (image) {
+      const figure = image.closest("figure");
+      const match = figure && /^page-(\d+)$/.exec(figure.id);
+      const source = image.getAttribute("src") || "";
+      if (match && source.startsWith("data:image/")) images[match[1]] = source;
+    });
+  if (payload && typeof payload === "object") sourcePageImageCache.set(payload, images);
+  return images;
+}
+
+function updateBatchRubricEditorStatus() {
+  if (!batchRubricEditorStatus) return;
+  const criteria = Array.from(batchRubricItems.querySelectorAll("input"))
+    .map(function (input) { return input.value.trim(); });
+  const useShared = useSharedBatchRubric.checked;
+  const isMultiCandidate = (cvInput.files || []).length > 1;
+  if (!useShared) {
+    batchRubricEditorStatus.textContent = isMultiCandidate
+      ? (mockMode
+        ? "Independent local extraction is selected. The heuristic may return different criteria for each CV; use the shared checklist for consistent comparison."
+        : "Independent extraction is selected. Muse may return different criteria for each CV; use the shared checklist for a consistent comparison.")
+      : (mockMode
+        ? "The local heuristic will derive criteria for this review. For a batch, use the shared checklist to keep every CV on the same criteria."
+        : "Muse will extract criteria during this CV review. For a batch, use the shared checklist to keep every CV on the same criteria.");
+    return;
+  }
+  const nonempty = criteria.filter(Boolean);
+  if (!nonempty.length) {
+    batchRubricEditorStatus.textContent = "Add at least one criterion, or turn off the shared checklist.";
+  } else if (nonempty.length !== criteria.length) {
+    batchRubricEditorStatus.textContent = "Fill in or remove the blank criterion before running the review.";
+  } else {
+    batchRubricEditorStatus.textContent = mockMode
+      ? "This checklist will be fixed when you start and applied to every CV. The local simulation makes no model calls."
+      : "This checklist will be fixed when you start the run and applied to each CV. It adds no Muse calls; each CV gets one Muse analysis, followed by local quote and date checks.";
+  }
+}
+
+function renderBatchRubricEditor(focusLast) {
+  const job = jobInput.value.trim();
+  if (!job) {
+    batchRubricEditor.hidden = true;
+    return;
+  }
+  batchRubricEditor.hidden = false;
+  if (batchRubricEditorJob !== job) {
+    batchRubricEditorJob = job;
+    const roleCriteria = currentRoleAudit && Array.isArray(currentRoleAudit.criteria)
+      ? currentRoleAudit.criteria.map(function (entry) { return String(entry.text || "").trim(); }).filter(Boolean)
+      : [];
+    const extracted = roleCriteria.length ? roleCriteria : listedBatchRubricFromJob(job);
+    batchRubricItems.replaceChildren();
+    useSharedBatchRubric.checked = extracted.length > 0;
+    extracted.forEach(function (item) { addBatchRubricEditorRow(item); });
+  }
+  batchRubricCount.textContent = batchRubricItems.children.length + " / 20 criteria";
+  addBatchRubricItem.disabled = batchRubricItems.children.length >= 20;
+  updateBatchRubricEditorStatus();
+  if (focusLast && batchRubricItems.lastElementChild) {
+    batchRubricItems.lastElementChild.querySelector("input").focus();
+  }
+}
+
+function addBatchRubricEditorRow(value) {
+  const rowIndex = batchRubricItems.children.length;
+  const item = document.createElement("li");
+  const row = document.createElement("div");
+  row.className = "batch-rubric-item-row";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.maxLength = 1200;
+  input.value = String(value || "");
+  input.setAttribute("aria-label", "Shared job criterion " + (rowIndex + 1));
+  input.placeholder = "Enter one job-related criterion";
+  input.addEventListener("input", updateBatchRubricEditorStatus);
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "batch-rubric-remove";
+  remove.textContent = "Remove";
+  remove.setAttribute("aria-label", "Remove criterion " + (rowIndex + 1));
+  remove.addEventListener("click", function () {
+    item.remove();
+    renderBatchRubricEditor();
+  });
+  row.append(input, remove);
+  item.appendChild(row);
+  batchRubricItems.appendChild(item);
+}
+
+function getLockedBatchRubric() {
+  if (!useSharedBatchRubric.checked) return null;
+  const criteria = Array.from(batchRubricItems.querySelectorAll("input"))
+    .map(function (input) { return input.value.trim(); });
+  if (!criteria.length || criteria.length > 20 || criteria.some(function (item) { return !item; })) {
+    throw new Error("Complete at least one criterion, remove any blank rows, and keep the shared checklist to 20 items.");
+  }
+  const keys = criteria.map(batchRubricKey);
+  if (new Set(keys).size !== keys.length) {
+    throw new Error("Remove duplicate criteria so each CV is checked against a clear, distinct requirement.");
+  }
+  return criteria;
+}
+
+function setBatchRubricEditorDisabled(disabled) {
+  batchRubricItems.querySelectorAll("input, button").forEach(function (control) {
+    control.disabled = disabled;
+  });
+  addBatchRubricItem.disabled = disabled || batchRubricItems.children.length >= 20;
+  useSharedBatchRubric.disabled = disabled;
+}
+
+addBatchRubricItem.addEventListener("click", function () {
+  if (batchRubricItems.children.length >= 20) return;
+  addBatchRubricEditorRow("");
+  useSharedBatchRubric.checked = true;
+  renderBatchRubricEditor(true);
+});
+useSharedBatchRubric.addEventListener("change", updateBatchRubricEditorStatus);
+
 roleAuditButton.addEventListener("click", async function () {
   const description = jobInput.value.trim();
   if (!description) {
@@ -93,7 +280,7 @@ roleAuditButton.addEventListener("click", async function () {
   }
 
   roleAuditButton.disabled = true;
-  roleAuditButton.textContent = "Building the evidence plan…";
+  roleAuditButton.textContent = "Preparing checklist…";
   roleAuditStatus.textContent = "Running the check on this app. No CV or Meta request is involved.";
   roleAuditStatus.hidden = false;
   const requestId = ++roleAuditRequestId;
@@ -107,28 +294,30 @@ roleAuditButton.addEventListener("click", async function () {
     const audit = result.role_clarity_audit || {};
     currentRoleAudit = audit;
     renderRoleClarityAudit(audit);
+    if (batchRubricEditorJob !== description) renderBatchRubricEditor();
     const total = Number(audit.criteria_count || 0);
     const cues = Number(audit.count || 0);
     const shown = Array.isArray(audit.criteria) ? audit.criteria.length : 0;
     const omitted = Number(audit.criteria_truncated || 0);
-    roleAuditStatus.textContent = total || cues
-      ? "Role review checklist ready · " + shown + " listed requirement(s) prepared with evidence prompts" +
+    roleAuditStatus.textContent = shown
+      ? "Found " + shown + " explicit job item(s). Review and edit the checklist below; no Muse call was made." +
         (omitted ? " · " + omitted + " more omitted at the display limit" : "") +
-        " · " + cues + " optional wording cue(s). Download the worksheet or edit the job text to rerun."
-      : "Role review checklist ready. No numbered or bulleted requirements or listed wording cues were detected; review the job text manually.";
+        (cues ? " Optional wording prompts are in the collapsed details." : "")
+      : "No numbered or bulleted requirements were detected. Add criteria manually below; this was a local check with no Muse call.";
   } catch (error) {
     if (requestId !== roleAuditRequestId) return;
     roleAuditStatus.textContent = error.message || "The role check could not run. Try again.";
   } finally {
     if (requestId === roleAuditRequestId) {
       roleAuditButton.disabled = false;
-      roleAuditButton.textContent = "Build role review checklist";
+      roleAuditButton.textContent = "Prepare role checklist";
     }
   }
 });
 
 cvInput.addEventListener("change", function () {
   const files = Array.from(cvInput.files || []);
+  renderBatchRubricEditor();
   const resultsWereCleared = clearCurrentResults(true);
   if (!files.length) {
     fileName.textContent = "Choose CV PDFs or drop them here";
@@ -138,6 +327,7 @@ cvInput.addEventListener("change", function () {
   const fileError = getSelectionError(files);
   if (fileError) {
     cvInput.value = "";
+    renderBatchRubricEditor();
     fileName.textContent = "Choose CV PDFs or drop them here";
     showError(fileError);
     return;
@@ -181,6 +371,16 @@ uploadZone.addEventListener("drop", function (event) {
 jobInput.addEventListener("input", function () {
   clearCurrentResults(true);
   charCount.textContent = String(jobInput.value.length);
+  roleAuditRequestId += 1;
+  roleAuditButton.disabled = false;
+  roleAuditButton.textContent = "Prepare role checklist";
+  currentRoleAudit = null;
+  roleWorksheetButton.disabled = true;
+  document.getElementById("role-clarity-audit").hidden = true;
+  roleAuditStatus.hidden = true;
+  batchRubricEditor.hidden = true;
+  batchRubricEditorJob = null;
+  useSharedBatchRubric.checked = false;
 });
 
 draftInput.addEventListener("input", function () {
@@ -191,6 +391,8 @@ draftInput.addEventListener("input", function () {
 const loadDemoButton = document.getElementById("load-demo-case");
 const loadUnifiedDemoButton = document.getElementById("load-unified-demo");
 const loadUnifiedDemoButtonLabel = loadUnifiedDemoButton.textContent.trim();
+const loadUnifiedReplayButton = document.getElementById("load-unified-replay");
+const loadUnifiedReplayButtonLabel = loadUnifiedReplayButton.textContent.trim();
 loadUnifiedDemoButton.addEventListener("click", async function () {
   loadUnifiedDemoButton.disabled = true;
   loadUnifiedDemoButton.textContent = "Loading five fictional CVs…";
@@ -214,6 +416,7 @@ loadUnifiedDemoButton.addEventListener("click", async function () {
     cvInput.dispatchEvent(new Event("change"));
     jobInput.value = manifest.job_description;
     jobInput.dispatchEvent(new Event("input"));
+    renderBatchRubricEditor();
     draftInput.value = "";
     draftInput.dispatchEvent(new Event("input"));
     document.getElementById("consent").checked = false;
@@ -224,6 +427,78 @@ loadUnifiedDemoButton.addEventListener("click", async function () {
     loadUnifiedDemoButton.textContent = loadUnifiedDemoButtonLabel;
   } finally {
     loadUnifiedDemoButton.disabled = false;
+  }
+});
+
+loadUnifiedReplayButton.addEventListener("click", async function () {
+  loadUnifiedReplayButton.disabled = true;
+  loadUnifiedReplayButton.textContent = "Loading saved Muse results…";
+  hideError();
+  try {
+    const response = await fetch("/demo/unified-replay");
+    if (!response.ok) throw new Error("The frozen Muse replay is unavailable.");
+    const replay = await response.json();
+    if (
+      replay.replay_mode !== "frozen_live_muse_results" ||
+      replay.makes_model_request !== false ||
+      replay.model !== "muse-spark-1.3" ||
+      !Array.isArray(replay.results) || replay.results.length !== 5
+    ) {
+      throw new Error("The saved run did not pass its replay checks.");
+    }
+    const prepared = await Promise.all(replay.results.map(async function (entry) {
+      const fileResponse = await fetch("/demo/unified-cv/" + encodeURIComponent(entry.fixture_id));
+      if (!fileResponse.ok) throw new Error("A CV source file for the saved replay is unavailable.");
+      const pdf = await fileResponse.blob();
+      const file = new File([pdf], entry.filename, { type: "application/pdf" });
+      const result = entry.result;
+      result.frozen_replay = true;
+      result.replay_disclosure = replay.disclosure;
+      return {
+        candidateId: entry.candidate_id,
+        filename: file.name,
+        file: file,
+        result: result,
+        reportUrl: entry.report_url,
+        uploadIndex: Number(String(entry.candidate_id).replace(/^C/, "")) - 1,
+        decision: "undecided",
+        decisionReason: "",
+        decisionNote: "",
+        interviewInviteDraft: "",
+        interviewInvitePreparedAt: null,
+      };
+    }));
+
+    const transfer = new DataTransfer();
+    prepared.forEach(function (entry) { transfer.items.add(entry.file); });
+    clearCurrentResults(false);
+    cvInput.files = transfer.files;
+    fileName.textContent = prepared.length + " frozen demo CVs · " + prepared.map(function (entry) { return entry.filename; }).join(" · ");
+    fileName.title = prepared.map(function (entry) { return entry.filename; }).join("\n");
+    jobInput.value = replay.job_description;
+    charCount.textContent = String(jobInput.value.length);
+    batchRubricEditorJob = null;
+    renderBatchRubricEditor();
+    draftInput.value = "";
+    draftCharCount.textContent = "0";
+    document.getElementById("consent").checked = false;
+    batchReports = prepared;
+    batchReviewStates = prepared.map(function () { return {}; });
+    batchFailures = [];
+    batchRubricInfo = {
+      mode: "frozen_replay",
+      criteria: prepared[0].result.requirements.map(function (item) { return item.requirement; }),
+      label: replay.rubric_version || "frozen demo",
+    };
+    activeBatchIndex = 0;
+    renderResults(prepared[0].result, prepared[0].file, batchReviewStates[0]);
+    renderBatchReview();
+    loadUnifiedReplayButton.textContent = "Frozen Muse replay loaded · " + replay.rubric_version;
+  } catch (error) {
+    showError(error.message || "The frozen Muse replay could not be loaded.");
+    loadUnifiedReplayButton.textContent = loadUnifiedReplayButtonLabel;
+  } finally {
+    loadUnifiedReplayButton.disabled = false;
   }
 });
 
@@ -247,6 +522,7 @@ loadDemoButton.addEventListener("click", async function () {
     cvInput.dispatchEvent(new Event("change"));
     jobInput.value = demoJob;
     jobInput.dispatchEvent(new Event("input"));
+    renderBatchRubricEditor();
     draftInput.value = demoApplicationDraft;
     draftInput.dispatchEvent(new Event("input"));
     jobInput.focus();
@@ -285,6 +561,7 @@ previewDemoButton.addEventListener("click", async function () {
       result: payload,
       uploadIndex: 0,
       decision: "undecided",
+      decisionReason: "",
       decisionNote: "",
       interviewInviteDraft: "",
       interviewInvitePreparedAt: null,
@@ -301,11 +578,127 @@ previewDemoButton.addEventListener("click", async function () {
   }
 });
 
+async function makeSessionCacheKey(file, jobDescription, rubric, applicationDraft) {
+  if (!window.crypto || !window.crypto.subtle) return null;
+  try {
+    const digest = await window.crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+    const hash = Array.from(new Uint8Array(digest)).map(function (value) {
+      return value.toString(16).padStart(2, "0");
+    }).join("");
+    return JSON.stringify([
+      analysisCacheVersion,
+      mockMode ? "mock" : "muse",
+      hash,
+      jobDescription,
+      rubric || null,
+      applicationDraft || "",
+    ]);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function getSessionCachedAnalysis(key) {
+  if (!key || !sessionAnalysisCache.has(key)) return null;
+  const entry = sessionAnalysisCache.get(key);
+  if (!entry || entry.expiresAt <= Date.now()) {
+    if (entry) analysisCacheBytes = Math.max(0, analysisCacheBytes - entry.bytes);
+    sessionAnalysisCache.delete(key);
+    return null;
+  }
+  sessionAnalysisCache.delete(key);
+  sessionAnalysisCache.set(key, entry);
+  return entry.payload;
+}
+
+function rememberSessionAnalysis(key, payload) {
+  if (!key || mockMode) return;
+  let serialized;
+  try {
+    serialized = JSON.stringify(payload);
+  } catch (_error) {
+    return;
+  }
+  const bytes = serialized.length * 2;
+  if (!bytes || bytes > analysisCacheMaxBytes) return;
+  if (sessionAnalysisCache.has(key)) {
+    const previous = sessionAnalysisCache.get(key);
+    analysisCacheBytes = Math.max(0, analysisCacheBytes - previous.bytes);
+    sessionAnalysisCache.delete(key);
+  }
+  while (
+    sessionAnalysisCache.size >= analysisCacheMaxEntries ||
+    analysisCacheBytes + bytes > analysisCacheMaxBytes
+  ) {
+    const oldestKey = sessionAnalysisCache.keys().next().value;
+    if (oldestKey === undefined) break;
+    const oldest = sessionAnalysisCache.get(oldestKey);
+    analysisCacheBytes = Math.max(0, analysisCacheBytes - (oldest ? oldest.bytes : 0));
+    sessionAnalysisCache.delete(oldestKey);
+  }
+  sessionAnalysisCache.set(key, {
+    payload: payload,
+    bytes: bytes,
+    expiresAt: Date.now() + analysisCacheTtlMs,
+  });
+  analysisCacheBytes += bytes;
+}
+
+function newBatchReport(candidateId, file, uploadIndex, result) {
+  return {
+    candidateId: candidateId,
+    filename: file.name,
+    file: file,
+    result: result,
+    uploadIndex: uploadIndex,
+    decision: "undecided",
+    decisionReason: "",
+    decisionNote: "",
+    interviewInviteDraft: "",
+    interviewInvitePreparedAt: null,
+  };
+}
+
+function addCompletedBatchReport(entry, generation) {
+  if (generation !== batchReviewGeneration) return;
+  const selected = activeCandidateEntry();
+  const selectedId = selected ? selected.candidateId : null;
+  captureActiveBatchReview();
+  const paired = batchReports.map(function (report, index) {
+    return { entry: report, state: batchReviewStates[index] || {} };
+  });
+  paired.push({ entry: entry, state: {} });
+  paired.sort(function (left, right) {
+    return left.entry.uploadIndex - right.entry.uploadIndex;
+  });
+  batchReports = paired.map(function (item) { return item.entry; });
+  batchReviewStates = paired.map(function (item) { return item.state; });
+  batchFailures = batchFailures.filter(function (item) {
+    return item.uploadIndex !== entry.uploadIndex;
+  });
+  activeBatchIndex = selectedId
+    ? batchReports.findIndex(function (report) { return report.candidateId === selectedId; })
+    : batchReports.findIndex(function (report) { return report.candidateId === entry.candidateId; });
+  if (activeBatchIndex < 0) activeBatchIndex = 0;
+  results.classList.remove("batch-failures-only");
+  results.hidden = false;
+  if (!selectedId) {
+    renderResults(
+      batchReports[activeBatchIndex].result,
+      batchReports[activeBatchIndex].file,
+      batchReviewStates[activeBatchIndex]
+    );
+  }
+  renderBatchReview();
+}
+
 form.addEventListener("submit", async function (event) {
   event.preventDefault();
   hideError();
   if (!analysisReady) {
-    showError("Real analysis is paused until the server API key is configured. Your files were not submitted.");
+    showError(museDisabled
+      ? "Muse analysis is disabled on this server. Your files were not submitted."
+      : "Real analysis is paused until a valid server API key is configured. Your files were not submitted.");
     return;
   }
   const submittedFiles = Array.from(cvInput.files || []);
@@ -324,117 +717,229 @@ form.addEventListener("submit", async function (event) {
   }
 
   const isBatch = submittedFiles.length > 1;
-  const formData = new FormData();
-  formData.append("job_description", jobInput.value.trim());
-  formData.append("consent", document.getElementById("consent").checked ? "true" : "false");
-  if (isBatch) {
-    submittedFiles.forEach(function (file) { formData.append("cvs", file, file.name); });
-  } else {
-    formData.append("cv", submittedFiles[0], submittedFiles[0].name);
-    formData.append("application_draft", draftInput.value.trim());
+  let lockedBatchRubric = null;
+  try {
+    lockedBatchRubric = getLockedBatchRubric();
+  } catch (error) {
+    showError(error.message || "Review the shared job checklist before starting analysis.");
+    return;
   }
+  const jobDescription = jobInput.value.trim();
+  const applicationDraft = isBatch ? "" : draftInput.value.trim();
+  const consent = document.getElementById("consent").checked;
   clearCurrentResults(false);
+  const generation = batchReviewGeneration;
+  const requestController = new AbortController();
+  activeAnalysisController = requestController;
   analyzeButton.disabled = true;
   analyzeButton.setAttribute("aria-busy", "true");
   analyzeButton.querySelector("span:first-child").textContent = mockMode
-    ? (isBatch ? "Local mock is reviewing the CV batch…" : "Local mock is checking the CV…")
-    : (isBatch ? "Muse is reviewing the CV batch…" : "Muse is mapping and checking source evidence…");
+    ? (isBatch ? "Local simulation is reviewing the CV batch…" : "Local simulation is checking the CV…")
+    : (isBatch ? "Muse is reviewing CVs as they finish…" : "Muse is analyzing evidence; local checks follow…");
   cvInput.disabled = true;
+  setBatchRubricEditorDisabled(true);
   jobInput.readOnly = true;
   draftInput.readOnly = true;
   document.getElementById("consent").disabled = true;
   loadDemoButton.disabled = true;
   previewDemoButton.disabled = true;
+  loadUnifiedDemoButton.disabled = true;
+  loadUnifiedReplayButton.disabled = true;
+
   const analysisStartedAt = Date.now();
+  const progressState = { succeeded: 0, failed: 0, reused: 0, inFlight: 0 };
+  const rubricMode = lockedBatchRubric
+    ? "recruiter_locked"
+    : (isBatch && useSharedBatchRubric.checked ? "shared_job_description_items" : "independent_extraction");
   function updateAnalysisStatus() {
     const elapsedSeconds = Math.floor((Date.now() - analysisStartedAt) / 1000);
-    const prefix = mockMode ? "Two-pass local simulation" : "Two-pass Muse Spark analysis";
+    const prefix = mockMode ? "Local heuristic workflow" : "One Muse analysis + local source checks";
     const progress = isBatch
-      ? " · processing " + submittedFiles.length + " CVs in upload order"
+      ? " · " + progressState.succeeded + "/" + submittedFiles.length + " ready · " +
+        progressState.inFlight + " processing · " + progressState.reused + " reused in this tab · up to " +
+        Math.min(submittedFiles.length, maxConcurrentAnalyses) + " at once"
       : "";
     analysisStatusText.textContent = prefix + progress + " · " + elapsedSeconds + " seconds elapsed.";
   }
   analysisStatus.hidden = false;
   updateAnalysisStatus();
   analysisTimer = window.setInterval(updateAnalysisStatus, 5000);
+
   try {
-    const response = await fetch(isBatch ? "/api/analyze-batch" : "/api/analyze", { method: "POST", body: formData });
-    const payload = await response.json();
-    if (!response.ok) {
-      throw new Error(payload.detail || "Analysis could not be completed.");
-    }
     if (!isBatch) {
-      batchReports = [{
-        candidateId: "C1",
-        filename: submittedFiles[0].name,
-        file: submittedFiles[0],
-        result: payload,
-        uploadIndex: 0,
-        decision: "undecided",
-        decisionNote: "",
-        interviewInviteDraft: "",
-        interviewInvitePreparedAt: null,
-      }];
+      const formData = new FormData();
+      formData.append("cv", submittedFiles[0], submittedFiles[0].name);
+      formData.append("job_description", jobDescription);
+      formData.append("application_draft", applicationDraft);
+      formData.append("consent", consent ? "true" : "false");
+      if (lockedBatchRubric) formData.append("locked_rubric_json", JSON.stringify(lockedBatchRubric));
+      const response = await fetch("/api/analyze", {
+        method: "POST", body: formData, signal: requestController.signal,
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.detail || "Analysis could not be completed.");
+      if (generation !== batchReviewGeneration) return;
+      batchRubricInfo = {
+        mode: lockedBatchRubric ? "recruiter_locked" : "independent_extraction",
+        criteria: lockedBatchRubric || [],
+      };
+      batchReports = [newBatchReport("C1", submittedFiles[0], 0, payload)];
       batchReviewStates = [{}];
       batchFailures = [];
       activeBatchIndex = 0;
       renderResults(payload, submittedFiles[0]);
       renderBatchReview();
     } else {
-      const entries = Array.isArray(payload.results) ? payload.results : [];
+      batchRubricInfo = {
+        mode: rubricMode,
+        criteria: lockedBatchRubric || (rubricMode === "shared_job_description_items"
+          ? listedBatchRubricFromJob(jobDescription)
+          : []),
+      };
       batchReports = [];
       batchReviewStates = [];
-      batchFailures = [];
-      entries.forEach(function (entry, index) {
-        const file = submittedFiles[index];
-        if (entry && entry.result && file) {
-          batchReports.push({
-            candidateId: entry.candidate_id || "C" + (index + 1),
-            filename: file.name,
-            file: file,
-            result: entry.result,
-            uploadIndex: index,
-            decision: "undecided",
-            decisionNote: "",
-            interviewInviteDraft: "",
-            interviewInvitePreparedAt: null,
-          });
-          batchReviewStates.push({});
-        } else {
-          batchFailures.push({
-            candidateId: entry && entry.candidate_id ? entry.candidate_id : "C" + (index + 1),
-            filename: file ? file.name : "Candidate CV " + (index + 1),
-            detail: entry && entry.error && entry.error.detail
-              ? entry.error.detail
-              : "This CV could not be analyzed.",
-            uploadIndex: index,
-          });
-        }
+      batchFailures = submittedFiles.map(function (file, index) {
+        return {
+          candidateId: "C" + (index + 1),
+          filename: file.name,
+          file: file,
+          jobDescription: jobDescription,
+          consent: consent,
+          lockedRequirements: (lockedBatchRubric || []).slice(),
+          detail: "Waiting for analysis to start.",
+          uploadIndex: index,
+          pending: true,
+          started: false,
+        };
       });
-      if (!batchReports.length) {
-        throw new Error("No CV in this batch produced an evidence review. Check the uploaded PDFs and try again.");
+      batchRetryInProgress = false;
+      activeBatchIndex = -1;
+      results.hidden = false;
+      renderBatchReview();
+      let nextIndex = 0;
+
+      async function analyzeCandidate(index) {
+        const file = submittedFiles[index];
+        const pendingEntry = batchFailures.find(function (item) { return item.uploadIndex === index; });
+        if (pendingEntry) {
+          pendingEntry.started = true;
+          pendingEntry.detail = mockMode ? "Local simulation is running." : "Muse analysis is running.";
+        }
+        progressState.inFlight += 1;
+        renderBatchReview();
+        updateAnalysisStatus();
+        try {
+          const cacheKey = mockMode ? null : await makeSessionCacheKey(
+            file, jobDescription, lockedBatchRubric, applicationDraft
+          );
+          if (generation !== batchReviewGeneration || requestController.signal.aborted) return;
+          let payload = getSessionCachedAnalysis(cacheKey);
+          let reused = Boolean(payload);
+          if (!payload) {
+            const existingAnalysis = cacheKey && sessionAnalysisInFlight.get(cacheKey);
+            if (existingAnalysis) {
+              reused = true;
+              payload = await existingAnalysis;
+            } else {
+              const analysisPromise = (async function () {
+                const formData = new FormData();
+                formData.append("cv", file, file.name);
+                formData.append("job_description", jobDescription);
+                formData.append("application_draft", "");
+                formData.append("consent", consent ? "true" : "false");
+                if (lockedBatchRubric) formData.append("locked_rubric_json", JSON.stringify(lockedBatchRubric));
+                const response = await fetch("/api/analyze", {
+                  method: "POST", body: formData, signal: requestController.signal,
+                });
+                const responsePayload = await response.json();
+                if (!response.ok) {
+                  throw new Error(responsePayload.detail || "This CV could not be analyzed.");
+                }
+                return responsePayload;
+              })();
+              if (cacheKey) sessionAnalysisInFlight.set(cacheKey, analysisPromise);
+              try {
+                payload = await analysisPromise;
+                rememberSessionAnalysis(cacheKey, payload);
+              } finally {
+                if (cacheKey && sessionAnalysisInFlight.get(cacheKey) === analysisPromise) {
+                  sessionAnalysisInFlight.delete(cacheKey);
+                }
+              }
+            }
+            if (cacheKey && existingAnalysis) {
+              payload = Object.assign({}, payload, { session_cache: true });
+            }
+          } else {
+            payload = Object.assign({}, payload, { session_cache: true });
+          }
+          if (generation !== batchReviewGeneration || requestController.signal.aborted) return;
+          progressState.succeeded += 1;
+          if (reused) progressState.reused += 1;
+          addCompletedBatchReport(newBatchReport("C" + (index + 1), file, index, payload), generation);
+        } catch (error) {
+          if (generation !== batchReviewGeneration || requestController.signal.aborted) return;
+          progressState.failed += 1;
+          const failedEntry = batchFailures.find(function (item) { return item.uploadIndex === index; });
+          if (failedEntry) {
+            failedEntry.pending = false;
+            failedEntry.started = false;
+            failedEntry.detail = error.message || "This CV could not be analyzed. Retry it separately.";
+          }
+          renderBatchReview();
+        } finally {
+          progressState.inFlight = Math.max(0, progressState.inFlight - 1);
+          updateAnalysisStatus();
+        }
       }
-      activeBatchIndex = 0;
-      renderResults(batchReports[0].result, batchReports[0].file, batchReviewStates[0]);
+
+      async function worker() {
+        while (!requestController.signal.aborted && generation === batchReviewGeneration) {
+          const index = nextIndex;
+          nextIndex += 1;
+          if (index >= submittedFiles.length) return;
+          await analyzeCandidate(index);
+        }
+      }
+      await Promise.all(Array.from(
+        { length: Math.min(submittedFiles.length, maxConcurrentAnalyses) },
+        worker
+      ));
+      if (generation !== batchReviewGeneration || requestController.signal.aborted) return;
+      if (!batchReports.length) {
+        activeBatchIndex = -1;
+        results.classList.add("batch-failures-only");
+        results.hidden = false;
+        showError("No CV completed analysis. Use the per-candidate messages below to retry or correct the affected file.");
+        results.scrollIntoView({ behavior: "auto", block: "start" });
+      }
       renderBatchReview();
     }
   } catch (error) {
-    showError(error.message || "Analysis failed. No result was generated.");
+    if (!requestController.signal.aborted && generation === batchReviewGeneration) {
+      showError(error.message || "Analysis failed. No result was generated.");
+    }
   } finally {
-    if (analysisTimer) window.clearInterval(analysisTimer);
-    analysisTimer = null;
-    analysisStatus.hidden = true;
-    analyzeButton.disabled = !analysisReady;
-    analyzeButton.removeAttribute("aria-busy");
-    analyzeButton.querySelector("span:first-child").textContent = mockMode
-      ? "Run local mock review"
-      : modelReady ? "Review CVs with Muse Spark" : "Real analysis unavailable";
-    cvInput.disabled = false;
-    jobInput.readOnly = false;
-    draftInput.readOnly = false;
-    document.getElementById("consent").disabled = false;
-    loadDemoButton.disabled = false;
-    previewDemoButton.disabled = false;
+    if (generation === batchReviewGeneration) {
+      if (analysisTimer) window.clearInterval(analysisTimer);
+      analysisTimer = null;
+      analysisStatus.hidden = true;
+      analyzeButton.disabled = !analysisReady;
+      analyzeButton.removeAttribute("aria-busy");
+      analyzeButton.querySelector("span:first-child").textContent = mockMode
+        ? "Run local workflow simulation"
+        : modelReady ? "Review CVs with Muse Spark" : "Real analysis unavailable";
+      cvInput.disabled = false;
+      setBatchRubricEditorDisabled(false);
+      jobInput.readOnly = false;
+      draftInput.readOnly = false;
+      document.getElementById("consent").disabled = false;
+      loadDemoButton.disabled = false;
+      previewDemoButton.disabled = false;
+      loadUnifiedDemoButton.disabled = false;
+      loadUnifiedReplayButton.disabled = false;
+      if (activeAnalysisController === requestController) activeAnalysisController = null;
+    }
   }
 });
 
@@ -543,6 +1048,7 @@ function renderBatchRequirementMatrix(root) {
           priority: String(finding.job_priority || "Not stated"),
           priorityBasis: String(finding.priority_basis || ""),
           sourceLine: hasSourceLine ? sourceLine : 0,
+          sourceType: String(jobSource.source_type || "job_description"),
           findings: Object.create(null),
         };
         rowsByKey.set(key, row);
@@ -563,6 +1069,25 @@ function renderBatchRequirementMatrix(root) {
     empty.textContent = "No successful candidate reviews are available for comparison.";
     root.appendChild(empty);
     return;
+  }
+
+  const candidateRequirementKeys = uploads
+    .filter(function (candidate) { return candidate.kind === "review"; })
+    .map(function (candidate) {
+      const findings = Array.isArray(candidate.entry.result.requirements)
+        ? candidate.entry.result.requirements
+        : [];
+      return findings.map(batchMatrixRequirementKey).filter(Boolean);
+    });
+  const requirementCoverage = window.EvidenceTrailRequirementCoverage.compare(candidateRequirementKeys);
+  if (requirementCoverage.candidateCount > 1 && !requirementCoverage.consistent) {
+    const warning = document.createElement("p");
+    warning.className = "batch-rubric-drift";
+    warning.setAttribute("role", "status");
+    warning.textContent = evidenceEngineLabel(candidate.entry.result) + " returned different requirement lists across " +
+      requirementCoverage.candidateCount + " CV reviews. " + requirementCoverage.missingAssignments +
+      " candidate-requirement entries are missing from one or more reviews. Check the job criteria before comparing; a blank cell means no finding was returned, not that the person lacks the skill.";
+    root.appendChild(warning);
   }
 
   const strengthLegend = document.createElement("div");
@@ -597,14 +1122,18 @@ function renderBatchRequirementMatrix(root) {
   uploads.forEach(function (candidate) {
     const heading = document.createElement("th");
     heading.scope = "col";
-    heading.className = candidate.kind === "failure" ? "batch-matrix-failed-heading" : "";
+    heading.className = candidate.kind === "failure"
+      ? "batch-matrix-failed-heading" + (candidate.entry.pending ? " batch-matrix-pending-heading" : "")
+      : "";
     const title = document.createElement("strong");
     title.textContent = "Candidate " + (candidate.order + 1);
     const filename = document.createElement("span");
     filename.textContent = candidate.entry.filename || "CV";
     const order = document.createElement("small");
     order.textContent = "Upload #" + (candidate.order + 1) +
-      (candidate.kind === "failure" ? " · not analyzed" : "");
+      (candidate.kind === "failure"
+        ? candidate.entry.pending ? (candidate.entry.started ? " · processing" : " · queued") : " · not analyzed"
+        : "");
     heading.append(title, filename, order);
     if (candidate.kind === "review") {
       const decision = document.createElement("small");
@@ -649,9 +1178,11 @@ function renderBatchRequirementMatrix(root) {
       if (priority.basis) priorityLabel.title = "Based on job-post wording: " + priority.basis;
       requirementCell.appendChild(priorityLabel);
     }
-    if (row.sourceLine) {
+    if (row.sourceLine || row.sourceType === "recruiter_locked_rubric") {
       const sourceLine = document.createElement("small");
-      sourceLine.textContent = "Job wording · line " + row.sourceLine;
+      sourceLine.textContent = row.sourceType === "recruiter_locked_rubric"
+        ? "Recruiter-locked criterion"
+        : "Job wording · line " + row.sourceLine;
       requirementCell.appendChild(sourceLine);
     }
     tableRow.appendChild(requirementCell);
@@ -660,7 +1191,9 @@ function renderBatchRequirementMatrix(root) {
       const cell = document.createElement("td");
       if (candidate.kind === "failure") {
         cell.className = "batch-matrix-unavailable";
-        cell.textContent = "CV not analyzed";
+        cell.textContent = candidate.entry.pending
+          ? (candidate.entry.started ? "Analysis in progress" : "Queued")
+          : "CV not analyzed";
         tableRow.appendChild(cell);
         return;
       }
@@ -681,7 +1214,10 @@ function renderBatchRequirementMatrix(root) {
       const displayLabel = timelineNeedsReview
         ? "Conflict to clarify"
         : statusLabels[type];
-      const evidence = Array.isArray(finding.evidence) ? finding.evidence[0] : null;
+      const evidenceList = Array.isArray(finding.evidence) ? finding.evidence : [];
+      const evidence = evidenceList.find(function (item) {
+        return item && (item.display_role === "supports" || item.role === "supports");
+      }) || evidenceList[0] || null;
       const pageNumber = evidence ? Number(evidence.page) : 0;
       const page = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 0;
       const quote = evidence && typeof evidence.quote === "string" ? evidence.quote : "";
@@ -698,7 +1234,7 @@ function renderBatchRequirementMatrix(root) {
       button.setAttribute(
         "aria-label",
         "Candidate " + (candidate.order + 1) + ", " + row.requirement + ": " +
-          (timelineNeedsReview ? "Conflict to clarify. " + timelineMuseLabel(finding) : displayLabel) +
+          (timelineNeedsReview ? "Conflict to clarify. " + timelineSourceLabel(finding, candidate.entry.result.provider_mode) : displayLabel) +
           (page ? ", CV page " + page + ". Open source." : ". Open candidate review.")
       );
       button.dataset.matrixAriaBase = button.getAttribute("aria-label");
@@ -718,7 +1254,7 @@ function renderBatchRequirementMatrix(root) {
       if (timelineNeedsReview) {
         const provenance = document.createElement("span");
         provenance.className = "batch-matrix-timeline-provenance";
-        provenance.textContent = timelineMuseLabel(finding);
+        provenance.textContent = timelineSourceLabel(finding, candidate.entry.result.provider_mode);
         button.appendChild(provenance);
       }
       const quoteCheck = document.createElement("span");
@@ -772,6 +1308,9 @@ function renderBatchReview() {
   const matrix = document.getElementById("batch-review-matrix");
   if (!panel || !list || !matrix) return;
   list.replaceChildren();
+  const toolbar = document.getElementById("batch-review-toolbar");
+  if (toolbar) toolbar.hidden = batchReports.length === 0;
+  renderBatchRubricStatus();
   panel.hidden = batchReports.length <= 1 && batchFailures.length === 0;
   const matrixMode = !panel.hidden && batchReviewMode === "matrix";
   list.hidden = matrixMode;
@@ -799,12 +1338,26 @@ function renderBatchReview() {
   reviewOrder.forEach(function (row) {
     if (row.kind === "failure") {
       const item = document.createElement("div");
-      item.className = "batch-candidate batch-candidate-failed";
+      item.className = "batch-candidate batch-candidate-failed" +
+        (row.entry.pending ? " batch-candidate-pending" : "");
       const title = document.createElement("strong");
       title.textContent = row.entry.candidateId + " · " + row.entry.filename;
       const detail = document.createElement("span");
-      detail.textContent = "Not analyzed · " + row.entry.detail;
+      detail.textContent = row.entry.pending
+        ? (row.entry.started ? "Muse analysis in progress · " : "Queued · ") + row.entry.detail
+        : "Not analyzed · " + row.entry.detail;
       item.append(title, detail);
+      if (row.entry.file && !row.entry.pending) {
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "batch-retry-candidate secondary-button";
+        retry.dataset.retryUploadIndex = String(row.entry.uploadIndex);
+        retry.disabled = batchRetryInProgress;
+        retry.textContent = batchRetryInProgress && row.entry.retrying
+          ? "Retrying this CV…"
+          : mockMode ? "Retry this CV · local simulation" : "Retry this CV · 1 Muse request";
+        item.appendChild(retry);
+      }
       list.appendChild(item);
       return;
     }
@@ -832,10 +1385,127 @@ function renderBatchReview() {
     openButton.append(title, detail);
     const decisionState = document.createElement("span");
     decisionState.className = "batch-decision-state batch-decision-state-" + (entry.decision || "undecided");
-    decisionState.textContent = "Recruiter decision · " + recruiterDecisionLabel(entry.decision);
+    const linkedDecisionCount = Array.isArray(entry.decisionRequirementIds)
+      ? entry.decisionRequirementIds.length
+      : 0;
+    const linkedDecisionText = linkedDecisionCount === 1
+      ? " · linked to 1 job criterion"
+      : linkedDecisionCount > 1
+        ? " · linked to " + linkedDecisionCount + " job criteria"
+        : "";
+    decisionState.textContent = "Recruiter decision · " + recruiterDecisionLabel(entry.decision) +
+      linkedDecisionText;
     card.append(openButton, decisionState);
     list.appendChild(card);
   });
+}
+
+function renderBatchRubricStatus() {
+  const status = document.getElementById("batch-rubric-status");
+  if (!status) return;
+  const criteria = Array.isArray(batchRubricInfo.criteria) ? batchRubricInfo.criteria : [];
+  let message = "";
+  if (batchRubricInfo.mode === "recruiter_locked") {
+    message = "Recruiter-locked rubric · " + criteria.length +
+      " criteria were applied to every CV. The original role text remains available beside this shared checklist.";
+  } else if (batchRubricInfo.mode === "shared_job_description_items") {
+    message = "Shared job rubric · " + criteria.length +
+      " numbered or bulleted JD criteria applied to every CV. Each CV's evidence is assessed separately.";
+  } else if (batchRubricInfo.mode === "per_candidate_extraction") {
+    message = "This JD had no numbered or bulleted criteria to share. Requirements were extracted separately for each CV; check the matrix warning before comparing.";
+  } else if (batchRubricInfo.mode === "independent_extraction") {
+    message = mockMode
+      ? "Independent extraction selected · the local heuristic built a requirement list separately for each CV. Check the matrix warning before comparing."
+      : "Independent extraction selected · Muse built a requirement list separately for each CV. Check the matrix warning before comparing.";
+  } else if (batchRubricInfo.mode === "frozen_replay") {
+    message = "Frozen demo replay · shared rubric " + (batchRubricInfo.label || "") +
+      " applied to all " + criteria.length + " criteria. Loading and reviewing this saved run makes no Muse request.";
+  }
+  const omitted = batchReports.reduce(function (total, entry) {
+    const audit = entry.result && entry.result.batch_rubric_alignment;
+    return total + (audit ? Number(audit.missing_model_entries || 0) : 0);
+  }, 0);
+  if (omitted > 0) {
+    message += " The analysis omitted " + omitted +
+      " criterion entr" + (omitted === 1 ? "y" : "ies") + "; those criteria remain visible and need human review.";
+  }
+  status.textContent = message;
+  status.hidden = !message;
+}
+
+async function retryFailedBatchCandidate(uploadIndex) {
+  if (batchRetryInProgress) return;
+  const generation = batchReviewGeneration;
+  const failure = batchFailures.find(function (entry) { return entry.uploadIndex === uploadIndex; });
+  if (!failure || !failure.file) return;
+
+  batchRetryInProgress = true;
+  failure.retrying = true;
+  hideError();
+  renderBatchReview();
+  const formData = new FormData();
+  formData.append("cv", failure.file, failure.filename);
+  formData.append("job_description", failure.jobDescription || jobInput.value.trim());
+  formData.append("application_draft", "");
+  formData.append("consent", failure.consent ? "true" : "false");
+  if (failure.lockedRequirements && failure.lockedRequirements.length) {
+    formData.append("locked_rubric_json", JSON.stringify(failure.lockedRequirements));
+  }
+
+  try {
+    const response = await fetch("/api/analyze", { method: "POST", body: formData });
+    const payload = await response.json();
+    if (generation !== batchReviewGeneration) return;
+    if (!response.ok) throw new Error(payload.detail || "This CV could not be analyzed.");
+
+    const priorCandidateId = activeCandidateEntry() && activeCandidateEntry().candidateId;
+    captureActiveBatchReview();
+    const retryEntry = {
+      candidateId: failure.candidateId,
+      filename: failure.filename,
+      file: failure.file,
+      result: payload,
+      uploadIndex: failure.uploadIndex,
+      decision: "undecided",
+      decisionReason: "",
+      decisionNote: "",
+      interviewInviteDraft: "",
+      interviewInvitePreparedAt: null,
+    };
+    const paired = batchReports.map(function (entry, index) {
+      return { entry: entry, state: batchReviewStates[index] || {} };
+    });
+    paired.push({ entry: retryEntry, state: {} });
+    paired.sort(function (a, b) { return a.entry.uploadIndex - b.entry.uploadIndex; });
+    batchReports = paired.map(function (item) { return item.entry; });
+    batchReviewStates = paired.map(function (item) { return item.state; });
+    batchFailures = batchFailures.filter(function (entry) { return entry.uploadIndex !== uploadIndex; });
+    activeBatchIndex = batchReports.findIndex(function (entry) {
+      return entry.candidateId === failure.candidateId;
+    });
+    if (activeBatchIndex < 0 && priorCandidateId) {
+      activeBatchIndex = batchReports.findIndex(function (entry) {
+        return entry.candidateId === priorCandidateId;
+      });
+    }
+    if (activeBatchIndex < 0) activeBatchIndex = 0;
+    results.classList.remove("batch-failures-only");
+    renderResults(batchReports[activeBatchIndex].result, batchReports[activeBatchIndex].file, batchReviewStates[activeBatchIndex]);
+    renderBatchReview();
+  } catch (error) {
+    if (generation !== batchReviewGeneration) return;
+    failure.detail = error.message || "This CV could not be analyzed. Retry it separately.";
+    failure.retrying = false;
+    showError(failure.detail);
+    renderBatchReview();
+  } finally {
+    if (generation === batchReviewGeneration) {
+      batchRetryInProgress = false;
+      const stillFailed = batchFailures.find(function (entry) { return entry.uploadIndex === uploadIndex; });
+      if (stillFailed) stillFailed.retrying = false;
+      renderBatchReview();
+    }
+  }
 }
 
 function recruiterDecisionLabel(value) {
@@ -861,7 +1531,10 @@ function renderRecruiterDecisionPanel() {
   const candidateLabel = (entry.candidateId || "Candidate " + (activeBatchIndex + 1)) +
     " · " + (entry.filename || "CV");
   document.getElementById("recruiter-decision-candidate").textContent = candidateLabel;
-  document.getElementById("recruiter-decision-select").value = entry.decision || "undecided";
+  const decision = entry.decision || "undecided";
+  document.getElementById("recruiter-decision-select").value = decision;
+  document.getElementById("recruiter-decision-reason").value = entry.decisionReason || "";
+  updateDecisionReasonField(decision, entry);
   document.getElementById("recruiter-decision-note").value = entry.decisionNote || "";
   const inviteDraft = document.getElementById("interview-invite-draft");
   const invitePanel = document.getElementById("interview-invite-panel");
@@ -897,33 +1570,107 @@ function renderRecruiterDecisionPanel() {
     ". These are document findings, not a candidate score.";
 
   const status = document.getElementById("recruiter-decision-status");
+  renderRecruiterDecisionStatus(entry, status);
+}
+
+function renderRecruiterDecisionStatus(entry, status) {
+  status.classList.remove("is-validation-error");
+  const linkedCount = Array.isArray(entry.decisionRequirementIds)
+    ? entry.decisionRequirementIds.length
+    : 0;
+  const linkedText = linkedCount === 1
+    ? " · linked to 1 job criterion"
+    : linkedCount > 1
+      ? " · linked to " + linkedCount + " job criteria"
+      : "";
   status.textContent = entry.decision && entry.decision !== "undecided"
     ? "Decision recorded for this review" + (entry.decisionUpdatedAt
       ? " · " + new Date(entry.decisionUpdatedAt).toLocaleString()
-      : "") + ". Included in the evidence pack."
+      : "") + linkedText + ". Included in the evidence pack."
     : "No recruiter decision recorded yet.";
 }
 
-function saveActiveRecruiterDecision() {
+function renderDecisionCriteria(entry) {
+  const root = document.getElementById("decision-criteria-list");
+  const findings = entry && entry.result && Array.isArray(entry.result.requirements)
+    ? entry.result.requirements
+    : [];
+  const selected = new Set(Array.isArray(entry && entry.decisionRequirementIds)
+    ? entry.decisionRequirementIds
+    : []);
+  root.replaceChildren();
+  findings.forEach(function (finding, index) {
+    const requirementId = String(finding.id || "").trim();
+    if (!requirementId) return;
+    const label = document.createElement("label");
+    label.className = "decision-criterion-option";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = requirementId;
+    checkbox.checked = selected.has(requirementId);
+    checkbox.id = "decision-criterion-" + index;
+    const copy = document.createElement("span");
+    const text = document.createElement("span");
+    text.textContent = String(finding.requirement || "Job requirement");
+    const status = document.createElement("small");
+    status.className = "decision-criterion-status";
+    status.textContent = plainFindingLabel(finding);
+    copy.append(text, status);
+    label.htmlFor = checkbox.id;
+    label.append(checkbox, copy);
+    root.appendChild(label);
+  });
+  if (!root.childElementCount) {
+    const empty = document.createElement("p");
+    empty.className = "field-help";
+    empty.textContent = "No checklist items are available. Add role criteria before recording Hold or Do not advance.";
+    root.appendChild(empty);
+  }
+}
+
+function updateDecisionReasonField(decision, entry, rerenderCriteria = true) {
+  const helper = window.EvidenceTrailRecruiterDecision;
+  const field = document.getElementById("recruiter-decision-reason-field");
+  const reason = document.getElementById("recruiter-decision-reason");
+  const criteriaField = document.getElementById("decision-criteria-field");
+  const required = helper.requiresReason(decision);
+  field.hidden = !required;
+  criteriaField.hidden = !required;
+  reason.required = required;
+  if (rerenderCriteria) renderDecisionCriteria(entry);
+}
+
+function saveActiveRecruiterDecision(keepEditing = false) {
   const entry = activeCandidateEntry();
   if (!entry) return;
   const decision = document.getElementById("recruiter-decision-select").value;
+  const reason = document.getElementById("recruiter-decision-reason").value;
   const note = document.getElementById("recruiter-decision-note").value.trim();
-  entry.decision = decision;
-  entry.decisionNote = note;
-  entry.decisionUpdatedAt = decision === "undecided" ? null : new Date().toISOString();
-  renderRecruiterDecisionPanel();
+  updateDecisionReasonField(decision, entry, false);
+  const linkedRequirementIds = Array.from(
+    document.querySelectorAll("#decision-criteria-list input[type='checkbox']:checked")
+  ).map(function (checkbox) { return checkbox.value; });
+  const status = document.getElementById("recruiter-decision-status");
+  const transition = window.EvidenceTrailRecruiterDecision.recordDecision(
+    entry, decision, reason, note, new Date().toISOString(), linkedRequirementIds
+  );
+  Object.assign(entry, transition.entry);
+  if (!transition.ok) {
+    status.textContent = transition.error;
+    status.classList.add("is-validation-error");
+    renderBatchReview();
+    return;
+  }
+  if (keepEditing) renderRecruiterDecisionStatus(entry, status);
+  else renderRecruiterDecisionPanel();
   renderBatchReview();
 }
 
 document.getElementById("recruiter-decision-select").addEventListener("change", saveActiveRecruiterDecision);
+document.getElementById("recruiter-decision-reason").addEventListener("change", saveActiveRecruiterDecision);
+document.getElementById("decision-criteria-list").addEventListener("change", saveActiveRecruiterDecision);
 document.getElementById("recruiter-decision-note").addEventListener("input", function () {
-  const entry = activeCandidateEntry();
-  if (!entry) return;
-  entry.decisionNote = this.value.trim();
-  if (entry.decision && entry.decision !== "undecided") {
-    entry.decisionUpdatedAt = new Date().toISOString();
-  }
+  saveActiveRecruiterDecision(true);
 });
 
 function prepareInterviewInvite() {
@@ -932,6 +1679,8 @@ function prepareInterviewInvite() {
   entry.interviewInviteDraft = window.EvidenceTrailInterviewInvite.buildDraft(entry.result.requirements);
   entry.interviewInvitePreparedAt = new Date().toISOString();
   entry.decision = "advance";
+  entry.decisionReason = "";
+  entry.decisionRequirementIds = [];
   entry.decisionUpdatedAt = entry.interviewInvitePreparedAt;
   document.getElementById("recruiter-decision-select").value = "advance";
   renderRecruiterDecisionPanel();
@@ -1015,6 +1764,14 @@ document.getElementById("batch-review-view-switch").addEventListener("click", fu
 });
 
 document.getElementById("batch-review-items").addEventListener("click", function (event) {
+  const retryButton = event.target instanceof Element
+    ? event.target.closest("button[data-retry-upload-index]")
+    : null;
+  if (retryButton) {
+    const uploadIndex = Number(retryButton.dataset.retryUploadIndex);
+    if (Number.isInteger(uploadIndex)) void retryFailedBatchCandidate(uploadIndex);
+    return;
+  }
   const button = event.target instanceof Element
     ? event.target.closest("button[data-batch-index]")
     : null;
@@ -1068,11 +1825,26 @@ document.getElementById("batch-review-download").addEventListener("click", funct
     const itemReviews = Object.entries(state.reviewEntries || {}).map(function (item) {
       return { requirement_id: item[0], ...item[1] };
     });
+    const decisionRequirementIds = Array.isArray(entry.decisionRequirementIds)
+      ? entry.decisionRequirementIds
+      : [];
+    const linkedRequirements = window.EvidenceTrailRecruiterDecision
+      .selectLinkedRequirements(requirements, decisionRequirementIds)
+      .map(function (finding) {
+        return {
+          requirement_id: finding.id,
+          requirement: finding.requirement,
+          evidence_status: plainFindingLabel(finding),
+        };
+      });
     return {
       candidate_id: entry.candidateId || "C" + (index + 1),
       filename: entry.filename,
       upload_order: Number(entry.uploadIndex ?? index) + 1,
       recruiter_decision: entry.decision || "undecided",
+      decision_reason: entry.decisionReason || "",
+      decision_requirement_ids: decisionRequirementIds,
+      decision_linked_requirements: linkedRequirements,
       decision_note: entry.decisionNote || "",
       decision_recorded_at: entry.decisionUpdatedAt || null,
       interview_invite_draft: entry.interviewInviteDraft || "",
@@ -1109,6 +1881,11 @@ document.getElementById("batch-review-download").addEventListener("click", funct
     job_description_sha256: jobHash,
     recruiter_control: true,
     automated_ranking: false,
+    job_rubric: {
+      mode: batchRubricInfo.mode || "unknown",
+      requirements: Array.isArray(batchRubricInfo.criteria) ? batchRubricInfo.criteria : [],
+      applied_consistently: batchRubricInfo.mode === "shared_job_description_items" || batchRubricInfo.mode === "recruiter_locked" || batchRubricInfo.mode === "frozen_replay",
+    },
     candidates,
     failed_candidates: failures,
     note: "Shortlist decisions and notes were entered by the recruiter. Evidence counts are document findings, not a candidate score. Download each CV's HTML evidence pack separately for the page images and interactive report.",
@@ -1125,12 +1902,22 @@ document.getElementById("batch-review-download").addEventListener("click", funct
 });
 
 function clearCurrentResults(showNotice) {
+  if (activeAnalysisController) {
+    activeAnalysisController.abort();
+    activeAnalysisController = null;
+  }
+  if (analysisTimer) window.clearInterval(analysisTimer);
+  analysisTimer = null;
+  batchReviewGeneration += 1;
   batchReports = [];
   batchReviewStates = [];
   batchFailures = [];
+  batchRetryInProgress = false;
   activeBatchIndex = -1;
   currentResultPayload = null;
   batchReviewMode = "dossier";
+  batchRubricInfo = { mode: "", criteria: [] };
+  results.classList.remove("batch-failures-only");
   const batchReviewPanel = document.getElementById("batch-review");
   const batchReviewItems = document.getElementById("batch-review-items");
   const batchReviewMatrix = document.getElementById("batch-review-matrix");
@@ -1153,7 +1940,7 @@ function clearCurrentResults(showNotice) {
   roleAuditStatus.textContent = "";
   roleAuditStatus.hidden = true;
   roleAuditButton.disabled = false;
-  roleAuditButton.textContent = "Build role review checklist";
+  roleAuditButton.textContent = "Prepare role checklist";
   if (results.hidden) return false;
 
   results.hidden = true;
@@ -1235,8 +2022,8 @@ function renderVerifierChip(payload) {
     detail.textContent = "Hand-authored example; no live verification or model call.";
   } else if (payload.provider_mode === "mock") {
     chip.classList.add("verifier-chip-preview");
-    label.textContent = "Local mock";
-    detail.textContent = "Deterministic simulation; no Muse verification or model call.";
+    label.textContent = "Local simulation";
+    detail.textContent = "Heuristic rules only; no semantic model or hiring assessment.";
   } else {
     const audit = payload.quote_audit || {};
     const proposed = Number(audit.verification_proposed || 0);
@@ -1258,13 +2045,16 @@ function renderVerifierChip(payload) {
 }
 
 function renderResults(payload, analyzedFile, savedState) {
+  results.classList.remove("batch-failures-only");
   currentResultPayload = payload;
   const previewNotice = document.getElementById("preview-notice");
-  previewNotice.hidden = !payload.preview_mode && payload.provider_mode !== "mock";
+  previewNotice.hidden = !payload.preview_mode && payload.provider_mode !== "mock" && !payload.frozen_replay;
   previewNotice.textContent = payload.preview_mode
     ? "Synthetic preview only: these hand-authored findings use a fictional CV. No Muse Spark or Meta Model API request was made."
+    : payload.frozen_replay
+      ? "Frozen live Muse replay · recorded 28 Oct 2026 from fictional CVs. Loading it makes no API request. This set combines four completed batch analyses with a separate C3 recovery after the first C3 response failed local schema validation; usage for that failed request was not returned."
     : payload.provider_mode === "mock"
-      ? "Local mock simulation only: deterministic heuristics exercise the same pipeline, but this is not Muse analysis and must not be used as a hiring assessment. No Meta API call or model tokens."
+      ? "Local workflow simulation only: deterministic heuristics exercise document handling and reviewer controls. It cannot judge paraphrases or transferable experience and must not be used as a hiring assessment. No model call or model tokens."
       : "";
   renderVerifierChip(payload);
   const findingsList = document.getElementById("findings-list");
@@ -1344,7 +2134,9 @@ function renderResults(payload, analyzedFile, savedState) {
   );
   appendFindingGroup(
     "Related experience to review",
-    "Muse sees a possible connection to the job need. Review what may transfer and what the CV still does not establish.",
+    payload.provider_mode === "mock"
+      ? "The local simulation flagged a possible connection. It cannot judge whether experience transfers; inspect the source and what remains unproven."
+      : "Muse sees a possible connection to the job need. Review what may transfer and what the CV still does not establish.",
     relatedFindings
   );
   appendFindingGroup(
@@ -1405,7 +2197,8 @@ function renderResults(payload, analyzedFile, savedState) {
       " not mapped to a finding. The report may not cover the full role; open verification details to inspect."
     : "";
 
-  const pageNumbers = Object.keys(payload.pages || {}).sort(function (a, b) {
+  const pageImages = sourcePageImages(payload);
+  const pageNumbers = Object.keys(pageImages).sort(function (a, b) {
     return Number(a) - Number(b);
   });
   const sourcePages = document.getElementById("source-pages");
@@ -1437,8 +2230,10 @@ function renderResults(payload, analyzedFile, savedState) {
       title.className = "source-page-head";
       title.textContent = "CV page " + number + " · verified highlights";
       const image = document.createElement("img");
-      image.src = payload.pages[number];
+      image.src = pageImages[number];
       image.alt = "CV page " + number + " with verified passages highlighted";
+      image.loading = "lazy";
+      image.decoding = "async";
       page.append(title, image);
       sourcePages.appendChild(page);
     });
@@ -1449,28 +2244,37 @@ function renderResults(payload, analyzedFile, savedState) {
     ? " · OCR used on page(s) " + payload.ocr_pages.join(", ")
     : "";
   const rejectedCount = Number(payload.excluded_unverified_requirements || 0);
-  const callLabel = payload.preview_mode
-    ? "synthetic example · no Meta API request"
+  const callLabel = payload.frozen_replay
+    ? "2 saved Muse Spark passes · no new request"
+    : payload.session_cache
+      ? "reused completed analysis from this tab · no new request"
+    : payload.preview_mode
+      ? "synthetic example · no Meta API request"
     : payload.provider_mode === "mock"
-      ? "local mock pipeline · no Meta API request"
-      : Number(payload.analysis_calls || 0) === 2
-        ? "2 real Muse Spark passes · requirement mapping + source adjudication"
-        : payload.analysis_calls + " real Muse Spark pass(es)";
-  const firstUsage = usage.first_pass || {};
-  const secondUsage = usage.verification_pass || {};
+      ? "local heuristic pipeline · no model request"
+      : Number(payload.analysis_calls || 0) === 1
+        ? "1 Muse request · semantic analysis + local source verification"
+        : payload.analysis_calls + " real Muse request(s)";
+  const analysisUsage = usage.analysis_pass || usage.first_pass || {};
+  const historicSecondUsage = usage.verification_pass || {};
   const tokenDetails = payload.preview_mode || payload.provider_mode === "mock"
     ? ""
-    : " · pass 1 " +
-    (firstUsage.input_tokens || 0).toLocaleString() + " in / " +
-    (firstUsage.output_tokens || 0).toLocaleString() + " out · pass 2 " +
-    (secondUsage.input_tokens || 0).toLocaleString() + " in / " +
-    (secondUsage.output_tokens || 0).toLocaleString() + " out · total " +
+    : payload.frozen_replay
+      ? " · saved pass 1 " + (analysisUsage.input_tokens || 0).toLocaleString() + " in / " +
+        (analysisUsage.output_tokens || 0).toLocaleString() + " out · pass 2 " +
+        (historicSecondUsage.input_tokens || 0).toLocaleString() + " in / " +
+        (historicSecondUsage.output_tokens || 0).toLocaleString() + " out · total " +
+        (usage.input_tokens || 0).toLocaleString() + " in / " +
+        (usage.output_tokens || 0).toLocaleString() + " out"
+      : " · model " +
+    (analysisUsage.input_tokens || 0).toLocaleString() + " in / " +
+    (analysisUsage.output_tokens || 0).toLocaleString() + " out · total " +
     (usage.input_tokens || 0).toLocaleString() + " in / " +
     (usage.output_tokens || 0).toLocaleString() + " out";
   document.getElementById("run-meta").textContent =
     payload.model + " · " + callLabel + tokenDetails + ocrText +
     (rejectedCount ? " · " + rejectedCount +
-      (payload.provider_mode === "mock" ? " mock-proposed requirement(s) omitted" : " model-proposed requirement(s) omitted") : "");
+      (payload.provider_mode === "mock" ? " heuristic-proposed requirement(s) omitted" : " model-proposed requirement(s) omitted") : "");
   const ocrWarning = document.getElementById("ocr-review-warning");
   const ocrPages = Array.isArray(payload.ocr_pages) ? payload.ocr_pages : [];
   ocrWarning.hidden = ocrPages.length === 0;
@@ -1491,15 +2295,17 @@ function renderResults(payload, analyzedFile, savedState) {
   rejectedPanel.hidden = false;
   if (payload.preview_mode) {
     rejectedSummary.textContent = "Verifier rejection ledger · synthetic preview";
-    rejectedIntro.textContent = "This sample made no model call and contains no rejected model proposal. Live analyses list any second-pass citation rejected by local source checks.";
+    rejectedIntro.textContent = "This sample made no model call and contains no rejected model proposal. Live analyses list proposals excluded by local quote, page, or evidence checks.";
   } else {
     rejectedSummary.textContent = rejectedTotal + " proposed citation" +
       (rejectedTotal === 1 ? "" : "s") + " rejected by local checks";
     rejectedIntro.textContent = rejectedTotal
       ? (payload.provider_mode === "mock"
-        ? "These mock proposals did not pass source validation, so they are excluded from the displayed status, highlights, and evidence graph."
-        : "These model proposals did not pass source validation, so they are excluded from the displayed status, highlights, and evidence graph.")
-      : "No second-pass citations were rejected in this run. Every displayed citation still passed the local source checks.";
+        ? "These local heuristic proposals did not pass source validation, so they are excluded from the displayed status, highlights, and evidence graph."
+        : "These model proposals did not pass local quote, page, or evidence checks, so they are excluded from the displayed status, highlights, and evidence graph.")
+      : payload.provider_mode === "mock"
+        ? "No heuristic-selected quote was rejected by the local text and page checks. This does not evaluate semantic relevance."
+        : "No citations were rejected in this run. Every displayed citation passed the local quote and page checks.";
     const rejectionLabels = {
       source_not_allowed: "Source ID was not allowed for this requirement",
       invalid_evidence_role: "Evidence role was not supported",
@@ -1547,11 +2353,15 @@ function renderResults(payload, analyzedFile, savedState) {
     auditNode.textContent =
       "Synthetic sample only: quotes are locally checked against the fictional PDF; " +
       "no model verification or token usage is represented.";
+  } else if (payload.provider_mode === "mock") {
+    auditNode.textContent =
+      "Local simulation selected " + proposedQuotes + " candidate quote(s); " +
+      verifiedQuotes + " were found on their cited PDF page and " + excludedQuotes +
+      " were excluded. This checks text location only; no semantic model reviewed the requirement. Inspect the original CV yourself.";
   } else {
     auditNode.textContent =
-      "Pass 1 exact quote check: " + verifiedQuotes + "/" + proposedQuotes +
-      " matched the PDF (" + excludedQuotes + " excluded). Pass 2 source adjudication: " +
-      secondVerified + "/" + secondProposed + " citations matched an allowed retrieved span and PDF page (" +
+      "Muse's single structured analysis proposed " + proposedQuotes + " quote(s). Local PDF checks matched " +
+      secondVerified + "/" + secondProposed + " citations to the source page (" +
       secondExcluded + " excluded). " + ambiguous + " requirement(s) marked ambiguous. " +
       "A matching quote proves text presence, not qualification truth.";
   }
@@ -1569,10 +2379,11 @@ function renderResults(payload, analyzedFile, savedState) {
   if (omittedRequirements.length) {
     const omittedCount = omittedRequirements.length;
     omittedPanel.hidden = false;
-    omittedSummary.textContent = omittedCount + " model-proposed requirement" +
+    omittedSummary.textContent = omittedCount +
+      (payload.provider_mode === "mock" ? " heuristic-proposed requirement" : " model-proposed requirement") +
       (omittedCount === 1 ? "" : "s") + " omitted before evidence review";
     const reasonLabels = {
-      empty_requirement: "Muse returned an empty requirement.",
+      empty_requirement: evidenceEngineLabel(payload) + " returned an empty requirement.",
       not_in_job_description: "The wording was not found in the supplied job description.",
       duplicate_requirement: "A duplicate requirement was omitted."
     };
@@ -1591,7 +2402,9 @@ function renderResults(payload, analyzedFile, savedState) {
 
   document.getElementById("result-caption").textContent = payload.preview_mode
     ? "Fictional example. Select a finding below to open the exact source evidence. This is not Muse output."
-    : "Open any finding to see the source quote and page. EvidenceTrail checks document text; a person decides what it means.";
+    : payload.provider_mode === "mock"
+      ? "Open any finding to inspect the source passage. Local rules check text presence and dates; they do not assess whether experience meets the requirement."
+      : "Open any finding to see the source quote and page. EvidenceTrail checks document text; a person decides what it means.";
 
   const provenance = document.getElementById("provenance-details");
   provenance.replaceChildren();
@@ -1668,7 +2481,7 @@ function renderRoleClarityAudit(audit) {
   languageReference.open = false;
   worksheetButton.disabled = !criteria.length;
   panel.hidden = !items.length && !criteria.length;
-  panel.open = criteria.length > 0;
+  panel.open = false;
   if (panel.hidden) return;
 
   const count = Number(audit.count || 0);
@@ -1817,7 +2630,7 @@ function renderEvidenceGraph(graph) {
     const meta = document.createElement("span");
     const timelineNeedsReview = Array.isArray(row.timeline_review_flags) && row.timeline_review_flags.length > 0;
     const relationLabel = timelineNeedsReview
-      ? "Conflict to clarify · " + timelineMuseLabel(row)
+      ? "Conflict to clarify · " + timelineSourceLabel(row, currentResultPayload && currentResultPayload.provider_mode)
       : row.evidence_type === "related"
         ? "related experience"
         : row.evidence_type === "direct"
@@ -1839,7 +2652,9 @@ function renderEvidenceGraph(graph) {
       const sourceBlock = document.createElement("div");
       sourceBlock.className = "graph-job-source";
       const sourceLabel = document.createElement("span");
-      sourceLabel.textContent = Number.isInteger(jobSource.line)
+      sourceLabel.textContent = jobSource.source_type === "recruiter_locked_rubric"
+        ? "RECRUITER-LOCKED CHECKLIST"
+        : Number.isInteger(jobSource.line)
         ? "JOB POST · STARTS AT LINE " + jobSource.line
         : "JOB POST · SOURCE TEXT CHECKED";
       const sourceText = document.createElement("q");
@@ -1921,7 +2736,7 @@ function plainFindingLabel(finding) {
   }[state];
 }
 
-function timelineMuseLabel(finding) {
+function timelineSourceLabel(finding, providerMode) {
   const originalType = String(
     finding && (finding.muse_evidence_type || finding.evidence_type) || ""
   );
@@ -1931,7 +2746,10 @@ function timelineMuseLabel(finding) {
     unsupported: "Unsupported",
     conflicting: "Conflicting",
   };
-  return "Muse: " + (labels[originalType] || "Needs review") + " · Timeline check: conflict";
+  const source = evidenceEngineLabel(
+    providerMode ? { provider_mode: providerMode } : currentResultPayload
+  );
+  return source + ": " + (labels[originalType] || "Needs review") + " · Timeline check: conflict";
 }
 
 function evidenceStrengthValue(finding) {
@@ -2040,7 +2858,7 @@ function buildFindingCard(finding, criterion) {
     : finding.evidence_strength === "keyword_only"
       ? "The CV mentions a keyword or title, but gives no described task or example to support this requirement."
     : finding.evidence_type === "related" && finding.certainty === "ambiguous"
-      ? "Muse sees a possible connection, but the evidence or transfer needs a closer human review."
+      ? evidenceEngineLabel(currentResultPayload) + " sees a possible connection, but the evidence or transfer needs a closer human review."
     : finding.certainty === "ambiguous"
       ? "The CV wording is unclear. Check the passages below before relying on this result."
       : finding.evidence_type === "related"
@@ -2061,8 +2879,47 @@ function buildFindingCard(finding, criterion) {
   if (Array.isArray(finding.timeline_review_flags) && finding.timeline_review_flags.length) {
     const provenance = document.createElement("p");
     provenance.className = "timeline-provenance";
-    provenance.textContent = timelineMuseLabel(finding);
+    provenance.textContent = timelineSourceLabel(finding, currentResultPayload && currentResultPayload.provider_mode);
     body.appendChild(provenance);
+  }
+  if (finding.scope_boundary_review) {
+    const provenance = document.createElement("p");
+    provenance.className = "scope-provenance";
+    provenance.textContent = "Muse: Direct · Local scope check: Related · recruiter review";
+    body.appendChild(provenance);
+  }
+  if (finding.evidence_conflict_review) {
+    const review = finding.evidence_conflict_review;
+    const provenance = document.createElement("p");
+    provenance.className = "scope-provenance";
+    provenance.textContent = "Muse: " + String(review.muse_evidence_type || "Needs review") +
+      " · Mixed citation roles: " + String(review.final_evidence_type || "Needs review") +
+      " · recruiter review";
+    body.appendChild(provenance);
+  }
+
+  const scopeLimitations = Array.isArray(finding.scope_limitations)
+    ? finding.scope_limitations
+    : [];
+  if (scopeLimitations.length) {
+    const scopeCard = document.createElement("section");
+    scopeCard.className = "finding-scope-limitation";
+    const scopeHeading = document.createElement("h4");
+    scopeHeading.textContent = "CV scope passage to clarify";
+    scopeCard.appendChild(scopeHeading);
+    scopeLimitations.slice(0, 3).forEach(function (limitation) {
+      if (!limitation || !Number.isInteger(Number(limitation.page)) || !limitation.quote) return;
+      const quote = document.createElement("blockquote");
+      quote.textContent = String(limitation.quote);
+      const anchor = document.createElement("a");
+      anchor.className = "page-anchor scope-limitation-anchor";
+      anchor.href = "#page-" + Number(limitation.page);
+      anchor.dataset.page = String(Number(limitation.page));
+      anchor.dataset.quote = String(limitation.quote);
+      anchor.textContent = "Inspect this statement on CV page " + Number(limitation.page) + " →";
+      scopeCard.append(quote, anchor);
+    });
+    body.appendChild(scopeCard);
   }
 
   if (finding.evidence_type === "related") {
@@ -2073,7 +2930,7 @@ function buildFindingCard(finding, criterion) {
     const transfer = document.createElement("p");
     transfer.className = "finding-transfer-explanation";
     transfer.textContent = String(finding.transfer_explanation ||
-      "Muse suggests a possible connection, but no transfer explanation was returned. Review the CV passage before relying on it.");
+      evidenceEngineLabel(currentResultPayload) + " suggests a possible connection, but no transfer explanation was returned. Review the CV passage before relying on it.");
     transferCard.append(transferTitle, transfer);
 
     const aspects = Array.isArray(finding.unproven_aspects)
@@ -2126,7 +2983,9 @@ function buildFindingCard(finding, criterion) {
     const source = document.createElement("div");
     source.className = "finding-job-source";
     const sourceLabel = document.createElement("span");
-    sourceLabel.textContent = Number.isInteger(jobSource.line)
+    sourceLabel.textContent = jobSource.source_type === "recruiter_locked_rubric"
+      ? "From the recruiter-locked checklist"
+      : Number.isInteger(jobSource.line)
       ? "From the job post · line " + jobSource.line
       : "From the job post";
     const sourceQuote = document.createElement("blockquote");
@@ -2145,14 +3004,17 @@ function buildFindingCard(finding, criterion) {
     const quoteList = document.createElement("div");
     quoteList.className = "quote-list";
     finding.evidence.forEach(function (evidence) {
+      const displayRole = evidence.display_role || evidence.role;
       const quote = document.createElement("div");
       quote.className = "quote-item" +
-        (evidence.role === "contradicts" ? " contradicts" : evidence.evidence_type === "related" ? " related-evidence" : "");
+        (displayRole === "scope_context" ? " scope-context" : evidence.role === "contradicts" ? " contradicts" : evidence.evidence_type === "related" ? " related-evidence" : "");
       const role = document.createElement("span");
       role.className = "quote-role";
       const timelineNeedsReview = Array.isArray(finding.timeline_review_flags) && finding.timeline_review_flags.length > 0;
-      const evidenceLabel = evidence.role === "contradicts"
-        ? "CV says something different"
+      const evidenceLabel = displayRole === "scope_context"
+        ? "Scope passage · review candidate's role"
+        : evidence.role === "contradicts"
+        ? "Potential conflicting statement · review"
         : timelineNeedsReview
           ? "CV passage · timeline needs review"
         : finding.evidence_type === "related"
@@ -2300,7 +3162,9 @@ function renderApplicationPrep(prep) {
       jobSourceNode = document.createElement("div");
       jobSourceNode.className = "application-prep-job-source";
       const sourceLabel = document.createElement("span");
-      sourceLabel.textContent = Number.isInteger(jobSource.line)
+      sourceLabel.textContent = jobSource.source_type === "recruiter_locked_rubric"
+        ? "Recruiter-locked checklist"
+        : Number.isInteger(jobSource.line)
         ? "Job post · starts at line " + jobSource.line
         : "Job post wording checked";
       const sourceText = document.createElement("blockquote");
@@ -2400,6 +3264,12 @@ function renderTimelineAudit(audit) {
     heading.textContent = String(episode.role || "Role not confirmed") + " · " +
       String(episode.start_date || "") + "–" + String(episode.end_date || "");
     item.appendChild(heading);
+    const origin = document.createElement("small");
+    origin.className = "timeline-origin";
+    origin.textContent = episode.source === "local_date_extraction"
+      ? "Dates found in CV text by local code"
+      : "Muse proposal · date quote checked locally";
+    item.appendChild(origin);
     if (episode.date_quote) {
       const source = document.createElement("button");
       source.type = "button";
@@ -2481,7 +3351,10 @@ function applicationPrepText() {
       ? entry.job_source
       : null;
     if (jobSource && jobSource.text) {
-      lines.push((Number.isInteger(jobSource.line) ? "Job post starting at line " + jobSource.line : "Job post wording") + ": " + String(jobSource.text));
+      const sourceLabel = jobSource.source_type === "recruiter_locked_rubric"
+        ? "Recruiter-locked criterion"
+        : Number.isInteger(jobSource.line) ? "Job post starting at line " + jobSource.line : "Job post wording";
+      lines.push(sourceLabel + ": " + String(jobSource.text));
     }
     lines.push(String(entry.action || ""));
     (Array.isArray(entry.evidence) ? entry.evidence : []).forEach(function (source) {
@@ -2682,7 +3555,7 @@ function buildReviewedReport(reportHtml) {
     const recorded = reportDocument.createElement("p");
     recorded.textContent = "Recorded in this browser session (UTC): " + response.recordedAt;
     const boundary = reportDocument.createElement("p");
-    boundary.textContent = "This statement was added after CV analysis. It is separate from the CV, was not sent to Muse, and did not change the evidence status.";
+    boundary.textContent = "This statement was added after CV analysis. It is separate from the CV, was not sent for model analysis, and did not change the evidence status.";
     const reply = reportDocument.createElement("blockquote");
     reply.textContent = response.text;
     record.append(title, recorded, boundary, reply);
@@ -2706,6 +3579,34 @@ function buildReviewedReport(reportHtml) {
       decision.textContent += " · recorded " + activeEntry.decisionUpdatedAt + " (UTC)";
     }
     handoff.append(heading, candidate, decision);
+
+    if (activeEntry.decisionReason) {
+      const decisionReason = reportDocument.createElement("p");
+      decisionReason.className = "recruiter-handoff-reason";
+      decisionReason.textContent = "Job-related reason: " +
+        window.EvidenceTrailRecruiterDecision.reasonLabel(activeEntry.decisionReason);
+      handoff.appendChild(decisionReason);
+    }
+
+    const decisionRequirementIds = Array.isArray(activeEntry.decisionRequirementIds)
+      ? activeEntry.decisionRequirementIds
+      : [];
+    const linkedRequirements = window.EvidenceTrailRecruiterDecision.selectLinkedRequirements(
+      Array.isArray(result.requirements) ? result.requirements : [],
+      decisionRequirementIds
+    );
+    if (linkedRequirements.length) {
+      const linkedHeading = reportDocument.createElement("h3");
+      linkedHeading.textContent = "Decision linked to these job requirements";
+      const linkedList = reportDocument.createElement("ul");
+      linkedRequirements.forEach(function (finding) {
+        const item = reportDocument.createElement("li");
+        item.textContent = String(finding.id || "") + " · " +
+          String(finding.requirement || "Job requirement") + " (" + plainFindingLabel(finding) + ")";
+        linkedList.appendChild(item);
+      });
+      handoff.append(linkedHeading, linkedList);
+    }
 
     if (activeEntry.interviewInviteDraft) {
       const invite = reportDocument.createElement("section");
@@ -2781,7 +3682,7 @@ function buildReviewedReport(reportHtml) {
     }
     const boundary = reportDocument.createElement("p");
     boundary.className = "recruiter-handoff-boundary";
-    boundary.textContent = "The decision and notes above were entered by the recruiter. Muse findings describe supplied documents and do not determine suitability.";
+    boundary.textContent = "The decision and notes above were entered by the recruiter. Evidence findings describe supplied documents and do not determine suitability.";
     handoff.appendChild(boundary);
 
     const reportStyle = reportDocument.querySelector("style");
@@ -2795,7 +3696,7 @@ function buildReviewedReport(reportHtml) {
 
   const disclosure = reportDocument.createElement("p");
   disclosure.className = "sub review-disclosure";
-  disclosure.textContent = "Human review records were entered by the reviewer and are separate from Muse output. They do not represent a hiring decision.";
+  disclosure.textContent = "Human review records were entered by the reviewer and are separate from generated evidence findings. They do not represent a hiring decision.";
   const intro = reportDocument.querySelector("main .sub");
   if (intro) intro.insertAdjacentElement("afterend", disclosure);
   return "<!doctype html>\n" + reportDocument.documentElement.outerHTML;
@@ -3122,9 +4023,31 @@ async function renderInteractivePdfPage(pageNumber) {
   document.getElementById("source-viewer-zoom-in").disabled = currentPdfZoom >= 2.5;
 }
 
-document.getElementById("download-report").addEventListener("click", function () {
-  if (!currentReport) return;
-  const blob = new Blob([buildReviewedReport(currentReport)], { type: "text/html;charset=utf-8" });
+document.getElementById("download-report").addEventListener("click", async function () {
+  let reportHtml = currentReport;
+  let reportCandidate = null;
+  if (!reportHtml) {
+    const activeEntry = activeCandidateEntry();
+    if (!activeEntry || !activeEntry.reportUrl) return;
+    reportCandidate = activeEntry;
+    this.disabled = true;
+    try {
+      const response = await fetch(activeEntry.reportUrl);
+      if (!response.ok) throw new Error("The saved evidence pack could not be loaded.");
+      reportHtml = await response.text();
+    } catch (error) {
+      showError(error.message || "The saved evidence pack could not be loaded.");
+      return;
+    } finally {
+      this.disabled = false;
+    }
+  }
+  if (reportCandidate && activeCandidateEntry() !== reportCandidate) {
+    showError("The selected candidate changed while the evidence pack was loading. Select the candidate again and retry.");
+    return;
+  }
+  if (!reportHtml) return;
+  const blob = new Blob([buildReviewedReport(reportHtml)], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

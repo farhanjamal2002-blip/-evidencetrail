@@ -37,12 +37,16 @@ class LocalHTTPException(Exception):
 def install_import_shims() -> None:
     """Stand in for runtime plumbing that this direct-call harness doesn't use."""
     fastapi = types.ModuleType("fastapi")
+    fastapi.__path__ = []
 
     class FastAPI:
         def __init__(self, **_kwargs: Any):
             pass
 
         def mount(self, *_args: Any, **_kwargs: Any) -> None:
+            pass
+
+        def add_middleware(self, *_args: Any, **_kwargs: Any) -> None:
             pass
 
         def get(self, *_args: Any, **_kwargs: Any):
@@ -69,9 +73,17 @@ def install_import_shims() -> None:
     template_module.Jinja2Templates = type(
         "Jinja2Templates", (), {"__init__": lambda self, *_a, **_k: None}
     )
+    middleware_module = types.ModuleType("fastapi.middleware")
+    middleware_module.__path__ = []
+    gzip_module = types.ModuleType("fastapi.middleware.gzip")
+    gzip_module.GZipMiddleware = type("GZipMiddleware", (), {})
+    fastapi.middleware = middleware_module
+    middleware_module.gzip = gzip_module
     sys.modules.update(
         {
             "fastapi": fastapi,
+            "fastapi.middleware": middleware_module,
+            "fastapi.middleware.gzip": gzip_module,
             "fastapi.responses": response_module,
             "fastapi.staticfiles": static_module,
             "fastapi.templating": template_module,
@@ -93,6 +105,7 @@ def install_import_shims() -> None:
     sys.modules["dotenv"] = dotenv
 
     openai = types.ModuleType("openai")
+    openai.APIConnectionError = type("APIConnectionError", (Exception,), {})
     openai.OpenAI = lambda **_kwargs: (_ for _ in ()).throw(
         AssertionError("The fake API client must be installed before provider use.")
     )
@@ -108,7 +121,7 @@ def install_import_shims() -> None:
 
 install_import_shims()
 
-import fitz  # noqa: E402
+import pymupdf as fitz  # noqa: E402
 import app  # noqa: E402
 
 
@@ -196,132 +209,99 @@ class FakeMuseCompletions:
 
     def create(self, **request: Any) -> types.SimpleNamespace:
         self.calls.append(request)
-        schema_name = request["response_format"]["json_schema"]["name"]
-        if schema_name == "requirement_evidence_map":
-            if self.scenario in {"invalid_json", "truncated"}:
-                reason = "length" if self.scenario == "truncated" else "stop"
-                return self.response("{\"requirements\":", finish_reason=reason)
-            if self.scenario == "refusal":
-                return self.response("", refusal="local refusal fixture")
-            result: dict[str, Any] = {
-                "requirements": [
-                    {
-                        "requirement": "At least 5 years of Python experience",
-                        "evidence": [
-                            {"quote": PYTHON_QUOTE, "role": "supports", "page_hint": 1}
-                        ],
-                    },
-                    {
-                        "requirement": "Current AWS certification",
-                        "evidence": [
-                            {"quote": AWS_QUOTE, "role": "contradicts", "page_hint": 1}
-                        ],
-                    },
-                    {"requirement": "Bachelor's degree", "evidence": []},
-                ],
-                "application_claims": [
-                    {"claim": "Led a team of 4 analysts"},
-                    {"claim": "Owned a $50M quantum portfolio"},
-                ],
-                "employment_episodes": [{
-                    "role": "Procurement Analyst",
-                    "company": "SampleCo",
-                    "start_date": "2020",
-                    "end_date": "2025",
-                    "date_quote": TIMELINE_DATE_QUOTE,
-                    "scope_quote": TIMELINE_SCOPE_QUOTE,
-                    "experience_areas": ["procurement"],
-                    "page_hint": 1,
-                }],
-                "experience_claims": [{
-                    "topic": "procurement",
-                    "claim_quote": TIMELINE_CLAIM_QUOTE,
-                    "page_hint": 1,
-                }],
-            }
-            if self.scenario == "extra_first_field":
-                result["unrequested_field"] = "reject this"
-            return self.response(json.dumps(result))
+        if self.scenario in {"invalid_json", "truncated"}:
+            reason = "length" if self.scenario == "truncated" else "stop"
+            return self.response("{\"requirements\":", finish_reason=reason)
+        if self.scenario == "refusal":
+            return self.response("", refusal="local refusal fixture")
 
-        prefix = (
-            "Review every job requirement and application claim against the source spans. "
-            "Return one review per supplied item.\n"
+        python_quote = (
+            "I have 20 years in quantum procurement"
+            if self.scenario == "forged_quote"
+            else PYTHON_QUOTE
         )
-        payload = json.loads(request["messages"][1]["content"][len(prefix) :])
-        spans = {span["id"]: span for span in payload["source_spans"]}
-
-        def citation_for(item: dict[str, Any], quote: str) -> list[dict[str, str]]:
-            source_id = next(
-                (
-                    source_id
-                    for source_id in item["source_span_ids"]
-                    if quote.casefold() in spans[source_id]["text"].casefold()
-                ),
-                None,
-            )
-            if not source_id:
-                return []
-            if self.scenario == "forged_source" and item.get("id") == "R1":
-                source_id = "FORGED-SOURCE-ID"
-            return [{"source_id": source_id, "quote": quote, "role": "supports"}]
-
-        reviews = []
-        for item in payload["requirements"]:
-            text = item["text"]
-            if text.startswith("At least 5 years"):
-                status, evidence = "supported", citation_for(item, PYTHON_QUOTE)
-                evidence_type = "direct"
-            elif text == "Current AWS certification":
-                status = "conflicting"
-                evidence = citation_for(item, AWS_QUOTE)
-                evidence = [dict(citation, role="contradicts") for citation in evidence]
-                evidence_type = "conflicting"
-            else:
-                status, evidence = "not_found", []
-                evidence_type = "unsupported"
-            reviews.append(
+        result: dict[str, Any] = {
+            "requirements": [
                 {
-                    "requirement_id": item["id"],
-                    "status": status,
-                    "evidence_type": evidence_type,
-                    "evidence_strength": (
-                        "specific" if evidence_type == "direct"
-                        else "stated" if evidence_type == "conflicting"
-                        else "none"
-                    ),
+                    "requirement": "At least 5 years of Python experience",
+                    "status": "supported",
+                    "evidence_type": "direct",
+                    "evidence_strength": "specific",
                     "transfer_explanation": None,
                     "unproven_aspects": [],
-                    "follow_up_question": "Can you share a relevant example?",
+                    "follow_up_question": None,
                     "certainty": "clear",
-                    "reason": "Local fake response based on its supplied source spans.",
-                    "evidence": evidence,
-                }
-            )
-
-        application_reviews = []
-        for item in payload["application_claims"]:
-            if "team of 4 analysts" in item["text"]:
-                status = "supported"
-                evidence = citation_for(item, TEAM_QUOTE)
-            else:
-                status, evidence = "not_found", []
-            application_reviews.append(
+                    "reason": "The CV provides a direct duration statement.",
+                    "evidence": [{
+                        "quote": python_quote, "role": "supports", "page_hint": 1,
+                    }],
+                },
                 {
-                    "claim_id": item["id"],
-                    "status": status,
+                    "requirement": "Current AWS certification",
+                    "status": "conflicting",
+                    "evidence_type": "conflicting",
+                    "evidence_strength": "stated",
+                    "transfer_explanation": None,
+                    "unproven_aspects": [],
+                    "follow_up_question": "Can you clarify the credential's current status?",
                     "certainty": "clear",
-                    "reason": "Local fake response; the unsupported example has no citation.",
-                    "evidence": evidence,
-                }
-            )
-
-        if self.scenario == "forged_review_id" and reviews:
-            reviews[0]["requirement_id"] = "R999"
-        if self.scenario == "missing_review" and reviews:
-            reviews.pop()
-        return self.response(
-            json.dumps({"reviews": reviews, "application_reviews": application_reviews})
-        )
+                    "reason": "The CV explicitly describes an incompatible credential status.",
+                    "evidence": [{
+                        "quote": AWS_QUOTE, "role": "contradicts", "page_hint": 1,
+                    }],
+                },
+                {
+                    "requirement": "Bachelor's degree",
+                    "status": "not_found",
+                    "evidence_type": "unsupported",
+                    "evidence_strength": "none",
+                    "transfer_explanation": None,
+                    "unproven_aspects": [],
+                    "follow_up_question": "Can you describe your relevant education?",
+                    "certainty": "clear",
+                    "reason": "No degree passage is shown in this CV.",
+                    "evidence": [],
+                },
+            ],
+            "application_claims": [
+                {
+                    "claim": "Led a team of 4 analysts",
+                    "status": "supported",
+                    "certainty": "clear",
+                    "reason": "The CV contains a direct statement about the team.",
+                    "evidence": [{"quote": TEAM_QUOTE, "role": "supports", "page_hint": 1}],
+                },
+                {
+                    "claim": "Owned a $50M quantum portfolio",
+                    "status": "not_found",
+                    "certainty": "clear",
+                    "reason": "No direct support for this claim appears in the CV.",
+                    "evidence": [],
+                },
+            ],
+            "employment_episodes": [{
+                "role": "Procurement Analyst",
+                "company": "SampleCo",
+                "start_date": "2020",
+                "end_date": "2025",
+                "date_quote": TIMELINE_DATE_QUOTE,
+                "scope_quote": TIMELINE_SCOPE_QUOTE,
+                "experience_areas": ["procurement"],
+                "page_hint": 1,
+            }],
+            "experience_claims": [{
+                "topic": "procurement",
+                "claim_quote": TIMELINE_CLAIM_QUOTE,
+                "page_hint": 1,
+            }],
+        }
+        if self.scenario == "extra_first_field":
+            result["unrequested_field"] = "reject this"
+        if self.scenario == "invalid_semantic_enum":
+            result["requirements"][0]["evidence_type"] = "invented"
+        if self.scenario == "missing_semantic_field":
+            del result["requirements"][0]["certainty"]
+        return self.response(json.dumps(result))
 
     @staticmethod
     def response(
@@ -359,8 +339,21 @@ def run_mock_pipeline() -> None:
     assert result["usage"] == {
         "input_tokens": 0,
         "output_tokens": 0,
-        "first_pass": {"input_tokens": 0, "output_tokens": 0},
-        "verification_pass": {"input_tokens": 0, "output_tokens": 0},
+        "cached_input_tokens": 0,
+        "reasoning_tokens": 0,
+        "analysis_pass": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cached_input_tokens": 0,
+            "reasoning_tokens": 0,
+        },
+        "local_verification": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cached_input_tokens": 0,
+            "reasoning_tokens": 0,
+            "mode": "local_mock",
+        },
     }
     assert [item["status"] for item in result["requirements"]] == [
         "supported",
@@ -447,19 +440,20 @@ def run_batch_pipeline() -> None:
 def run_fake_muse_pipeline() -> None:
     app.MOCK_PROVIDER_ENABLED = False
     app.ANALYSIS_PROVIDER = "muse"
+    app.MUSE_PROVIDER_ENABLED = True
     app.OpenAI = FakeMuseClient
     FakeMuseCompletions.scenario = "clean"
     FakeMuseCompletions.calls.clear()
     result = asyncio.run(analyze(draft=DRAFT))
     assert result["provider_mode"] == "muse"
-    assert result["analysis_calls"] == 2
+    assert result["analysis_calls"] == 1
     assert result["timeline_audit"]["dated_employment_months"] == 60
     assert result["timeline_audit"]["tenure_by_area"] == [
         {"area": "procurement", "months": 60}
     ]
     assert result["timeline_audit"]["flags"][0]["type"] == "claimed_tenure_exceeds_dated_evidence"
     assert "Timeline and tenure review" in result["report_html"]
-    assert len(FakeMuseCompletions.calls) == 2
+    assert len(FakeMuseCompletions.calls) == 1
     assert [item["status"] for item in result["requirements"]] == [
         "supported",
         "conflicting",
@@ -469,19 +463,19 @@ def run_fake_muse_pipeline() -> None:
     assert claim_statuses == ["supported", "not_found"], claim_statuses
     assert all(request["store"] is False for request in FakeMuseCompletions.calls)
     assert FakeMuseCompletions.calls[0]["model"] == app.MODEL_ID
-    assert any(
-        part.get("type") == "file"
-        for part in FakeMuseCompletions.calls[0]["messages"][1]["content"]
-    )
-    print("PASS fake Muse: two-pass app path, timeline math, application claims, strict schema")
+    muse_input = FakeMuseCompletions.calls[0]["messages"][1]["content"]
+    assert isinstance(muse_input, str)
+    assert "[Page 1]" in muse_input
+    assert PYTHON_QUOTE in muse_input
+    print("PASS fake Muse: one-pass semantic response, local quote checks, timeline math, strict schema")
 
     for scenario, expected_calls in (
         ("invalid_json", 1),
         ("truncated", 1),
         ("refusal", 1),
         ("extra_first_field", 1),
-        ("forged_review_id", 2),
-        ("missing_review", 2),
+        ("invalid_semantic_enum", 1),
+        ("missing_semantic_field", 1),
     ):
         FakeMuseCompletions.scenario = scenario
         FakeMuseCompletions.calls.clear()
@@ -490,15 +484,15 @@ def run_fake_muse_pipeline() -> None:
         assert failure.detail and "Muse" in failure.detail
     print("PASS fake Muse attacks: six broken replies fail closed with no report")
 
-    FakeMuseCompletions.scenario = "forged_source"
+    FakeMuseCompletions.scenario = "forged_quote"
     FakeMuseCompletions.calls.clear()
     result = asyncio.run(analyze())
     finding = result["requirements"][0]
     assert finding["status"] == "not_found"
     assert finding["certainty"] == "ambiguous"
     assert finding["evidence"] == []
-    assert result["verification_audit"]["rejected_citations"][0]["reason"] == "source_not_allowed"
-    print("PASS citation attack: forged source becomes ambiguous not_found, never highlighted")
+    assert result["verification_audit"]["rejected_citations"][0]["reason"] == "quote_not_found_on_cited_page"
+    print("PASS citation attack: forged quote is rejected by the local page verifier")
 
 
 def run_input_attacks() -> None:

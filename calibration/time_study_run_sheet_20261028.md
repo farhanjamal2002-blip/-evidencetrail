@@ -6,20 +6,20 @@
 
 ## Preflight — complete before inviting reviewers
 
-- [x] One job description and one paper rubric used in both rounds: [rubric demo-v1](unified_demo_rubric_v1.md).
-- [x] Five CV PDFs for that same job, with stable candidate IDs and upload order: [PDF assets](unified_demo_assets/).
-- [ ] Frozen EvidenceTrail results for the same five CVs. The single live attempt did not return a completed batch; see [attempt record](unified_demo_attempt_20261028.json).
-- [x] Prewritten planted-issue key: [answer key](unified_demo_answer_key_v1.md). Keep it hidden from reviewers.
-- [ ] PDF-only packet and EvidenceTrail replay use the same CV content and rubric. Replay mode is pending the successful frozen Muse result.
+- [x] One job description and one paper rubric used in both rounds: [rubric demo-v2](unified_demo_rubric_v2.md).
+- [x] Five CV PDFs for that same job, with stable candidate IDs and upload order: [PDF assets](unified_demo_assets_v2/) and [ZIP packet](unified_demo_cvs_20261028_v2.zip).
+- [x] Frozen real Muse results for all five CVs: [combined replay](unified_demo_replay_20261028_v2_combined.json) and [combined metrics](unified_demo_metrics_20261028_v2_combined.json). C3 completed in a separately logged manual recovery after the initial schema-validation failure.
+- [x] Prewritten planted-issue key: [answer key](unified_demo_answer_key_v2.md). Keep it hidden from reviewers.
+- [x] PDF-only packet and frozen replay use the same v2 CV content and rubric. The app's “Open the frozen live Muse run” action loads saved results without a new API call.
 - [ ] Three reviewers, timer, and observation sheets are ready. Do not show the answer key to reviewers.
 
-**Fixture check:** The new unified one-job, five-CV fixture is assembled and its scan was confirmed image-only with OCR. Its live Muse results are not frozen yet. The prior five-case calibration, two-CV Strength Ladder demo, and earlier scan catch remain separate evidence sets.
+**Fixture check:** The one-job, five-CV v2 fixture is frozen. Its fifth CV is image-only and exercised OCR. The saved run contains one genuine blocked quote; keep that exact quote and page as observed, and do not introduce additional failures. Prior five-case calibration and older unified v1 outputs remain separate historical evidence sets.
 
-**Blocked-quote rule:** Score the blocked-quote item only if the frozen unified Muse run actually contains a verifier-blocked quote. If it does not, mark that item “not present in this set” for both review conditions and keep the earlier scan audit labelled as a separate example. Never plant or edit a quote failure to force the study result.
+**Blocked-quote rule:** The v2 replay contains one verifier-blocked quote on C5. Reviewers should count it as caught only if they identify the missing source support before seeing the answer key. Never plant or edit another quote failure to force the study result.
 
 ## Participant protocol
 
-After the live results and judge replay are frozen, recruit three people who can perform a basic recruiter-style CV review. Tell each person to review all five candidates against the rubric and record a decision plus a short reason. Give the same time limit and instructions in both rounds. Do not teach the planted issues. The human time study has not run.
+Recruit three people who can perform a basic recruiter-style CV review. Tell each person to review all five candidates against the rubric and record a decision plus a short reason. Give the same time limit and instructions in both rounds. Do not teach the planted issues. The human time study has not run.
 
 | Reviewer | Round order | PDF-only total minutes | EvidenceTrail total minutes | Notes |
 |---|---|---:|---:|---|

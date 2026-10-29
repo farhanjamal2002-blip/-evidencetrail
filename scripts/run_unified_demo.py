@@ -2,7 +2,8 @@
 """Preflight or run the single-job, five-CV fictional EvidenceTrail demo.
 
 The live path submits one batch to the local application. The application makes
-two Muse requests per CV. No retries are enabled in the Meta client or runner.
+one Muse request per CV, then verifies quotes and dates locally. No retries are
+enabled in the Meta client or runner.
 The replay artifact intentionally contains only fictional CV results and is
 kept separate from the expected-label calibration report.
 """
@@ -10,8 +11,10 @@ kept separate from the expected-label calibration report.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -19,11 +22,12 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = ROOT / "calibration" / "unified_supplier_operations_demo_20261028.json"
-ASSET_DIR = ROOT / "calibration" / "unified_demo_assets"
-METRICS_FILE = ROOT / "calibration" / "unified_demo_metrics_20261028.json"
-REPLAY_FILE = ROOT / "calibration" / "unified_demo_replay_20261028.json"
-ATTEMPT_FILE = ROOT / "calibration" / "unified_demo_attempt_20261028.json"
+FIXTURE = ROOT / "calibration" / "unified_supplier_operations_demo_20261028_v2.json"
+ASSET_DIR = ROOT / "calibration" / "unified_demo_assets_v2"
+METRICS_FILE = ROOT / "calibration" / "unified_demo_metrics_20261028_v2.json"
+REPLAY_FILE = ROOT / "calibration" / "unified_demo_replay_20261028_v2.json"
+ATTEMPT_FILE = ROOT / "calibration" / "unified_demo_attempt_20261028_v2.json"
+RUN_SUFFIX_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 sys.path.insert(0, str(ROOT))
 
 
@@ -32,11 +36,47 @@ def parse_args() -> argparse.Namespace:
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--preflight-only", action="store_true")
     group.add_argument("--confirm-live-call", action="store_true")
+    parser.add_argument(
+        "--fixture",
+        help="Calibration fixture JSON under calibration/ (defaults to the frozen v2 fixture).",
+    )
+    parser.add_argument(
+        "--run-suffix",
+        help=(
+            "Write this run to separate immutable calibration artifacts, for example "
+            "hardened_medium_20261029. Letters, digits, underscores, and hyphens only."
+        ),
+    )
     return parser.parse_args()
 
 
-def load_fixture() -> dict[str, Any]:
-    value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+def artifact_paths(run_suffix: str | None) -> tuple[Path, Path, Path]:
+    """Return metrics, replay, and attempt paths without overwriting prior runs."""
+    if run_suffix is None:
+        return METRICS_FILE, REPLAY_FILE, ATTEMPT_FILE
+    if not RUN_SUFFIX_RE.fullmatch(run_suffix):
+        raise ValueError("Run suffix must use 1–64 letters, digits, underscores, or hyphens.")
+    return tuple(
+        ROOT / "calibration" / f"unified_demo_{kind}_{run_suffix}.json"
+        for kind in ("metrics", "replay", "attempt")
+    )
+
+
+def resolve_fixture_path(value: str | None) -> Path:
+    if not value:
+        return FIXTURE
+    path = Path(value)
+    path = (ROOT / path).resolve() if not path.is_absolute() else path.resolve()
+    calibration_root = (ROOT / "calibration").resolve()
+    if path == calibration_root or calibration_root not in path.parents:
+        raise ValueError("The fixture path must point to a file under calibration/.")
+    if path.suffix.casefold() != ".json":
+        raise ValueError("The fixture must be a JSON file.")
+    return path
+
+
+def load_fixture(fixture_path: Path = FIXTURE) -> dict[str, Any]:
+    value = json.loads(fixture_path.read_text(encoding="utf-8"))
     candidates = value.get("candidates")
     if not isinstance(candidates, list) or len(candidates) != 5:
         raise ValueError("The unified demo fixture must contain exactly five CVs.")
@@ -51,18 +91,20 @@ def load_fixture() -> dict[str, Any]:
     return value
 
 
-def build_assets(fixture: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    import fitz
+def build_assets(
+    fixture: dict[str, Any], asset_dir: Path = ASSET_DIR
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    import pymupdf as fitz
     import app
     from scripts.evaluate_semantic_cases import make_case_pdf
 
-    ASSET_DIR.mkdir(parents=True, exist_ok=True)
+    asset_dir.mkdir(parents=True, exist_ok=True)
     candidate_rows: list[dict[str, Any]] = []
     asset_checks: list[dict[str, Any]] = []
     for index, candidate in enumerate(fixture["candidates"], start=1):
         pdf = make_case_pdf(candidate)
         filename = f"{candidate['id']}.pdf"
-        output_path = ASSET_DIR / filename
+        output_path = asset_dir / filename
         output_path.write_bytes(pdf)
         extracted = app.extract_pdf(pdf)
         document = fitz.open(stream=pdf, filetype="pdf")
@@ -130,7 +172,17 @@ def strength_matches(case: dict[str, Any], result: dict[str, Any]) -> list[dict[
 
 def main() -> int:
     args = parse_args()
-    fixture = load_fixture()
+    try:
+        metrics_file, replay_file, attempt_file = artifact_paths(args.run_suffix)
+        fixture_path = resolve_fixture_path(args.fixture)
+    except ValueError as exc:
+        print(json.dumps({
+            "status": "blocked",
+            "reason": str(exc),
+            "live_calls_made": 0,
+        }, indent=2))
+        return 2
+    fixture = load_fixture(fixture_path)
     try:
         from dotenv import load_dotenv
 
@@ -153,24 +205,34 @@ def main() -> int:
         }, indent=2))
         return 2
 
-    candidate_rows, asset_checks = build_assets(fixture)
+    asset_dir = (
+        ROOT / "calibration" / f"unified_demo_assets_{args.run_suffix}"
+        if args.run_suffix
+        else ASSET_DIR
+    )
+    candidate_rows, asset_checks = build_assets(fixture, asset_dir)
+    fixture_sha256 = hashlib.sha256(fixture_path.read_bytes()).hexdigest()
+    system_prompt_sha256 = hashlib.sha256(app.SYSTEM_PROMPT.encode("utf-8")).hexdigest()
     preflight = {
         "demo_id": fixture["demo_id"],
         "rubric_version": fixture["rubric_version"],
         "provider": provider,
         "model": app.MODEL_ID,
+        "reasoning_effort": app.MUSE_REASONING_EFFORT,
+        "system_prompt_sha256": system_prompt_sha256,
+        "fixture_sha256": fixture_sha256,
         "server_key_configured": key_configured,
         "candidate_count": len(candidate_rows),
         "one_shared_job_description": True,
-        "expected_live_requests": 2 * len(candidate_rows),
+        "expected_live_requests": len(candidate_rows),
         "automatic_retries": 0,
         "asset_checks": asset_checks,
         "pdf_assets": candidate_rows,
-        "fixture": str(FIXTURE.relative_to(ROOT)),
-        "metrics_output": str(METRICS_FILE.relative_to(ROOT)),
-        "replay_output": str(REPLAY_FILE.relative_to(ROOT)),
-        "attempt_log": str(ATTEMPT_FILE.relative_to(ROOT)),
-        "prior_attempt_record_exists": ATTEMPT_FILE.exists(),
+        "fixture": str(fixture_path.relative_to(ROOT)),
+        "metrics_output": str(metrics_file.relative_to(ROOT)),
+        "replay_output": str(replay_file.relative_to(ROOT)),
+        "attempt_log": str(attempt_file.relative_to(ROOT)),
+        "prior_attempt_record_exists": attempt_file.exists(),
         "no_model_requests_made": True,
     }
     if provider != "muse" or app.ANALYSIS_PROVIDER != "muse":
@@ -179,7 +241,7 @@ def main() -> int:
     if not key_configured:
         print(json.dumps({"status": "blocked", "reason": "MODEL_API_KEY is not configured; no request was made.", **preflight}, indent=2))
         return 2
-    if args.confirm_live_call and ATTEMPT_FILE.exists():
+    if args.confirm_live_call and attempt_file.exists():
         print(json.dumps({
             "status": "blocked_prior_attempt",
             "reason": "A live-run attempt is already recorded. No new Muse request was made. Check provider usage before deliberately clearing the attempt record.",
@@ -205,13 +267,16 @@ def main() -> int:
         "started_at_utc": datetime.now(timezone.utc).isoformat(),
         "provider": "muse",
         "model": app.MODEL_ID,
+        "reasoning_effort": app.MUSE_REASONING_EFFORT,
+        "system_prompt_sha256": system_prompt_sha256,
+        "fixture_sha256": fixture_sha256,
         "expected_live_requests": preflight["expected_live_requests"],
         "automatic_retries": 0,
         "retry_policy": "No request is automatically retried.",
         "live_calls_reported": None,
         "warning": "A started run may incur provider usage even if the client does not receive a final report.",
     }
-    ATTEMPT_FILE.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
+    attempt_file.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
     started = time.monotonic()
     try:
         with TestClient(app.app) as client:
@@ -228,7 +293,7 @@ def main() -> int:
             "live_calls_reported": "unknown",
             "note": "The client was interrupted before receiving the batch response. Check provider usage before authorizing another run.",
         })
-        ATTEMPT_FILE.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
+        attempt_file.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(attempt, indent=2))
         return 130
     except Exception as exc:
@@ -240,7 +305,7 @@ def main() -> int:
             "error_type": type(exc).__name__,
             "note": "No retry was made. Check provider usage before authorizing another run.",
         })
-        ATTEMPT_FILE.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
+        attempt_file.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(attempt, indent=2))
         return 1
     elapsed = round(time.monotonic() - started, 3)
@@ -256,7 +321,7 @@ def main() -> int:
             "elapsed_seconds": elapsed,
             "retry_policy": "No retry was made. Check provider usage before any new live run.",
         }
-        METRICS_FILE.write_text(json.dumps(failure, indent=2) + "\n", encoding="utf-8")
+        metrics_file.write_text(json.dumps(failure, indent=2) + "\n", encoding="utf-8")
         attempt.update({
             "status": "http_failure",
             "finished_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -265,7 +330,7 @@ def main() -> int:
             "http_status": response.status_code,
             "note": "No retry was made. Check provider usage before authorizing another run.",
         })
-        ATTEMPT_FILE.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
+        attempt_file.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(failure, indent=2))
         return 1
 
@@ -357,6 +422,9 @@ def main() -> int:
         "run_label": fixture["demo_id"],
         "provider": "muse",
         "model": app.MODEL_ID,
+        "reasoning_effort": app.MUSE_REASONING_EFFORT,
+        "system_prompt_sha256": system_prompt_sha256,
+        "fixture_sha256": fixture_sha256,
         "rubric_version": fixture["rubric_version"],
         "candidate_count": len(candidate_rows),
         "expected_live_requests": preflight["expected_live_requests"],
@@ -401,13 +469,13 @@ def main() -> int:
         "failed_candidates": totals["failed_candidates"],
         "estimated_standard_token_cost_usd": metrics["overall"]["estimated_standard_token_cost_usd"],
     })
-    ATTEMPT_FILE.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
+    attempt_file.write_text(json.dumps(attempt, indent=2) + "\n", encoding="utf-8")
     metrics["overall"]["rejected_quote_details"] = [
         detail
         for item in candidate_reports
         for detail in item.get("rejected_quote_details", [])
     ]
-    METRICS_FILE.write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    metrics_file.write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     replay = {
         "schema_version": 1,
@@ -416,6 +484,9 @@ def main() -> int:
         "rubric_version": fixture["rubric_version"],
         "provider_mode": "muse",
         "model": app.MODEL_ID,
+        "reasoning_effort": app.MUSE_REASONING_EFFORT,
+        "system_prompt_sha256": system_prompt_sha256,
+        "fixture_sha256": fixture_sha256,
         "job_description": fixture["job_description"],
         "job_source": fixture["job_source"],
         "candidate_count": batch.get("candidate_count", len(candidate_rows)),
@@ -423,11 +494,11 @@ def main() -> int:
         "analysis_calls": batch.get("analysis_calls", totals["reported_analysis_calls"]),
         "automated_ranking": False,
         "elapsed_seconds": elapsed,
-        "assets_directory": str(ASSET_DIR.relative_to(ROOT)),
+        "assets_directory": str(asset_dir.relative_to(ROOT)),
         "results": replay_entries,
         "disclosure": "Frozen Muse results on five fictional CV PDFs. Replaying this file makes no model call. These results are a small demo calibration, not a hiring recommendation or general accuracy estimate.",
     }
-    REPLAY_FILE.write_text(json.dumps(replay, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    replay_file.write_text(json.dumps(replay, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(metrics, indent=2, ensure_ascii=False))
     return 1 if totals["failed_candidates"] else 0
 

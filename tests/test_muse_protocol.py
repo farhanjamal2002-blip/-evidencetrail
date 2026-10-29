@@ -87,7 +87,30 @@ class MuseProtocolTests(unittest.TestCase):
         decoded, usage = decode_chat_json_response(response, response_name="map")
         validate_mapping_result(decoded, max_application_claims=12)
         self.assertEqual(decoded, valid_mapping())
-        self.assertEqual(usage, {"input_tokens": 23, "output_tokens": 11})
+        self.assertEqual(usage, {
+            "input_tokens": 23,
+            "output_tokens": 11,
+            "cached_input_tokens": 0,
+            "reasoning_tokens": 0,
+        })
+
+    def test_optional_cached_and_reasoning_usage_is_reported(self) -> None:
+        response = fake_response(
+            json.dumps(valid_mapping()),
+            usage=SimpleNamespace(
+                prompt_tokens=230,
+                completion_tokens=110,
+                prompt_tokens_details=SimpleNamespace(cached_tokens=160),
+                completion_tokens_details=SimpleNamespace(reasoning_tokens=87),
+            ),
+        )
+        _decoded, usage = decode_chat_json_response(response, response_name="map")
+        self.assertEqual(usage, {
+            "input_tokens": 230,
+            "output_tokens": 110,
+            "cached_input_tokens": 160,
+            "reasoning_tokens": 87,
+        })
 
     def test_rejects_refusal_truncation_ambiguous_choices_and_non_text_content(self) -> None:
         cases = [
@@ -199,7 +222,12 @@ class MuseProtocolTests(unittest.TestCase):
             usage=SimpleNamespace(prompt_tokens=-4, completion_tokens="unknown"),
         )
         _decoded, usage = decode_chat_json_response(response, response_name="map")
-        self.assertEqual(usage, {"input_tokens": 0, "output_tokens": 0})
+        self.assertEqual(usage, {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cached_input_tokens": 0,
+            "reasoning_tokens": 0,
+        })
 
 
 if __name__ == "__main__":

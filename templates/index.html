@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f3f6fb">
-    <title>EvidenceTrail — Muse Spark evidence review</title>
-    <link rel="stylesheet" href="/static/app.css?v=20261028-20">
+    <title>EvidenceTrail — CV evidence review</title>
+    <link rel="stylesheet" href="/static/app.css?v=20261028-25">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -15,11 +15,11 @@
           <span class="brand-mark">ET</span>
           <span>EvidenceTrail</span>
         </a>
-        <div class="model-pill {{ 'is-mock' if mock_mode else ('is-configured' if model_ready else 'is-missing') }}" aria-label="{{ 'Local mock simulation; not Muse and no Meta API request' if mock_mode else 'Muse Spark setup status; key presence does not confirm API connectivity' }}">
+        <div class="model-pill {{ 'is-mock' if mock_mode else ('is-missing' if muse_disabled or not model_ready else 'is-configured') }}" aria-label="{{ 'Local evidence simulation; no external model requests' if mock_mode else ('Muse disabled by server configuration' if muse_disabled else 'Muse Spark setup status; key presence does not confirm API connectivity') }}">
           <span class="model-symbol" aria-hidden="true">✦</span>
           <span class="model-copy">
-            <strong>{{ 'Local mock · NOT MUSE' if mock_mode else 'Muse Spark 1.3' }}</strong>
-            <small>{{ 'simulation mode · no Meta API request' if mock_mode else ('key set · connection unverified' if model_ready else 'sample mode · live analysis paused') }}</small>
+            <strong>{{ 'Local workflow simulation' if mock_mode else ('Muse disabled' if muse_disabled else 'Muse Spark 1.3') }}</strong>
+            <small>{{ 'heuristics only · no model calls' if mock_mode else ('explicit opt-in required' if muse_disabled else ('key set · connection unverified' if model_ready else 'server key required · analysis paused')) }}</small>
           </span>
           <span class="config-dot" aria-hidden="true"></span>
         </div>
@@ -30,7 +30,7 @@
           <div class="hero-copy">
           <div class="eyebrow">JOB REQUIREMENTS → CV EVIDENCE → HUMAN REVIEW</div>
             <h1>Review the evidence behind every requirement.</h1>
-          <p>Give a recruiter one job description and a small batch of CVs. EvidenceTrail uses Muse to find direct or potentially related experience, then checks every displayed quote against the uploaded PDF. A person reviews gaps and conflicts and makes every hiring decision.</p>
+          <p>{% if mock_mode %}Set one role checklist, then inspect locally retrieved passages and page checks. This mode is a workflow simulation; it does not understand paraphrases or make a hiring assessment.{% elif muse_disabled %}Muse is disabled on this server, so new CV analysis is unavailable. The saved Muse replay is historical and makes no new request.{% else %}Set one role checklist, review one CV or a small batch against it, and inspect the source behind every finding. Muse interprets the evidence; local checks verify quotes and dates; the recruiter makes every decision.{% endif %}</p>
           </div>
           <div class="hero-stamp">
             <span class="stamp-line"></span>
@@ -46,21 +46,21 @@
           <div class="review-path-steps">
             <article class="review-path-step">
               <span class="review-path-number" aria-hidden="true">01</span>
-              <div><h3>Set the role criteria</h3><p>Muse Spark turns the job description into a structured set of requirements.</p></div>
+              <div><h3>Set the role criteria</h3><p>Prepare a checklist from explicit job-post items, then edit it before looking at CVs.</p></div>
             </article>
             <article class="review-path-step">
               <span class="review-path-number" aria-hidden="true">02</span>
-              <div><h3>Trace each CV</h3><p>EvidenceTrail verifies the quoted text and connects it to the original CV page.</p></div>
+              <div><h3>{% if mock_mode %}Find source passages{% elif muse_disabled %}Muse is disabled{% else %}Trace each CV with Muse{% endif %}</h3><p>{% if mock_mode %}Local retrieval proposes text matches; EvidenceTrail checks the quote and page. Semantic transfer is not evaluated in this mode.{% elif muse_disabled %}This server cannot run a new analysis until Muse is explicitly enabled.{% else %}Muse interprets each criterion; EvidenceTrail checks every displayed quote against the original CV page.{% endif %}</p></div>
             </article>
             <article class="review-path-step">
               <span class="review-path-number" aria-hidden="true">03</span>
-              <div><h3>Review gaps and conflicts</h3><p>Compare candidates by evidence type, inspect the source, and prepare consistent follow-up questions.</p></div>
+              <div><h3>Review, then decide</h3><p>Inspect gaps and conflicts, record your decision, and export the evidence trail. No candidate score or ranking.</p></div>
             </article>
           </div>
         </section>
 
         <section class="workbench">
-          <form id="analysis-form" class="input-panel" data-model-ready="{{ 'true' if model_ready else 'false' }}" data-mock-mode="{{ 'true' if mock_mode else 'false' }}">
+          <form id="analysis-form" class="input-panel" data-model-ready="{{ 'true' if model_ready else 'false' }}" data-mock-mode="{{ 'true' if mock_mode else 'false' }}" data-muse-disabled="{{ 'true' if muse_disabled else 'false' }}" data-max-concurrent="{{ max_concurrent_analyses }}">
             <div class="panel-heading">
               <div>
                 <div class="step-label">01 / DEFINE THE ROLE</div>
@@ -74,11 +74,11 @@
               <span class="char-count"><span id="char-count">0</span> / 18,000</span>
             </div>
             <textarea id="job-description" name="job_description" maxlength="18000" required
-              placeholder="Paste the role description. Muse will structure its requirements, then EvidenceTrail will trace them to each CV."></textarea>
+              placeholder="Paste the role description. Prepare one checklist, edit it, then review each CV against the same criteria."></textarea>
 
             <div class="role-preflight-actions">
-              <button id="role-audit-button" class="secondary-button" type="button">Build role review checklist</button>
-              <span>Only the job text is sent to this app. No CV or Muse call; the checklist is not stored and does not change the analysis.</span>
+              <button id="role-audit-button" class="secondary-button" type="button">Prepare role checklist</button>
+              <span>Local preparation only: no Muse call. It picks up numbered and bulleted criteria for you to review.</span>
             </div>
             <p id="role-audit-status" class="role-audit-status" role="status" aria-live="polite" hidden></p>
             <details id="role-clarity-audit" class="role-clarity-audit" hidden>
@@ -99,7 +99,24 @@
               </details>
             </details>
 
-            <div class="step-label candidate-upload-step">02 / ADD CANDIDATES</div>
+            <section id="batch-rubric-editor" class="batch-rubric-editor" aria-labelledby="batch-rubric-title" hidden>
+              <div class="batch-rubric-editor-heading">
+                <div>
+                  <div class="step-label">02 / REVIEW THE ROLE CHECKLIST</div>
+                  <h3 id="batch-rubric-title">Review criteria before you add CVs</h3>
+                </div>
+                <span id="batch-rubric-count" class="batch-rubric-count">0 criteria</span>
+              </div>
+              <p>Edit the job-related criteria before reviewing applicants. Add anything missed. Use the same checklist for each CV to keep the comparison consistent; it does not rank candidates.</p>
+              <ol id="batch-rubric-items" class="batch-rubric-items"></ol>
+              <div class="batch-rubric-editor-actions">
+                <button id="add-batch-rubric-item" class="secondary-button" type="button">Add a criterion</button>
+                <label class="batch-rubric-toggle"><input id="use-shared-batch-rubric" type="checkbox"><span>Use this checklist for each CV</span></label>
+              </div>
+              <p id="batch-rubric-editor-status" class="batch-rubric-editor-status" role="status" aria-live="polite"></p>
+            </section>
+
+            <div class="step-label candidate-upload-step">03 / ADD CANDIDATES</div>
             <label class="field-label" for="cv">Candidate CVs <span>(up to 5)</span></label>
             <label class="upload-zone" for="cv">
               <input id="cv" name="cv" type="file" accept="application/pdf,.pdf" multiple data-max-bytes="{{ max_pdf_bytes }}" data-max-files="5" required>
@@ -126,7 +143,7 @@
 
             <label class="consent-row" {% if not analysis_ready %}hidden{% endif %}>
               <input id="consent" name="consent" type="checkbox" value="true" required {% if not analysis_ready %}disabled{% endif %}>
-              <span>{% if mock_mode %}I understand this is a local mock simulation, not Muse analysis. Its deterministic results are for pipeline development only and must not be used for a hiring assessment.{% else %}I understand the selected CVs and job description are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. If supplied for a single CV, the candidate statement is sent too. Uploads may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models; its terms allow processing to provide the service and address policy, safety, and security concerns.{% endif %}</span>
+              <span>{% if mock_mode %}I understand this is a local heuristic simulation. No external model call is made. Results exercise the document workflow only and must not be used for a hiring assessment.{% else %}I understand that page-labelled text extracted locally from the selected CVs, the job description, and any supplied candidate statement are sent to Meta Model API (Muse Spark 1.3 Standard mode) for analysis. The original PDF is kept for local quote and page checks. Uploads may be held in memory or request-scoped temporary server storage while processing. Meta says Standard mode content is not used to train its models; its terms allow processing to provide the service and address policy, safety, and security concerns.{% endif %}</span>
             </label>
 
             <div id="error-box" class="error-box" role="alert" hidden></div>
@@ -136,8 +153,13 @@
             </div>
             {% if mock_mode %}
             <div id="mock-provider-notice" class="model-key-notice mock-provider-notice" role="status">
-              <strong>Local simulation is active · not Muse.</strong>
-              <span>This exercises extraction, retrieval, source checks, and export with deterministic heuristics. It makes no Meta API calls and is not a hiring assessment.</span>
+              <strong>Local-only mode is active.</strong>
+              <span>This exercises extraction, retrieval, source checks, timeline checks, and export with deterministic heuristics. It makes no model calls and is not a hiring assessment.</span>
+            </div>
+            {% elif muse_disabled %}
+            <div id="model-key-notice" class="model-key-notice" role="status">
+              <strong>Muse is disabled by server configuration.</strong>
+              <span>The provider was explicitly requested but its opt-in flag is off. The server rejects analysis before PDF extraction or any model request.</span>
             </div>
             {% elif not model_ready %}
             <div id="model-key-notice" class="model-key-notice" role="status">
@@ -146,9 +168,9 @@
             </div>
             {% endif %}
             <button id="analyze-button" class="primary-button" type="submit" {% if not analysis_ready %}disabled aria-describedby="model-key-notice"{% elif mock_mode %}aria-describedby="mock-provider-notice"{% endif %}>
-              <span>{% if mock_mode %}Run local mock review{% elif model_ready %}Review CVs with Muse Spark{% else %}Real analysis unavailable{% endif %}</span><span class="button-arrow">↗</span>
+              <span>{% if mock_mode %}Run local workflow simulation{% elif model_ready %}Review CVs with Muse Spark{% else %}Real analysis unavailable{% endif %}</span><span class="button-arrow">↗</span>
             </button>
-            <div class="privacy-footnote">{% if mock_mode %}Local mock only: zero Meta API calls or model tokens. Results are simulated and not for hiring decisions.{% else %}Two Muse Spark passes per CV: requirement mapping, then source-span adjudication. EvidenceTrail verifies quotes locally. No candidate score, automatic ranking, or persistent CV storage.{% endif %}</div>
+            <div class="privacy-footnote">{% if mock_mode %}Local-only simulation: zero model calls or model tokens. It tests document handling and reviewer controls; semantic accuracy is not evaluated.{% elif muse_disabled %}New analysis is blocked. No PDF extraction or model request will run in this configuration.{% else %}One Muse Spark request per CV receives page-labelled text extracted locally from the PDF and returns semantic findings; EvidenceTrail checks quotes against the original pages and calculates dates locally. Batch results appear as each CV finishes, with up to {{ max_concurrent_analyses }} analyses in flight. Identical CV + job + rubric runs can be reused from this browser tab for 15 minutes; the cache stays in memory and is not sent to the server. No candidate score, automatic ranking, or persistent CV storage.{% endif %}</div>
           </form>
 
           <aside class="demo-panel">
@@ -156,10 +178,11 @@
             <h2>Try the prepared case</h2>
             <p>The fictional case includes direct evidence, a possible transferable skill, a missing requirement, and a conflict—each tied to the CV page.</p>
             <div class="unified-demo-card">
-              <strong>Unified supplier-operations set · rubric v1</strong>
+              <strong>Unified supplier-operations set · rubric v3</strong>
               <p>One fixed job description and five fictional CVs: concrete contract work, generic claims, adjacent experience, overlapping dates, and a scanned two-column CV.</p>
               <button id="load-unified-demo" class="secondary-button" type="button">Load the five-CV set</button>
-              <small>Loading fills the form only. Files are sent for analysis only after you confirm and choose Review CVs.</small>
+              <button id="load-unified-replay" class="secondary-button" type="button">Open saved Muse results · replay only</button>
+              <small>{% if mock_mode %}The local review makes no model call. The saved Muse replay is historical and makes no new request.{% else %}Loading inputs makes no API call. The frozen replay shows saved model results and source evidence without another request.{% endif %}</small>
             </div>
             {% if mock_mode %}
             <button id="load-demo-case" class="secondary-button" type="button">Load sample inputs for local simulation</button>
@@ -201,7 +224,8 @@
                 <button id="batch-review-download" class="secondary-button" type="button">Download shortlist audit JSON</button>
               </div>
             </div>
-            <div class="batch-review-toolbar">
+            <p id="batch-rubric-status" class="batch-rubric-status" role="status" aria-live="polite" hidden></p>
+            <div id="batch-review-toolbar" class="batch-review-toolbar">
               <div id="batch-review-view-switch" class="batch-review-view-switch" role="group" aria-label="Batch review layout">
                 <button id="batch-review-dossier-view" type="button" data-batch-review-mode="dossier" aria-pressed="true">Candidate dossiers</button>
                 <button id="batch-review-matrix-view" type="button" data-batch-review-mode="matrix" aria-pressed="false">Requirement matrix</button>
@@ -213,7 +237,7 @@
           </section>
           <div class="results-top">
             <div>
-              <div class="step-label">03 / PLAIN-LANGUAGE SUMMARY</div>
+              <div class="step-label">04 / REVIEW THE EVIDENCE</div>
               <h2>What we found in the CV</h2>
               <p id="result-caption" class="result-caption"></p>
             </div>
@@ -265,7 +289,7 @@
             <summary>About these results</summary>
             <section class="status-key" aria-label="About the CV findings">
               <div><strong class="status-supported">Direct evidence</strong><span>The CV describes the job need in a sufficiently similar context. Check the original passage.</span></div>
-              <div><strong class="status-related">Related experience</strong><span>Muse sees a possible transfer. Review the explanation and what remains unproven.</span></div>
+              <div><strong class="status-related">Related experience</strong><span>A passage may describe a nearby task. A reviewer must judge whether it transfers and what remains unproven.</span></div>
               <div><strong class="status-not_found">Not mentioned</strong><span>This CV doesn't show it. The person may still have the experience.</span></div>
               <div><strong class="status-conflicting">Details differ</strong><span>Two parts of the CV say different things. Check both passages.</span></div>
               <div><strong class="status-needs_review">Needs a closer look</strong><span>The wording or source is unclear, so a person should review it.</span></div>
@@ -355,6 +379,22 @@
                   <option value="do_not_advance">Do not advance</option>
                 </select>
               </div>
+              <div id="recruiter-decision-reason-field" hidden>
+                <label class="recruiter-decision-label" for="recruiter-decision-reason">Job-related reason <span>(required for Hold or Do not advance)</span></label>
+                <select id="recruiter-decision-reason" class="recruiter-decision-select">
+                  <option value="">Choose a reason</option>
+                  <option value="required_evidence_not_shown">Required evidence is not shown in the submitted CV</option>
+                  <option value="credential_not_documented">Required credential is not documented</option>
+                  <option value="scope_needs_clarification">Dates, scope, or ownership need clarification</option>
+                  <option value="related_not_sufficient">Related experience does not meet this role's requirement</option>
+                  <option value="other">Other job-related reason</option>
+                </select>
+              </div>
+              <fieldset id="decision-criteria-field" class="decision-criteria-field" hidden>
+                <legend>Link this decision to at least one job requirement <span>(required for Hold or Do not advance)</span></legend>
+                <div id="decision-criteria-list" class="decision-criteria-list"></div>
+                <p class="field-help">This records the reason for your action. It does not change the evidence label or make the decision for you.</p>
+              </fieldset>
               <div>
                 <label class="recruiter-decision-label" for="recruiter-decision-note">Handoff note <span>(optional)</span></label>
                 <textarea id="recruiter-decision-note" class="recruiter-decision-note" maxlength="400" rows="3" placeholder="What should the hiring manager know or check next?"></textarea>
@@ -427,6 +467,8 @@
       </footer>
     </div>
     <script src="/static/interview-invite.js?v=20261028-1"></script>
-    <script src="/static/app.js?v=20261028-19"></script>
+    <script src="/static/recruiter-decision.js?v=20261028-1"></script>
+    <script src="/static/requirement-coverage.js?v=20261028-1"></script>
+    <script src="/static/app.js?v=20261028-27"></script>
   </body>
 </html>

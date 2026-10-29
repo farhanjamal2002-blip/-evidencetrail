@@ -1,6 +1,6 @@
 """Preflight or run one controlled Muse analysis on fictional sample documents.
 
-The script makes two Meta Model API requests only when the server-side key is
+The script makes one Meta Model API request only when the server-side key is
 configured and ``--confirm-live-call`` is supplied. Its report contains no key,
 full CV text, accepted quotes, or full report; rejected quote snippets include
 their cited page and failure reason for calibration review.
@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--confirm-live-call",
         action="store_true",
-        help="Authorize exactly two Meta Model API requests for the synthetic sample.",
+        help="Authorize exactly one Meta Model API request for the synthetic sample.",
     )
     parser.add_argument(
         "--preflight-only",
@@ -62,13 +63,16 @@ def load_app() -> Any | None:
 
 
 def configuration_report(application: Any) -> dict[str, Any]:
-    key_configured = bool(os.getenv("MODEL_API_KEY", "").strip())
+    key_configured = bool(application.configured_model_api_key())
     provider = application.ANALYSIS_PROVIDER
+    muse_enabled = bool(getattr(application, "MUSE_PROVIDER_ENABLED", False))
     return {
         "provider": provider,
         "model": application.MODEL_ID,
+        "reasoning_effort": application.MUSE_REASONING_EFFORT,
         "server_key_configured": key_configured,
-        "expected_live_requests": 2 if provider == "muse" and key_configured else 0,
+        "muse_enabled": muse_enabled,
+        "expected_live_requests": 1 if provider == "muse" and muse_enabled and key_configured else 0,
         "automatic_retries": 0,
         "api_storage_requested": False,
         "meta_request_made": False,
@@ -92,7 +96,9 @@ def make_sample_job_description() -> str:
     )
 
 
-def safe_live_summary(result: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+def safe_live_summary(
+    result: dict[str, Any], reasoning_effort: str = "unknown"
+) -> tuple[dict[str, Any], list[str]]:
     """Return a small calibration report and structural warnings, not raw output."""
     warnings: list[str] = []
     requirements = result.get("requirements")
@@ -179,15 +185,15 @@ def safe_live_summary(result: dict[str, Any]) -> tuple[dict[str, Any], list[str]
             })
 
     usage = result.get("usage") if isinstance(result.get("usage"), dict) else {}
-    pass_usage: dict[str, dict[str, int]] = {}
-    for pass_name in ("first_pass", "verification_pass"):
-        raw_pass_usage = usage.get(pass_name)
-        if not isinstance(raw_pass_usage, dict):
-            raw_pass_usage = {}
-        pass_usage[pass_name] = {
-            "input_tokens": nonnegative_int(raw_pass_usage.get("input_tokens")),
-            "output_tokens": nonnegative_int(raw_pass_usage.get("output_tokens")),
-        }
+    analysis_usage = usage.get("analysis_pass")
+    if not isinstance(analysis_usage, dict):
+        analysis_usage = {}
+    local_verification = usage.get("local_verification")
+    if not isinstance(local_verification, dict):
+        local_verification = {}
+    performance = result.get("performance_ms")
+    if not isinstance(performance, dict):
+        performance = {}
 
     quote_audit = result.get("quote_audit")
     if not isinstance(quote_audit, dict):
@@ -198,6 +204,7 @@ def safe_live_summary(result: dict[str, Any]) -> tuple[dict[str, Any], list[str]
         "status": "completed",
         "provider": result.get("provider_mode"),
         "model": result.get("model"),
+        "reasoning_effort": reasoning_effort,
         "analysis_calls": result.get("analysis_calls"),
         "requirements": requirement_summary,
         "status_coverage": {
@@ -211,7 +218,14 @@ def safe_live_summary(result: dict[str, Any]) -> tuple[dict[str, Any], list[str]
         },
         "job_item_coverage": safe_coverage(result.get("job_item_coverage")),
         "quote_audit": {
-            key: nonnegative_int(quote_audit.get(key))
+            key: nonnegative_int(
+                quote_audit.get(
+                    key,
+                    quote_audit.get("retrieved_source_spans", 0)
+                    if key == "locally_anchored_source_spans"
+                    else 0,
+                )
+            )
             for key in (
                 "proposed",
                 "verified",
@@ -220,14 +234,42 @@ def safe_live_summary(result: dict[str, Any]) -> tuple[dict[str, Any], list[str]
                 "verification_verified",
                 "verification_excluded",
                 "ambiguous_requirements",
-                "retrieved_source_spans",
+                "locally_anchored_source_spans",
             )
         },
         "rejected_quote_details": rejected_quote_details,
-        "usage_by_pass": pass_usage,
+        "usage_by_stage": {
+            "muse_analysis": {
+                "input_tokens": nonnegative_int(analysis_usage.get("input_tokens")),
+                "output_tokens": nonnegative_int(analysis_usage.get("output_tokens")),
+                "cached_input_tokens": nonnegative_int(analysis_usage.get("cached_input_tokens")),
+                "reasoning_tokens": nonnegative_int(analysis_usage.get("reasoning_tokens")),
+                "api_latency_ms": nonnegative_int(analysis_usage.get("api_latency_ms")),
+                "cv_text_characters": nonnegative_int(analysis_usage.get("cv_text_characters")),
+                "cv_page_count": nonnegative_int(analysis_usage.get("cv_page_count")),
+                "cv_ocr_page_count": nonnegative_int(analysis_usage.get("cv_ocr_page_count")),
+            },
+            "local_verification": {
+                "input_tokens": nonnegative_int(local_verification.get("input_tokens")),
+                "output_tokens": nonnegative_int(local_verification.get("output_tokens")),
+                "mode": local_verification.get("mode", "unknown"),
+            },
+        },
         "usage_total": {
             "input_tokens": nonnegative_int(usage.get("input_tokens")),
             "output_tokens": nonnegative_int(usage.get("output_tokens")),
+            "cached_input_tokens": nonnegative_int(usage.get("cached_input_tokens")),
+            "reasoning_tokens": nonnegative_int(usage.get("reasoning_tokens")),
+        },
+        "performance_ms": {
+            str(key)[:80]: (
+                None
+                if value is None
+                else nonnegative_int(value)
+                if isinstance(value, int) and not isinstance(value, bool)
+                else None
+            )
+            for key, value in performance.items()
         },
         "ocr_pages": result.get("ocr_pages", []),
         "warnings": warnings,
@@ -270,6 +312,19 @@ def main() -> int:
             file=sys.stderr,
         )
         return 2
+    if not application.MUSE_PROVIDER_ENABLED:
+        print(
+            json.dumps(
+                {
+                    "status": "blocked",
+                    "reason": "Set EVIDENCETRAIL_ENABLE_MUSE=true to explicitly enable Muse.",
+                    **report,
+                },
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
+        return 2
     if not report["server_key_configured"]:
         print(
             json.dumps(
@@ -292,7 +347,7 @@ def main() -> int:
             json.dumps(
                 {
                     "status": "preflight_passed",
-                    "next_step": "Rerun with --confirm-live-call to make exactly two live requests.",
+                    "next_step": "Rerun with --confirm-live-call to make exactly one live request.",
                     **report,
                 },
                 indent=2,
@@ -303,6 +358,7 @@ def main() -> int:
     from fastapi.testclient import TestClient
 
     pdf_bytes = application.make_demo_pdf()
+    smoke_started = time.perf_counter()
     with TestClient(application.app) as client:
         response = client.post(
             "/api/analyze",
@@ -312,6 +368,7 @@ def main() -> int:
                 "consent": "true",
             },
         )
+    smoke_elapsed_seconds = round(time.perf_counter() - smoke_started, 3)
 
     if response.status_code != 200:
         print(
@@ -322,8 +379,9 @@ def main() -> int:
                     "detail": response.json().get("detail", "Analysis failed."),
                     "meta_request_made": None,
                     "provider_request_receipt": "unknown; failed app responses do not expose it",
-                    "expected_live_requests": 2,
+                    "expected_live_requests": 1,
                     "automatic_retries": 0,
+                    "end_to_end_seconds": smoke_elapsed_seconds,
                 },
                 ensure_ascii=False,
                 indent=2,
@@ -332,9 +390,12 @@ def main() -> int:
         )
         return 1
 
-    summary, warnings = safe_live_summary(response.json())
-    if summary["provider"] != "muse" or summary["analysis_calls"] != 2:
-        warnings.append("The completed response did not report the expected live two-call Muse path.")
+    summary, warnings = safe_live_summary(
+        response.json(), application.MUSE_REASONING_EFFORT
+    )
+    summary["end_to_end_seconds"] = smoke_elapsed_seconds
+    if summary["provider"] != "muse" or summary["analysis_calls"] != 1:
+        warnings.append("The completed response did not report one Muse analysis request.")
         summary["warnings"] = warnings
         summary["status"] = "completed_with_contract_warning"
         print(json.dumps(summary, indent=2, ensure_ascii=False))

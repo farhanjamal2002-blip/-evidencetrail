@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run a controlled live Muse calibration over the fictional public-JD cases.
 
-The script makes exactly two Meta Model API requests per case, only when
+The script makes exactly one Meta Model API request per case, only when
 ``--confirm-live-call`` is supplied. CVs are fictional and built into PDFs in
 memory. The report omits full CV text and accepted quotes, but retains rejected
 quote snippets with their cited page and rejection reason for calibration.
@@ -10,12 +10,14 @@ quote snippets with their cited page and rejection reason for calibration.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import os
 import re
 import sys
 import textwrap
+import time
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
@@ -26,19 +28,23 @@ sys.path.insert(0, str(ROOT))
 CASE_FILE = ROOT / "calibration" / "semantic_cases.json"
 LABELS = ("direct", "related", "unsupported", "conflicting")
 MIN_ALIGNMENT_SCORE = 0.35
+STANDARD_TOKEN_RATES = {
+    "muse-spark-1.3": (1.25, 4.25),
+    "muse-wonder-1.0": (4.00, 20.00),
+}
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--confirm-live-call",
         action="store_true",
-        help="Authorize two Muse requests per selected fictional CV (six for all cases).",
+        help="Authorize one Muse request per selected fictional CV.",
     )
     parser.add_argument(
         "--preflight-only",
         action="store_true",
-        help="Check provider configuration and dependencies without calling Muse.",
+        help="Check local configuration and dependencies only; does not test API connectivity.",
     )
     parser.add_argument(
         "--case",
@@ -46,10 +52,22 @@ def parse_args() -> argparse.Namespace:
         dest="case_ids",
         help="Limit the run to a case ID; repeat to choose multiple cases.",
     )
-    args = parser.parse_args()
+    parser.add_argument(
+        "--model",
+        choices=tuple(STANDARD_TOKEN_RATES),
+        default="muse-spark-1.3",
+        help="Model for this evaluation process; does not change the app default.",
+    )
+    args = parser.parse_args(argv)
     if args.confirm_live_call and args.preflight_only:
         parser.error("Choose either --confirm-live-call or --preflight-only.")
     return args
+
+
+def estimate_standard_token_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    """Estimate cost at full Standard rates; cached-input discounts are excluded."""
+    input_rate, output_rate = STANDARD_TOKEN_RATES[model]
+    return round((input_tokens * input_rate + output_tokens * output_rate) / 1_000_000, 8)
 
 
 def normalize(value: Any) -> str:
@@ -135,7 +153,11 @@ def score_case(
     for gold_index, result_index, _score in aligned:
         gold_label = expected[gold_index].get("evidence_type")
         item = returned[result_index]
-        muse_predicted = item.get("evidence_type")
+        muse_predicted = item.get("muse_evidence_type")
+        if muse_predicted not in LABELS:
+            muse_predicted = item.get("proposed_evidence_type")
+        if muse_predicted not in LABELS:
+            muse_predicted = item.get("evidence_type")
         predicted = muse_predicted
         if gold_label not in LABELS:
             continue
@@ -143,9 +165,16 @@ def score_case(
             predicted = "unclassified"
         timeline_flags = item.get("timeline_review_flags")
         has_timeline_conflict = isinstance(timeline_flags, list) and bool(timeline_flags)
+        has_scope_boundary_gate = isinstance(item.get("scope_boundary_review"), dict)
         adjudicated = item.get("final_evidence_type")
         if adjudicated not in LABELS:
-            adjudicated = "conflicting" if has_timeline_conflict else predicted
+            adjudicated = (
+                "conflicting"
+                if has_timeline_conflict
+                else item.get("evidence_type")
+                if has_scope_boundary_gate
+                else predicted
+            )
         if adjudicated not in LABELS:
             adjudicated = "unclassified"
         confusion[gold_label][predicted] += 1
@@ -163,7 +192,15 @@ def score_case(
             "expected": gold_label,
             "predicted": predicted,
             "adjudicated": adjudicated,
-            "adjudication_reason": "timeline_gate" if has_timeline_conflict else None,
+            "adjudication_reason": (
+                "timeline_and_scope_boundary_gates"
+                if has_timeline_conflict and has_scope_boundary_gate
+                else "timeline_gate"
+                if has_timeline_conflict
+                else "scope_boundary_gate"
+                if has_scope_boundary_gate
+                else None
+            ),
             "predicted_strength": item.get("evidence_strength") if item.get("evidence_strength") in strength_distribution else "not_reported",
             "certainty": item.get("certainty") if item.get("certainty") in {"clear", "ambiguous"} else "unclassified",
         })
@@ -370,6 +407,8 @@ def summarize(
             "timeline_missed_flags": totals["timeline_false_negative"],
             "provider_reported_input_tokens": totals["provider_reported_input_tokens"],
             "provider_reported_output_tokens": totals["provider_reported_output_tokens"],
+            "provider_reported_cached_input_tokens": totals["provider_reported_cached_input_tokens"],
+            "provider_reported_reasoning_tokens": totals["provider_reported_reasoning_tokens"],
             "evidence_strength_distribution": {
                 label: totals["evidence_strength_" + label]
                 for label in ("specific", "stated", "keyword_only", "none", "not_reported")
@@ -382,13 +421,21 @@ def summarize(
 
 
 def make_case_pdf(case: dict[str, Any]) -> bytes:
-    import fitz
+    import pymupdf as fitz
     from PIL import Image, ImageDraw, ImageFont
 
     document = fitz.open()
     pages = case.get("cv_pages", [])
     layouts = case.get("cv_layout", [])
-    for index, content in enumerate(pages):
+    dash_map = str.maketrans({
+        "\u2010": "-", "\u2011": "-", "\u2012": "-",
+        "\u2013": "-", "\u2014": "-", "\u2212": "-",
+    })
+    for index, raw_content in enumerate(pages):
+        if isinstance(raw_content, dict):
+            content = {key: str(value).translate(dash_map) for key, value in raw_content.items()}
+        else:
+            content = str(raw_content).translate(dash_map)
         page = document.new_page(width=612, height=792)
         layout = layouts[index] if index < len(layouts) else "single_column"
         if layout == "scanned_two_column":
@@ -469,10 +516,12 @@ def main() -> int:
     key_configured = bool(os.getenv("MODEL_API_KEY", "").strip())
     preflight = {
         "provider": provider,
-        "model": "muse-spark-1.3",
+        "model": args.model,
         "server_key_configured": key_configured,
+        "preflight_scope": "local configuration and dependencies only",
+        "preflight_network_probe_performed": False,
         "selected_cases": [case.get("id") for case in cases],
-        "expected_live_requests": 2 * len(cases),
+        "expected_live_requests": len(cases),
         "automatic_retries": 0,
         "report_contains_cv_text": False,
         "report_contains_accepted_quote_text": False,
@@ -487,7 +536,7 @@ def main() -> int:
     try:
         from fastapi.testclient import TestClient
         import app
-        import fitz  # noqa: F401
+        import pymupdf as fitz  # noqa: F401
     except ModuleNotFoundError as exc:
         print(json.dumps({
             "status": "blocked",
@@ -499,10 +548,12 @@ def main() -> int:
 
     report = {
         "provider": app.ANALYSIS_PROVIDER,
-        "model": app.MODEL_ID,
+        "model": args.model,
         "server_key_configured": key_configured,
+        "preflight_scope": "local configuration and dependencies only",
+        "preflight_network_probe_performed": False,
         "selected_cases": [case.get("id") for case in cases],
-        "expected_live_requests": 2 * len(cases),
+        "expected_live_requests": len(cases),
         "automatic_retries": 0,
         "report_contains_cv_text": False,
         "report_contains_accepted_quote_text": False,
@@ -514,6 +565,9 @@ def main() -> int:
     if not key_configured:
         print(json.dumps({"status": "blocked", "reason": "MODEL_API_KEY is not configured in this runtime; no request was made.", "live_calls_made": 0, **report}, indent=2), file=sys.stderr)
         return 2
+    # Keep production's default on Spark while allowing a reproducible model
+    # comparison in this isolated evaluator process.
+    app.MODEL_ID = args.model
     if args.preflight_only:
         print(json.dumps({"status": "ready_for_review", **report}, indent=2))
         return 0
@@ -540,6 +594,8 @@ def main() -> int:
         "timeline_adjudicated_findings": 0,
         "provider_reported_input_tokens": 0,
         "provider_reported_output_tokens": 0,
+        "provider_reported_cached_input_tokens": 0,
+        "provider_reported_reasoning_tokens": 0,
         "evidence_strength_specific": 0,
         "evidence_strength_stated": 0,
         "evidence_strength_keyword_only": 0,
@@ -548,6 +604,7 @@ def main() -> int:
     }
     failures = 0
     completed_call_count = 0
+    run_started = time.perf_counter()
     with TestClient(app.app) as client:
         for case in cases:
             response = client.post(
@@ -566,14 +623,28 @@ def main() -> int:
                 continue
             result_payload = response.json()
             report_for_case, case_totals = score_case(case, result_payload)
+            performance = result_payload.get("performance_ms")
+            if isinstance(performance, dict):
+                report_for_case["performance_ms"] = {
+                    str(key): value
+                    for key, value in performance.items()
+                    if isinstance(value, (int, float))
+                    and not isinstance(value, bool)
+                }
             usage = result_payload.get("usage")
             usage = usage if isinstance(usage, dict) else {}
             input_tokens = safe_nonnegative_int(usage.get("input_tokens"))
             output_tokens = safe_nonnegative_int(usage.get("output_tokens"))
+            cached_input_tokens = safe_nonnegative_int(usage.get("cached_input_tokens"))
+            reasoning_tokens = safe_nonnegative_int(usage.get("reasoning_tokens"))
             report_for_case["provider_reported_input_tokens"] = input_tokens
             report_for_case["provider_reported_output_tokens"] = output_tokens
+            report_for_case["provider_reported_cached_input_tokens"] = cached_input_tokens
+            report_for_case["provider_reported_reasoning_tokens"] = reasoning_tokens
             case_totals["provider_reported_input_tokens"] = input_tokens
             case_totals["provider_reported_output_tokens"] = output_tokens
+            case_totals["provider_reported_cached_input_tokens"] = cached_input_tokens
+            case_totals["provider_reported_reasoning_tokens"] = reasoning_tokens
             case_reports.append(report_for_case)
             completed_call_count += safe_nonnegative_int(response.json().get("analysis_calls"))
             for key in totals:
@@ -592,19 +663,28 @@ def main() -> int:
                 adjudicated_confusion[gold_label][adjudicated] += 1
 
     result = summarize(case_reports, totals, confusion, adjudicated_confusion)
+    result["sequential_run_wall_seconds"] = round(
+        time.perf_counter() - run_started, 3
+    )
     result["status"] = "completed_with_case_failures" if failures else "completed"
     result["failed_cases"] = failures
-    result["live_requests_expected"] = 2 * len(cases)
+    result["live_requests_expected"] = len(cases)
     result["live_calls_reported_for_completed_cases"] = completed_call_count
     result["live_calls_for_failed_cases"] = "unknown; no automatic retry was made"
     result["model"] = app.MODEL_ID
+    result["reasoning_effort"] = app.MUSE_REASONING_EFFORT
+    result["analysis_prompt_sha256"] = hashlib.sha256(
+        app.SYSTEM_PROMPT.encode("utf-8")
+    ).hexdigest()
+    result["local_verification"] = "quote/page checks and timeline math run in EvidenceTrail; no second Muse request"
     input_tokens = result["overall"]["provider_reported_input_tokens"]
     output_tokens = result["overall"]["provider_reported_output_tokens"]
-    result["estimated_standard_token_cost_usd"] = round(
-        (input_tokens * 1.25 + output_tokens * 4.25) / 1_000_000, 8
+    result["estimated_standard_token_cost_usd"] = estimate_standard_token_cost(
+        app.MODEL_ID, input_tokens, output_tokens
     )
     result["cost_estimate_note"] = (
-        "Token-based estimate at the saved Muse Spark Standard rates; not a provider billing record."
+        "Token-based estimate at full Standard input/output rates for the selected model. "
+        "It does not apply cached-input discounts and is not a provider billing record."
     )
     result["automatic_retries"] = 0
     result["report_contains_cv_text"] = False

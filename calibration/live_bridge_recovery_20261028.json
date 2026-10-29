@@ -1,0 +1,119 @@
+{
+  "run_id": "live_bridge_recovery_20261028",
+  "date": "2026-10-28",
+  "credential_source": "existing local EvidenceTrail .env; value never printed or copied",
+  "model": "muse-spark-1.3",
+  "request_count": 6,
+  "requests": [
+    {
+      "purpose": "endpoint smoke",
+      "count": 1,
+      "http_status": 200,
+      "response_id": "chatcmpl-01a18296-dab8-73a1-b606-51a20755290e",
+      "latency_ms": 9989,
+      "usage": {
+        "input_tokens": 12,
+        "output_tokens": 4,
+        "total_tokens": 16
+      },
+      "retries": 0,
+      "response_text_stored": false
+    },
+    {
+      "purpose": "EvidenceTrail local synthetic app analysis",
+      "count": 2,
+      "status": "completed",
+      "api_storage_requested": false,
+      "automatic_retries": 0,
+      "usage": {
+        "input_tokens": 9431,
+        "output_tokens": 10268,
+        "total_tokens": 19699
+      },
+      "requirements": {
+        "direct": 1,
+        "related": 0,
+        "unsupported": 3,
+        "conflicting": 1
+      },
+      "quote_audit": {
+        "proposed": 3,
+        "verified": 3,
+        "excluded": 0
+      },
+      "job_item_coverage": {
+        "matched": 5,
+        "needs_review": 0
+      },
+      "ocr_pages": [],
+      "warning": "This sample did not exercise a Related finding; semantic transfer behavior remains untested by this run."
+    },
+    {
+      "purpose": "Muse source-review attempt with 1500-token completion cap",
+      "count": 1,
+      "usage": {
+        "input_tokens": 7652,
+        "output_tokens": 1500,
+        "total_tokens": 9152,
+        "reasoning_tokens": 1498
+      },
+      "visible_result": false,
+      "reason": "The completion cap was consumed by reasoning; no usable review text was returned."
+    },
+    {
+      "purpose": "Muse source-review attempt with 3000-token completion cap",
+      "count": 1,
+      "usage": {
+        "input_tokens": 5023,
+        "output_tokens": 3000,
+        "total_tokens": 8023,
+        "reasoning_tokens": 2998
+      },
+      "finish_reason": "length",
+      "visible_result": false
+    },
+    {
+      "purpose": "Muse source review with reasoning_effort low",
+      "count": 1,
+      "http_status": 200,
+      "response_id": "chatcmpl-01a1829d-7914-77eb-bac3-81be1d214b8f",
+      "latency_ms": 9934,
+      "usage": {
+        "input_tokens": 5007,
+        "output_tokens": 953,
+        "total_tokens": 5960,
+        "reasoning_tokens": 878
+      },
+      "retries": 0,
+      "review_result": "No concrete citation-verification bypass was demonstrated in the supplied source excerpt."
+    }
+  ],
+  "combined_observed_tokens": 42850,
+  "reported_cost_usd": null,
+  "cost_note": "API responses exposed token usage but not billed USD; no dollar amount is inferred.",
+  "secret_handling": {
+    "key_value_printed": false,
+    "key_value_committed": false,
+    "key_transferred_to_github_or_vercel": false
+  },
+  "production_host_called": false,
+  "production_reasoning_settings_changed": false,
+  "offline_checks": {
+    "pytest": {
+      "passed": 80,
+      "subtests_passed": 93,
+      "failed": 0
+    },
+    "offline_stress_suite": "all scenarios passed; zero live API requests",
+    "javascript_tests": {
+      "passed": 4,
+      "failed": 0
+    },
+    "javascript_syntax_checks": "passed"
+  },
+  "notes": [
+    "The KUL GitHub runner remains without MODEL_API_KEY; it stopped before sending a request. The local workspace route succeeded without changing that runner.",
+    "The live app smoke used one synthetic CV and one synthetic JD, not the full five-CV calibration set.",
+    "One Starlette/httpx deprecation warning appeared during the test run; no test failed."
+  ]
+}

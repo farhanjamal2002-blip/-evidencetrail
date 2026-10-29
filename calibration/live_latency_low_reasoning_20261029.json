@@ -1,0 +1,166 @@
+{
+  "run_id": "live_low_reasoning_public_jd_20261029",
+  "date": "2026-10-29",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "low",
+  "dataset": "five fictional CVs against five public-job-derived JDs",
+  "selected_cases": [
+    "india_public_procurement_manager",
+    "uae_contract_supplier_manager",
+    "semiconductor_supplier_operations_manager",
+    "nhs_procurement_director_credential_boundary",
+    "scanned_cv_procurement_credential_boundary"
+  ],
+  "expected_live_requests": 5,
+  "completed_calls_reported": 5,
+  "automatic_retries": 0,
+  "end_to_end_seconds": 86.75,
+  "api_calls": [
+    {
+      "http_completed": true,
+      "latency_ms": 18973,
+      "input_tokens": 2044,
+      "output_tokens": 3462,
+      "reasoning_tokens": 2609,
+      "cached_input_tokens": 0
+    },
+    {
+      "http_completed": true,
+      "latency_ms": 16920,
+      "input_tokens": 2040,
+      "output_tokens": 2823,
+      "reasoning_tokens": 2031,
+      "cached_input_tokens": 0
+    },
+    {
+      "http_completed": true,
+      "latency_ms": 16376,
+      "input_tokens": 2069,
+      "output_tokens": 2660,
+      "reasoning_tokens": 2005,
+      "cached_input_tokens": 0
+    },
+    {
+      "http_completed": true,
+      "latency_ms": 16036,
+      "input_tokens": 1995,
+      "output_tokens": 2516,
+      "reasoning_tokens": 1913,
+      "cached_input_tokens": 0
+    },
+    {
+      "http_completed": true,
+      "latency_ms": 15342,
+      "input_tokens": 2026,
+      "output_tokens": 2300,
+      "reasoning_tokens": 1735,
+      "cached_input_tokens": 0
+    }
+  ],
+  "overall": {
+    "gold_requirements": 18,
+    "aligned_findings": 18,
+    "strict_category_accuracy": 0.7222,
+    "deterministic_adjudicated_accuracy": 0.8333,
+    "coverage": 1.0,
+    "false_related_transfers": 0,
+    "false_transfer_rate_on_nonrelated_gold": 0.0,
+    "missed_related_transfers": 2,
+    "missed_transfer_rate_on_related_gold": 0.3333,
+    "related_to_direct_overclaims": 1,
+    "ambiguous_findings": 4,
+    "verified_citations": 23,
+    "proposed_citations": 23,
+    "rejected_quote_count": 5,
+    "quote_verification_rate": 1.0,
+    "missing_gold_requirements": 0,
+    "unmatched_model_findings": 0,
+    "timeline_flags_expected": 2,
+    "timeline_flags_detected": 2,
+    "timeline_review_gated_findings": 2,
+    "direct_claims_gated_to_review": 2,
+    "timeline_adjudicated_findings": 2,
+    "timeline_flag_precision": 1.0,
+    "timeline_flag_recall": 1.0,
+    "timeline_false_positives": 0,
+    "timeline_missed_flags": 0,
+    "provider_reported_input_tokens": 10174,
+    "provider_reported_output_tokens": 13761,
+    "evidence_strength_distribution": {
+      "specific": 8,
+      "stated": 8,
+      "keyword_only": 0,
+      "none": 2,
+      "not_reported": 0
+    }
+  },
+  "confusion_matrix": {
+    "direct": {
+      "direct": 6,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "related": {
+      "direct": 1,
+      "related": 4,
+      "unsupported": 1,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "unsupported": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 3,
+      "conflicting": 1,
+      "unclassified": 0
+    },
+    "conflicting": {
+      "direct": 2,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    }
+  },
+  "deterministic_adjudicated_confusion_matrix": {
+    "direct": {
+      "direct": 6,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "related": {
+      "direct": 1,
+      "related": 4,
+      "unsupported": 1,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "unsupported": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 3,
+      "conflicting": 1,
+      "unclassified": 0
+    },
+    "conflicting": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 2,
+      "unclassified": 0
+    }
+  },
+  "analysis_prompt_sha256": "5081db7c99e3f503761a8969533b96cdf30e5684872f7ce1769d168065855f8f",
+  "estimated_standard_token_cost_usd": 0.07120175,
+  "cost_estimate_note": "Token-based estimate at full Standard input/output rates for the selected model. It does not apply cached-input discounts and is not a provider billing record.",
+  "source_report_status": "completed",
+  "failed_cases": 0,
+  "report_contains_cv_text": false,
+  "report_contains_accepted_quote_text": false,
+  "report_contains_rejected_quote_text": true,
+  "note": "Reasoning effort was injected process-locally for this controlled run; app.py and the product default were not changed."
+}

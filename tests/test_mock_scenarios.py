@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import random
+import asyncio
 import io
 import json
 import math
@@ -12,7 +13,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
-import fitz
+import pymupdf as fitz
 from PIL import Image, ImageDraw, ImageFont
 from pydantic import BaseModel, ConfigDict
 from typing import Literal
@@ -228,6 +229,61 @@ class MockScenarioTests(unittest.TestCase):
             },
         )
 
+    def test_analysis_returns_fine_grained_latency_for_each_local_stage(self) -> None:
+        response = self.analyze(
+            make_pdf("Python automation and supplier contracts"),
+            "Requirements:\n- Python automation and supplier contracts",
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        performance = response.json()["performance_ms"]
+        expected_local_stages = (
+            "upload_read_ms",
+            "pdf_extract_and_ocr_ms",
+            "pdf_open_ms",
+            "pdf_structure_validation_ms",
+            "pdf_page_dimension_checks_ms",
+            "pdf_native_text_extraction_ms",
+            "pdf_word_bbox_processing_ms",
+            "pdf_ocr_detection_ms",
+            "pdf_page_record_assembly_ms",
+            "pdf_readability_validation_ms",
+            "semantic_pass_total_ms",
+            "proposal_grounding_ms",
+            "timeline_audit_ms",
+            "application_claim_grounding_ms",
+            "job_description_coverage_ms",
+            "role_clarity_audit_ms",
+            "requirement_priority_annotation_ms",
+            "local_quote_verification_ms",
+            "timeline_flag_linking_ms",
+            "verification_summary_ms",
+            "page_preview_render_ms",
+            "preview_pdf_open_ms",
+            "preview_page_raster_ms",
+            "preview_pixmap_to_rgb_ms",
+            "preview_highlight_draw_ms",
+            "preview_jpeg_encode_ms",
+            "preview_base64_encode_ms",
+            "evidence_graph_ms",
+            "clarification_brief_ms",
+            "application_prep_ms",
+            "audit_hashes_ms",
+            "html_evidence_pack_ms",
+            "response_object_assembly_ms",
+            "pipeline_ms",
+        )
+        for stage in expected_local_stages:
+            self.assertIsInstance(performance[stage], int, stage)
+            self.assertGreaterEqual(performance[stage], 0, stage)
+        for muse_stage in (
+            "muse_api_ms",
+            "muse_client_setup_ms",
+            "muse_prompt_build_ms",
+            "muse_response_decode_ms",
+            "muse_response_validation_ms",
+        ):
+            self.assertIsNone(performance[muse_stage], muse_stage)
+
     def test_health_landing_preview_and_sample_pdf(self) -> None:
         self.assertEqual(self.client.get("/health").json(), {"status": "ok"})
         landing = self.client.get("/")
@@ -237,6 +293,12 @@ class MockScenarioTests(unittest.TestCase):
         self.assertIn("Candidate statement", landing.text)
         self.assertIn("Candidate evidence reviews", landing.text)
         self.assertIn("Recruiter shortlist decision", landing.text)
+        self.assertIn("Job-related reason", landing.text)
+        self.assertIn("required for Hold or Do not advance", landing.text)
+        self.assertIn("batch-rubric-status", landing.text)
+        self.assertIn("batch-rubric-editor", landing.text)
+        self.assertIn("use-shared-batch-rubric", landing.text)
+        self.assertIn('/static/requirement-coverage.js', landing.text)
         self.assertIn("Download shortlist audit JSON", landing.text)
         self.assertIn("A reply you record stays in this tab", landing.text)
         self.assertEqual(self.client.get("/demo/preview").status_code, 200)
@@ -306,6 +368,8 @@ class MockScenarioTests(unittest.TestCase):
         self.assertEqual(payload["completed_count"], 2)
         self.assertEqual(payload["failed_count"], 0)
         self.assertEqual(payload["analysis_calls"], 0)
+        self.assertEqual(payload["rubric_mode"], "shared_job_description_items")
+        self.assertEqual(payload["locked_rubric"], ["At least 5 years of Python experience"])
         self.assertFalse(payload["automated_ranking"])
         self.assertEqual(
             [item["filename"] for item in payload["results"]],
@@ -313,6 +377,110 @@ class MockScenarioTests(unittest.TestCase):
         )
         self.assertTrue(
             all(item["result"]["provider_mode"] == "mock" for item in payload["results"])
+        )
+        self.assertTrue(
+            all(
+                [finding["requirement"] for finding in item["result"]["requirements"]]
+                == payload["locked_rubric"]
+                for item in payload["results"]
+            )
+        )
+
+    def test_recruiter_locked_rubric_is_used_for_every_candidate(self) -> None:
+        pdf = make_pdf("Supplier contracts and sourcing experience")
+        rubric = ["Own supplier contract negotiations", "Lead procurement teams"]
+        with patch.object(app, "reserve_analysis_slot", wraps=app.reserve_analysis_slot) as reserve:
+            response = self.client.post(
+                "/api/analyze-batch",
+                files=[
+                    ("cvs", ("candidate-a.pdf", pdf, "application/pdf")),
+                    ("cvs", ("candidate-b.pdf", pdf, "application/pdf")),
+                ],
+                data={
+                    "job_description": "Procurement leader for our regional supplier network.",
+                    "consent": "true",
+                    "locked_rubric_json": json.dumps(rubric),
+                },
+            )
+        reserve.assert_called_once()
+        self.assertEqual(reserve.call_args.kwargs["cost"], 2)
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertEqual(payload["rubric_mode"], "recruiter_locked")
+        self.assertEqual(payload["locked_rubric"], rubric)
+        self.assertEqual(payload["completed_count"], 2, payload)
+        self.assertTrue(
+            all(
+                [item["requirement"] for item in entry["result"]["requirements"]] == rubric
+                for entry in payload["results"]
+            )
+        )
+        self.assertTrue(
+            all(
+                item["job_source"]["source_type"] == "recruiter_locked_rubric"
+                for entry in payload["results"]
+                for item in entry["result"]["requirements"]
+            )
+        )
+
+    def test_batch_runs_in_bounded_parallel_and_keeps_upload_order(self) -> None:
+        pdf = make_pdf("Python experience: 8 years")
+        active = 0
+        maximum_active = 0
+
+        async def fake_analysis(request, cv, job_description, application_draft, consent, locked_rubric_json):
+            nonlocal active, maximum_active
+            active += 1
+            maximum_active = max(maximum_active, active)
+            try:
+                await asyncio.sleep(0.03 if cv.filename == "candidate-a.pdf" else 0.01)
+                return {"analysis_calls": 1, "provider_mode": "muse"}
+            finally:
+                active -= 1
+
+        with patch.object(app, "analyze", new=fake_analysis):
+            response = self.client.post(
+                "/api/analyze-batch",
+                files=[
+                    ("cvs", (f"candidate-{letter}.pdf", pdf, "application/pdf"))
+                    for letter in ("a", "b", "c")
+                ],
+                data={"job_description": "- Python experience", "consent": "true"},
+            )
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertEqual(payload["completed_count"], 3)
+        self.assertEqual(payload["analysis_calls"], 3)
+        self.assertLessEqual(maximum_active, app.MAX_CONCURRENT_ANALYSES)
+        if app.MAX_CONCURRENT_ANALYSES > 1:
+            self.assertGreater(maximum_active, 1)
+        self.assertEqual(
+            [item["filename"] for item in payload["results"]],
+            ["candidate-a.pdf", "candidate-b.pdf", "candidate-c.pdf"],
+        )
+
+    def test_batch_can_explicitly_use_separate_extraction_for_bulleted_jd(self) -> None:
+        pdf = make_pdf("Python experience: 8 years")
+        response = self.client.post(
+            "/api/analyze-batch",
+            files=[("cvs", ("candidate.pdf", pdf, "application/pdf"))],
+            data={
+                "job_description": "Requirements:\n- At least five years of Python experience",
+                "consent": "true",
+                "rubric_mode": "per_candidate_extraction",
+            },
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertEqual(payload["rubric_mode"], "independent_extraction")
+        self.assertEqual(payload["locked_rubric"], [])
+
+    def test_unstructured_job_text_does_not_claim_a_shared_batch_rubric(self) -> None:
+        self.assertEqual(
+            app.build_shared_batch_rubric(
+                "Procurement role requiring ownership of supplier relationships and contract reviews."
+            ),
+            [],
         )
 
     def test_analyze_batch_rejects_bad_file_before_analyzing_any_candidate(self) -> None:
@@ -330,6 +498,51 @@ class MockScenarioTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn("No CV in the batch was analyzed", response.json()["detail"])
+
+    def test_single_cv_retry_can_reuse_a_recruiter_locked_batch_rubric(self) -> None:
+        job = "Requirements:\n- Five years of Python experience\n- Current AWS certification"
+        pdf = make_pdf("Python experience: 8 years")
+        response = self.client.post(
+            "/api/analyze",
+            files={"cv": ("retry.pdf", pdf, "application/pdf")},
+            data={
+                "job_description": job,
+                "application_draft": "",
+                "consent": "true",
+                "locked_rubric_json": json.dumps(["Five years of Python experience"]),
+            },
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(
+            [item["requirement"] for item in response.json()["requirements"]],
+            ["Five years of Python experience"],
+        )
+
+        invalid = self.client.post(
+            "/api/analyze",
+            files={"cv": ("retry.pdf", pdf, "application/pdf")},
+            data={
+                "job_description": job,
+                "consent": "true",
+                "locked_rubric_json": json.dumps(["Supplier contracts", "supplier contracts!"]),
+            },
+        )
+        self.assertEqual(invalid.status_code, 400)
+        self.assertIn("unique, readable item", invalid.json()["detail"])
+
+    def test_batch_rejects_duplicate_recruiter_rubric_items(self) -> None:
+        pdf = make_pdf("Supplier contract work")
+        response = self.client.post(
+            "/api/analyze-batch",
+            files=[("cvs", ("candidate.pdf", pdf, "application/pdf"))],
+            data={
+                "job_description": "Procurement role.",
+                "consent": "true",
+                "locked_rubric_json": json.dumps(["Supplier contracts", "supplier contracts!"]),
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("unique, readable item", response.json()["detail"])
 
     def test_role_description_audit_is_local_explainable_and_html_safe(self) -> None:
         job = (
@@ -579,7 +792,7 @@ class MockScenarioTests(unittest.TestCase):
         self.assertIn("Draft prompts for consistent", result["report_html"])
         for finding in result["requirements"]:
             self.assertEqual(finding["certainty"], "ambiguous")
-            self.assertIn("Local mock only", finding["review_reason"])
+            self.assertIn("Local simulation only", finding["review_reason"])
             for citation in finding["evidence"]:
                 self.assertIn(citation["role"], {"supports", "contradicts"})
                 self.assertGreaterEqual(citation["page"], 1)
@@ -596,8 +809,8 @@ class MockScenarioTests(unittest.TestCase):
         self.assertEqual(result["analysis_calls"], 0)
         self.assertEqual(result["usage"]["input_tokens"], 0)
         self.assertEqual(result["usage"]["output_tokens"], 0)
-        self.assertIn("NOT MUSE", result["model"])
-        self.assertIn("LOCAL MOCK SIMULATION", result["report_html"])
+        self.assertIn("Local heuristic", result["model"])
+        self.assertIn("LOCAL WORKFLOW SIMULATION", result["report_html"])
         self.assertNotIn("OCR text needs visual review", result["report_html"])
         self.assertNotIn("second Muse pass", result["report_html"])
         self.assertIn("<style>", result["report_html"])
@@ -751,8 +964,8 @@ class MockScenarioTests(unittest.TestCase):
             self.assertEqual(run["analysis_calls"], 0)
             self.assertEqual(run["usage"]["input_tokens"], 0)
             self.assertEqual(run["usage"]["output_tokens"], 0)
-            self.assertIn("NOT MUSE", run["model"])
-            self.assertIn("LOCAL MOCK SIMULATION", run["report_html"])
+            self.assertIn("Local heuristic", run["model"])
+            self.assertIn("LOCAL WORKFLOW SIMULATION", run["report_html"])
             self.assertEqual(run["quote_audit"]["excluded"], 0)
             audit = run["verification_audit"]
             self.assertEqual(audit["excluded"], 0)
@@ -1193,7 +1406,9 @@ class MockScenarioTests(unittest.TestCase):
             self.assertEqual(finding["status"], "supported")
             self.assertTrue(finding["evidence"])
             self.assertTrue(all(item["page"] == 2 for item in finding["evidence"]))
-        self.assertEqual(set(result["pages"]), {"2"})
+        self.assertNotIn("pages", result)
+        self.assertIn("<figure id='page-2'>", result["report_html"])
+        self.assertIn("src='data:image/jpeg;base64,", result["report_html"])
 
     def test_scanned_pdf_uses_ocr_and_preserves_source_grounding(self) -> None:
         image = Image.new("RGB", (1600, 1000), "white")
@@ -1267,7 +1482,7 @@ class MockScenarioTests(unittest.TestCase):
             self.assertIsNotNone(
                 app.locate_quote(citation["quote"], app.extract_pdf(cv), citation["page"])
             )
-        self.assertIn("Local mock only", finding["review_reason"])
+        self.assertIn("Local simulation only", finding["review_reason"])
 
     def test_consent_and_input_validation_fail_closed(self) -> None:
         cv = make_pdf("Fictional CV with more than enough readable text.")
@@ -1509,7 +1724,12 @@ class MockScenarioTests(unittest.TestCase):
         )
         first_pass, first_usage = app.mock_map_requirements(pages, job)
         FirstPassContract.model_validate(first_pass)
-        self.assertEqual(first_usage, {"input_tokens": 0, "output_tokens": 0})
+        self.assertEqual(first_usage, {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cached_input_tokens": 0,
+            "reasoning_tokens": 0,
+        })
 
         findings, *_rest = app.ground_results(first_pass, pages, job)
         payload, _source_by_id, allowed = app.prepare_verification_request(findings, pages)
@@ -1538,7 +1758,12 @@ class MockScenarioTests(unittest.TestCase):
                     }
                 ]
             },
-            {"input_tokens": 0, "output_tokens": 0},
+            {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "cached_input_tokens": 0,
+                "reasoning_tokens": 0,
+            },
         )
         with patch.object(app, "mock_map_requirements", return_value=mocked_mapping):
             response = self.analyze(cv, job)
@@ -1573,17 +1798,29 @@ class MockScenarioTests(unittest.TestCase):
         script = r'''
 import os
 os.environ["EVIDENCETRAIL_PROVIDER"] = "muse"
+os.environ["EVIDENCETRAIL_ENABLE_MUSE"] = "true"
 os.environ["MODEL_API_KEY"] = ""
 import app
 from fastapi.testclient import TestClient
 app.OpenAI = lambda *a, **k: (_ for _ in ()).throw(AssertionError("API client created"))
 with TestClient(app.app) as client:
+    home = client.get("/")
+    assert "server key required · analysis paused" in home.text
     response = client.post("/api/analyze", files={"cv": ("x.pdf", b"bad", "application/pdf")}, data={"job_description": "- Requirement", "consent": "true"})
     assert response.status_code == 503, response.text
+    assert "MODEL_API_KEY" in response.json()["detail"]
     assert "no Meta API call was made" in response.json()["detail"]
+    os.environ["MODEL_API_KEY"] = "add_your_meta_model_api_key"
+    placeholder_home = client.get("/")
+    assert "server key required · analysis paused" in placeholder_home.text
+    placeholder_response = client.post("/api/analyze", files={"cv": ("x.pdf", b"bad", "application/pdf")}, data={"job_description": "- Requirement", "consent": "true"})
+    assert placeholder_response.status_code == 503, placeholder_response.text
+    assert "MODEL_API_KEY" in placeholder_response.json()["detail"]
+    assert "no Meta API call was made" in placeholder_response.json()["detail"]
 '''
         env = os.environ.copy()
         env["EVIDENCETRAIL_PROVIDER"] = "muse"
+        env["EVIDENCETRAIL_ENABLE_MUSE"] = "true"
         env["MODEL_API_KEY"] = ""
         result = subprocess.run(
             [sys.executable, "-c", script],
@@ -1598,6 +1835,7 @@ with TestClient(app.app) as client:
     def test_live_smoke_script_fails_closed_without_key(self) -> None:
         env = os.environ.copy()
         env["EVIDENCETRAIL_PROVIDER"] = "muse"
+        env["EVIDENCETRAIL_ENABLE_MUSE"] = "true"
         env["MODEL_API_KEY"] = ""
         result = subprocess.run(
             [sys.executable, "scripts/live_smoke_test.py"],
@@ -1614,6 +1852,43 @@ with TestClient(app.app) as client:
         self.assertEqual(blocked_summary["meta_request_made"], False)
         self.assertEqual(blocked_summary["expected_live_requests"], 0)
 
+    def test_muse_requires_explicit_enable_flag_before_processing(self) -> None:
+        env = os.environ.copy()
+        env["EVIDENCETRAIL_PROVIDER"] = "muse"
+        env["EVIDENCETRAIL_ENABLE_MUSE"] = "false"
+        env["MODEL_API_KEY"] = "fake-test-key"
+        script = r'''
+import os
+os.environ["EVIDENCETRAIL_PROVIDER"] = "muse"
+os.environ["EVIDENCETRAIL_ENABLE_MUSE"] = "false"
+os.environ["MODEL_API_KEY"] = "fake-test-key"
+import app
+from fastapi.testclient import TestClient
+app.OpenAI = lambda *a, **k: (_ for _ in ()).throw(AssertionError("API client created"))
+with TestClient(app.app) as client:
+    home = client.get("/")
+    assert home.status_code == 200, home.text
+    assert "Muse is disabled by server configuration" in home.text
+    assert "No PDF extraction or model request will run" in home.text
+    assert 'data-muse-disabled="true"' in home.text
+    response = client.post("/api/analyze", files={"cv": ("x.pdf", b"bad", "application/pdf")}, data={"job_description": "- Requirement", "consent": "true"})
+    assert response.status_code == 503, response.text
+    assert "Muse analysis is disabled" in response.json()["detail"]
+    assert "no Meta API call was made" in response.json()["detail"]
+    batch_response = client.post("/api/analyze-batch", files=[("cvs", ("x.pdf", b"bad", "application/pdf"))], data={"job_description": "- Requirement", "consent": "true"})
+    assert batch_response.status_code == 503, batch_response.text
+    assert "Muse analysis is disabled" in batch_response.json()["detail"]
+'''
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=app.BASE_DIR,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_configured_muse_pipeline_rejects_hostile_citations_without_network(self) -> None:
         script = r'''
 import json
@@ -1625,7 +1900,7 @@ os.environ["MODEL_API_KEY"] = "fake-test-key"
 os.environ["MAX_ANALYSES_PER_HOUR_PER_IP"] = "1000"
 os.environ["MAX_ANALYSES_PER_PROCESS"] = "1000"
 
-import fitz
+import pymupdf as fitz
 import app
 from fastapi.testclient import TestClient
 
@@ -1634,9 +1909,7 @@ scenario = "normal"
 class FakeCompletions:
     def create(self, **kwargs):
         calls.append(kwargs)
-        request_number = len(calls)
-        schema_name = kwargs["response_format"]["json_schema"]["name"]
-        if schema_name == "requirement_evidence_map" and scenario == "invalid_json":
+        if scenario == "invalid_json":
             return SimpleNamespace(
                 choices=[SimpleNamespace(
                     message=SimpleNamespace(content='{"requirements":'),
@@ -1644,7 +1917,7 @@ class FakeCompletions:
                 )],
                 usage=SimpleNamespace(prompt_tokens=31, completion_tokens=7),
             )
-        if schema_name == "requirement_evidence_map" and scenario == "truncated":
+        if scenario == "truncated":
             return SimpleNamespace(
                 choices=[SimpleNamespace(
                     message=SimpleNamespace(content='{"requirements":'),
@@ -1652,50 +1925,14 @@ class FakeCompletions:
                 )],
                 usage=SimpleNamespace(prompt_tokens=31, completion_tokens=7),
             )
-        if schema_name == "requirement_evidence_map":
-            quote = (
-                "Python experience: 8 years"
-                if request_number == 1
-                else "I have 20 years in quantum procurement"
-            )
-            result = {
-                "requirements": [{
-                    "requirement": "At least 5 years of Python experience",
-                    "evidence": [{
-                        "quote": quote,
-                        "role": "supports",
-                        "page_hint": 1,
-                    }],
-                }],
-                "application_claims": [],
-                "employment_episodes": [],
-                "experience_claims": [],
-            }
-            if scenario == "extra_first_field":
-                result["unexpected"] = "must not be trusted"
-        else:
-            user_text = kwargs["messages"][1]["content"]
-            prefix = "Review every job requirement and application claim against the source spans. Return one review per supplied item.\n"
-            payload = json.loads(user_text[len(prefix):])
-            source_id = (
-                next(
-                    span["id"] for span in payload["source_spans"]
-                    if "Python experience: 8 years" in span["text"]
-                )
-                if request_number == 2
-                else "FORGED-SOURCE-ID"
-            )
-            quote = (
-                "Python experience: 8 years"
-                if request_number == 2
-                else "I have 20 years in quantum procurement"
-            )
-            result = {"reviews": [{
-                "requirement_id": (
-                    "FORGED-ID"
-                    if scenario == "forged_review_id"
-                    else payload["requirements"][0]["id"]
-                ),
+        quote = (
+            "I have 20 years in quantum procurement"
+            if scenario == "hostile_quote"
+            else "Python experience: 8 years"
+        )
+        result = {
+            "requirements": [{
+                "requirement": "At least 5 years of Python experience",
                 "status": "supported",
                 "evidence_type": "direct",
                 "evidence_strength": "stated",
@@ -1703,15 +1940,23 @@ class FakeCompletions:
                 "unproven_aspects": [],
                 "follow_up_question": None,
                 "certainty": "clear",
-                "reason": "The model proposes a supporting statement.",
+                "reason": "The CV states Python experience and a duration.",
                 "evidence": [{
-                    "source_id": source_id,
                     "quote": quote,
                     "role": "supports",
+                    "page_hint": 1,
                 }],
-            }], "application_reviews": []}
-            if scenario == "missing_review":
-                result["reviews"] = []
+            }],
+            "application_claims": [],
+            "employment_episodes": [],
+            "experience_claims": [],
+        }
+        if scenario == "extra_first_field":
+            result["unexpected"] = "must not be trusted"
+        if scenario == "invalid_evidence_type":
+            result["requirements"][0]["evidence_type"] = "invented"
+        if scenario == "missing_semantic_field":
+            del result["requirements"][0]["certainty"]
         return SimpleNamespace(
             choices=[SimpleNamespace(
                 message=SimpleNamespace(content=json.dumps(result)),
@@ -1742,36 +1987,39 @@ with TestClient(app.app) as client:
     response = analyze_once()
     assert response.status_code == 200, response.text
     result = response.json()
+    scenario = "hostile_quote"
     hostile_response = analyze_once()
     assert hostile_response.status_code == 200, hostile_response.text
     hostile_result = hostile_response.json()
 
-assert len(calls) == 4, len(calls)
+assert len(calls) == 2, len(calls)
 assert calls[0]["model"] == app.MODEL_ID
 assert all(call["store"] is False for call in calls)
-assert any(part.get("type") == "file" for part in calls[0]["messages"][1]["content"])
-assert result["analysis_calls"] == 2
+assert isinstance(calls[0]["messages"][1]["content"], str)
+assert "[Page 1]" in calls[0]["messages"][1]["content"]
+assert "Python experience: 8 years" in calls[0]["messages"][1]["content"]
+assert result["analysis_calls"] == 1
 assert result["provider_mode"] == "muse"
 assert result["requirements"][0]["status"] == "supported"
 assert result["requirements"][0]["evidence"][0]["quote"] == "Python experience: 8 years"
-assert result["usage"]["input_tokens"] == 62
-assert result["usage"]["output_tokens"] == 14
-assert "Two-pass Muse Spark analysis" in result["report_html"]
+assert result["usage"]["input_tokens"] == 31
+assert result["usage"]["output_tokens"] == 7
+assert "Single-pass Muse Spark analysis" in result["report_html"]
 hostile_finding = hostile_result["requirements"][0]
 assert hostile_finding["status"] == "not_found"
 assert hostile_finding["certainty"] == "ambiguous"
 assert hostile_finding["evidence"] == []
-assert hostile_result["pages"] == {}
+assert "pages" not in hostile_result
 assert hostile_result["verification_audit"]["excluded"] == 1
-assert hostile_result["verification_audit"]["rejected_citations"][0]["reason"] == "source_not_allowed"
-assert "Source ID was not allowed for this requirement" in hostile_result["report_html"]
+assert hostile_result["verification_audit"]["rejected_citations"][0]["reason"] == "quote_not_found_on_cited_page"
+assert "Quote could not be located on the cited PDF page" in hostile_result["report_html"]
 
 for bad_scenario, expected_calls in (
     ("invalid_json", 1),
     ("truncated", 1),
     ("extra_first_field", 1),
-    ("forged_review_id", 2),
-    ("missing_review", 2),
+    ("invalid_evidence_type", 1),
+    ("missing_semantic_field", 1),
 ):
     scenario = bad_scenario
     calls.clear()
@@ -1782,6 +2030,7 @@ for bad_scenario, expected_calls in (
 '''
         env = os.environ.copy()
         env["EVIDENCETRAIL_PROVIDER"] = "muse"
+        env["EVIDENCETRAIL_ENABLE_MUSE"] = "true"
         env["MODEL_API_KEY"] = "fake-test-key"
         result = subprocess.run(
             [sys.executable, "-c", script],
@@ -1817,8 +2066,8 @@ for bad_scenario, expected_calls in (
             created_at="2026-10-27T00:00:00+00:00",
             provider_mode="mock",
         )
-        self.assertIn("Local mock returned an empty requirement", report)
-        self.assertIn("Local mock-proposed requirement(s)", report)
+        self.assertIn("Local heuristic returned an empty requirement", report)
+        self.assertIn("Local heuristic-proposed requirement(s)", report)
         self.assertNotIn("Muse returned an empty requirement", report)
 
     def test_malformed_pdf_corpus_never_returns_server_error(self) -> None:

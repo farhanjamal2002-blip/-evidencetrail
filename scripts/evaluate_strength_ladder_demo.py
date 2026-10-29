@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run one bounded, two-candidate Muse comparison for the strength ladder demo.
 
-The script makes at most four provider requests: two Muse passes per fictional
+The script makes at most two provider requests: one Muse analysis per fictional
 CV. It never retries. The saved result omits full CV text and accepted quotes,
 but retains any rejected quote snippet with its page and failure reason.
 """
@@ -67,7 +67,7 @@ def main() -> int:
         "model": "muse-spark-1.3",
         "server_key_configured": key_configured,
         "candidate_count": len(fixture["candidates"]),
-        "expected_live_requests": 2 * len(fixture["candidates"]),
+        "expected_live_requests": len(fixture["candidates"]),
         "automatic_retries": 0,
         "report_contains_cv_text": False,
         "report_contains_accepted_quote_text": False,

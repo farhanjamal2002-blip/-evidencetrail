@@ -1,0 +1,13 @@
+{
+  "run_id": "india_related_miss_trace_20261028_v2",
+  "status": "running",
+  "started_at_utc": "2026-10-28T13:48:25.425148+00:00",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "case_id": "india_public_procurement_manager",
+  "purpose": "Inspect the saved evidence and category for the one public-JD Related undercall; this separate trace is not added to the five-case score.",
+  "expected_live_requests": 2,
+  "automatic_retries": 0,
+  "preflight_zero_call": true,
+  "output_file": "calibration/india_related_miss_trace_20261028_v2.json"
+}

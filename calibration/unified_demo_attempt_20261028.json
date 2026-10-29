@@ -1,18 +1,17 @@
 {
   "demo_id": "unified_supplier_operations_demo_20261028_v1",
   "rubric_version": "demo-v1",
-  "status": "interrupted_before_batch_response",
-  "run_date_utc": "2026-10-28",
+  "status": "completed",
+  "started_at_utc": "2026-10-28T13:08:27.494664+00:00",
   "provider": "muse",
   "model": "muse-spark-1.3",
   "expected_live_requests": 10,
   "automatic_retries": 0,
-  "live_calls_reported": "unknown",
-  "runtime_key_configured": true,
-  "blocker": "The execution environment network allowlist does not include api.meta.ai. The client did not receive a completed batch response, and the run was interrupted rather than allowing repeated request timeouts.",
-  "provider_usage_or_debit": "unknown; check the Meta dashboard before authorizing another live run",
-  "metrics_saved": false,
-  "replay_saved": false,
-  "credential_or_candidate_pii_saved": false,
-  "note": "This record describes one attempted run. It is not a completed Muse calibration. No second run was made."
+  "retry_policy": "No request is automatically retried.",
+  "live_calls_reported": 10,
+  "warning": "A started run may incur provider usage even if the client does not receive a final report.",
+  "finished_at_utc": "2026-10-28T13:13:07.839961+00:00",
+  "elapsed_seconds": 280.327,
+  "failed_candidates": 0,
+  "estimated_standard_token_cost_usd": 0.2358355
 }

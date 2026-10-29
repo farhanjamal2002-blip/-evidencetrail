@@ -6,15 +6,32 @@ import json
 import unittest
 from pathlib import Path
 
-from scripts.evaluate_semantic_cases import align_findings, make_case_pdf, score_case
+from scripts.evaluate_semantic_cases import (
+    align_findings,
+    estimate_standard_token_cost,
+    make_case_pdf,
+    parse_args,
+    score_case,
+)
 from app import attach_timeline_review_flags, build_report, extract_pdf
-import fitz
+import pymupdf as fitz
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class SemanticCalibrationTests(unittest.TestCase):
+    def test_model_override_keeps_spark_as_default_and_supports_wonder(self) -> None:
+        self.assertEqual(parse_args([]).model, "muse-spark-1.3")
+        self.assertEqual(
+            parse_args(["--model", "muse-wonder-1.0"]).model,
+            "muse-wonder-1.0",
+        )
+
+    def test_cost_estimate_uses_selected_models_standard_rates(self) -> None:
+        self.assertEqual(estimate_standard_token_cost("muse-spark-1.3", 1_000_000, 1_000_000), 5.5)
+        self.assertEqual(estimate_standard_token_cost("muse-wonder-1.0", 1_000_000, 1_000_000), 24.0)
+
     def test_public_case_set_has_diverse_jobs_and_only_fictional_candidates(self) -> None:
         fixture = json.loads((ROOT / "calibration" / "semantic_cases.json").read_text())
         cases = fixture["cases"]
@@ -52,6 +69,18 @@ class SemanticCalibrationTests(unittest.TestCase):
         for candidate in fixture["candidates"]:
             extracted = extract_pdf(make_case_pdf(candidate))
             self.assertTrue(extracted[0]["text"].strip())
+
+    def test_pdf_builder_preserves_date_ranges_with_ascii_separators(self) -> None:
+        case = {
+            "cv_pages": ["FICTIONAL CV — Candidate\nSupplier Analyst | 2021–2026"],
+            "cv_layout": ["single_column"],
+        }
+        document = fitz.open(stream=make_case_pdf(case), filetype="pdf")
+        extracted = document[0].get_text()
+        document.close()
+
+        self.assertIn("2021-2026", extracted)
+        self.assertNotIn("2021?2026", extracted)
 
     def test_scanned_two_column_case_runs_ocr_and_reports_ocr_pages(self) -> None:
         fixture = json.loads((ROOT / "calibration" / "semantic_cases.json").read_text())
@@ -136,6 +165,35 @@ class SemanticCalibrationTests(unittest.TestCase):
             report["evidence_strength_distribution"],
             {"specific": 1, "stated": 0, "keyword_only": 1, "none": 1, "not_reported": 0},
         )
+
+    def test_scope_gate_scores_muse_output_separately_from_final_label(self) -> None:
+        requirement = "Support supplier negotiations and contract implementation."
+        case = {
+            "id": "scope-boundary",
+            "expected": [{"requirement": requirement, "evidence_type": "related"}],
+        }
+        result = {
+            "requirements": [{
+                "requirement": requirement,
+                "evidence_type": "related",
+                "muse_evidence_type": "direct",
+                "proposed_evidence_type": "direct",
+                "final_evidence_type": "related",
+                "scope_boundary_review": {
+                    "rule": "explicit_scope_limit_with_no_matching_direct_action",
+                },
+                "certainty": "ambiguous",
+            }],
+        }
+
+        report, _totals = score_case(case, result)
+
+        self.assertEqual(report["strict_category_accuracy"], 0.0)
+        self.assertEqual(report["deterministic_adjudicated_accuracy"], 1.0)
+        self.assertEqual(report["related_to_direct_overclaims"], 1)
+        self.assertEqual(report["item_labels"][0]["predicted"], "direct")
+        self.assertEqual(report["item_labels"][0]["adjudicated"], "related")
+        self.assertEqual(report["item_labels"][0]["adjudication_reason"], "scope_boundary_gate")
 
     def test_requirement_alignment_marks_omitted_gold_item(self) -> None:
         expected = [
@@ -281,6 +339,36 @@ class SemanticCalibrationTests(unittest.TestCase):
         self.assertIn("cited page 1", report)
         self.assertIn("Minimum 10 years of procurement experience.", report)
         self.assertIn("Quote could not be located on the cited PDF page", report)
+
+    def test_html_report_shows_unverified_date_quote_and_does_not_count_it(self) -> None:
+        report = build_report(
+            findings=[],
+            previews={},
+            cv_hash="cv",
+            job_hash="job",
+            omitted_requirement_audit=[],
+            proposed_quotes=0,
+            excluded_quotes=0,
+            verification_audit={},
+            evidence_graph={"requirements": []},
+            created_at="2026-10-28T00:00:00+00:00",
+            timeline_audit={
+                "status": "review_required",
+                "dated_employment_months": 0,
+                "episodes": [],
+                "flags": [{
+                    "type": "employment_date_range_unverified",
+                    "date_page": 1,
+                    "date_quote": "2021?2026",
+                    "review_note": "No duration was counted; confirm the dates against the CV.",
+                }],
+            },
+        )
+
+        self.assertIn("employment date range unverified", report)
+        self.assertIn("CV page 1 · 2021?2026", report)
+        self.assertIn("No duration was counted", report)
+        self.assertNotIn("No timeline flag was raised", report)
 
     def test_fixture_pdf_builder_preserves_pages_and_two_column_text(self) -> None:
         fixture = json.loads((ROOT / "calibration" / "semantic_cases.json").read_text())

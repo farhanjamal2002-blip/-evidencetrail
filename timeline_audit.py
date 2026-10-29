@@ -1,8 +1,8 @@
-"""Conservative date math for CV employment timelines.
+"""Conservative, quote-anchored date math for CV employment timelines.
 
-Muse proposes episodes and duration claims. This module verifies the cited text,
-parses only explicit dates, and performs interval arithmetic locally. Flags are
-review prompts, not claims of fraud or qualification.
+Local code finds clear date ranges first; Muse may add role scope and propose
+other spans. This module verifies each source quote and performs interval
+arithmetic locally. Flags prompt review and never assert fraud or qualification.
 """
 
 from __future__ import annotations
@@ -24,6 +24,35 @@ DATE_TOKEN = re.compile(
     rf"(?<![A-Za-z0-9])(?:({MONTH_PATTERN})\.?\s+\d{{4}}|\d{{4}}(?:[-/]\d{{1,2}})?|present|current|ongoing|now)(?![A-Za-z0-9])",
     re.IGNORECASE,
 )
+DATE_RANGE_CONNECTOR = re.compile(r"\s*(?:-|–|—|to|through|until)\s*", re.IGNORECASE)
+EMPLOYMENT_STATUS = re.compile(
+    r"\b(?:full[ -]time|part[ -]time|permanent|fixed[ -]term|internship|intern|"
+    r"apprentice|freelance|self[ -]employed|employed)\b",
+    re.IGNORECASE,
+)
+ROLE_CUE = re.compile(
+    r"\b(?:manager|director|engineer|analyst|specialist|associate|coordinator|"
+    r"officer|consultant|executive|lead|head|supervisor|technician|administrator|"
+    r"developer|nurse|teacher|buyer|procurement|sourcing|accountant|architect|"
+    r"scientist|representative|president|founder|owner|partner|operator|designer|"
+    r"recruiter|counsel|attorney|lawyer|sales|assistant|controller|inspector|"
+    r"planner|strategist|advisor|adviser|specialist|principal|chief)\b",
+    re.IGNORECASE,
+)
+NON_WORK_CONTEXT = re.compile(
+    r"\b(?:education|bachelor(?:'s)?(?:\s+degree)?|master(?:'s)?\s+(?:degree|of|in)|"
+    r"doctorate|ph\.?d|diploma|graduat(?:ed|ion)|coursework|certification|"
+    r"certificate|academic)\b",
+    re.IGNORECASE,
+)
+WORK_SECTION_HEADINGS = {
+    "experience", "work experience", "professional experience", "employment",
+    "employment history", "work history", "career history", "professional history",
+}
+NON_WORK_SECTION_HEADINGS = {
+    "education", "education history", "certifications", "certificates", "projects",
+    "selected projects", "publications", "skills", "awards", "training",
+}
 DURATION = re.compile(
     r"\b(?P<number>\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|"
     r"eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|"
@@ -61,6 +90,9 @@ WORK_ACTION = re.compile(
 )
 MAX_EPISODES = 40
 MAX_EXPERIENCE_CLAIMS = 20
+# Month-level CV dates can produce a short handoff overlap. Escalate only
+# overlaps longer than two months; all spans are still unioned for tenure math.
+MIN_OVERLAP_REVIEW_MONTHS = 3
 
 
 def _month_index(year: int, month: int) -> int:
@@ -100,8 +132,157 @@ def parse_date_bound(value: Any, *, end: bool, as_of: date) -> tuple[int, str] |
     return (start + 1 if end else start, "month")
 
 
-def _date_tokens(text: str) -> list[str]:
-    return [match.group(0).strip() for match in DATE_TOKEN.finditer(text)]
+def _explicit_date_range(text: str) -> tuple[list[str] | None, str | None]:
+    """Return two date anchors only when their source has an explicit range connector."""
+    matches = list(DATE_TOKEN.finditer(text))
+    if len(matches) < 2:
+        return None, "date_quote_lacks_two_anchors"
+    if len(matches) > 2:
+        return None, "date_quote_has_extra_date_anchors"
+    connector = text[matches[0].end():matches[1].start()]
+    if not DATE_RANGE_CONNECTOR.fullmatch(connector):
+        return None, "date_quote_has_ambiguous_range_separator"
+    return [match.group(0).strip() for match in matches], None
+
+
+def extract_explicit_employment_episodes(
+    pages: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Find clear employment date lines locally so timeline math doesn't depend on Muse.
+
+    The extractor is deliberately conservative: a range must appear on a line
+    that is in a work-history section, has an explicit employment marker, or
+    has a recognizable role cue. Education and profile-duration lines are
+    excluded. The returned quote is still passed through the normal local
+    quote/page verifier before it can affect a review flag.
+    """
+    episodes: list[dict[str, Any]] = []
+    for page in pages:
+        page_number = page.get("number")
+        try:
+            page_number = int(page_number)
+        except (TypeError, ValueError):
+            continue
+        lines = [
+            re.sub(r"\s+", " ", line).strip()
+            for line in str(page.get("text", "")).splitlines()
+            if line.strip()
+        ]
+        in_work_section = False
+        for index, line in enumerate(lines):
+            heading = re.sub(r"[^a-z ]+", " ", line.casefold()).strip()
+            heading = re.sub(r"\s+", " ", heading)
+            if heading in WORK_SECTION_HEADINGS:
+                in_work_section = True
+                continue
+            if heading in NON_WORK_SECTION_HEADINGS:
+                in_work_section = False
+                continue
+
+            date_parts, range_error = _explicit_date_range(line)
+            if range_error or not date_parts:
+                continue
+            if re.search(r"\b(?:profile|summary|experience covers|years of experience)\b", line, re.I):
+                continue
+
+            first_date = DATE_TOKEN.search(line)
+            if not first_date:
+                continue
+            role = line[:first_date.start()].strip(" |·:,-")
+            date_quote = line
+            if not role and index:
+                previous = lines[index - 1]
+                previous_heading = re.sub(r"[^a-z ]+", " ", previous.casefold()).strip()
+                previous_heading = re.sub(r"\s+", " ", previous_heading)
+                if (
+                    previous_heading not in WORK_SECTION_HEADINGS
+                    and previous_heading not in NON_WORK_SECTION_HEADINGS
+                    and len(previous.split()) <= 14
+                    and not DATE_TOKEN.search(previous)
+                ):
+                    role = previous.strip(" |·:,-")
+                    date_quote = f"{previous} {line}"
+
+            if not role or len(role.split()) > 14:
+                continue
+            if (
+                NON_WORK_CONTEXT.search(line)
+                and not EMPLOYMENT_STATUS.search(line)
+                and not ROLE_CUE.search(role)
+            ):
+                continue
+            has_work_cue = (
+                in_work_section
+                or bool(EMPLOYMENT_STATUS.search(line))
+                or bool(ROLE_CUE.search(role))
+            )
+            if not has_work_cue:
+                continue
+
+            # Remove employment labels from the display role while preserving
+            # the complete source line for exact anchoring.
+            display_role = EMPLOYMENT_STATUS.sub("", role)
+            display_role = re.sub(r"\s+", " ", display_role).strip(" |·:,-")
+            if not display_role:
+                continue
+            episodes.append({
+                "role": display_role[:160],
+                "company": "",
+                "start_date": date_parts[0],
+                "end_date": date_parts[1],
+                "date_quote": date_quote[:1200],
+                "scope_quote": None,
+                "experience_areas": [],
+                "page_hint": page_number,
+                "_source": "local_date_extraction",
+            })
+            if len(episodes) >= MAX_EPISODES:
+                return episodes
+    return episodes
+
+
+def _role_identity(value: Any) -> set[str]:
+    role = EMPLOYMENT_STATUS.sub("", str(value or "").casefold())
+    return {
+        token for token in re.findall(r"[a-z0-9]+", role)
+        if token not in {"role", "not", "confirmed", "full", "time", "part"}
+    }
+
+
+def _same_episode_proposal(
+    left: dict[str, Any], right: dict[str, Any], *, as_of: date
+) -> bool:
+    left_start = parse_date_bound(left.get("start_date"), end=False, as_of=as_of)
+    left_end = parse_date_bound(left.get("end_date"), end=True, as_of=as_of)
+    right_start = parse_date_bound(right.get("start_date"), end=False, as_of=as_of)
+    right_end = parse_date_bound(right.get("end_date"), end=True, as_of=as_of)
+    if not left_start or not left_end or not right_start or not right_end:
+        return False
+    if (left_start[0], left_end[0]) != (right_start[0], right_end[0]):
+        return False
+    left_quote = " ".join(re.findall(r"[a-z0-9]+", str(left.get("date_quote", "")).casefold()))
+    right_quote = " ".join(re.findall(r"[a-z0-9]+", str(right.get("date_quote", "")).casefold()))
+    if left_quote and left_quote == right_quote:
+        return True
+    left_role = _role_identity(left.get("role"))
+    right_role = _role_identity(right.get("role"))
+    if not left_role or not right_role:
+        return False
+    overlap = len(left_role & right_role) / max(1, len(left_role | right_role))
+    return overlap >= 0.6
+
+
+def _unverified_date_range_flag(date_quote: str, page: int, reason: str) -> dict[str, Any]:
+    return {
+        "type": "employment_date_range_unverified",
+        "date_page": max(0, int(page or 0)),
+        "date_quote": date_quote[:500],
+        "reason": reason,
+        "review_note": (
+            "The cited employment dates could not be verified as one explicit, matching range. "
+            "No duration was counted; confirm the dates against the CV before relying on total experience."
+        ),
+    }
 
 
 def _duration_months(text: str) -> int | None:
@@ -151,9 +332,36 @@ def audit_employment_timeline(
 ) -> dict[str, Any]:
     """Verify Muse-proposed timeline spans, then calculate durations and overlaps."""
     today = as_of or date.today()
-    raw_episodes = episodes if isinstance(episodes, list) else []
+    model_episodes = episodes if isinstance(episodes, list) else []
+    raw_episodes = extract_explicit_employment_episodes(pages)[:MAX_EPISODES]
+    for model_episode in model_episodes:
+        if len(raw_episodes) >= MAX_EPISODES:
+            break
+        if not isinstance(model_episode, dict):
+            raw_episodes.append(model_episode)
+            continue
+        duplicate = next(
+            (
+                existing for existing in raw_episodes
+                if isinstance(existing, dict)
+                and _same_episode_proposal(existing, model_episode, as_of=today)
+            ),
+            None,
+        )
+        if duplicate is not None:
+            # Keep locally parsed dates and source quote authoritative, while
+            # retaining Muse's optional, separately quote-verified work scope.
+            if not duplicate.get("scope_quote") and model_episode.get("scope_quote"):
+                duplicate["scope_quote"] = model_episode["scope_quote"]
+            if not duplicate.get("experience_areas") and isinstance(
+                model_episode.get("experience_areas"), list
+            ):
+                duplicate["experience_areas"] = model_episode["experience_areas"]
+            continue
+        raw_episodes.append(model_episode)
     raw_claims = experience_claims if isinstance(experience_claims, list) else []
     exclusions: list[dict[str, str]] = []
+    date_range_flags: list[dict[str, Any]] = []
     verified: list[dict[str, Any]] = []
 
     for index, item in enumerate(raw_episodes[:MAX_EPISODES], start=1):
@@ -167,23 +375,41 @@ def audit_employment_timeline(
             exclusions.append({"item": f"episode_{index}", "reason": "date_quote_not_verified"})
             continue
 
+        source_dates, range_error = _explicit_date_range(date_quote)
+        if range_error:
+            exclusions.append({"item": f"episode_{index}", "reason": range_error})
+            date_range_flags.append(
+                _unverified_date_range_flag(
+                    date_quote, int(location.get("page", 0)), range_error
+                )
+            )
+            continue
+
         start_raw = str(item.get("start_date", "")).strip()
         end_raw = str(item.get("end_date", "")).strip()
         start = parse_date_bound(start_raw, end=False, as_of=today)
         end = parse_date_bound(end_raw, end=True, as_of=today)
-        source_dates = _date_tokens(date_quote)
         if not start or not end or start[0] >= end[0]:
-            exclusions.append({"item": f"episode_{index}", "reason": "invalid_or_inverted_dates"})
-            continue
-        if len(source_dates) < 2:
-            exclusions.append({"item": f"episode_{index}", "reason": "date_quote_lacks_two_anchors"})
+            reason = "invalid_or_inverted_dates"
+            exclusions.append({"item": f"episode_{index}", "reason": reason})
+            date_range_flags.append(
+                _unverified_date_range_flag(
+                    date_quote, int(location.get("page", 0)), reason
+                )
+            )
             continue
         source_start = parse_date_bound(source_dates[0], end=False, as_of=today)
-        source_end = parse_date_bound(source_dates[-1], end=True, as_of=today)
+        source_end = parse_date_bound(source_dates[1], end=True, as_of=today)
         # The exact CV quote must anchor the dates Muse supplied; page checks
-        # alone are not enough if the model normalized the wrong dates.
+        # and matching tokens alone are not enough without a range connector.
         if not source_start or not source_end or source_start[0] != start[0] or source_end[0] != end[0]:
-            exclusions.append({"item": f"episode_{index}", "reason": "dates_do_not_match_quote"})
+            reason = "dates_do_not_match_quote"
+            exclusions.append({"item": f"episode_{index}", "reason": reason})
+            date_range_flags.append(
+                _unverified_date_range_flag(
+                    date_quote, int(location.get("page", 0)), reason
+                )
+            )
             continue
 
         scope_quote = str(item.get("scope_quote") or "").strip()
@@ -212,6 +438,11 @@ def audit_employment_timeline(
 
         verified.append({
             "id": f"E{index}",
+            "source": (
+                "local_date_extraction"
+                if item.get("_source") == "local_date_extraction"
+                else "muse_proposal"
+            ),
             "role": role_label or "Role not confirmed",
             "company": str(item.get("company", ""))[:160],
             "start_date": start_raw,
@@ -231,13 +462,16 @@ def audit_employment_timeline(
     for left_index, left in enumerate(verified):
         for right in verified[left_index + 1:]:
             overlap = min(left["end_month"], right["end_month"]) - max(left["start_month"], right["start_month"])
-            if overlap > 0:
+            if overlap >= MIN_OVERLAP_REVIEW_MONTHS:
                 overlaps.append({
                     "type": "employment_date_overlap",
                     "episodes": [left["id"], right["id"]],
                     "roles": [left["role"], right["role"]],
                     "overlap_months": overlap,
-                    "review_note": "These dated roles overlap. Confirm whether they were concurrent, part-time, or a date-entry issue.",
+                    "review_note": (
+                        "These dated roles overlap by at least three months. Confirm "
+                        "whether they were concurrent, part-time, or a date-entry issue."
+                    ),
                 })
 
     all_intervals = [(item["start_month"], item["end_month"]) for item in verified]
@@ -253,7 +487,7 @@ def audit_employment_timeline(
     ]
 
     claims: list[dict[str, Any]] = []
-    flags: list[dict[str, Any]] = list(overlaps)
+    flags: list[dict[str, Any]] = [*date_range_flags, *overlaps]
     for index, item in enumerate(raw_claims[:MAX_EXPERIENCE_CLAIMS], start=1):
         if not isinstance(item, dict):
             exclusions.append({"item": f"claim_{index}", "reason": "invalid_shape"})
