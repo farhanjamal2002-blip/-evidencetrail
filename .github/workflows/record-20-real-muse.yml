@@ -1,4 +1,5 @@
 name: EvidenceTrail one-time twenty-fictional-CV Muse recording
+# Second controlled recording: PDF trailer IDs fixed for stable fingerprints; no results from first run were published.
 on:
   push:
     branches: [feat/recruiter-demo20-muse-inbox]
@@ -60,6 +61,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: evidencetrail-authentic-20-cv-muse-attempt
-          path: artifacts/demo20-replay/
+          path: |
+            artifacts/demo20-replay/
+            data/demo20_muse_replay.json
           retention-days: 14
           if-no-files-found: warn
