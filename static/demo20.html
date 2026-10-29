@@ -70,6 +70,25 @@ label.consent input{margin-top:1px;flex:0 0 auto}
 select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#30594f;margin:12px 0 5px}
 @media(max-width:1150px){.layout{grid-template-columns:280px minmax(0,1fr)}.review-panel{grid-column:1/-1}}
 @media(max-width:650px){.top{padding:0 13px;height:auto;min-height:62px}.app{padding:12px}.layout{display:flex;flex-direction:column}.layout>.panel{width:100%}.list{min-height:0;max-height:325px}.review{padding:14px}.demo-label{font-size:9px}}
+
+/* Color AND text: purely CV-documentation signals, not candidate scores. */
+.coverage-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:10px 12px;border-bottom:1px solid #e7eeea}
+.coverage-action{border:1px solid #dce8e1;background:#f9fcfa;border-radius:9px;text-align:left;padding:7px 8px;min-width:0}
+.coverage-action strong{font-size:17px;display:block;color:#285e55}
+.coverage-action span{font-size:10px;line-height:1.35;color:#526e64;display:block}
+.coverage-action.active{border-color:#3e9380;background:#e9f6ef}
+.coverage-action:focus-visible{outline:2px solid #0b7a70;outline-offset:2px}
+.coverage-legend{padding:7px 12px;color:#536f65;font-size:10px;border-bottom:1px solid #e7eeea}
+.coverage-group{position:sticky;top:0;z-index:1;border-bottom:1px solid #dfe9e3;background:#eff5f1;padding:10px 13px;color:#315e51;font-size:11px;font-weight:750}
+.coverage-group small{display:block;font-weight:450;line-height:1.4;color:#6a8276}
+.coverage-dots{display:inline-flex;gap:4px;vertical-align:middle;margin:2px 0 5px}
+.coverage-dot{width:12px;height:12px;border:1px solid #cad9d1;border-radius:3px;display:inline-block}
+.coverage-dot.direct{background:#32936c;border-color:#237c57}
+.coverage-dot.related{background:#e5b856;border-color:#c89933}
+.coverage-dot.missing{background:#f4f5f4;border-color:#bdc9c3}
+.coverage-dot.discrepancy{background:#c45f58;border-color:#a73c36}
+.coverage-unknown{font-size:10px;color:#708b80;display:block;margin-bottom:5px}
+@media(max-width:650px){.coverage-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.coverage-action span{font-size:9px}}
 </style>
 </head>
 <body>
@@ -110,8 +129,14 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
   <button type="button" class="quickview" data-view="human_review">Needs clarification</button>
   <button type="button" class="quickview" data-view="awaiting_decision">Awaiting recruiter decision</button>
  </nav>
- <div class="queue-help">Keyboard: J next · K previous. No AI ranking or automatic rejection.</div>
- <div class="toolbar"><input id="search" class="text-input" aria-label="Search applications" placeholder="Search ID, role, or CV text…"><select id="filter" aria-label="Filter applications"><option value="all">All applicants</option><option value="not_analyzed">Not analyzed</option><option value="ready">Evidence ready</option><option value="all_direct">All criteria directly documented</option><option value="direct">Any direct evidence</option><option value="related">Related evidence</option><option value="conflicting">Multiple-claim discrepancies</option><option value="scope_limit">Scope limitations</option><option value="not_found">Missing / unproven</option><option value="failed">Failed analysis</option><option value="human_review">Needs clarification</option><option value="awaiting_decision">Awaiting human decision</option><option value="reviewed">Human-reviewed</option><option value="no_direct">No directly documented requirements</option></select></div>
+ <div class="coverage-summary" id="coverage-summary" aria-label="Evidence coverage groups">
+<button type="button" class="coverage-action" data-coverage="coverage_complete" title="Documented evidence, not a hiring recommendation"><strong id="coverage-complete-count">0</strong><span>All directly documented</span></button>
+<button type="button" class="coverage-action" data-coverage="coverage_partial" title="Some relevant CV evidence and unresolved requirements"><strong id="coverage-partial-count">0</strong><span>Partial / scope questions</span></button>
+<button type="button" class="coverage-action" data-coverage="coverage_attention" title="Gaps or discrepancies; never automatic rejection"><strong id="coverage-attention-count">0</strong><span>Gaps / discrepancies</span></button>
+</div>
+<div class="coverage-legend">Each square = one job requirement. 🟩 Direct · 🟨 Related/limited · ⬜ Not documented · 🟥 Discrepancy. These describe CV documentation, not candidate ability.</div>
+<div class="queue-help">Grouped by CV evidence; original received order within each group. J next · K previous. No scores or automatic rejection.</div>
+ <div class="toolbar"><input id="search" class="text-input" aria-label="Search applications" placeholder="Search ID, role, or CV text…"><select id="filter" aria-label="Filter applications"><option value="all">All applicants</option><option value="not_analyzed">Not analyzed</option><option value="ready">Evidence ready</option><option value="coverage_complete">All directly documented</option><option value="coverage_partial">Partial / scope questions</option><option value="coverage_attention">Gaps / discrepancies</option><option value="all_direct">All criteria directly documented</option><option value="direct">Any direct evidence</option><option value="related">Related evidence</option><option value="conflicting">Multiple-claim discrepancies</option><option value="scope_limit">Scope limitations</option><option value="not_found">Missing / unproven</option><option value="failed">Failed analysis</option><option value="human_review">Needs clarification</option><option value="awaiting_decision">Awaiting human decision</option><option value="reviewed">Human-reviewed</option><option value="no_direct">No directly documented requirements</option></select></div>
  <div class="list" id="list"><div class="empty">Loading 20 fictional applicants and the saved Muse evidence…</div></div>
 </section>
 <section class="panel review-panel">
@@ -121,6 +146,7 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
 </div>
 <p class="footer">EvidenceTrail is a document evidence layer, not a hiring-decision engine. This demo does not store decisions or CVs in a tenant database. Never use these fictional reference labels as applicant assessments.</p>
 </main>
+<script src="/static/coverage_matrix.js"></script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
