@@ -55,17 +55,21 @@ FIRST_PERSON = re.compile(r"\b(?:I|my|personally)\b", re.IGNORECASE)
 EXPLICIT_SELF_DENIAL = re.compile(
     r"\b(?:I (?:did not|never|have never|had never|was not)|"
     r"my (?:role|duties) did not|"
-    r"no (?:direct|personal) (?:responsibility|authority|experience))\b",
+    r"no (?:direct|personal) (?:responsibility|authority|experience)|"
+    r"never|did not|not the (?:negotiator|owner|lead)|"
+    r"without (?:direct|personal) (?:responsibility|authority))\b",
     re.IGNORECASE,
 )
 
 
 def _first_action_synonyms(requirement: str) -> tuple[str, ...]:
+    # The first action in the requirement is usually the required ownership.
+    # "Personally LED supplier price NEGOTIATIONS" tests leadership, not just
+    # proximity to a later noun containing the negotiation root.
     words = requirement.casefold()
-    for stem, equivalents in REQUIREMENT_ACTIONS:
-        if stem in words:
-            return equivalents
-    return ()
+    hits = [(words.index(stem),equivalents)
+            for stem,equivalents in REQUIREMENT_ACTIONS if stem in words]
+    return min(hits,key=lambda x:x[0])[1] if hits else ()
 
 
 def _asserts_requested_personal_action(quote: str, action_words: tuple[str, ...]) -> bool:
@@ -76,9 +80,15 @@ def _asserts_requested_personal_action(quote: str, action_words: tuple[str, ...]
     # turn into the applicant saying they personally negotiated.
     clauses = re.split(r"[;.!?]|\b(?:but|whereas|while)\b", quote, flags=re.IGNORECASE)
     for clause in clauses:
-        if not FIRST_PERSON.search(clause) or SCOPE_NEGATIVE.search(clause):
+        if SCOPE_NEGATIVE.search(clause):
             continue
-        if any(stem in clause.casefold() for stem in action_words):
+        cleaned = clause.strip().casefold()
+        # Real CV bullet points often omit "I": "led all negotiations".
+        first_person = bool(FIRST_PERSON.search(clause))
+        verb_led_bullet = any(cleaned.startswith(stem) for stem in action_words)
+        if not first_person and not verb_led_bullet:
+            continue
+        if any(stem in cleaned for stem in action_words):
             return True
     return False
 
@@ -196,7 +206,7 @@ def clarify_verified_findings(findings: list[dict[str, Any]]) -> dict[str, int]:
                 "This does not establish that the CV claim is false."
             )
             counters["multi_quote_discrepancies_retained"] += 1
-        elif status == "not_found" and evidence_type == "related":
+        elif status == "not_found" and evidence_type == "related" and not finding.get("review_reason_code"):
             finding["review_reason_code"] = "related_evidence_exact_criterion_unproven"
             finding["review_label"] = "Related evidence — exact requirement unproven"
             finding["review_explanation"] = (
