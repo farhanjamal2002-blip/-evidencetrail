@@ -27,8 +27,9 @@ ABSENCE_ONLY = re.compile(
 # 'supported'. Ambiguous examples remain visible for human clarification.
 REQUIREMENT_ACTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("negotiat", ("negotiat",)),
-    ("led", ("led", "lead", "command")),
-    ("lead", ("led", "lead", "command")),
+    ("led", ("led", "lead", "command", "chaired", "directed", "headed")),
+    ("lead", ("led", "lead", "command", "chaired", "directed", "headed")),
+    ("design", ("design", "designed", "built", "created")),
     ("develop", ("develop", "deplo", "built", "wrote")),
     ("deploy", ("deplo", "shipp", "released")),
     ("configur", ("configur", "set up")),
@@ -67,8 +68,13 @@ def _first_action_synonyms(requirement: str) -> tuple[str, ...]:
     # "Personally LED supplier price NEGOTIATIONS" tests leadership, not just
     # proximity to a later noun containing the negotiation root.
     words = requirement.casefold()
-    hits = [(words.index(stem),equivalents)
-            for stem,equivalents in REQUIREMENT_ACTIONS if stem in words]
+    # Word-boundary matching matters: "sign" occurs INSIDE "designed";
+    # treating that substring as an approval verb erased true CV conflicts.
+    hits = []
+    for stem,equivalents in REQUIREMENT_ACTIONS:
+        match = re.search(r"\b" + re.escape(stem), words)
+        if match:
+            hits.append((match.start(),equivalents))
     return min(hits,key=lambda x:x[0])[1] if hits else ()
 
 
@@ -85,10 +91,16 @@ def _asserts_requested_personal_action(quote: str, action_words: tuple[str, ...]
         cleaned = clause.strip().casefold()
         # Real CV bullet points often omit "I": "led all negotiations".
         first_person = bool(FIRST_PERSON.search(clause))
-        verb_led_bullet = any(cleaned.startswith(stem) for stem in action_words)
+        verb_led_bullet = any(
+            re.match(r"\b" + re.escape(stem), cleaned)
+            for stem in action_words
+        )
         if not first_person and not verb_led_bullet:
             continue
-        if any(stem in cleaned for stem in action_words):
+        if any(
+            re.search(r"\b" + re.escape(stem), cleaned)
+            for stem in action_words
+        ):
             return True
     return False
 
