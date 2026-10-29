@@ -41,6 +41,7 @@ from muse_protocol import (
 )
 from timeline_audit import audit_employment_timeline
 from semantic_review import clarify_verified_findings
+from verification_receipt import build_verification_receipt
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -6042,6 +6043,7 @@ async def analyze(
         performance_ms["pipeline_ms"] = max(
             0, round((time.perf_counter() - pipeline_started) * 1000)
         )
+        response_payload["verification_receipt"] = build_verification_receipt(response_payload)
         return response_payload
     finally:
         analysis_semaphore.release()
