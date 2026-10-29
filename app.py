@@ -168,6 +168,11 @@ analysis_times_by_ip: dict[str, list[float]] = {}
 app = FastAPI(title="EvidenceTrail", docs_url=None, redoc_url=None)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+
+# Fictional recruiter inbox is explicitly separate from real applicant workflows.
+from demo20_workflow import router as demo20_router
+app.include_router(demo20_router)
+
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
