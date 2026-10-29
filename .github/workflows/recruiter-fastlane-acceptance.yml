@@ -1,4 +1,5 @@
 name: EvidenceTrail recruiter fastlane acceptance
+# Saved replay is zero new Meta calls; explicit local simulation is one expected mock API call.
 # Next-to-review button is only enabled if a different analyzed applicant needs action.
 # Reset button must never pass click event as autoReplay boolean.
 # Verify reset clears previously selected queue filters and quick views.
