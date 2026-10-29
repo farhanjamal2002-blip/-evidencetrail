@@ -1015,7 +1015,7 @@ function hideError() {
 }
 
 function getPdfFileError(file) {
-  if (!/\.pdf$/i.test(file.name || "")) return "Choose a PDF file.";
+  if (!/\\.(pdf|png|jpe?g)$/i.test(file.name || "")) return "Choose PDF, PNG or JPEG CV files.";
   if (!file.size) return "That CV file is empty. Choose another file.";
   if (file.size > maxPdfBytes) {
     const limitMb = Math.max(1, Math.round(maxPdfBytes / (1024 * 1024)));
