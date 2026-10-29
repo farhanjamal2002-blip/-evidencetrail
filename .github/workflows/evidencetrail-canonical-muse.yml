@@ -1,0 +1,92 @@
+name: EvidenceTrail canonical Muse 5-CV verification
+
+on:
+  push:
+    branches:
+      - ops/muse-frozen-8140662-20261029
+    paths:
+      - .github/workflows/evidencetrail-canonical-muse.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidencetrail-frozen-8140662-muse
+  cancel-in-progress: false
+
+jobs:
+  canonical-muse:
+    name: Frozen Muse preflight and single live batch
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: "true"
+      MUSE_REASONING_EFFORT: minimal
+      MAX_CONCURRENT_ANALYSES: "5"
+    steps:
+      - name: Checkout EXACT frozen EvidenceTrail commit, not this control branch
+        uses: actions/checkout@v4
+        with:
+          ref: 8140662cae1e14fbae7b66f664a7d9d99b396674
+          persist-credentials: false
+
+      - name: Confirm frozen identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "8140662cae1e14fbae7b66f664a7d9d99b396674"
+          mkdir -p artifacts/canonical-muse
+          printf '{"executed_sha":"%s","fixture":"calibration/unified_supplier_operations_demo_20261029_v3.json","reasoning_effort":"minimal","automatic_retries":0,"fixture_fictional":true}\n' "$(git rev-parse HEAD)" > artifacts/canonical-muse/identity.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install OCR for image-only CV
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+
+      - name: Install frozen application dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Credential presence preflight (NEVER print secret)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$MODEL_API_KEY" ]; then
+            echo 'MUSE_PREFLIGHT=BLOCKED: MODEL_API_KEY is not available to this EvidenceTrail GitHub workflow. No Meta request sent.'
+            exit 2
+          fi
+          echo 'MUSE_PREFLIGHT=KEY_PRESENT; secret value never printed.'
+
+      - name: Preflight frozen one-JD five-fictional-CV fixture (zero requests)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/run_unified_demo.py --preflight-only --fixture calibration/unified_supplier_operations_demo_20261029_v3.json --run-suffix canonical_8140662_20261029
+
+      - name: ONE actual Muse Spark five-CV batch; NO retries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/run_unified_demo.py --confirm-live-call --fixture calibration/unified_supplier_operations_demo_20261029_v3.json --run-suffix canonical_8140662_20261029
+
+      - name: Preserve generated receipt/metrics/replay; no API key
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-muse-8140662-canonical
+          path: |
+            artifacts/canonical-muse/identity.json
+            calibration/unified_demo_attempt_canonical_8140662_20261029.json
+            calibration/unified_demo_metrics_canonical_8140662_20261029.json
+            calibration/unified_demo_replay_canonical_8140662_20261029.json
+          retention-days: 14
+          if-no-files-found: warn
