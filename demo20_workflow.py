@@ -106,7 +106,8 @@ def make_cv_pdf(candidate_id: str) -> bytes:
                 page.insert_text((48,y),wrapped,fontsize=10)
                 y+=19
             y+=8
-    result=doc.tobytes(garbage=3,deflate=True)
+    # No random PDF trailer ID: same fictional input must hash identically across CI and Render.
+    result=doc.tobytes(garbage=3,deflate=True,no_new_id=True)
     doc.close()
     return result
 
