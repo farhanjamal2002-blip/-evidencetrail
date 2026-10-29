@@ -25,6 +25,19 @@
 - Original live pilot median **2.11 seconds/CV** on its ten first-pass requests, not the median for the separate timeline replacement and not a throughput SLA.
 - Genuine live probes consumed **15 provider requests total across two runs**: ten primary calls + four blind adjudications + one repaired case. No new calls are necessary for the saved judge demo.
 
+## A wider, real Meta judge probe — 100 cases, ten API calls
+
+[100 blind Meta document judgments](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40923268118) completed on **100 predeclared fictional job/CV snippets** across ten domains and ten evidence classes. These cases were *not* the first Muse outputs being graded. Rather, the same Meta model family independently read each supplied job criterion and CV text **without** seeing the expected class, injected status or EvidenceTrail result.
+
+- **100/100** classifications agreed with their predefined synthetic reference labels.
+- **40** quotes were supplied by the model, and **40/40** were checked to be exact substrings of the synthetic CV text. Other cases had no quote, often appropriately because a requirement was not established.
+- **Ten genuine Meta requests**, ten authentic provider receipts, **no retries**. Each request assessed ten short synthetic cases; median request **2.17 seconds**. That number is **per batch**, not per independently uploaded CV.
+- All ten role groups parsed successfully. The evaluation returns a per-class breakdown with ten examples of each evidence family.
+- **This is NOT 100 independently annotated real CVs**, NOT 100 full EvidenceTrail pipelines, and NOT independent external or human validation. These snippets are closely related to the hand-authored rule scenarios, short, and explicitly prompted with the status policy. A 100/100 score here reveals an easy controlled case set, not a plausible general-population accuracy guarantee.
+- This 100-case run adds ten more billable/credit-consuming provider requests to the 15 previously made: **25 genuine Meta requests in all three live evaluation workflows**, while the 1,000 controlled policy cases cost zero API calls.
+
+**Interpretation:** Meta understands our clean, explicit policy examples well. We need a hard, unseen dataset with realistic mixed-role CVs, noisy evidence and non-obvious edge cases before asserting that retrieval is substantially improved or that a second Meta call is generally worth it.
+
 ## The next accuracy bottleneck
 
 All **100 synthetic missed-direct cases** remain false negatives even after post-processing. That is a real *architectural* weakness: deterministic post-verification can demote an unsupported positive, but cannot invent a correctly grounded supporting quotation that the first Muse pass didn't retrieve. The solution must be tested, not assumed:
