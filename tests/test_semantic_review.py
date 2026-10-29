@@ -47,6 +47,42 @@ class SemanticCalibrationTests(unittest.TestCase):
         self.assertEqual(f["review_label"],"Discrepancy to clarify")
         self.assertEqual(len(f["evidence"]),2)
 
+    def test_two_verified_scope_limits_are_not_internal_contradictions(self):
+        f=row([
+            ("I assembled supplier comparison notes; my manager negotiated the contracts.", "contradicts"),
+            ("I had no authority to approve the supplier contracts.", "contradicts"),
+        ])
+        before=deepcopy(f["evidence"])
+        counts=clarify_verified_findings([f])
+        self.assertEqual(f["status"],"not_found")
+        self.assertEqual(f["raw_status"],"conflicting")
+        self.assertEqual(f["review_reason_code"],"explicit_scope_limit_not_contradiction")
+        self.assertEqual(counts["multi_scope_limits_clarified"],1)
+        self.assertEqual([q["quote"] for q in f["evidence"]],
+                         [q["quote"] for q in before])
+        self.assertEqual([q["role"] for q in f["evidence"]],["contradicts","contradicts"])
+        self.assertEqual([q["display_role"] for q in f["evidence"]],["scope_context","scope_context"])
+
+    def test_five_distinct_genuine_cv_contradictions_survive(self):
+        from scripts.hard_cv_corpus import SECTORS
+        self.assertEqual(len(SECTORS),5)
+        for sector in SECTORS:
+            with self.subTest(sector=sector["code"]):
+                f=row([(sector["direct"][0],"supports"),
+                       (sector["denial"],"contradicts")])
+                quotes=deepcopy(f["evidence"])
+                clarify_verified_findings([f])
+                self.assertEqual(f["status"],"conflicting")
+                self.assertEqual(f["review_reason_code"],"multi_claim_or_timeline_discrepancy")
+                self.assertEqual(f["evidence"],quotes)
+
+    def test_independent_timeline_issue_retained_even_with_two_limits(self):
+        f=row([("I did not approve vendor contracts.","contradicts"),
+               ("My manager signed all vendor agreements.","contradicts")],
+              flags=[{"code":"independently_verified_duration_gap"}])
+        clarify_verified_findings([f])
+        self.assertEqual(f["status"],"conflicting")
+
     def test_local_timeline_flags_prevent_false_clearance(self):
         f=row([("Only documented role was 2022 to 2026.","contradicts")],flags=[{"code":"duration_gap"}])
         clarify_verified_findings([f])
