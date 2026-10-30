@@ -36,7 +36,7 @@ The public service deliberately disables new paid Muse calls. Click **“Explore
 - [x] 143 Python / 13 JS, Chromium (desktop + mobile), Docker acceptance: [action log](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40888555124).
 - [x] Judge-facing README: [JUDGE_GUIDE.md](JUDGE_GUIDE.md).
 - [ ] **Judges' build:** choose **one commit** after final PR review, pin its SHA and share a working runnable/deployed version.
-- [x] **Public demo URL:** [20-fictional-CV review inbox](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20) deployed on a separate free Render service. `/health` and recruiter page verified October 29. Muse is intentionally disabled publicly; use the authentic recorded CI calls for model proof. The original `https://evidencetrail.onrender.com` still deploys older main. The public demo may cold-start.
+- [ ] **Public final-version parity:** [isolated 20-fictional-CV judge reviewer](https://evidencetrail-judge-rc1-2026.onrender.com/demo20) is on a separate free, mock-only Render service. Verify [exact deployed SHA](https://evidencetrail-judge-rc1-2026.onrender.com/build-info) against release PR #28 using the [automated public parity workflow](.github/workflows/public-demo-parity.yml). The older two services are not the final judge target; free hosting may cold-start.
 - [ ] **Video:** record a tight 2-minute demo *from that same build*. Video length is a recommendation here; entrant must verify organizer's actual field limits.
 - [ ] **Repository landing page:** point judges immediately to demo URL, 2-minute video, run instructions and genuine Muse receipts.
 - [ ] **Participant portal:** confirm selected track, rules acceptance, eligibility, required fields, team representative, final submission.
