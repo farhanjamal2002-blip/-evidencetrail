@@ -43,13 +43,13 @@ The feature set is locked. Permit only release-blocking correctness, accessibili
 - Every finding presents **Quote on the page?** separately from **Does it credit the applicant?** Raw Muse status remains visible through the final pipeline label, with a short reason for any change.
 - Recruiter review is a separate panel with **Not reviewed**, **Reviewed**, and **Follow-up needed**, plus a note. It does not change the evidence status.
 - Stored findings carry a **Saved replay** badge. The M02 benchmark ends with a dark ET-018 source-review card and a small fictional-set caveat.
-- ET-018's instruction-like line is outlined from the generated PDF's exact PyMuPDF geometry and labeled **Treated as content**. If the exact source span is not found once, the UI does not draw a guessed highlight.
+- Both instruction-like lines in ET-018 are outlined from their exact PyMuPDF geometry and labeled **Treated as content**. Wrapped text fragments must match the fixture's expected line layout; otherwise the UI draws no guessed highlight.
 - Named buttons and links have 44px minimum targets; key label and status color pairs are checked against 4.5:1; no emoji icons.
 
 ## Current verification record
 
 - JavaScript syntax check: passed.
 - Python syntax checks for the ET-018 geometry endpoint and browser smoke: passed.
-- PyMuPDF check on the generated ET-018 fixture: exact instruction line found once at page coordinates [48.0, 181.25, 371.98, 194.99] on a 612 by 792 page.
+- PyMuPDF check on the generated ET-018 fixture: first instruction line box [48.0, 181.25, 371.98, 194.99]; second wrapped instruction line union [48.0, 208.25, 382.60, 240.99], on a 612 by 792 page.
 - Browser smoke assertions now cover the judge path, ET-018 outline, M02 evidence axes and caveat, reviewer states, touch targets, contrast, saved replay labeling, and no paid analysis calls. **The end-to-end browser run has not yet been observed passing on GitHub Actions.**
 - This UI is on the draft release branch only. It has not been merged or deployed.
