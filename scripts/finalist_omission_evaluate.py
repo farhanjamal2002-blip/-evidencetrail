@@ -22,6 +22,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from fastapi.testclient import TestClient
 import app
 from scripts.finalist_omission_corpus import CASES, make_cv_pdf, manifest_hash
+from ownership_provenance import ownership_warning
 
 OUT = Path("artifacts/finalist-unseen-omissions/report.json")
 
@@ -46,6 +47,10 @@ def run_audit() -> dict:
                 continue
             payload=response.json()
             findings=payload.get("requirements") or []
+            # Evaluate warnings against the frozen source text of our synthetic
+            # generator. This is a shadow fixture diagnostic, not a claim that
+            # the quote verifier independently accepted every word.
+            shadow_warning=ownership_warning(case.requirement, case.cv_text)
             observed=findings[0].get("status") if len(findings)==1 else "invalid_requirement_count"
             rows.append({
                 "case":case.id,"family":case.family,"trap":case.trap,
@@ -54,6 +59,8 @@ def run_audit() -> dict:
                 "matches_author_label":observed==case.reference,
                 "ocr_pages":payload.get("ocr_pages") or [],
                 "verified_quotes":sum(len(f.get("evidence") or []) for f in findings),
+                "shadow_ownership_warning":bool(shadow_warning),
+                "shadow_review_question":shadow_warning.get("suggested_question") if shadow_warning else None,
                 "performance_ms":(payload.get("performance_ms") or {}).get("pipeline_ms"),
                 "http_status":response.status_code,
             })
@@ -70,6 +77,9 @@ def run_audit() -> dict:
                       and x["case"] not in false_support+missed_support+missed_conflict]
     latencies=[v["performance_ms"] for v in valid
                if isinstance(v.get("performance_ms"),(int,float))]
+    warned=[x for x in valid if x.get("shadow_ownership_warning")]
+    warning_false_alarms=[x["case"] for x in warned if x["expected"]=="supported"]
+    warning_captures=[x["case"] for x in warned if x["case"] in false_support]
     result={
         "title":"EvidenceTrail untuned author-labelled fictional omission diagnostic",
         "provider":"local mock only — NO META MODEL REQUESTS",
@@ -81,6 +91,15 @@ def run_audit() -> dict:
         "confusion":[{"reference":a,"observed":b,"count":n}
                      for (a,b),n in sorted(counts.items())],
         "false_supported_cases":false_support,
+        "shadow_ownership_audit":{
+            "warning_kind":"provenance_ambiguity_for_human_review",
+            "warning_count":len(warned),
+            "captured_false_support_cases":warning_captures,
+            "false_alarm_on_author_supported_cases":warning_false_alarms,
+            "automatic_label_changes":0,
+            "qualification_assertions":0,
+            "evidence_source":"original fictional CV text before model interpretation",
+        },
         "missed_supported_cases":missed_support,
         "missed_conflicting_cases":missed_conflict,
         "other_mismatch_cases":other_mismatches,
