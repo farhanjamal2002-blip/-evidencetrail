@@ -341,3 +341,65 @@ Show the user-visible evidence chain instead of a list of model names:
 - Audit: Spark, Glimmer, Wonder, or tool outputs are each attributed to the component that produced them; source checks retain their own independent result.
 
 This gives the project a substantive Meta stack story while preserving one product goal: help a recruiter inspect what the documents support, locate uncertainty, and ask a focused question. The full-family design is a routing hypothesis until these experiments are run; there are no new full-stack performance results in this memo.
+
+
+## Addendum — Optimize the intelligence loop as a measured cascade (30 October 2026)
+
+### New research implication
+
+A model cascade can save compute by handling easy cases cheaply and escalating cases likely to fail. The useful design lesson is to set escalation from *measured task signals* and validate the full routed system end to end, rather than routing on an uncalibrated confidence score. The 2024 study *Language Model Cascades: Token-level Uncertainty and Beyond* also documents length bias in naive generated-sequence uncertainty; that signal is not available here anyway because Meta documents that Muse Spark does not expose log probabilities. Treat Spark's self-reported certainty as descriptive text, not a calibrated routing probability. (Gupta et al., 2024, https://arxiv.org/abs/2404.10136; Meta reasoning docs: https://dev.meta.ai/docs/reasoning.)
+
+The 2024 EMNLP multi-agent debate study found that reflection can become stuck on an initial position and that multi-agent procedures require careful stopping; it also warns that the judge can be unfair when agents differ. That supports a *blind independent challenge followed by evidence comparison*, not a consensus vote or repeated debate. (Liang et al., https://aclanthology.org/2024.emnlp-main.992/.)
+
+Current Meta API guidance says prompt caching is automatic for repeated stable prefixes, reports cached tokens, and supports explicit cache keys as an optional routing aid. EvidenceTrail already supplies a fixed analysis cache key and a long stable developer instruction block. The optimization question is therefore not “add caching,” but “measure real cache hits and arrange repeatable shared-prefix inputs.” Keep shared job criteria byte-stable across a batch and the CV-specific material after that prefix; use provider-reported cached token counts to demonstrate any savings. (https://dev.meta.ai/docs/prompt-caching.)
+
+### Proposed v1 cascade for EvidenceTrail
+
+Use hard, inspectable triggers first. Do not use an LLM's confidence field as the sole gate.
+
+| Stage | Tool/model | Run condition | Output and stop rule |
+| --- | --- | --- | --- |
+| 0. Intake quality | Local PDF text/OCR and layout checks | Every document | Page-labelled source blocks, OCR/layout warnings, and source fingerprint. Never silently turn low-quality OCR into certainty. |
+| 1. Main analysis | Muse Spark, current schema and minimal effort | Every CV | One structured proposal per requirement, linked to short source spans. |
+| 2. Source audit | Existing deterministic quote/page/provenance checks | Every proposal | Verify quote presence, page, source IDs, and mechanical date constraints. A pass establishes anchoring only, not semantic entailment. |
+| 3. Targeted repair | One Spark call with verifier feedback | Only if a concrete repairable source/schema error is found | Resubmit the affected requirement and exact failure location; retain original and replacement with separate provider receipts. Stop after one repair. |
+| 4. Independent challenge | Muse Glimmer, run locally | Predeclared hard-case sample first; later only on measurable triggers such as OCR/layout warning, unresolved actor/scope ambiguity, conflicting source spans, or post-repair disagreement | Give Glimmer the requirement and source passages but not Spark's label/rationale on the first pass. Compare actor/action/scope and cited passages. Preserve disagreement; no majority vote. |
+| 5. Escalation | Muse Wonder | Only when a material issue remains after source audit and independent challenge | One focused synthesis request. It may recommend a bounded conclusion or unresolved state; it cannot overrule missing source evidence or deterministic failures. |
+| 6. Visual aid | Muse Spark image input; SAM only for a locator if needed | OCR/layout warning on a scanned fictional fixture | Spark may interpret the page image; all quotes still need local PDF text/page verification. SAM can locate a visual region, not validate text or meaning. |
+
+**Operational privacy boundary:** use Standard API mode for real CVs unless the product's privacy policy and applicant notice deliberately authorize a different data-use arrangement. Meta's current pricing page says Contributor mode permits submitted prompts, files, context, and responses to be used to train future models. Do not use synthetic benchmark savings to justify sending real CVs under that mode. (https://dev.meta.ai/docs/pricing-rate-limits.)
+
+### Tournament experiment: prove that routing earns its extra complexity
+
+Freeze one set of fictional inputs and run these arms with the exact source fingerprints:
+
+- **A — Current baseline:** Spark minimal → existing local verifier.
+- **B — Feedback repair:** A plus one Spark repair only on a predeclared deterministic failure.
+- **C — Independent challenge:** A plus a blinded Glimmer first pass on fixed hard cases.
+- **D — Routed stack:** B, then C only on predeclared trigger cases; at most one Wonder escalation for residual material disagreement.
+- **E — Vision diagnostic:** A versus same OCR text plus page image on scan fixtures only.
+
+Save every request/response, model and runtime revision, prompt/schema hash, fixture fingerprint, original and repaired findings, provider/runtime receipts, token counts, cached token counts, reasoning tokens, and latency. No retries; never overwrite an earlier result. Synthetic expected labels are author-written fixture assertions, not human judgments or estimates of real-world accuracy.
+
+Report each arm separately by failure type:
+
+1. False-supported findings and missed-supported findings.
+2. Actor/action/scope mismatch rate.
+3. Quote and page verification rate.
+4. Contradiction retrieval/retention rate.
+5. Correction yield: initially wrong cases fixed, initially right cases broken, plus unresolved cases.
+6. Challenger value: unique Spark errors caught, Spark errors shared, and correct Spark cases challenged into error.
+7. OCR recovery and visual-only unsupported quote rate.
+8. End-to-end cost, cached versus uncached input, latency p50/p95, model-call count, and human-facing review state.
+
+Select D only if its *incremental unique correction yield* improves on A and B without increasing false-supported findings or hiding unresolved cases, at a disclosed cost and latency. Report uncertainty and the tiny synthetic denominator. If the current 12 pairs cannot support a trigger rule without reusing tuning cases as evaluation, add a fresh held-out fictional fixture set first; do not fit a purportedly calibrated router on 12 pairs.
+
+### What to build after research review
+
+1. Extend the replay runner to compute stage-by-stage metrics and cost/latency deltas from saved receipts.
+2. Add route decisions as explicit reason codes (for example `ocr_warning`, `quote_missing`, `actor_scope_conflict`, `source_conflict`, `unresolved_after_repair`). Persist them with each result.
+3. Add a held-out set of fictional pages for each trigger and easy controls. Keep prompt tuning and routing-threshold selection out of the final held-out evaluation.
+4. Run Spark-only and routed arms with no human ratings and no LLM-as-judge ground truth. Preserve raw artifacts for a reproducible judge demo.
+5. Show one difficult example as a trace: Spark proposal → exact source audit → independent challenge → bounded resolution or visible unresolved state. The demo claim should be “we found and surfaced this evidence mismatch,” not “multiple models agreed, therefore it is true.”
+
+**Current status:** this is a research-backed experiment design only. No new Spark, Glimmer, or Wonder inference has been performed; no new measured result is claimed; frozen RC1 remains unchanged.
