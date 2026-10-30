@@ -2,9 +2,9 @@ name: EvidenceTrail browser smoke
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, release/evidencetrail-judge-rc1-oct30]
   push:
-    branches: [feat/evidencetrail-review-workflow, release/evidencetrail-judge-rc1-oct30]
+    branches: [feat/evidencetrail-review-workflow, feat/judge-replay-benchmark-ui, release/evidencetrail-judge-rc1-oct30]
   workflow_dispatch:
 
 permissions:
