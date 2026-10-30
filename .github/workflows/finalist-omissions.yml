@@ -32,9 +32,13 @@ jobs:
         run: python -m unittest tests.test_ownership_provenance -v
       - name: Measure mock-only omissions; archive all mismatches
         run: python scripts/finalist_omission_evaluate.py
+      - name: Shadow review of 20 authentic SAVED Muse receipts (no paid calls)
+        run: python scripts/historical_muse_ownership_shadow.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: finalist-untouched-omission-report
-          path: artifacts/finalist-unseen-omissions/report.json
+          path: |
+            artifacts/finalist-unseen-omissions/report.json
+            artifacts/finalist-unseen-omissions/historic-muse-shadow.json
           retention-days: 14
