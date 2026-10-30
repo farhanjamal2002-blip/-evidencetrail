@@ -1,49 +1,38 @@
 # Hackathon feature freeze
 
-Status: proposed scope for the draft judge release. This is a planning artifact only; it does not change the live service or merge branches.
+**Status: FROZEN — October 30, 2026.** This locks product scope for the draft judge release. It changes no live service and merges no branches.
 
-## Frozen core loop
+## Frozen product loop
 
 1. Recruiter sets the job requirements and supplies CVs.
 2. Local PDF extraction and OCR prepare page-labelled source text.
 3. Muse Spark interprets each requirement against retrieved CV evidence.
-4. Deterministic checks verify proposed quotations and pages; safeguards retain the raw model label, final evidence status, and reason for any change.
-5. Recruiter inspects the original passage, records a human review or follow-up note, and exports an evidence pack.
+4. Deterministic checks verify proposed quotations and pages; safeguards preserve the raw model label, final evidence status, and reason for any change.
+5. Recruiter inspects the source, records a human review or follow-up note, and exports the evidence pack.
 
 The product never scores or ranks candidates and never makes the hiring decision.
 
 ## Flagship proof
 
-Use the saved fictional M02 actor-swap replay. Show that the quote/page check stays true while the actor attribution changes the conclusion about the applicant. Keep the raw Muse result, final pipeline result, and authentic receipts visible. Label this as a saved replay on a small fictional set, not live inference or real-CV accuracy.
+Use the saved fictional M02 actor-swap replay. Show that the quote/page check stays true while the actor attribution changes whether the passage supports the applicant. Keep the raw Muse result, final pipeline result, and authentic receipts visible. Label it as a saved replay on a small fictional set, not live inference or real-CV accuracy.
 
-ET-018 is a short supporting demo of instruction-like text being treated as document content. It is not a second product workflow.
+Use ET-018 only as a short supporting demo of instruction-like text treated as document content.
 
-## Retain in the submission
+## Included in the freeze
 
 - Muse Spark interpretation, local retrieval, exact quote/page verification, PDF highlights, and OCR where already supported.
-- Received-order inbox, per-requirement evidence review, audit/receipt view, human notes or follow-up, and evidence export.
-- Saved replay fallback; no public judge-page API call is required.
+- Received-order inbox, per-requirement evidence review, raw-to-final audit, and provider receipts.
+- Human-controlled review/follow-up notes and evidence export.
+- Saved replay fallback; the public judge path does not require a fresh model call.
 
-## One bounded pre-freeze experiment: Glimmer
+## Explicitly deferred
 
-Glimmer is not yet an implemented or measured release feature. Before UI freeze, compare a blinded Glimmer challenge against predeclared fictional controls: actor swap, direct applicant support, no evidence, and genuine contradiction. Give it only the requirement and source passages, without Spark's label. Preserve receipts and disagreements; never majority-vote.
-
-Include Glimmer only if it catches the actor-attribution gap without regressing the controls, has authentic receipts, and fits the time and credit budget. Otherwise lock the Spark + deterministic-verifier loop and defer Glimmer. No broad sweep or selective retrying.
-
-## Explicitly out of scope
-
-- Scores, rankings, automatic rejection, or model-made recruiter decisions.
-- ATS integration, multi-tenant production operations, or new workflow modules.
-- Public live Muse calls; saved receipts are the judge fallback.
-- Muse vision, SAM, Voice, Muse Image, or Wonder escalation without a tested need and result.
+- Glimmer or any other second-model challenge. The potential benefit is not yet demonstrated strongly enough to justify added latency, setup, and failure modes.
+- Muse vision, SAM, Voice, Muse Image, Wonder escalation, or a new tool-calling loop.
+- New workflow modules, ATS integration, or multi-tenant production operations. Existing interview-prep and self-attested-reply paths may remain in the repository but stay off the primary judge path.
+- Public live Muse calls, scores, rankings, automatic rejection, or model-made hiring decisions.
 - Claims of real-world résumé accuracy, superiority over human review, or general model superiority.
 
-## Lock criteria
+## Feature acceptance boundary
 
-- The complete recruiter path works with saved results without a key or fresh model call.
-- M02 shows source existence separately from applicant attribution, with its receipt and caveat.
-- Supported, not-found, and genuine conflict remain distinct; OCR pages get no fabricated word coordinates.
-- Received order and human control remain intact.
-- The Glimmer test either passes the gate above or is explicitly deferred.
-
-After these criteria are met, allow only release-blocking correctness, accessibility, or demo-path fixes. Then freeze the UI, consolidate the repository, and review the cumulative release PR. Do not merge the stacked PR chain blindly.
+The feature set is locked. Permit only release-blocking correctness, accessibility, or judge-path reliability fixes; no new capabilities or model routing. The UI should be frozen against this exact loop. After UI freeze, consolidate the repository into one reviewed release path and resolve the cumulative PR's mergeability; do not merge the stacked PR chain blindly.
