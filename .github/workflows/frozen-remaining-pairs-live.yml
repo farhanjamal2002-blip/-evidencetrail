@@ -43,23 +43,31 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           path: research
       - name: Preflight fixed scope and credentials; do not probe provider
+        id: preflight
         run: |
           test -n "$MODEL_API_KEY"
           test -f frozen/app.py
           test -f research/scripts/run_remaining_frozen_pairs.py
           test -f research/evaluation/RESEARCH_METAMORPHIC_PAIRS.json
-          test ! -e research/artifacts/live-remaining-pairs-frozen-20261030/attempt_started.json
+          if [ -e research/artifacts/live-remaining-pairs-frozen-20261030/attempt_started.json ]; then
+            echo "skip_replay=true" >> "$GITHUB_OUTPUT"
+            echo "Prior one-shot attempt exists; skipping paid calls."
+          else
+            echo "skip_replay=false" >> "$GITHUB_OUTPUT"
+          fi
           test "$(git -C frozen rev-parse HEAD)" = "8489e45ae0f87d8421562618bda556c31911372b"
           git -C research rev-parse HEAD
       - name: Install exact release dependencies and OCR runtime
+        if: steps.preflight.outputs.skip_replay != 'true'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng fonts-dejavu-core
           python -m pip install -r frozen/requirements.txt
       - name: Run exactly twenty predeclared variants, no retries
+        if: steps.preflight.outputs.skip_replay != 'true'
         run: python research/scripts/run_remaining_frozen_pairs.py
       - name: Upload all case outputs and provider receipts
-        if: always()
+        if: always() && steps.preflight.outputs.skip_replay != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: frozen-rc1-remaining-pairs-results
@@ -67,7 +75,7 @@ jobs:
           retention-days: 90
           if-no-files-found: warn
       - name: Commit durable results and provider receipts to research branch
-        if: always()
+        if: always() && steps.preflight.outputs.skip_replay != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TARGET_BRANCH: eval/academic-methods-oct30
