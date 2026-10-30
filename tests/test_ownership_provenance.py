@@ -68,6 +68,24 @@ class OwnershipProvenanceTests(unittest.TestCase):
             with self.subTest(quote=quote):
                 self.assertIsNotNone(ownership_warning(requirement,quote))
 
+    def test_historical_muse_citations_have_stable_criterion_identifiers(self):
+        from demo20_workflow import _load_verified_recording
+        from copy import deepcopy
+        raw=_load_verified_recording()
+        before=deepcopy(raw)
+        known={"ET-005","ET-007","ET-015"}
+        flagged={}
+        for applicant in raw["results"]:
+            warnings=audit_verified_findings(applicant["requirements"])
+            if warnings:
+                flagged[applicant["id"]]=warnings
+                self.assertTrue(all(
+                    str(w.get("requirement_id","")).startswith("R")
+                    and w.get("page",0)>=1 for w in warnings
+                ))
+        self.assertTrue(known.issubset(flagged))
+        self.assertEqual(raw,before,"Never alter immutable historical Meta results")
+
     def test_entire_author_frozen_corpus_reports_counts_without_relabeling(self):
         positive=[c for c in CASES if c.reference=="supported"]
         negative=[c for c in CASES if c.reference=="not_found"]
