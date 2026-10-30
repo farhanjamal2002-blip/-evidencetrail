@@ -1,5 +1,7 @@
 # EvidenceTrail research-replication protocol — evidence-first, not score-first
 
+**Further paper-by-paper engineering plan:** [RESEARCH_DEEP_DIVE_ACTION_MATRIX_20261030.md](RESEARCH_DEEP_DIVE_ACTION_MATRIX_20261030.md), including CogniBench, RefChecker, ALCE, FActScore, RAGChecker, human overreliance, and peer-reviewed hiring research. The separately authored [12 CV perturbation pairs](RESEARCH_METAMORPHIC_PAIRS.json) have a no-cost, provenance-enforcing [metric runner](../scripts/metamorphic_research_metrics.py), but no real Muse predictions yet.
+
 **Status:** PRE-REGISTERED EXPERIMENT DESIGN. No academic benchmark has yet been run against EvidenceTrail. This document adapts *methods* from named research papers; it does not copy their data/results into our own claims, reproduce their text, or imply the original authors endorse EvidenceTrail.
 
 **Goal:** determine whether a recruiting-document evidence reviewer (a) identifies actually supported claims, (b) avoids accepting claims about *other* people, (c) points to the correct source, (d) preserves meaningful uncertainty without missing legitimate documented evidence, and (e) helps a human reviewer rather than inducing overreliance.
