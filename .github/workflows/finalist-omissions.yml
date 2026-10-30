@@ -28,6 +28,8 @@ jobs:
           python -m pip install -r requirements.txt
       - name: Check corpus and reference labels
         run: python -m unittest tests.test_finalist_omission_corpus -v
+      - name: Test conservative ownership-provenance shadow audit
+        run: python -m unittest tests.test_ownership_provenance -v
       - name: Measure mock-only omissions; archive all mismatches
         run: python scripts/finalist_omission_evaluate.py
       - uses: actions/upload-artifact@v4
