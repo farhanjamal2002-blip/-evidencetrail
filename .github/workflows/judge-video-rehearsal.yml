@@ -2,7 +2,7 @@ name: Authentic public EvidenceTrail judge video rehearsal (zero Meta calls)
 on:
   push:
     branches: [submission/judge-video-capture-oct30]
-    paths: [.github/workflows/judge-video-rehearsal.yml]
+    paths: [.github/workflows/judge-video-rehearsal.yml, scripts/record_finalist_rehearsal.py]
   workflow_dispatch:
 permissions:
   contents: read
