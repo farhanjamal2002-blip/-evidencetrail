@@ -1,0 +1,50 @@
+name: Finalist five genuine Muse ownership probes — once, no retries
+on:
+  push:
+    branches: [eval/finalist-unseen-omissions-oct30]
+    paths: [.github/workflows/finalist-live-ownership.yml]
+permissions:
+  contents: read
+concurrency:
+  group: evidence-trail-finalist-ownership-live-once-20261030
+  cancel-in-progress: false
+jobs:
+  genuine-muse-ownership:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      EVIDENCETRAIL_ENABLE_META_VISION: 'false'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_PROCESS: '5'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '5'
+      MAX_CONCURRENT_ANALYSES: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eval/finalist-unseen-omissions-oct30
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install application plus OCR runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng fonts-dejavu-core
+          python -m pip install -r requirements.txt
+      - name: Check unmodified authored reference corpus BEFORE paid calls
+        run: |
+          PYTHONPATH=. python -m unittest tests.test_finalist_omission_corpus -v
+          test -n "$MODEL_API_KEY" || (echo 'No credential; zero calls'; exit 2)
+      - name: Five genuine Meta Muse synthetic-CV calls, no retries
+        run: PYTHONPATH=. python scripts/finalist_live_ownership_probe.py
+      - name: Preserve provider receipts and every failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finalist-genuine-muse-five-ownership
+          path: artifacts/finalist-ownership-live/
+          retention-days: 14
+          if-no-files-found: warn
