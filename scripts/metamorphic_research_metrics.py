@@ -1,8 +1,9 @@
 """Strict no-cost paired robustness metrics; no model inference occurs here.
 
 The challenge pairs are frozen author-created fictional CVs. This process
-reports genuine Muse outputs ONLY when both variants have authentic provider
-response IDs and matching challenge IDs. Until then no model accuracy or
+records results labelled Muse ONLY when both variants declare provider
+response IDs and matching challenge IDs. These declarations are NOT independent
+proof of genuine API execution; original provider receipts must be audited. Until then no model accuracy or
 real-world robustness result is emitted. A mock result is never accepted as
 a genuine research run.
 """
@@ -73,7 +74,7 @@ def evaluate(predictions, corpus, corpus_sha):
         if key in by_id:
             raise ValueError("Repeated model result (potential selective retry or cherry-picking)")
         if row.get("provider_mode")!="muse" or not isinstance(row.get("provider_response_id"),str) or not row["provider_response_id"].strip():
-            raise ValueError("Genuine Meta mode and nonempty provider receipt required")
+            raise ValueError("Muse mode and a nonempty declared provider receipt are required")
         if row.get("corpus_sha256") != corpus_sha:
             raise ValueError("Corpus fingerprint mismatch")
         if row.get("predicted_status") not in VALID:
@@ -122,11 +123,13 @@ def evaluate(predictions, corpus, corpus_sha):
     for outcome in outcomes:
         by_factor[outcome["factor"]].append(outcome)
     return {
-        "status":"SMALL PREDECLARED SYNTHETIC PAIR EVALUATION (NOT REAL-WORLD ACCURACY)",
+        "status":"SELF-REPORTED PROVIDER PAIR RESULTS — UNVERIFIED RECEIPT AUTHENTICITY",
         "model_results_measured":True,
+        "provider_receipt_authenticity_independently_verified":False,
+        "publication_ready":False,
         "challenge_sha256":corpus_sha,
         "pairs":len(outcomes),
-        "genuine_provider_records":len(predictions),
+        "self_reported_muse_records":len(predictions),
         "relation_matches_author_expectation":sum(x["relationship_matches_author_expectation"] for x in outcomes),
         "variant_label_matches_author_reference":sum(x["variant_labels_matching_author_reference"] for x in outcomes),
         "source_quotes_located":sum(x["source_quotes_located"] for x in outcomes),
@@ -137,6 +140,7 @@ def evaluate(predictions, corpus, corpus_sha):
         "per_pair":outcomes,
         "new_model_calls_in_metric_runner":0,
         "limitations":[
+            "Provider IDs are self-reported; independently check authentic original Meta logs before publication",
             "Author-defined fictional CV labels; not independent or real-world hiring data",
             "Pair invariance is not equivalent to per-criterion correctness",
             "Located page quotes are not automatically semantically sufficient",
