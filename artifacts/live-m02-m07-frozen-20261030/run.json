@@ -1,0 +1,66 @@
+{
+  "status": "completed",
+  "frozen_release_sha": "8489e45ae0f87d8421562618bda556c31911372b",
+  "challenge_sha256": "43c7168bb15faf0c1355428eff865dd3dda7810f8843c966fcb9ca5b4f06b62b",
+  "pair_ids": [
+    "M02",
+    "M07"
+  ],
+  "case_count": 4,
+  "requests_planned": 4,
+  "requests_attempted": 4,
+  "successful_authentic_receipts": 4,
+  "all_failures_retained": true,
+  "automatic_retries": 0,
+  "native_vision": false,
+  "human_ratings": false,
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "minimal",
+  "analysis_prompt_sha256": "6b44666f5a5a61788faf90e5471a36b0fe61e261ecad160e9a0fcfe9608b29c0",
+  "estimated_standard_cost_usd": 0.0201655,
+  "cost_estimate_is_not_provider_invoice": true,
+  "budget_ceiling_usd": 5.0,
+  "stopped_for_budget": false,
+  "wall_seconds": 12.086,
+  "limitations": [
+    "Two author-labelled fictional pairs; not human-rated and not representative accuracy.",
+    "A real provider receipt proves a call occurred, not that its semantic label is correct.",
+    "Page/quote verification does not prove real-world truth of a CV statement.",
+    "No retries; usage for failed requests may be unknown."
+  ],
+  "cases": [
+    {
+      "case_id": "M02-baseline",
+      "expected_status": "supported",
+      "http_status": 200,
+      "provider_receipt_present": true,
+      "raw_status": "supported",
+      "final_status": "supported"
+    },
+    {
+      "case_id": "M02-variant",
+      "expected_status": "not_found",
+      "http_status": 200,
+      "provider_receipt_present": true,
+      "raw_status": "conflicting",
+      "final_status": "not_found"
+    },
+    {
+      "case_id": "M07-baseline",
+      "expected_status": "supported",
+      "http_status": 200,
+      "provider_receipt_present": true,
+      "raw_status": "supported",
+      "final_status": "supported"
+    },
+    {
+      "case_id": "M07-variant",
+      "expected_status": "conflicting",
+      "http_status": 200,
+      "provider_receipt_present": true,
+      "raw_status": "conflicting",
+      "final_status": "conflicting"
+    }
+  ]
+}

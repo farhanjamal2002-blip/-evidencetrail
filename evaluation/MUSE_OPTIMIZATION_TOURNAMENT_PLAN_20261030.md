@@ -1,0 +1,405 @@
+# Muse Spark Optimization Plan for the Meta Hackathon
+## EvidenceTrail research-to-demo memo — 30 October 2026
+
+**Purpose:** find the best measured Muse configuration for the EvidenceTrail judge walkthrough. Optimize evidence-grounded criterion decisions, latency, and token use together; do not optimize a single accuracy number by adding unbounded retries.
+
+**Scope:** research and experiment plan only. This memo makes no new Muse performance claim, changes no release code, and authorizes no model calls. Existing RC1 remains frozen at commit 8489e45ae0f87d8421562618bda556c31911372b. The completed 12-pair replay is the baseline; its fictional author-written references are not human ratings or a real-world benchmark.
+
+## Executive recommendation
+
+Prioritize these three controlled experiments:
+
+1. **Prompt decision sequence:** compare the current long system prompt with one small, explicit actor–action–scope–object check before status assignment. The current prompt already includes many detailed rules and strict JSON Schema; published extraction work shows that a structured prompt can lose to a simpler question in a specific task. Test on our own frozen cases instead of assuming that more instructions improve results.
+2. **Selective reasoning effort:** keep minimal effort as the default unless a predeclared, measurable risk trigger is present. Compare minimal with medium on a few hard fictional cases; use a second call only if the benefit on false-supported decisions justifies the extra tokens and latency. Muse returns no token log probabilities, so its categorical certainty field must not be treated as calibrated confidence.
+3. **Scanned-page vision path:** compare OCR-text-only with OCR text plus the same page image on the two fictional scan cases. Muse Spark supports image input, but our optional vision path was previously disabled after a grounding regression. Keep local quote/page verification authoritative; image interpretation cannot authenticate the quote.
+
+The product advantage for judges is a demonstrable division of work: Muse interprets role and CV meaning; local deterministic code checks that evidence actually exists at the cited source; the recruiter sees the original text and retains control. The best optimization is the one that improves that loop without obscuring which component produced the result.
+
+## Verified current baseline
+
+From the frozen judge-release source and its documentation:
+
+- Model ID is muse-spark-1.3. The analysis schema is strict JSON Schema; the local protocol validates parsed results.
+- The normal live path makes one structured Muse request per CV. It sends locally extracted page-labelled text, not the original PDF. OCR is performed locally for scanned pages.
+- The default reasoning effort is minimal. The app exposes configurable reasoning effort; earlier small calibration runs favored minimal for the current demo, but they do not establish a universally optimal setting.
+- The release uses stable prompt-cache routing keys and records provider-reported token usage, including cached input and reasoning tokens. This makes actual cache and effort comparisons possible.
+- Native Muse image input is optional and disabled by default. The existing source verifier independently checks quote text and page location.
+- The public judge service is mock-only for fresh analysis; the saved replay contains genuine historical Muse outputs. A new prompt experiment must not be presented as the current public demo unless the exact build and its receipts are frozen and linked.
+
+The prompt is already extensive. It specifies protected-characteristic exclusions, source-only analysis, actor/task scope distinctions, evidence categories, follow-up behavior, chronology extraction, and output-length constraints. Repeating or adding rules without ablation risks increasing conflicts, prompt length, false abstention, and latency.
+
+## Research findings that change the optimization strategy
+
+| Research / primary source | Finding relevant to EvidenceTrail | Engineering consequence |
+| --- | --- | --- |
+| Schulten et al., “A Practitioner’s Guide to Systematic Prompt Evaluation for Information Extraction,” EMNLP 2026 Industry Track. https://aclanthology.org/2026.emnlp-industry.59/ | Their high-stakes document-extraction study varies individual prompt components; a structured role/definition/rules/JSON prompt unexpectedly underperforms a simpler question-style prompt on their task. Results are task- and model-specific. | Do not add prompt-engineering folklore. Freeze the challenge set, change one prompt factor per arm, preserve every output, and choose by the error profile. This is the strongest direct case for testing a compact prompt against the current long prompt. |
+| Xu et al., “Tree-of-Quote Prompting Improves Factuality and Attribution in Multi-Hop and Medical Reasoning,” EMNLP 2025. https://aclanthology.org/2025.emnlp-main.285/ | The method breaks a conclusion into subquestions, attaches quote evidence to each step, and advances only when quote quality suffices; their experiments report improved attribution on their own tasks. | Adapt the *structure*, not their claimed results: before assigning a CV label, explicitly check who acted, what action occurred, and whether scope/authority meets the exact requirement; return a source quote for each material proposition. The deterministic verifier still decides whether the quote exists. |
+| Ling et al., “LLM Abstention Can Be a Prompt Artifact, in Addition to Genuine Uncertainty,” EMNLP 2026. https://aclanthology.org/2026.emnlp-main.549/ | Adding an unknown option can itself change model behavior and lower answer accuracy on their true/false tasks. | Track false-supported and missed-supported separately. Preserve positive, negative, and adjacent-work controls in every prompt experiment; do not celebrate more not_found labels as better calibration. Keep not_found distinct from conflicting and from review-required. |
+| Chia et al., “M-LongDoc,” EMNLP 2025. https://aclanthology.org/2025.emnlp-main.469/ | Long-document evaluation and retrieval-aware processing are important; their reported tuning result is for a different model/task and hundreds-page documents. | Use the existing page-position counterfactual to test page 1/middle/last. If scaling beyond short CVs, evaluate recall-preserving page selection and ensure all pages that contain opposing claims remain available. Do not import their reported improvement as an EvidenceTrail result. |
+| Meta Model API: reasoning. https://dev.meta.ai/docs/reasoning | Reasoning effort is a per-request control; higher effort spends more reasoning work. Raw chain-of-thought is not exposed, and Muse does not support log probabilities. | Compare output outcomes, provider usage, and latency by effort. Do not build a confidence score from hidden reasoning or the model’s self-reported certainty. |
+| Meta Model API: prompt caching. https://dev.meta.ai/docs/prompt-caching | Stable prompt prefixes are cached automatically; stable instructions/examples should precede variable user content. Cache hits are visible in usage. | Retain stable instructions first and CV/job content last. Verify cached_tokens on repeated same-prefix requests before claiming cost/latency benefit. A stable cache key alone does not prove a hit. |
+| Meta Model API: structured output and image understanding. https://dev.meta.ai/docs/structured-output and https://dev.meta.ai/docs/image-understanding | The API supports schema-constrained JSON and image input. | Keep the current strict schema as the experimental control. Evaluate vision as its own factor on scan cases, with local quote/page checks still required. |
+
+## Tournament experiment plan
+
+### P0 — One-factor prompt test
+
+**Question:** Can a shorter, ordered decision checklist reduce applicant-actor and adjacent-task false support without increasing missed evidence?
+
+- **Baseline:** frozen RC1 prompt, strict output schema, minimal effort, current text/OCR input.
+- **Variant A (first):** retain the existing policy text and add no new examples; rewrite only the label decision paragraph as: requirement actor/action/scope → exact CV actor/action/scope → quote → status. Keep all prohibitions and output fields unchanged.
+- **Variant B (only if A is useful):** keep A and add two short fixed examples: applicant-versus-manager actor swap, and concrete adjacent work that remains Related rather than Direct. Do not combine B with a reasoning-effort or vision change.
+- **Cases:** use the existing frozen pairs, prioritizing M02/M03 (actor/responsibility), M05 (action), M09 (prompt injection), M10/M11 (adjacent work), and supported paraphrase controls M01/M04. Preserve original order and document hashes.
+- **Readouts:** final-label agreement with author-written synthetic references; false-supported count; missed-supported count; pair-relation consistency; quote verification and correct page; malformed/invalid response count; input/output/cached/reasoning tokens; end-to-end latency.
+- **Decision rule:** a variant advances only if false support does not increase, missed support does not materially worsen, and the critical actor/scope cases improve or remain stable. Publish all arms and denominators. With this small synthetic set, label the result exploratory and do not claim general model accuracy.
+- **No human ratings:** the gold is explicitly synthetic and author-labelled. Do not use an LLM judge as ground truth.
+
+### P0 — Minimal versus medium reasoning on hard cases
+
+**Question:** Does more effort fix the hard semantic errors enough to justify extra cost and delay?
+
+- Reuse stored minimal-effort outputs for a paired baseline; make fresh medium-effort calls only on a predeclared small subset with M02, M05, M07, and M12 representing actor, action, internal contradiction, and contradictory claims.
+- Freeze prompt, input, model, schema, order, and retry policy. One request per case and zero automatic retries.
+- Compare false support, missed support, final-label changes, quote/page validity, reasoning-token use, total tokens, and latency. A label change by itself is neither a win nor an error; compare to the prewritten case expectation.
+- If the service exposes a reasoning-summary feature on the selected API route, consider it only for diagnostics; summaries are explanations, not proof. Preserve raw response and receipt for every call.
+- **Decision:** keep minimal globally unless medium shows a reproducible improvement on the targeted failure mode. If improvement is selective, consider a transparent shadow/advisory escalation only after its trigger is predeclared and tested. Do not silently replace the original result.
+
+### P1 — OCR text versus OCR plus Muse image input
+
+**Question:** Does Muse’s visual reading recover useful content or layout relations that local OCR misses, while local source anchoring still works?
+
+- Use only the existing fictional scanned CV fixtures; no real applicant documents.
+- Compare identical OCR text sent alone versus the same OCR text plus the original page image. Keep prompt, schema, effort, and requirements fixed.
+- Score exact recovered content against the fixture text, requirement labels, proposed quote existence, local page anchoring, OCR-only failures recovered, visual-only unsupported quotes, token usage, latency, and provider receipts.
+- Do not enable visual evidence if Muse produces text that cannot be verified in the original PDF. Keep page-only fallback when OCR geometry is unavailable.
+- Treat the prior vision grounding regression as a blocking counterexample to investigate, not as an isolated bad run to omit.
+- **Tournament value:** a successful, bounded scan example could show a substantive Muse multimodal capability in the demo; an unsuccessful result should leave the stable OCR-only path in place.
+
+### P1 — Cache and input budget measurement
+
+No model-call experiment is needed to inspect historical receipt usage. Build a small report over saved receipts that compares input tokens, cached tokens, reasoning tokens, output tokens, latency, prompt version, and case. For any future controlled run:
+
+1. Keep system instructions and fixed examples byte-for-byte stable at the start.
+2. Put job-specific and CV-specific content after the stable prefix.
+3. Keep a shared cache key only for requests that really share that prefix.
+4. Measure first-request and subsequent-request cache counters separately.
+5. Use the official input-token counting endpoint to size a proposed request before inference when useful.
+6. Never describe a cache key, 1M context window, or API feature as a measured product gain without receipt evidence.
+
+A short CV may not benefit much from retrieval trimming. For longer documents, test full text against page-level candidate context with recall safeguards: include top relevant pages and every page identified by deterministic scans as containing dates, explicit negation, role boundaries, or duplicate claims. Retrieval is allowed to prioritize; it must not silently discard contradictory evidence.
+
+### P2 — Prompt compression after accuracy
+
+Only after the one-factor prompt test, try deleting duplicate wording from the long prompt. Preserve every rule around source-only truth, protected traits, actor/scope/authority, negation, explicit contradiction, unsupported absence, and no hiring decisions. Compare token counts and outputs on the same frozen cases. Compression is accepted only if it reduces measured input/latency or cost without increasing false support or missing hard cases. Do not assume a shorter prompt is better.
+
+## Minimal scorecard for every Muse run
+
+Record one row per request and retain the raw response plus provider receipt:
+
+- Source SHA, CV hash, JD hash, case/pair ID, and predeclared expected relation.
+- Model ID, endpoint, prompt hash/version, schema hash, reasoning effort, request order, and any image/OCR mode.
+- Provider response ID, HTTP outcome, retries, latency, input/output/cached/reasoning tokens, and estimated cost labelled as an estimate.
+- Raw model status, EvidenceTrail final status, evidence type/strength, proposed quotes, accepted/rejected quote audit, cited/verified page.
+- False-supported and missed-supported counts with denominators; pair consistency; stage of failure (OCR/extraction, retrieval, model interpretation, quote/page verifier, deterministic guard, or UI rendering).
+- Exact code SHA used. No response IDs copied into records unless they were returned by the provider; no synthetic response receipts.
+
+## The demo optimization that matters most
+
+Build the judge moment around one truthful, high-signal case:
+
+1. Show a Muse finding that cites a real passage.
+2. Open its verification receipt and source page.
+3. Show why the passage does not prove the applicant personally performed the claimed action, or show an explicit scope/timeline mismatch.
+4. Show the original Muse label and the separately derived EvidenceTrail status together.
+5. Show the clarification action and human-owned decision.
+6. State the boundary plainly: “The quote exists here; that does not verify the claim outside this document.”
+
+This shows genuine Meta interpretation and a useful independent safeguard in under a minute. It will help more than adding a long list of papers to the voiceover.
+
+## Gates before any optimization reaches the judge build
+
+- No experimental prompt, effort setting, or vision mode replaces frozen RC1 without a full diff review and exact-build replay.
+- Do not spend on duplicate baseline calls when a saved receipt for the identical input/configuration exists.
+- Do not run unregistered prompt variants and report only the best one. Predeclare variants and retain every outcome.
+- Do not equate citation validity with semantic support, author-labelled synthetic performance with real-world accuracy, or self-reported certainty with calibrated probability.
+- Keep the public replay clearly labelled as historical saved Muse output and the public fresh-analysis route mock-only unless deployment, consent, rate limits, and receipts are deliberately revalidated.
+
+## Primary sources
+
+- Meta Muse Spark 1.3 model and API overview: https://dev.meta.ai/models/muse-spark
+- Meta Model API reasoning: https://dev.meta.ai/docs/reasoning
+- Meta Model API prompt caching: https://dev.meta.ai/docs/prompt-caching
+- Meta Model API structured output: https://dev.meta.ai/docs/structured-output
+- Meta Model API image understanding: https://dev.meta.ai/docs/image-understanding
+- Meta Model API token counting: https://dev.meta.ai/docs/token-counting
+- Schulten et al., EMNLP 2026 Industry Track: https://aclanthology.org/2026.emnlp-industry.59/
+- Xu et al., EMNLP 2025: https://aclanthology.org/2025.emnlp-main.285/
+- Ling et al., EMNLP 2026: https://aclanthology.org/2026.emnlp-main.549/
+- Chia et al., EMNLP 2025: https://aclanthology.org/2025.emnlp-main.469/
+
+All paper-to-product interventions above are hypotheses to test on EvidenceTrail; published results belong to their authors and their evaluated tasks.
+
+
+## System-level intelligence: build a measured loop around Muse
+
+The strategic framing is **Muse as the reasoning core, with EvidenceTrail improving the quality of the work it can do**. Do not imply that the application changes Muse's weights or makes the model intrinsically smarter. The system can improve task performance by preparing relevant evidence, exposing specific verification failures, and spending extra inference only when there is a reason.
+
+### Research that supports this framing
+
+| Research / primary source | What it suggests | EvidenceTrail adaptation |
+| --- | --- | --- |
+| Gou et al., “CRITIC: Large Language Models Can Self-Correct with Tool-Interactive Critiquing,” ICLR 2024. https://proceedings.iclr.cc/paper_files/paper/2024/hash/fef126561bbf9d4467dbb8d27334b8fe-Abstract-Conference.html | External tools can validate parts of a model's initial output and provide feedback for revision; the authors emphasize external feedback. | Let deterministic PDF/source checks return concrete error codes and locations. A repair call receives those observations instead of a vague “think again.” |
+| Huang et al., “Large Language Models Cannot Self-Correct Reasoning Yet,” ICLR 2024. https://proceedings.iclr.cc/paper_files/paper/2024/hash/8b4add8b0aa8749d80a34ca5d941c355-Abstract-Conference.html | Intrinsic self-correction without external feedback can fail and sometimes degrade the original answer. | Do not add an unconditional Muse self-critique pass. Preserve the first answer and only test a constrained repair after an external check identifies a concrete issue. |
+| Tyen et al., “LLMs cannot find reasoning errors, but can correct them given the error location,” Findings of ACL 2024. https://aclanthology.org/2024.findings-acl.826/ | The authors find that models struggle to locate reasoning mistakes but can correct more reliably when given the error location. | EvidenceTrail's source audit can point to the failed quote, source page, missing actor, or conflicting span. Test error localization and correction as separate stages; never count a successful rewrite as proof that the detector found every error. |
+| Kamoi et al., “When Can LLMs Actually Correct Their Own Mistakes?,” TACL 2024. https://aclanthology.org/2024.tacl-1.78/ | Their survey finds stronger evidence for correction with reliable external feedback than for prompted self-critique alone. | Prefer measurable source, schema, OCR, and date checks as feedback. Keep semantic support limitations explicit where the check is not deterministic. |
+| Snell et al., “Scaling LLM Test-Time Compute Optimally…,” ICLR 2025. https://proceedings.iclr.cc/paper_files/paper/2025/hash/1b623663fd9b874366f3ce019fdfdd44-Abstract-Conference.html | The best amount of extra inference varies by problem difficulty; adaptive allocation can be more compute-efficient than spending equally on every prompt. | Keep minimal effort for ordinary cases; test extra effort only on defined hard cases and account for quality, tokens, and latency together. Their reported gains are for math reasoning, not CV review. |
+| Zhou et al., “When More Thinking Hurts,” Findings of ACL 2026. https://aclanthology.org/2026.findings-acl.1199/ | Additional reasoning can have diminishing returns, and longer reasoning can sometimes overturn a correct answer; the best budget varies with difficulty. | Include regression rate—previously correct baseline cases that become wrong—in every effort-level comparison. Never assume higher effort is automatically better. |
+| Trivedi et al., “Interleaving Retrieval with Chain-of-Thought Reasoning,” ACL 2023. https://aclanthology.org/2023.acl-long.557/ | For multi-step QA, one initial retrieval can be insufficient; retrieval and reasoning can inform each other. | Adapt cautiously: after Muse identifies a missing or competing evidence need, retrieve additional page-labelled source spans locally, then run at most one targeted reassessment. Keep full-document opposing evidence reachable to avoid retrieval blind spots. |
+| Zhou et al., “Plan and Budget,” ICLR 2026. https://proceedings.iclr.cc/paper_files/paper/2026/hash/ae8d4084f418bb51575c2ca6c658a05b-Abstract-Conference.html | Decomposing a problem into subquestions and allocating compute by difficulty is studied as a model-agnostic inference-time strategy. | Break each job requirement into actor/action/scope/time constraints and track which parts are resolved by the source. Allocate an extra Muse pass to unresolved material requirements only. This is an adaptation, not their method or benchmark result. |
+
+### Proposed EvidenceTrail intelligence loop
+
+1. **Prepare the input.** Extract page-labelled text and OCR locally; preserve page and region provenance. Keep CV instructions untrusted. Measure extraction quality instead of silently treating OCR text as certain.
+2. **Compile the requirement.** Represent each material criterion as the requested actor, action, object, scope/authority, and time or threshold where present. Keep the exact original job wording and source location.
+3. **Find evidence broadly.** Retrieve candidate passages from the CV with page IDs. Include both supporting and potentially opposing passages; retrieval should focus Muse's context without hiding contradictions.
+4. **Ask Muse for a structured first result.** For each requirement, require the model to link its label to the smallest exact source passages and mark which requirement dimensions each passage addresses. Strict JSON Schema and local schema validation remain in place.
+5. **Check externally.** Deterministic code checks quote presence, cited page, source IDs, OCR provenance, and supported date/scope rules. These checks can verify source anchoring and specific mechanical constraints; they cannot universally prove semantic entailment or the truth of a CV statement.
+6. **Repair only located failures.** When a check finds a concrete issue, send Muse the affected requirement, first result, precise failure location/reason, and allowed source passages. Ask it to revise only that requirement and return a replacement proposal. Keep the original and revised results side by side, with separate receipts.
+7. **Stop with a visible unresolved state.** Limit to one repair round in the tournament experiment. If the result still lacks sufficient support or the sources conflict, keep it ambiguous/needs review and show the relevant evidence. Do not loop until the answer looks favorable.
+8. **Choose effort by observed need.** Test higher reasoning effort for specific hard conditions, not because the model reports a low certainty string. Record each route decision and its token/latency cost.
+
+This architecture treats the model as the reasoning core while using local tools as its eyes and checkers. “More intelligent” means better measured answers per case and per token, with fewer unsupported conclusions and preserved evidence—not a bigger prompt or more calls by default.
+
+### Experiment: does grounded feedback help Muse correct its own outputs?
+
+**Corpus:** the 12 predeclared synthetic pairs and saved baseline responses. Start with six cases selected before seeing variant outcomes: actor swap (M02), responsibility/action mismatch (M03 or M05), internal contradiction (M07), prompt injection (M09), adjacent-skill transfer (M10 or M11), and page-position shift (M08). Retain at least one clearly supported control so a correction policy cannot improve by turning everything into not_found.
+
+**Arms:**
+
+- **A — Frozen baseline:** existing minimal-effort single-pass result from the 24-request replay.
+- **B — Blind re-critique:** one extra Muse call asks it to recheck its answer but gives no new verifier findings. This is the control for generic self-reflection.
+- **C — Located external feedback:** one extra Muse call is made only when the fixed verifier/test harness identifies a predeclared error location or unresolved criterion; it receives the exact error and allowed source spans. If no trigger occurs, no second call is made.
+- Freeze inputs, model, effort, schema and exact code revision. Never retry a failed paid request selectively; preserve failed attempts and provider IDs.
+
+**Score each arm separately:**
+
+- False-supported changes and false-supported remaining, with the non-supported denominator.
+- Supported-case regressions and missed-supported cases.
+- Pair-relation consistency and correct handling of actor, action, scope, negation, contradiction and position.
+- Quote/page verification before and after repair.
+- How often a repair changes the label, whether that change matches the synthetic gold, and whether a correct baseline was made worse.
+- Calls, tokens, cached tokens, reasoning tokens, latency, and estimated cost per corrected synthetic error.
+- Stage of failure: extraction/OCR, evidence retrieval, first Muse interpretation, mechanical verifier, repair, or final status derivation.
+
+**Decision rule:** C is worth keeping only if it beats both A and B on the predeclared hard-case error profile without creating a supported-case regression that outweighs its gains, and if the additional calls/latency fit the demo. Report every case and every arm. Six synthetic cases are a mechanism check, not proof of general accuracy. A second model or self-critique must not be used as ground truth; gold remains the prewritten synthetic reference.
+
+### Experiment: allocate extra inference and retrieval separately
+
+Do not mix evidence access with reasoning effort in one experiment. For the same selected cases, first test an evidence axis (full extracted CV vs page-labelled retrieved candidates plus opposing spans) at fixed minimal effort. Separately test an effort axis (minimal vs medium) with identical complete input and prompt. This reveals whether a failure comes from the model needing more reasoning or from not receiving the useful passage.
+
+Use a small paired schedule and report each axis separately:
+
+| Axis | Baseline | Variant | Main failure signal |
+| --- | --- | --- | --- |
+| Evidence access | Full page-labelled extracted text | Locally selected passages with page IDs plus all known opposing/date/scope passages | Relevant page/span recall, unsupported conclusions, missed contradictions |
+| Reasoning budget | Minimal effort | Medium effort on predeclared hard cases | False support corrected, supported regressions, tokens, latency |
+| Repair feedback | No repair | One repair with located external verifier feedback | Correction precision and regression rate |
+| Scan modality | OCR text only | OCR text plus same page image | Exact source recovery, quote/page validation, added cost |
+
+**Priority order for a winning demo:** make the located-feedback loop reliable on one vivid actor/scope failure; show it in the verification receipt; then decide whether multimodal scan handling adds a second compelling case. Do not add infrastructure that the demo cannot visibly prove.
+
+### Safety and integrity boundaries for this loop
+
+- A failed quote/page check is objective feedback; a semantic “this quote does not prove the person did the work” is not automatically objective unless grounded in explicit actor/scope text or a predeclared synthetic reference.
+- Preserve the original Muse response; never overwrite it with a repaired result.
+- A corrected status is a pipeline outcome on this dataset, not standalone Muse accuracy.
+- Keep not_found, explicit internal conflicting, and ambiguous/needs-review states distinct.
+- Never ask Muse to reveal hidden reasoning. Request only concise, structured evidence and, if useful, a short rationale; the model's chain of thought is private and not a verifier.
+- No real CVs, demographics, outside credential checks, human ratings, unsupported confidence claims, or new paid calls are part of this memo.
+
+
+## Multi-model intelligence: collaboration with evidence, not majority vote
+
+The product can be a genuine multi-model system while keeping Muse Spark at its core. The useful distinction is **division of work**: separate models independently inspect the same relevant source, one model tries to find what the first missed, and deterministic code verifies source facts. Do not run several copies of the same prompt and call the vote intelligence.
+
+### What the literature says
+
+| Research / primary source | Useful result and caution | EvidenceTrail design consequence |
+| --- | --- | --- |
+| Meta, “Muse Glimmer 30B: An On-Device Agentic Model,” Oct 19, 2026. https://ai.meta.com/research/publications/muse-glimmer-30b-an-on-device-agentic-model/ | Meta released Muse Glimmer as an Apache 2.0 open-weight 30B model for text/image input; Meta describes an approximately 4-bit quantization for single-GPU inference. | Glimmer is a plausible distinct Meta model for an independent challenger, OCR/layout challenge, or local/private inference experiment. It needs suitable GPU/runtime; do not assume it runs well on the public free web service or the developer laptop. |
+| Meta Model API model documentation. https://dev.meta.ai/docs/models | Muse Spark 1.3 supports hosted text, image, video, and PDF input and tool calling; Glimmer is separately open-weight and self-hosted. | A Spark + Glimmer evaluation can demonstrate both hosted Muse reasoning and an open-weight Meta model in one evidence-focused system. Keep modality/input differences controlled during model comparisons. |
+| Meta, “Collaborative Reasoner: Self-improving Social Agents with Synthetic Conversations.” https://ai.meta.com/research/publications/collaborative-reasoner-self-improving-social-agents-with-synthetic-conversations/ | Meta reports that current models do not consistently collaborate better without training for collaborative behavior. | Role names alone do not guarantee complementary reasoning. Measure whether the challenger catches errors the primary misses and whether its presence improves the whole pipeline. |
+| Joshi et al., “Too Many Cooks Spoil The Broth,” EMNLP 2026. https://aclanthology.org/2026.emnlp-main.2164/ | In their medical QA study, agent consensus could be biased; the council used substantially more calls and sometimes trailed one larger model. This is not a CV benchmark, but it is a strong warning against “agreement = correct.” | Do not select labels by majority vote. Report error overlap, disagreement accuracy, unique corrections, and cost against the strongest single model. |
+| Cui et al., “Free-MAD: Consensus-Free Multi-Agent Debate,” Findings of ACL 2026. https://aclanthology.org/2026.findings-acl.1600/ | The paper identifies token overhead and conformity/error propagation as problems with iterative consensus debate. | Prefer independent first outputs and one evidence-bounded challenge over long agent debates. Preserve disagreement and stop after a fixed small number of calls. |
+| Zhang et al., “Perceive-Then-Adjudicate,” Findings of EMNLP 2026. https://aclanthology.org/2026.findings-emnlp.1445/ | Their fact-checking design separates a knowledge agent, an evidence agent, and an adjudicator rather than collapsing them into one response. | Adapt the separation: Muse proposes document interpretation; a challenger looks for counter-evidence; a deterministic arbiter verifies quotes/pages and exposes semantic disputes. The paper's factuality results belong to Snopes/PolitiFact, not EvidenceTrail. |
+
+### Candidate architecture: Spark + Glimmer + EvidenceTrail
+
+1. **Local document reader:** PyMuPDF/Tesseract extracts page-labelled text and regions. Preserve OCR warnings, page IDs, source hashes, and potentially opposing passages.
+2. **Primary analyst — Muse Spark 1.3:** receives the JD criteria plus the page-labelled CV text; outputs a structured interpretation, source quote IDs, actor/action/scope, and unproven details. Preserve the original response and provider receipt.
+3. **Independent challenger — Muse Glimmer 30B:** receives the same requirement and allowed source passages, but not Spark's label or conclusion. Its job is to find a missing actor/scope qualifier, an explicit negation, an opposing passage, or an overlooked scan/layout detail. It must cite source/page IDs and may return “no challenge found.” Glimmer is a challenger, not an automatic second vote.
+4. **Mechanical verifier:** checks both model outputs against the original page text/images: quote presence, page, source ID, OCR provenance, and deterministic timeline/scope rules. A model's assertion about a quote cannot override a failed source check.
+5. **Evidence arbiter:** compares the two independent claims and their source IDs. If they agree and the source checks pass, show that result with both evidence paths. If they differ, show the exact competing passages and the point of disagreement. If deterministic checks cannot settle it, retain “ambiguous / review” and generate a neutral follow-up; do not force consensus.
+6. **Optional bounded repair:** only on a located disagreement or verifier finding, send one model a minimal packet containing the criterion, competing source spans, and exact failed check. Preserve both original outputs and the repair output/receipt. No open-ended debate loop.
+
+This is more than an LLM wrapper because multiple model roles operate on the same document evidence, a source verifier can reject unsupported citations, and the orchestration explicitly handles disagreement and error recovery. Its advantage must be demonstrated through unique corrected cases, not asserted from the architecture.
+
+### Fair experiment before implementation
+
+**Use the already frozen 12-pair fictional corpus and existing Muse Spark receipts.** Run a one-time Glimmer comparison on the same exact PDF/JD inputs or page-labelled text. Freeze Glimmer checkpoint hash, runtime/quantization, prompt, decoding settings, input form, and output schema. For the initial comparison, make one pass per case, no retry, no real CVs, and no human ratings.
+
+Compare these systems on the same cases:
+
+- **Spark only:** existing frozen results.
+- **Glimmer only:** independent output on the same cases.
+- **Spark + blinded Glimmer challenge:** Glimmer gets the requirement and source passages but not Spark's label; a fixed EvidenceTrail arbiter uses the two outputs plus source-check results. It may preserve disagreement rather than force a label.
+- **Majority vote / debate:** optional negative-control implementation on a tiny predeclared subset, only to show whether it adds value over independent outputs and whether it causes regressions. Do not promote it by default.
+
+**Report:**
+
+- Each model's label agreement with the author-written synthetic reference, by case and class.
+- False-supported and missed-supported counts with their denominators.
+- **Error overlap:** which mistakes Spark and Glimmer share; agreement must not be counted as proof.
+- **Unique correction yield:** number of baseline errors detected and correctly resolved by the challenger without changing a correct baseline into an error.
+- Source quote/page validity, opposing-evidence recall, actor/action/scope case outcomes, and scan-specific results.
+- Disagreement rate, number of unresolved cases, and whether a disagreement correctly points judges/reviewers to the relevant source.
+- Total model calls, GPU seconds, wall-clock latency, input/output/reasoning/cache tokens where available, and cost estimate. Compare against the strongest single model at a matched budget; do not hide Glimmer's GPU inference cost.
+
+**Ship criterion:** multi-model routing stays research-only unless it reduces the predeclared false-supported errors or catches meaningful unique misses versus the strongest single-model baseline, while keeping supported-case regressions and latency within an acceptable bound. No gain from simple agreement alone. If the 12 cases do not establish a benefit, keep the architecture as a research result and do not add a second model to the judge UI.
+
+### Judge-facing demo concept
+
+Use one fictional actor-swap or scope-boundary CV. Show:
+
+- Muse Spark's first interpretation and its authentic provider receipt.
+- Glimmer's blinded challenge, independently pointing to the passage that names the director or limits the applicant's responsibility.
+- EvidenceTrail opening both source passages on their exact PDF pages and displaying the conflict point.
+- A visible disposition: “The quote is real; the models disagree about what it proves.” Then show either the evidence-bounded correction or a follow-up question if it remains unresolved.
+
+Narration: **“One model proposes the finding. A second model tries to break it. Our source checker tests both against the CV. Agreement never replaces the document.”**
+
+Do not stage the challenger output or pre-author it as if Glimmer generated it. Record a fresh, reproducible open-weight inference on the exact synthetic fixture, save the checkpoint/runtime/input/output hashes and logs, and label it as a local model result. If the challenger misses the case, show the miss honestly or choose a different predeclared case; do not quietly edit its result.
+
+### Cost and tournament constraints
+
+- Keep the existing frozen public RC1 replay unchanged until a full comparative run passes.
+- Use saved Spark results as the baseline; do not buy duplicate Spark calls.
+- A local Glimmer inference avoids a second hosted API charge but still consumes GPU time and requires a reproducible environment. Do not assume its 30B checkpoint is free to serve in production.
+- Start with one bounded evaluation run on fictional CVs. Save the exact model artifact revision, quantization/runtime, prompt/schema hashes, input fingerprints, generated outputs, and runtime/cost receipt.
+- The current hackathon entry should remain easy to open. If Glimmer cannot cold-start reliably, use a clearly labelled saved inference for the judge walkthrough and separately offer the reproducible run artifact.
+- The story should lead with measured error detection and source provenance, not the number of models.
+
+This design uses Meta's hosted Muse Spark as the reasoning core and Meta's open-weight Muse Glimmer as a distinct challenger. It is a testable hypothesis; the papers' published improvements do not transfer automatically to fictional CV review.
+
+
+## Full Muse-family routing plan for the tournament
+
+“Use the whole Muse stack” should mean **route the right capability to the right evidence problem**. It does not mean making every CV go through every model. The tournament demo can show a family of cooperating capabilities around one auditable evidence record.
+
+| Muse capability | EvidenceTrail role to test | When it runs | Boundary |
+| --- | --- | --- | --- |
+| **Muse Spark 1.3** | Main CV/JD semantic analyst; structured requirement-to-source proposals | Standard text/OCR case | One response per CV remains the baseline; output is a proposal, not truth |
+| **Muse Glimmer 30B** (open weight) | Independent, blind counter-evidence challenger; optional local image/text analyst | Only on predeclared hard cases, disagreement, or low-quality scan | Log model checkpoint, quantization, runtime, and hardware; agreement with Spark is not correctness |
+| **Muse Wonder 1.0** | High-capability escalation / orchestration for unresolved, multi-criterion cases; coordinate tools and request focused evidence | Only after a concrete Spark/Glimmer disagreement or verifier exception | Preview and pay-as-you-go; test cost/latency. Do not use it for every easy CV |
+| **Muse Spark image input** | Read the page image when local OCR is uncertain or layout changes meaning | Low OCR quality, two-column ambiguity, or scan test fixture | Returned quote must still map to the original PDF page/span or stay unverified |
+| **SAM 3.1** | Segment a visually ambiguous region (e.g., a chart, table, stamp, or handwritten annotation) to give a visual locator | Only when the document contains a specific visual object that OCR/PyMuPDF cannot isolate | SAM returns geometry/masks for visual objects; it is not a text reader or semantic verifier. Keep quote and page checks separate |
+| **Muse Voice Transcribe 1.0** | Transcribe a candidate's optional spoken reply to a recruiter clarification | Only if the workflow accepts an audio reply with consent | Preserve the transcript as candidate self-attestation; label possible transcription errors; never turn it into verified credential evidence |
+| **Muse Image 1.0** | Generate controlled, fictional, non-evidentiary page-layout fixtures for OCR robustness tests | Development/evaluation fixture generation only | Do not use generated/edited images as original evidence or as proof about a candidate |
+| **Muse Spark Open** | Alternative self-hosted Spark-family evaluation or future local inference comparison | Separate model study if infrastructure supports it | 816B total / 42B active model is a substantial serving workload; checkpoint availability does not make it a cheap laptop model |
+| **Muse Code** | Optional coding/CI agent to implement and audit the evaluation harness | Development workflow only | It is not a runtime evidence model in the product and should not appear in product accuracy claims |
+
+Meta's current API documentation describes Muse Wonder as its most capable hosted agentic model and Muse Spark as the cost-sensitive/latency-sensitive option; both support structured output, tools, and multimodal inputs. Muse Glimmer is open-weight, text/image capable, and documented for quantized single-GPU serving. SAM segments visual objects into boxes/masks, Muse Voice is speech-to-text, and Muse Image generates/edits images. These capabilities have different jobs; only Spark, Glimmer, Wonder, and selective Spark image input directly affect CV reasoning. The others support narrowly defined evidence or testing needs.
+
+### Single coordinated flow
+
+1. **Extract locally first:** page text, OCR text, coordinates, reading-order warnings, page image thumbnails, and document hashes.
+2. **Spark proposes:** requirement tuple (actor/action/object/scope/time), finding, shortest relevant source spans, and what remains unproven.
+3. **Route by observable evidence condition:** standard text case stops after Spark plus source verification; low OCR/layout confidence gets a Spark image read; a fixed hard-case or disagreement trigger gets a blinded Glimmer challenge; a persistent material disagreement may get one Wonder escalation with the two outputs and verifier findings.
+4. **Use SAM only for visual localization:** if the issue is “where is this mark/table/object?”, segment the exact page region. The PDF's own page image remains the evidence source.
+5. **Use Voice only for clarification intake:** transcribe an optional audio response, link it to the asked requirement, and label it self-attested/unverified.
+6. **Arbitrate without an accuracy vote:** deterministic checks decide quote/page/date facts. Model consensus may be displayed as a signal; disagreements, shared errors, or missing verification lead to a clear unresolved state. Never allow a model to validate its own quote.
+7. **Return one review record:** raw model responses, model identities, source passages, verification receipt, any repair/escalation, and cost/latency are linked in one auditable record.
+
+### Priority for the current tournament window
+
+1. **P0:** Spark + Glimmer blind challenge on the already frozen 12 synthetic pairs. This is the smallest honest multi-model proof and directly tests whether the second Meta model contributes unique error detection.
+2. **P0:** One image-input comparison on the two existing scan fixtures, text/OCR-only versus OCR plus image. Keep source anchoring local.
+3. **P1:** Wonder escalation only for the small subset of cases with unresolved Spark/Glimmer disagreement. Compare against simply preserving disagreement; pay for the higher-capability pass only if it resolves specific cases without regression.
+4. **P1:** Muse Image to create a small set of controlled background/layout changes while the exact text is rendered programmatically. This expands document-layout tests without allowing generated text to become gold.
+5. **P2:** Voice Transcribe as a follow-up-channel extension after the core evidence loop is proven; record transcription word errors and keep spoken assertions separate from CV evidence.
+6. **P2:** SAM only if a specific visual element (not ordinary text) blocks evidence localization. Do not add a segmentation dependency for pages already handled by PyMuPDF/Tesseract.
+
+For each routed capability, report: eligible cases, actual routed cases, calls, success/failure/skip counts, model/runtime version, per-stage result, unique correction yield, regressions, and measured token/GPU/time cost. A successful API invocation is not a correctness result.
+
+### What would make the full-stack demo feel coherent
+
+Show the user-visible evidence chain instead of a list of model names:
+
+- Text CV: Spark proposes a claim; Glimmer independently points to the different actor or limiting scope; the verifier opens the exact pages; the UI preserves disagreement or shows a bounded correction.
+- Scanned CV: Spark's local OCR path and optional image read are compared; the quote only earns a verified badge after local page matching.
+- Clarification: if a finding remains unclear, the recruiter sends a question; an optional voice reply is transcribed, shown as self-attested, and attached to that requirement without overwriting the CV record.
+- Audit: Spark, Glimmer, Wonder, or tool outputs are each attributed to the component that produced them; source checks retain their own independent result.
+
+This gives the project a substantive Meta stack story while preserving one product goal: help a recruiter inspect what the documents support, locate uncertainty, and ask a focused question. The full-family design is a routing hypothesis until these experiments are run; there are no new full-stack performance results in this memo.
+
+
+## Addendum — Optimize the intelligence loop as a measured cascade (30 October 2026)
+
+### New research implication
+
+A model cascade can save compute by handling easy cases cheaply and escalating cases likely to fail. The useful design lesson is to set escalation from *measured task signals* and validate the full routed system end to end, rather than routing on an uncalibrated confidence score. The 2024 study *Language Model Cascades: Token-level Uncertainty and Beyond* also documents length bias in naive generated-sequence uncertainty; that signal is not available here anyway because Meta documents that Muse Spark does not expose log probabilities. Treat Spark's self-reported certainty as descriptive text, not a calibrated routing probability. (Gupta et al., 2024, https://arxiv.org/abs/2404.10136; Meta reasoning docs: https://dev.meta.ai/docs/reasoning.)
+
+The 2024 EMNLP multi-agent debate study found that reflection can become stuck on an initial position and that multi-agent procedures require careful stopping; it also warns that the judge can be unfair when agents differ. That supports a *blind independent challenge followed by evidence comparison*, not a consensus vote or repeated debate. (Liang et al., https://aclanthology.org/2024.emnlp-main.992/.)
+
+Current Meta API guidance says prompt caching is automatic for repeated stable prefixes, reports cached tokens, and supports explicit cache keys as an optional routing aid. EvidenceTrail already supplies a fixed analysis cache key and a long stable developer instruction block. The optimization question is therefore not “add caching,” but “measure real cache hits and arrange repeatable shared-prefix inputs.” Keep shared job criteria byte-stable across a batch and the CV-specific material after that prefix; use provider-reported cached token counts to demonstrate any savings. (https://dev.meta.ai/docs/prompt-caching.)
+
+### Proposed v1 cascade for EvidenceTrail
+
+Use hard, inspectable triggers first. Do not use an LLM's confidence field as the sole gate.
+
+| Stage | Tool/model | Run condition | Output and stop rule |
+| --- | --- | --- | --- |
+| 0. Intake quality | Local PDF text/OCR and layout checks | Every document | Page-labelled source blocks, OCR/layout warnings, and source fingerprint. Never silently turn low-quality OCR into certainty. |
+| 1. Main analysis | Muse Spark, current schema and minimal effort | Every CV | One structured proposal per requirement, linked to short source spans. |
+| 2. Source audit | Existing deterministic quote/page/provenance checks | Every proposal | Verify quote presence, page, source IDs, and mechanical date constraints. A pass establishes anchoring only, not semantic entailment. |
+| 3. Targeted repair | One Spark call with verifier feedback | Only if a concrete repairable source/schema error is found | Resubmit the affected requirement and exact failure location; retain original and replacement with separate provider receipts. Stop after one repair. |
+| 4. Independent challenge | Muse Glimmer, run locally | Predeclared hard-case sample first; later only on measurable triggers such as OCR/layout warning, unresolved actor/scope ambiguity, conflicting source spans, or post-repair disagreement | Give Glimmer the requirement and source passages but not Spark's label/rationale on the first pass. Compare actor/action/scope and cited passages. Preserve disagreement; no majority vote. |
+| 5. Escalation | Muse Wonder | Only when a material issue remains after source audit and independent challenge | One focused synthesis request. It may recommend a bounded conclusion or unresolved state; it cannot overrule missing source evidence or deterministic failures. |
+| 6. Visual aid | Muse Spark image input; SAM only for a locator if needed | OCR/layout warning on a scanned fictional fixture | Spark may interpret the page image; all quotes still need local PDF text/page verification. SAM can locate a visual region, not validate text or meaning. |
+
+**Operational privacy boundary:** use Standard API mode for real CVs unless the product's privacy policy and applicant notice deliberately authorize a different data-use arrangement. Meta's current pricing page says Contributor mode permits submitted prompts, files, context, and responses to be used to train future models. Do not use synthetic benchmark savings to justify sending real CVs under that mode. (https://dev.meta.ai/docs/pricing-rate-limits.)
+
+### Tournament experiment: prove that routing earns its extra complexity
+
+Freeze one set of fictional inputs and run these arms with the exact source fingerprints:
+
+- **A — Current baseline:** Spark minimal → existing local verifier.
+- **B — Feedback repair:** A plus one Spark repair only on a predeclared deterministic failure.
+- **C — Independent challenge:** A plus a blinded Glimmer first pass on fixed hard cases.
+- **D — Routed stack:** B, then C only on predeclared trigger cases; at most one Wonder escalation for residual material disagreement.
+- **E — Vision diagnostic:** A versus same OCR text plus page image on scan fixtures only.
+
+Save every request/response, model and runtime revision, prompt/schema hash, fixture fingerprint, original and repaired findings, provider/runtime receipts, token counts, cached token counts, reasoning tokens, and latency. No retries; never overwrite an earlier result. Synthetic expected labels are author-written fixture assertions, not human judgments or estimates of real-world accuracy.
+
+Report each arm separately by failure type:
+
+1. False-supported findings and missed-supported findings.
+2. Actor/action/scope mismatch rate.
+3. Quote and page verification rate.
+4. Contradiction retrieval/retention rate.
+5. Correction yield: initially wrong cases fixed, initially right cases broken, plus unresolved cases.
+6. Challenger value: unique Spark errors caught, Spark errors shared, and correct Spark cases challenged into error.
+7. OCR recovery and visual-only unsupported quote rate.
+8. End-to-end cost, cached versus uncached input, latency p50/p95, model-call count, and human-facing review state.
+
+Select D only if its *incremental unique correction yield* improves on A and B without increasing false-supported findings or hiding unresolved cases, at a disclosed cost and latency. Report uncertainty and the tiny synthetic denominator. If the current 12 pairs cannot support a trigger rule without reusing tuning cases as evaluation, add a fresh held-out fictional fixture set first; do not fit a purportedly calibrated router on 12 pairs.
+
+### What to build after research review
+
+1. Extend the replay runner to compute stage-by-stage metrics and cost/latency deltas from saved receipts.
+2. Add route decisions as explicit reason codes (for example `ocr_warning`, `quote_missing`, `actor_scope_conflict`, `source_conflict`, `unresolved_after_repair`). Persist them with each result.
+3. Add a held-out set of fictional pages for each trigger and easy controls. Keep prompt tuning and routing-threshold selection out of the final held-out evaluation.
+4. Run Spark-only and routed arms with no human ratings and no LLM-as-judge ground truth. Preserve raw artifacts for a reproducible judge demo.
+5. Show one difficult example as a trace: Spark proposal → exact source audit → independent challenge → bounded resolution or visible unresolved state. The demo claim should be “we found and surfaced this evidence mismatch,” not “multiple models agreed, therefore it is true.”
+
+**Current status:** this is a research-backed experiment design only. No new Spark, Glimmer, or Wonder inference has been performed; no new measured result is claimed; frozen RC1 remains unchanged.

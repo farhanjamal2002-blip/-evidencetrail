@@ -1,0 +1,39 @@
+name: Offline integrity audit for frozen replay
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - release/evidencetrail-judge-rc1-oct30
+    paths:
+      - scripts/audit_frozen_replay_artifacts.py
+      - artifacts/live-m02-m07-frozen-20261030/**
+      - artifacts/live-remaining-pairs-frozen-20261030/**
+      - evaluation/RESEARCH_METAMORPHIC_PAIRS.json
+      - .github/workflows/audit-frozen-replay.yml
+permissions:
+  contents: read
+concurrency:
+  group: offline-frozen-replay-audit-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recompute replay integrity and stage-wise counts without API calls
+        run: python scripts/audit_frozen_replay_artifacts.py --output "$RUNNER_TEMP/frozen-replay-audit.json"
+      - name: Retain machine-readable audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-replay-offline-integrity-audit
+          path: ${{ runner.temp }}/frozen-replay-audit.json
+          retention-days: 90

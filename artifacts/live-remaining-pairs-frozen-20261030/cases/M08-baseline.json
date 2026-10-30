@@ -1,0 +1,496 @@
+{
+  "case_id": "M08-baseline",
+  "pair_id": "M08",
+  "role": "baseline",
+  "single_change_factor": "evidence_position",
+  "expected_status": "supported",
+  "expected_relation": "invariant",
+  "expected_evidence_page": 1,
+  "expected_total_pages": 3,
+  "challenge_sha256": "43c7168bb15faf0c1355428eff865dd3dda7810f8843c966fcb9ca5b4f06b62b",
+  "input_pdf_sha256": "58944525acf8a56a3888760b3e0bd9ef5ac4c46decf37020b50cb9bc2d32c0c4",
+  "frozen_release_sha": "8489e45ae0f87d8421562618bda556c31911372b",
+  "request_ordinal": 11,
+  "automatic_retries": 0,
+  "native_vision": false,
+  "http_status": 200,
+  "elapsed_seconds": 1.668,
+  "application_result": {
+    "requirements": [
+      {
+        "id": "R1",
+        "requirement": "Designed vaccination outreach programs",
+        "job_source": {
+          "line": 1,
+          "text": "FICTIONAL ROLE Requirement: Designed vaccination outreach programs",
+          "verified": true
+        },
+        "status": "supported",
+        "note": "CV explicitly states designing a vaccination outreach program. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+        "evidence": [
+          {
+            "quote": "I designed a rural vaccination outreach program and coordinated implementation.",
+            "role": "supports",
+            "page": 1,
+            "boxes": [
+              [
+                48.0,
+                110.0,
+                479.5,
+                126.5
+              ]
+            ],
+            "source_id": "R1-Q1",
+            "evidence_type": "direct"
+          }
+        ],
+        "evidence_type": "direct",
+        "proposed_evidence_type": "direct",
+        "evidence_strength": "specific",
+        "strength_suppressed_supports": 0,
+        "transfer_explanation": null,
+        "unproven_aspects": [],
+        "follow_up_question": null,
+        "review_reason": "CV explicitly states designing a vaccination outreach program.",
+        "certainty": "clear",
+        "evidence_conflict_review": null,
+        "final_evidence_type": "direct",
+        "muse_evidence_type": "direct",
+        "raw_status": "supported",
+        "muse_status": "supported",
+        "effective_status": "supported"
+      }
+    ],
+    "evidence_graph": {
+      "nodes": [
+        {
+          "id": "JD-R1",
+          "kind": "job_description_source",
+          "label": "FICTIONAL ROLE Requirement: Designed vaccination outreach programs",
+          "line": 1,
+          "source_type": "job_description",
+          "verified": true
+        },
+        {
+          "id": "R1",
+          "kind": "requirement",
+          "label": "Designed vaccination outreach programs",
+          "status": "supported",
+          "evidence_type": "direct",
+          "certainty": "clear"
+        },
+        {
+          "id": "EV-R1-1",
+          "kind": "source_quote",
+          "source_id": "R1-Q1",
+          "page": 1,
+          "bbox": [
+            48.0,
+            110.0,
+            479.5,
+            126.5
+          ],
+          "quote": "I designed a rural vaccination outreach program and coordinated implementation.",
+          "role": "supports",
+          "proposed_role": "supports",
+          "evidence_type": "direct"
+        }
+      ],
+      "edges": [
+        {
+          "from": "JD-R1",
+          "to": "R1",
+          "relation": "defines"
+        },
+        {
+          "from": "R1",
+          "to": "EV-R1-1",
+          "relation": "supports"
+        }
+      ],
+      "requirements": [
+        {
+          "id": "R1",
+          "requirement": "Designed vaccination outreach programs",
+          "job_source": {
+            "line": 1,
+            "text": "FICTIONAL ROLE Requirement: Designed vaccination outreach programs",
+            "verified": true
+          },
+          "status": "supported",
+          "evidence_type": "direct",
+          "transfer_explanation": null,
+          "unproven_aspects": [],
+          "follow_up_question": null,
+          "certainty": "clear",
+          "sources": [
+            {
+              "id": "EV-R1-1",
+              "kind": "source_quote",
+              "source_id": "R1-Q1",
+              "page": 1,
+              "bbox": [
+                48.0,
+                110.0,
+                479.5,
+                126.5
+              ],
+              "quote": "I designed a rural vaccination outreach program and coordinated implementation.",
+              "role": "supports",
+              "proposed_role": "supports",
+              "evidence_type": "direct"
+            }
+          ]
+        }
+      ]
+    },
+    "timeline_audit": {
+      "status": "insufficient_data",
+      "precision_note": "Year-only endpoints use January boundaries; month-level dates count the stated endpoint month. Day-level precision is not inferred.",
+      "dated_employment_months": 0,
+      "dated_employment_years_approx": 0.0,
+      "episodes": [],
+      "tenure_by_area": [],
+      "experience_claims": [],
+      "overlaps": [],
+      "flags": [],
+      "excluded_proposals": [],
+      "requirement_links": []
+    },
+    "batch_rubric_alignment": {
+      "mode": "shared_job_description_items",
+      "required_count": 1,
+      "returned_count": 1,
+      "missing_model_entries": 0,
+      "extra_model_entries_dropped": 0
+    },
+    "job_item_coverage": {
+      "items": [],
+      "matched": 0,
+      "needs_review": 0,
+      "truncated": 0,
+      "method": "conservative lexical overlap; not semantic validation"
+    },
+    "role_clarity_audit": {
+      "criteria": [],
+      "criteria_count": 0,
+      "criteria_truncated": 0,
+      "items": [],
+      "count": 0,
+      "truncated": 0,
+      "disclosure": "Review and edit the job criteria before analyzing CVs."
+    },
+    "excluded_unverified_requirements": 0,
+    "omitted_requirement_audit": [],
+    "quote_audit": {
+      "proposed": 1,
+      "verified": 1,
+      "excluded": 0,
+      "verification_proposed": 1,
+      "verification_verified": 1,
+      "verification_excluded": 0,
+      "ambiguous_requirements": 0,
+      "locally_anchored_source_spans": 1
+    },
+    "verification_audit": {
+      "proposed": 1,
+      "verified": 1,
+      "accepted_citations": 1,
+      "excluded": 0,
+      "ambiguous_requirements": 0,
+      "evidence_conflict_review_findings": 0,
+      "strength_suppressed_supports": 0,
+      "rejected_citations": [],
+      "scope_boundary_review": {
+        "requirements_checked": 1,
+        "explicit_scope_limitations_detected": 0,
+        "direct_to_related_adjustments": 0,
+        "direct_to_conflict_adjustments": 0,
+        "direct_to_unsupported_adjustments": 0,
+        "adjusted_requirements": []
+      },
+      "status_invariants": {
+        "related_supported_demoted": 0,
+        "unsupported_supported_demoted": 0
+      },
+      "locally_anchored_source_spans": 1,
+      "verification_mode": "local_deterministic",
+      "semantic_review_clarifications": {
+        "single_scope_limits_clarified": 0,
+        "multi_scope_limits_clarified": 0,
+        "document_absences_clarified": 0,
+        "multi_quote_discrepancies_retained": 0,
+        "related_context_labeled": 0,
+        "unchanged": 1
+      },
+      "semantic_review_page_marks_reconciled": 0,
+      "timeline_gated_requirements": 0
+    },
+    "page_dimensions": {
+      "1": {
+        "width": 612.0,
+        "height": 792.0
+      },
+      "2": {
+        "width": 612.0,
+        "height": 792.0
+      },
+      "3": {
+        "width": 612.0,
+        "height": 792.0
+      }
+    },
+    "report_html": "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>EvidenceTrail evidence pack</title><style>\n      :root{color-scheme:light;--ink:#18212f;--muted:#627084;--line:#dce3ed;--paper:#f3f6fb;--blue:#0866ff}\n      *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 Arial,sans-serif}\n      main{max-width:980px;margin:0 auto;padding:42px 22px 70px}.brand{font-size:12px;letter-spacing:.16em;font-weight:800;color:var(--blue)}\n      h1{font-size:34px;line-height:1.12;margin:16px 0 10px}.sub{color:var(--muted);margin:0 0 28px}\n      .finding{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin:14px 0}\n      .timeline-audit{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin:18px 0}.timeline-audit blockquote{margin:6px 0 14px;padding:10px;border-left:3px solid #c7d8ee;background:#f7f9fc}\n      .job-source{margin:12px 0;padding:10px 12px;border-left:3px solid #8295aa;border-radius:0 8px 8px 0;background:#f5f7fa}\n      .job-source>span,.graph-job-source>span{display:block;margin-bottom:5px;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}\n      .job-source blockquote,.graph-job-source blockquote{margin:0;padding:8px 10px;background:#fff;border-left:2px solid #8295aa;color:#435269;font-size:13px;overflow-wrap:anywhere}\n      .application-claims{margin:24px 0;padding:18px;border:1px solid #c8d9f4;border-radius:14px;background:#f8fbff}\n      .application-claims>p{color:var(--muted);font-size:13px}.claim-audit{margin:12px 0;padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff}\n      .claim-audit>.draft-claim{margin:12px 0;padding:10px 12px;border-left:3px solid #6a7f9d;background:#f6f8fb;font-weight:650}\n      .claim-audit>a,.evidence>a{display:inline-block;margin-top:8px;color:var(--blue);font-size:12px;font-weight:700}\n      .finding-head{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}\n      .timeline-provenance,.scope-provenance{margin:8px 0;color:#805c13;font-size:12px;font-weight:700}\n      .scope-limitation{margin:12px 0;padding:12px 14px;border:1px solid #ead9b4;border-left:4px solid #c58a2e;border-radius:9px;background:#fffaf0;color:#66542f}\n      .scope-limitation strong{display:block;margin-bottom:7px;color:#805c13}.scope-limitation-quote{margin:0 0 6px;color:#4f4636}\n      .scope-limitation-link{color:#805c13;font-size:12px;font-weight:700}\n      .status{border-radius:999px;padding:4px 10px;background:#eef4f1}.status.supported{color:#096c5d;background:#e8f5f1}\n      .status.not_found{color:#8c641b;background:#fbf3df}.status.unsupported{color:#8c641b;background:#fbf3df}\n      .status.conflicting,.status.conflict_to_clarify{color:#a33e38;background:#fbe9e7}\n      .relationship{border-radius:999px;padding:4px 10px;background:#eef4f1;color:#096c5d}.relationship.related{color:#475c9e;background:#eef1fc}.relationship.unsupported{color:#8c641b;background:#fbf3df}.relationship.conflicting{color:#a33e38;background:#fbe9e7}\n      .source-check-badge{display:inline-block;padding:2px 7px;border:1px solid #dce5ef;border-radius:99px;font-size:10px;font-weight:700}\n      .source-check-verified{border-color:#bfdfd0;background:#f2faf5;color:#236342}\n      .source-check-blocked{border-color:#edc5c2;background:#fff4f2;color:#963d39}\n      .source-check-none{background:#f7f9fc;color:#526177}\n      h2{font-size:19px;margin:14px 0 6px}.finding p,.empty{color:var(--muted)}\n      .transfer{padding:10px 12px;border-left:3px solid #667bc1;background:#f2f4fc;color:#39496e!important}.unproven{padding:10px 12px;border:1px solid #ead9b4;border-radius:8px;background:#fffaf0;color:#66542f}.unproven ul{margin:6px 0 0;padding-left:20px}\n      .certainty{display:inline-block;border-radius:999px;padding:4px 9px;background:#fff3d6;color:#83580b;font-size:12px;font-weight:700}\n      .evidence{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.evidence-meta{font-size:12px;color:var(--blue);font-weight:700}\n      blockquote{margin:8px 0 0;padding:12px 14px;background:#f2f6fc;border-left:3px solid var(--blue)}\n      .audit-summary{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--muted);font-size:13px}\n      .omitted-audit{margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}\n      .omitted-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}\n      .omitted-audit ul{margin:10px 0 0;padding-left:20px}.omitted-audit li{margin:8px 0}\n      .coverage-audit{margin:14px 0;padding:12px 14px;border:1px solid #c8d9f4;border-radius:10px;background:#f8fbff}\n      .coverage-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}.coverage-audit>p{color:var(--muted);font-size:13px}\n      .coverage-audit ol{margin:10px 0 0;padding-left:22px}.coverage-audit li{margin:9px 0}.coverage-audit li strong,.coverage-audit li span{display:block}.coverage-audit li span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}\n      .role-audit{margin:14px 0;padding:12px 14px;border:1px solid #dfd2b0;border-radius:10px;background:#fffaf0}\n      .role-audit summary{cursor:pointer;font-weight:700;color:#644f20}.role-audit>p{color:var(--muted);font-size:13px}\n      .role-audit h3{font-size:15px;margin:18px 0 8px}\n      .role-audit ol{margin:10px 0 0;padding-left:22px}.role-audit li{margin:12px 0}.role-audit li strong,.role-audit li span{display:block}\n      .role-audit li span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}.role-audit blockquote{margin:7px 0;padding:9px 11px;background:#fff;border-left:3px solid #c6a555}\n      .ocr-warning{margin:14px 0;padding:13px 15px;border:1px solid #e6c783;border-radius:10px;background:#fff8e8;color:#775415}\n      .ocr-warning strong{font-size:13px}.ocr-warning p{margin:5px 0 0;color:#746343;font-size:13px}\n      .omitted-audit li span{display:block;color:var(--muted);font-size:13px}\n      .rejected-audit{margin:14px 0;padding:12px 14px;border:1px solid #f0c9c5;border-radius:10px;background:#fffafa}\n      .rejected-audit summary{cursor:pointer;font-weight:700;color:#9b3f38}\n      .rejected-audit>p{color:var(--muted);font-size:13px}\n      .rejected-audit ol{margin:10px 0 0;padding-left:22px}\n      .rejected-item{margin:10px 0;padding:10px 12px;border-left:3px solid #d65b53;background:#fff}\n      .rejected-item>span{display:block;margin-top:4px;color:var(--muted);font-size:12px}\n      .rejected-item blockquote{margin:8px 0 0;padding:9px 11px;background:#fff5f4;border-left:2px solid #d65b53;overflow-wrap:anywhere}\n      .graph-row{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:16px;padding:16px 0;border-top:1px solid var(--line)}\n      .graph-requirement{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;align-self:start}\n      .graph-job-source{margin-top:10px;padding:9px 10px;border-left:3px solid #8295aa;border-radius:0 8px 8px 0;background:#f5f7fa}\n      .graph-requirement span,.graph-source span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}\n      .graph-requirement strong{display:block;margin-top:6px}.graph-links{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}\n      .graph-arrow{color:var(--blue);font-size:22px}.graph-source{min-width:210px;flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}\n      .graph-source.support{border-top:3px solid #1ba085}.graph-source.conflict{border-top:3px solid #de4d48}\n      .graph-source blockquote{font-size:13px;padding:8px 10px}.graph-empty{color:var(--muted);font-style:italic;padding:10px}\n      .human-review-record{border-top:1px solid var(--line);margin-top:18px;padding-top:12px;color:var(--muted);font-size:13px}\n      .human-review-record h3{font-size:14px;color:var(--ink);margin:0 0 6px}.human-review-record p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}\n      .clarification-brief{margin:22px 0;padding:18px;border:1px solid #c8d9f4;border-radius:14px;background:#f8fbff}\n      .clarification-brief>h2{margin:0 0 5px}.clarification-disclosure,.clarification-reason{color:var(--muted);font-size:13px}\n      .clarification-item{margin-top:14px;padding:15px;border:1px solid var(--line);border-radius:10px;background:#fff}\n      .clarification-meta{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}\n      .clarification-item h3{margin:6px 0;font-size:15px}.clarification-question{font-weight:700}\n      .clarification-item ul{padding-left:20px}.clarification-item li{margin:8px 0;font-size:12px;color:var(--muted)}\n      .clarification-item blockquote{margin-top:5px;font-weight:400;overflow-wrap:anywhere}\n      .candidate-response-record{margin-top:14px;padding:13px 15px;border:1px solid #c9d9f1;border-radius:9px;background:#f8fbff}\n      .candidate-response-record h4{margin:0 0 8px;font-size:14px}.candidate-response-record p{font-size:12px;color:var(--muted)}\n      .candidate-response-record blockquote{white-space:pre-wrap;overflow-wrap:anywhere;border-left-color:#6d7e96}\n      .source-legend{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:12px}\n      .source-legend span{display:inline-flex;align-items:center;gap:6px}.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;background:#1ba085}.swatch.conflict{background:#de4d48}\n      figure{margin:20px 0;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}\n      figcaption{font-weight:700;margin:4px 0 12px}img{display:block;width:100%;height:auto;border-radius:6px}\n      footer{border-top:1px solid var(--line);margin-top:34px;padding-top:16px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}\n      @media(max-width:650px){.graph-row{grid-template-columns:1fr}.graph-links{padding-left:10px}}\n      @media print{body{background:#fff}main{padding:0}.finding,figure,.graph-row{break-inside:avoid}}\n    </style></head><body><main><div class='brand'>EVIDENCETRAIL · MUSE SPARK EVIDENCE REVIEW</div><h1>Grounded requirement evidence pack</h1><p class='sub'>Muse returns requirement-level interpretations and proposed evidence in one structured analysis. EvidenceTrail then checks every displayed quote against the original PDF page and applies deterministic timeline checks. A human reviews the interpretation. This is not a hiring decision.</p><p class='audit-summary'>Local source check: 1 of 1 proposed citation(s) matched the original PDF page; 0 were rejected. Local checks anchored 1 citation span(s); 0 requirement(s) were marked ambiguous.</p><h2>Requirement-to-source graph</h2><div class='graph-row'><div class='graph-requirement'><span>R1 · supported</span><strong>Designed vaccination outreach programs</strong><div class='graph-job-source'><span>Job post · starts at line 1</span><blockquote>FICTIONAL ROLE Requirement: Designed vaccination outreach programs</blockquote></div></div><div class='graph-links'><span class='graph-arrow'>→</span><div class='graph-source support'><span>Page 1 · R1-Q1 · support</span><blockquote>I designed a rural vaccination outreach program and coordinated implementation.</blockquote></div></div></div><article class='finding' data-finding-id='R1'><div class='finding-head'><span>R1</span><span class='status direct'>Direct</span><span class='relationship direct'>Direct</span></div><h2>Designed vaccination outreach programs</h2><p>CV explicitly states designing a vaccination outreach program. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.</p><div class='job-source'><span>Job post · starts at line 1</span><blockquote>FICTIONAL ROLE Requirement: Designed vaccination outreach programs</blockquote></div><div class='evidence'><div class='evidence-meta'>Direct · source quote · <span class='source-check-badge source-check-verified'>Verified (Page 1)</span> · source R1-Q1</div><blockquote>I designed a rural vaccination outreach program and coordinated implementation.</blockquote></div></article><h2>Verified source pages</h2><figure id='page-1'><figcaption>CV page 1</figcaption><p class='source-legend'><span><i class='swatch'></i>Teal highlight: supporting passage</span> <span><i class='swatch conflict'></i>Red highlight: conflicting statement</span></p><img src='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAcFBQYFBAcGBgYIBwcICxILCwoKCxYPEA0SGhYbGhkWGRgcICgiHB4mHhgZIzAkJiorLS4tGyIyNTEsNSgsLSz/2wBDAQcICAsJCxULCxUsHRkdLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCz/wAARCAPoAwUDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6RooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiis7XdesPDmmfb9ReVYPMSECKF5nZ3YKqhEBYksQMAd6ANGiubXx3o32C7vZ4tUs7e0VXlkvNLubcYLBRjeg3HJHAzU+s+MdI0O/FjcNd3F55YmaCys5bp448kB3EattHBxnGcHGcUAbtFcvqPxE8O6bpMGqSzXs2nTw/aFu7awnnhVM4yzohCkEchiCPSrdp4w0q6NoCt/ate3JtIEvLCe2Z5BG0mAJEBxtVjnpxjOaAN2iuYu/iL4bsrq4ikurlorWQxXF1FZzSW0Djgq8yoUUjvk8d8Vot4n0dPEttoBvkGpXdsbuCLBxLGDglW6H1xnOAT0oA1qKow61YT3GpQpcDfpbiO63AqIyY1kHJ4PyOpyPWs208c+Hr7wZJ4rt74vo8auzz+U4KhWKtlCN2QR0xQB0FFFYWs+MdI0O/FjcNd3F55YmaCys5bp448kB3EattHBxnGcHGcUAbtFZFj4q0bUrmwhs75Zm1K2e6tSqttljQqGwcYyC65U8j04NWrXV7K91S/0+3lL3OnlFuF2kBC67lGcYJ24OB0yPWgC7RRWXoviTSvEMuox6Zdee+mXb2V0uxlMcqfeXkDI9xwfWgDUormYPiH4YudFGrQai01o101mhjgkd5ZVzlURVLPwCflB4BPSp7nxv4etdJstSbUPNtr8kW3kQyTSSkZ3BY0Uvxg544xzigDfoqrpmp2Ws6ZBqGn3CXNpcLujkTow6fgc8EHkEUmlapaa1pcGo2Epltbhd8blSuR9DyKALdFFFABRVTVdUtNE0m51K/lMVpaoZJXCltqjqcDk0+1vYbx7hIvMzbSmF98bL82AeMj5hhhyMjr6GgCxRRRQAUUUUAFFFFABRRVK+1jT9Nu7K1u7qOKe+l8m3jPLSPtLYAHsp56UAXaKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK4v4pxyzeFrCKGc28r6zpypKqhjGxuo8MAeDg84PFdpRQB534807U9P+F2vDUtcm1YuIdhkt44vLxKucbAM5yOvpUthr2k+E/G/iqLxFqFtpkt/cx3trcXcixJPALeOParMcEoyPleo3ZxzXf0ySKOYASRq4ByAwzg+tAHnHii/ttU+AWvX1npf9mWlxb3EkMOwJvQyMRKVwMb/AL/r83PNbXjgE+IvBIVtrHWGwcZx/odxXYUUAeZeEfF3hvwz8OLXRNcu7e01TTYDa3mmykG4mlGQ22I/NJ5hywIBDbvrWFpHg++urvR9KuZDZa3p3hm2mtZm+Y2twkzbAfUAHYw7qWHevaDFG0iyMil14DEcj8adQB4Z/b1/4h0nxbp9tZm01nxFrMGlNayuU8thZwi5BYAnaFjlwwB4IOOaPER1DQNA8faFqtnZWCalp/8Aa1nDZztNEuAsUwDMiHOVjbGP4zXudFAGNo3jDw34hu3tdG17TtRnjTzGjtrhJGVcgZIB6ZIH41zNhr2k+E/G/iqLxFqFtpkt/cx3trcXcixJPALeOParMcEoyPleo3ZxzXf0ySKOYASRq4ByAwzg+tAHm+q31u/grSvG2n6UdMt9Gv3vhEse1pLN3dJpNoAxvjczYxnIHeuh+HdtKPCv9rXKFLvXZ31SVW6qJTmNT/uxCNf+A11VFAFa1N99ou/ta24h8wfZvKLFim0Z35GA27d04xivFoLu88Oy6xc6cGWbxNqWo6REyjIS8F7J5Dn/AIDLKSfSMV7lRQB4v4chsPCviDTXmeOz0XT9X1OxWaVgscLmOMRbmPAyqOoJ7nHeoY5UN5o96dYXw3ZXWpate2esOE2+W8o2xDzPkAlBaQFhyEG3rmvbXRJEKOodTwQwyDSSRRyxlJEV0P8ACwyKAOD+Hb6svg3So9OhsZbBLi4SW6meRHuk89/9IjXB/wBYMvgkDLccYrifA9zpcOleD20bVribxC955d5aC7d2+zfP5geHOFRV2lTtHO0g5bn3ToMCmiNBIZAi7yMFsckemaAPDfDWvwP4s8O31pqXkrqf2lbhX1WS8u3zE7IJ4sCONwyjCKCcggdDUOi6xdWGj6nFoeo/2xq8mgzzpe2Ooy3PmOu395PbyAmGf5jtAJydy44wPdhBCCSIkBLb/uj73r9felSKONmZI1QucsVGNx9TQB4NdTq/hnxNHpurWN1YHQne4itNSn1AGUsvlyM8igI5G8Fc5bgkfLXSyG41TxpHp1xfXgtJfE1zFIkdw6bo104OI8gghdwzge/rXqqRRxZ8tFTcdx2jGT606gDxG+uLqzhs9KlvVTQYdZ1C3c6hqMtvF8uDBC84y235nwCcEqoz0FehfDaW4n8HK818l9D9omFrKkkko8kOQqiSRQ0gHIDnqADk9a6p40lQpIiujdVYZBpwAAAAwB2oAxdQk1GPwZqUl8YI71ba4ObVm2gANsIJwc7duffOK8t8P61ptrbeHL7RdZ1DUr6XS559biju3uJdq2xbc0bEiOQTBVUYH3iORXst9aJf6fcWcpZY7iNomK9QGBBx781Hpem2+k6ZbWVuCUt4UhDtjcwRQoLEAZOBQB4bput3dndXH/CPX8D3V54avJoYYNXk1GSW6TymjZy4C+dtZztUevbFaFzqVtaalqA8Ba1d6iV8L3VwAt5JdAT+ZDiT5i373aSSvXpx83Pslxp9tc2cts0flpIrKTEdjLuBBKsMFTz1HNZOh+EoNFv2vn1G+1O7MP2dJrxoyY4924qNiKOTgliCxwMk4oA434czq/i2SPTdWsbqwOnh7iK01KfUAZS6+XIzyKAjkbwVzluCR8tbnjjTrL/hJ/B2o/Y4Pt39sJD9p8seb5f2e4OzdjO3POOma7NIo4s+WipuO47RjJ9adQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUVR1fWLTRLIXN4ZNrusUaRRtJJI7dFVVBJJ/oSeBQBeorP0jW7PW4ZntfNR7eTypoZ4mikifAbDKwBHDAg9CCCK0KACis6HXtOudSisYbgSTyrOygA4/cyJHICfUNIo//VWjnnFABRVO21S1vZUS2Z5lYzL5ioSitFII3UtjAbdkAd9rY6GrgIIyORQAUUZz0oJAxk4zQAUVVsdRttR+0fZnLfZpmt5MgjDr1H61ayAQM8mgAoqnbapa3sqJbM8ysZl8xUJRWikEbqWxgNuyAO+1sdDVzIxnIx60AFFFVbXUrW8ur23hk3SWUqxTZGAGKK4we/yuv50AWqKMjNFABRRkHuKM0AFFQXF7bWslvHNKqNcy+TED/G+1mwPwVj+FT0AFFGRjORiigAooyD361V1LUrXSdMub+7cpb2qGSQgbiAPYUAWqKCQBknAoz+tABRVe/voNN065vrlisFrE00hAyQqgknH0BotbyO8R3jWRVVguZEKBsgHK56jkcjvkdqALFFGRnGefSoL29ttOsLi9u5VhtraNpZZG6IijJJ+gBoAnooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArA8ZWEmoaPDGmltqkaXCSSwxTmCdVGfnhfcu2RTtP3hxkZzW/RQB5Xqg1/SfDzaoPtP2u01KL+xrfVJY2uZRIghaN2QncCZGKgkt8oz0GLDfDp7RLsQWK3Vxbf2ctldSMvmZidTLIpJyjHkseC3TmvSnijkZGdFYodykjO04xkenBNOoA8xsPh/HPrbLfeHbcWMTauSHSPy5HnngaFtoPP7tWGSPlKY44rPPgvxBNqWnyX9pdS3X2fT0ju0MDGzMar5o81mLodwZjsBD7sV69RQB5M/grVorOSDT9FW2jibVBJEjRxLcpLf28yIMHpJBGyAnGMYOOK6mz0i4bwT4gstF0Y+GZrxZxZRmVRtdogqybUJWL5+dqntuPLEV2FFAHk+meDtVsbG51DTdHuLS7sWtZ7Syk+zwLNLGXEgAjYqGaORo/MZstkZ4UE1/FHgjWn0aOzg0db+7TTWdb2NInf7c8jySkGVx5Q3kMGVSxzjcNor2CigDzgaVrthr8mpxaLcXKXA1KNY0liDIZ2tmjZsuML+5cHGSOOKxrzwprwbSHPh8vc6dFpmy4hELyAQsjTL5jyZTGHG2MDdnliCcewUUAeTP4J1VLGW3sNGFrHGdVWSONo4hcJLf28qIuD/HBGyAnGMYOOKu2Xgx77XLeR/DqWGgf2kbgabKIgiL9kaMu0SsVw0hHyjPI3EDJr0yigDhZ/Dmpj4UwaML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FFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQB//2Q==' alt='CV page 1 with verified evidence highlights'></figure><footer>Single-pass Muse Spark analysis via Meta Model API · Model muse-spark-1.3 · Created 2026-10-30T09:10:06+00:00 UTC<br>CV SHA-256: 58944525acf8a56a3888760b3e0bd9ef5ac4c46decf37020b50cb9bc2d32c0c4<br>Job description SHA-256: 25f9e8ef6b6fec4e5838c10245c36e79017e58692128e93da44823a154a9c458<br>Page-labelled CV text and job criteria from the job description are sent to Meta Model API for this analysis. The original PDF is used locally for quote and page verification. EvidenceTrail does not write uploaded files to persistent application storage; temporary handling depends on the request runtime. This report embeds CV page images; review it before sharing.</footer></main></body></html>",
+    "model": "muse-spark-1.3",
+    "provider_mode": "muse",
+    "analysis_calls": 1,
+    "usage": {
+      "input_tokens": 2376,
+      "output_tokens": 341,
+      "cached_input_tokens": 2161,
+      "reasoning_tokens": 213,
+      "analysis_pass": {
+        "input_tokens": 2376,
+        "output_tokens": 341,
+        "cached_input_tokens": 2161,
+        "reasoning_tokens": 213,
+        "provider_response_id": "chatcmpl-01a18c12-d3b4-7024-8e2a-c790acb1c544",
+        "api_latency_ms": 1655,
+        "client_setup_ms": 0,
+        "prompt_build_ms": 0,
+        "response_decode_ms": 0,
+        "response_validation_ms": 0,
+        "cv_text_characters": 334,
+        "vision_pages_supplied": 0,
+        "cv_page_count": 3,
+        "cv_ocr_page_count": 0
+      },
+      "local_verification": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cached_input_tokens": 0,
+        "reasoning_tokens": 0,
+        "mode": "local_deterministic"
+      }
+    },
+    "performance_ms": {
+      "upload_read_ms": 0,
+      "pdf_extract_and_ocr_ms": 2,
+      "pdf_open_ms": 0,
+      "pdf_structure_validation_ms": 0,
+      "pdf_page_dimension_checks_ms": 0,
+      "pdf_native_text_extraction_ms": 1,
+      "pdf_word_bbox_processing_ms": 0,
+      "pdf_ocr_detection_ms": 0,
+      "pdf_page_record_assembly_ms": 0,
+      "pdf_readability_validation_ms": 0,
+      "semantic_pass_total_ms": 1656,
+      "muse_api_ms": 1655,
+      "muse_client_setup_ms": 0,
+      "muse_prompt_build_ms": 0,
+      "muse_response_decode_ms": 0,
+      "muse_response_validation_ms": 0,
+      "proposal_grounding_ms": 0,
+      "timeline_audit_ms": 0,
+      "proposal_grounding_and_timeline_ms": 0,
+      "job_description_coverage_ms": 0,
+      "role_clarity_audit_ms": 0,
+      "requirement_priority_annotation_ms": 0,
+      "local_requirement_audits_ms": 0,
+      "local_quote_verification_ms": 0,
+      "timeline_flag_linking_ms": 0,
+      "verification_summary_ms": 0,
+      "local_verification_and_review_rules_ms": 0,
+      "page_preview_render_ms": 6,
+      "preview_pdf_open_ms": 0,
+      "preview_page_raster_ms": 2,
+      "preview_pixmap_to_rgb_ms": 2,
+      "preview_highlight_draw_ms": 0,
+      "preview_jpeg_encode_ms": 1,
+      "preview_base64_encode_ms": 0,
+      "evidence_graph_ms": 0,
+      "audit_hashes_ms": 0,
+      "html_evidence_pack_ms": 0,
+      "report_assembly_ms": 0,
+      "response_object_assembly_ms": 0,
+      "pipeline_ms": 1665
+    },
+    "cv_sha256": "58944525acf8a56a3888760b3e0bd9ef5ac4c46decf37020b50cb9bc2d32c0c4",
+    "job_sha256": "25f9e8ef6b6fec4e5838c10245c36e79017e58692128e93da44823a154a9c458",
+    "created_at": "2026-10-30T09:10:06+00:00",
+    "ocr_pages": [],
+    "input_document": {
+      "original_media_type": "application/pdf",
+      "original_sha256": "58944525acf8a56a3888760b3e0bd9ef5ac4c46decf37020b50cb9bc2d32c0c4",
+      "normalized_pdf_sha256": "58944525acf8a56a3888760b3e0bd9ef5ac4c46decf37020b50cb9bc2d32c0c4",
+      "locally_converted_image": false,
+      "vision_model_calls": 0,
+      "vision_pages_supplied": 0,
+      "vision_opt_in": false,
+      "quote_verification": "existing_page_checked_pdf_ocr_pipeline"
+    },
+    "verification_receipt": {
+      "schema": "evidencetrail/verification-receipt/v1",
+      "provider": {
+        "mode": "muse",
+        "model": "muse-spark-1.3",
+        "response_id": "chatcmpl-01a18c12-d3b4-7024-8e2a-c790acb1c544",
+        "real_muse_response": true,
+        "source": "new_analysis",
+        "additional_model_calls_for_receipt": 0
+      },
+      "document": {
+        "cv_sha256": "58944525acf8a56a3888760b3e0bd9ef5ac4c46decf37020b50cb9bc2d32c0c4",
+        "extraction_mode": "pdf_text_no_ocr_reported",
+        "ocr_pages": [],
+        "cited_pages": [
+          1
+        ]
+      },
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "semantic_overrides": {
+        "raw_vs_verified_status_changes": 0,
+        "unmodified_raw_labels": true
+      },
+      "input_guardrails": {
+        "prompt_injection_scan": {
+          "status": "not_recorded"
+        },
+        "hidden_text_scan": {
+          "status": "not_recorded"
+        },
+        "input_sanitization_check": {
+          "status": "not_recorded"
+        }
+      },
+      "timeline": {
+        "status": "recorded",
+        "audit": {
+          "status": "insufficient_data",
+          "precision_note": "Year-only endpoints use January boundaries; month-level dates count the stated endpoint month. Day-level precision is not inferred.",
+          "dated_employment_months": 0,
+          "dated_employment_years_approx": 0.0,
+          "episodes": [],
+          "tenure_by_area": [],
+          "experience_claims": [],
+          "overlaps": [],
+          "flags": [],
+          "excluded_proposals": [],
+          "requirement_links": []
+        }
+      },
+      "requirements": [
+        {
+          "requirement_index": 1,
+          "requirement": "Designed vaccination outreach programs",
+          "raw_muse_status": "supported",
+          "verified_status": "supported",
+          "review_label": null,
+          "override_applied": false,
+          "override_reason_code": null,
+          "verification_explanation": null,
+          "quote_citations": [
+            {
+              "page": 1,
+              "source_id": "R1-Q1",
+              "quote": "I designed a rural vaccination outreach program and coordinated implementation.",
+              "source_verified": true,
+              "match_method": null,
+              "char_span": null,
+              "bounding_boxes": null
+            }
+          ],
+          "timeline_review_flags": []
+        }
+      ],
+      "disclaimer": "PDF grounding confirms the supplied document passage, not real-world truth or a candidate hiring decision. Unknown checks are not passed checks."
+    }
+  },
+  "provider_response_id": "chatcmpl-01a18c12-d3b4-7024-8e2a-c790acb1c544",
+  "provider_receipt_present": true,
+  "provider_mode": "muse",
+  "model": "muse-spark-1.3",
+  "analysis_calls": 1,
+  "finding_summary": [
+    {
+      "requirement": "Designed vaccination outreach programs",
+      "raw_status": "supported",
+      "final_status": "supported",
+      "evidence_type": "direct",
+      "cited_pages": [
+        1
+      ],
+      "page_matches_expected": true,
+      "evidence": [
+        {
+          "quote": "I designed a rural vaccination outreach program and coordinated implementation.",
+          "role": "supports",
+          "page": 1,
+          "boxes": [
+            [
+              48.0,
+              110.0,
+              479.5,
+              126.5
+            ]
+          ],
+          "source_id": "R1-Q1",
+          "evidence_type": "direct"
+        }
+      ]
+    }
+  ],
+  "quote_audit": {
+    "proposed": 1,
+    "verified": 1,
+    "excluded": 0,
+    "verification_proposed": 1,
+    "verification_verified": 1,
+    "verification_excluded": 0,
+    "ambiguous_requirements": 0,
+    "locally_anchored_source_spans": 1
+  },
+  "verification_audit": {
+    "proposed": 1,
+    "verified": 1,
+    "accepted_citations": 1,
+    "excluded": 0,
+    "ambiguous_requirements": 0,
+    "evidence_conflict_review_findings": 0,
+    "strength_suppressed_supports": 0,
+    "rejected_citations": [],
+    "scope_boundary_review": {
+      "requirements_checked": 1,
+      "explicit_scope_limitations_detected": 0,
+      "direct_to_related_adjustments": 0,
+      "direct_to_conflict_adjustments": 0,
+      "direct_to_unsupported_adjustments": 0,
+      "adjusted_requirements": []
+    },
+    "status_invariants": {
+      "related_supported_demoted": 0,
+      "unsupported_supported_demoted": 0
+    },
+    "locally_anchored_source_spans": 1,
+    "verification_mode": "local_deterministic",
+    "semantic_review_clarifications": {
+      "single_scope_limits_clarified": 0,
+      "multi_scope_limits_clarified": 0,
+      "document_absences_clarified": 0,
+      "multi_quote_discrepancies_retained": 0,
+      "related_context_labeled": 0,
+      "unchanged": 1
+    },
+    "semantic_review_page_marks_reconciled": 0,
+    "timeline_gated_requirements": 0
+  },
+  "ocr_pages": [],
+  "estimated_standard_cost_usd_total": 0.070887
+}
