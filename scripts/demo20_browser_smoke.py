@@ -153,11 +153,13 @@ async def main():
                         "#benchmark-panel a[href*='/actions/runs/41031352414']",
                         "#m02-audit-artifact",
                     ):
-                        link=page.locator(selector)
-                        href=await link.get_attribute("href")
-                        assert href and href.startswith("https://github.com/")
-                        response=await page.request.get(href)
-                        assert response.status==200,(href,response.status)
+                        links=await page.locator(selector).all()
+                        assert links,selector
+                        for link in links:
+                            href=await link.get_attribute("href")
+                            assert href and href.startswith("https://github.com/")
+                            response=await page.request.get(href)
+                            assert response.status==200,(href,response.status)
                     # Encore returns to the same inbox and selects ET-018 without reload.
                     await page.locator("#injection-encore").click()
                     await page.locator("#benchmark-panel").wait_for(state="hidden")
