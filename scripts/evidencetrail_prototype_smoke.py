@@ -39,7 +39,7 @@ async def main():
                             path=str(OUT / f"screen-{screen_id}.png"), full_page=True
                         )
 
-                await page.locator("[data-action='open-audit']").first.click()
+                await page.locator("[data-action='open-audit']:visible").first.click()
                 audit = page.locator("#audit-overlay")
                 assert await audit.get_attribute("aria-hidden") == "false"
                 text = await audit.inner_text()
