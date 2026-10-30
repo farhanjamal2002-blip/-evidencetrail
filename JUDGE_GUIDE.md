@@ -22,7 +22,7 @@
 
 
 
-**Release provenance:** on tested implementation/main-sync SHA `eb1916d166f34bc04bf436707d24ed0c389d1b46`, [20-CV acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080426015), [judge-browser smoke](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080426198), and [CI](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080425782) passed. This branch is not deployed. [Public parity run 41080415297](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080415297) reports the host is still on SHA `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`; confirm `/build-info` matches the reviewed release SHA before presenting this UI.
+**Release provenance — current draft snapshot:** PR #28 head `5c20bd2bdf620c00aa6f66938fc3ee09ca5f6674` passed [20-CV mock acceptance 41080741919](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080741919), [judge-browser smoke 41080742057](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080742057), and [CI 41080742170](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080742170). PR #28 remains draft and is not deployed. [Public parity run 41080729614](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080729614) reports the public host is still on SHA `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`. Check `/build-info` against the reviewed release SHA before directing judges to the hosted build. The separate eight-screen prototype in [draft PR #38](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/38) is not part of PR #28.
 
 ## Source quote geometry benchmark — October 29, 2026
 
