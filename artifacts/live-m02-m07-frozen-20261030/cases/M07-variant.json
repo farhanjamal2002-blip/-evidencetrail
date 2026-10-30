@@ -1,0 +1,634 @@
+{
+  "case_id": "M07-variant",
+  "pair_id": "M07",
+  "role": "variant",
+  "single_change_factor": "explicit_internal_discrepancy",
+  "expected_status": "conflicting",
+  "expected_relation": "must_change",
+  "challenge_sha256": "43c7168bb15faf0c1355428eff865dd3dda7810f8843c966fcb9ca5b4f06b62b",
+  "input_pdf_sha256": "449557bfb5078bce8a7dcd8f4fad2b288629438c20a5bdbe73b8d9bb764c3b46",
+  "frozen_release_sha": "8489e45ae0f87d8421562618bda556c31911372b",
+  "request_ordinal": 4,
+  "automatic_retries": 0,
+  "native_vision": false,
+  "http_status": 200,
+  "elapsed_seconds": 3.202,
+  "application_result": {
+    "requirements": [
+      {
+        "id": "R1",
+        "requirement": "Worked as a procurement lead continuously from 2021 through 2023",
+        "job_source": {
+          "line": 1,
+          "text": "FICTIONAL ROLE Requirement: Worked as a procurement lead continuously from 2021 through 2023",
+          "verified": true
+        },
+        "status": "conflicting",
+        "note": "CV both asserts and denies procurement lead work in 2022. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+        "evidence": [
+          {
+            "quote": "I was a procurement lead continuously from 2021 through 2023.",
+            "role": "supports",
+            "page": 1,
+            "boxes": [
+              [
+                48.0,
+                110.0,
+                387.5,
+                126.5
+              ]
+            ],
+            "source_id": "R1-Q1",
+            "evidence_type": "conflicting"
+          },
+          {
+            "quote": "was not employed as a procurement lead during 2022.",
+            "role": "contradicts",
+            "page": 1,
+            "boxes": [
+              [
+                48.0,
+                128.1,
+                337.5,
+                144.5
+              ]
+            ],
+            "source_id": "R1-Q2",
+            "evidence_type": "conflicting"
+          }
+        ],
+        "evidence_type": "conflicting",
+        "proposed_evidence_type": "conflicting",
+        "evidence_strength": "specific",
+        "strength_suppressed_supports": 0,
+        "transfer_explanation": null,
+        "unproven_aspects": [],
+        "follow_up_question": "Can you clarify your employment status during 2022?",
+        "review_reason": "CV both asserts and denies procurement lead work in 2022.",
+        "certainty": "clear",
+        "evidence_conflict_review": null,
+        "final_evidence_type": "conflicting",
+        "muse_evidence_type": "conflicting",
+        "raw_status": "conflicting",
+        "muse_status": "conflicting",
+        "effective_status": "conflicting",
+        "review_reason_code": "multi_claim_or_timeline_discrepancy",
+        "review_label": "Discrepancy to clarify",
+        "review_explanation": "Multiple cited statements or an independently checked timeline flag require human clarification. This does not establish that the CV claim is false."
+      }
+    ],
+    "evidence_graph": {
+      "nodes": [
+        {
+          "id": "JD-R1",
+          "kind": "job_description_source",
+          "label": "FICTIONAL ROLE Requirement: Worked as a procurement lead continuously from 2021 through 2023",
+          "line": 1,
+          "source_type": "job_description",
+          "verified": true
+        },
+        {
+          "id": "R1",
+          "kind": "requirement",
+          "label": "Worked as a procurement lead continuously from 2021 through 2023",
+          "status": "conflicting",
+          "evidence_type": "conflicting",
+          "certainty": "clear"
+        },
+        {
+          "id": "EV-R1-1",
+          "kind": "source_quote",
+          "source_id": "R1-Q1",
+          "page": 1,
+          "bbox": [
+            48.0,
+            110.0,
+            387.5,
+            126.5
+          ],
+          "quote": "I was a procurement lead continuously from 2021 through 2023.",
+          "role": "supports",
+          "proposed_role": "supports",
+          "evidence_type": "conflicting"
+        },
+        {
+          "id": "EV-R1-2",
+          "kind": "source_quote",
+          "source_id": "R1-Q2",
+          "page": 1,
+          "bbox": [
+            48.0,
+            128.1,
+            337.5,
+            144.5
+          ],
+          "quote": "was not employed as a procurement lead during 2022.",
+          "role": "contradicts",
+          "proposed_role": "contradicts",
+          "evidence_type": "conflicting"
+        }
+      ],
+      "edges": [
+        {
+          "from": "JD-R1",
+          "to": "R1",
+          "relation": "defines"
+        },
+        {
+          "from": "R1",
+          "to": "EV-R1-1",
+          "relation": "supports"
+        },
+        {
+          "from": "R1",
+          "to": "EV-R1-2",
+          "relation": "contradicts"
+        }
+      ],
+      "requirements": [
+        {
+          "id": "R1",
+          "requirement": "Worked as a procurement lead continuously from 2021 through 2023",
+          "job_source": {
+            "line": 1,
+            "text": "FICTIONAL ROLE Requirement: Worked as a procurement lead continuously from 2021 through 2023",
+            "verified": true
+          },
+          "status": "conflicting",
+          "evidence_type": "conflicting",
+          "transfer_explanation": null,
+          "unproven_aspects": [],
+          "follow_up_question": "Can you clarify your employment status during 2022?",
+          "certainty": "clear",
+          "sources": [
+            {
+              "id": "EV-R1-1",
+              "kind": "source_quote",
+              "source_id": "R1-Q1",
+              "page": 1,
+              "bbox": [
+                48.0,
+                110.0,
+                387.5,
+                126.5
+              ],
+              "quote": "I was a procurement lead continuously from 2021 through 2023.",
+              "role": "supports",
+              "proposed_role": "supports",
+              "evidence_type": "conflicting"
+            },
+            {
+              "id": "EV-R1-2",
+              "kind": "source_quote",
+              "source_id": "R1-Q2",
+              "page": 1,
+              "bbox": [
+                48.0,
+                128.1,
+                337.5,
+                144.5
+              ],
+              "quote": "was not employed as a procurement lead during 2022.",
+              "role": "contradicts",
+              "proposed_role": "contradicts",
+              "evidence_type": "conflicting"
+            }
+          ]
+        }
+      ]
+    },
+    "timeline_audit": {
+      "status": "review_required",
+      "precision_note": "Year-only endpoints use January boundaries; month-level dates count the stated endpoint month. Day-level precision is not inferred.",
+      "dated_employment_months": 24,
+      "dated_employment_years_approx": 2.0,
+      "episodes": [
+        {
+          "id": "E1",
+          "source": "local_date_extraction",
+          "role": "I was a procurement lead continuously from",
+          "company": "",
+          "start_date": "2021",
+          "end_date": "2023",
+          "precision": "year_only",
+          "date_quote": "I was a procurement lead continuously from 2021 through 2023. In the same CV I wrote that I",
+          "date_page": 1,
+          "scope_quote": "",
+          "scope_page": null,
+          "experience_areas": [],
+          "duration_months": 24
+        },
+        {
+          "id": "E2",
+          "source": "muse_proposal",
+          "role": "Role not confirmed",
+          "company": "",
+          "start_date": "2021",
+          "end_date": "2023",
+          "precision": "year_only",
+          "date_quote": "from 2021 through 2023",
+          "date_page": 1,
+          "scope_quote": "I was a procurement lead continuously from 2021 through 2023.",
+          "scope_page": 1,
+          "experience_areas": [],
+          "duration_months": 24
+        }
+      ],
+      "tenure_by_area": [],
+      "experience_claims": [],
+      "overlaps": [
+        {
+          "type": "employment_date_overlap",
+          "episodes": [
+            "E1",
+            "E2"
+          ],
+          "roles": [
+            "I was a procurement lead continuously from",
+            "Role not confirmed"
+          ],
+          "overlap_months": 24,
+          "review_note": "These dated roles overlap by at least three months. Confirm whether they were concurrent, part-time, or a date-entry issue."
+        }
+      ],
+      "flags": [
+        {
+          "type": "employment_date_overlap",
+          "episodes": [
+            "E1",
+            "E2"
+          ],
+          "roles": [
+            "I was a procurement lead continuously from",
+            "Role not confirmed"
+          ],
+          "overlap_months": 24,
+          "review_note": "These dated roles overlap by at least three months. Confirm whether they were concurrent, part-time, or a date-entry issue."
+        }
+      ],
+      "excluded_proposals": [],
+      "requirement_links": []
+    },
+    "batch_rubric_alignment": {
+      "mode": "shared_job_description_items",
+      "required_count": 1,
+      "returned_count": 1,
+      "missing_model_entries": 0,
+      "extra_model_entries_dropped": 0
+    },
+    "job_item_coverage": {
+      "items": [],
+      "matched": 0,
+      "needs_review": 0,
+      "truncated": 0,
+      "method": "conservative lexical overlap; not semantic validation"
+    },
+    "role_clarity_audit": {
+      "criteria": [],
+      "criteria_count": 0,
+      "criteria_truncated": 0,
+      "items": [],
+      "count": 0,
+      "truncated": 0,
+      "disclosure": "Review and edit the job criteria before analyzing CVs."
+    },
+    "excluded_unverified_requirements": 0,
+    "omitted_requirement_audit": [],
+    "quote_audit": {
+      "proposed": 2,
+      "verified": 2,
+      "excluded": 0,
+      "verification_proposed": 2,
+      "verification_verified": 2,
+      "verification_excluded": 0,
+      "ambiguous_requirements": 0,
+      "locally_anchored_source_spans": 2
+    },
+    "verification_audit": {
+      "proposed": 2,
+      "verified": 2,
+      "accepted_citations": 2,
+      "excluded": 0,
+      "ambiguous_requirements": 0,
+      "evidence_conflict_review_findings": 0,
+      "strength_suppressed_supports": 0,
+      "rejected_citations": [],
+      "scope_boundary_review": {
+        "requirements_checked": 1,
+        "explicit_scope_limitations_detected": 0,
+        "direct_to_related_adjustments": 0,
+        "direct_to_conflict_adjustments": 0,
+        "direct_to_unsupported_adjustments": 0,
+        "adjusted_requirements": []
+      },
+      "status_invariants": {
+        "related_supported_demoted": 0,
+        "unsupported_supported_demoted": 0
+      },
+      "locally_anchored_source_spans": 2,
+      "verification_mode": "local_deterministic",
+      "semantic_review_clarifications": {
+        "single_scope_limits_clarified": 0,
+        "multi_scope_limits_clarified": 0,
+        "document_absences_clarified": 0,
+        "multi_quote_discrepancies_retained": 1,
+        "related_context_labeled": 0,
+        "unchanged": 0
+      },
+      "semantic_review_page_marks_reconciled": 0,
+      "timeline_gated_requirements": 0
+    },
+    "page_dimensions": {
+      "1": {
+        "width": 612.0,
+        "height": 792.0
+      }
+    },
+    "report_html": "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>EvidenceTrail evidence pack</title><style>\n      :root{color-scheme:light;--ink:#18212f;--muted:#627084;--line:#dce3ed;--paper:#f3f6fb;--blue:#0866ff}\n      *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 Arial,sans-serif}\n      main{max-width:980px;margin:0 auto;padding:42px 22px 70px}.brand{font-size:12px;letter-spacing:.16em;font-weight:800;color:var(--blue)}\n      h1{font-size:34px;line-height:1.12;margin:16px 0 10px}.sub{color:var(--muted);margin:0 0 28px}\n      .finding{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin:14px 0}\n      .timeline-audit{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin:18px 0}.timeline-audit blockquote{margin:6px 0 14px;padding:10px;border-left:3px solid #c7d8ee;background:#f7f9fc}\n      .job-source{margin:12px 0;padding:10px 12px;border-left:3px solid #8295aa;border-radius:0 8px 8px 0;background:#f5f7fa}\n      .job-source>span,.graph-job-source>span{display:block;margin-bottom:5px;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}\n      .job-source blockquote,.graph-job-source blockquote{margin:0;padding:8px 10px;background:#fff;border-left:2px solid #8295aa;color:#435269;font-size:13px;overflow-wrap:anywhere}\n      .application-claims{margin:24px 0;padding:18px;border:1px solid #c8d9f4;border-radius:14px;background:#f8fbff}\n      .application-claims>p{color:var(--muted);font-size:13px}.claim-audit{margin:12px 0;padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff}\n      .claim-audit>.draft-claim{margin:12px 0;padding:10px 12px;border-left:3px solid #6a7f9d;background:#f6f8fb;font-weight:650}\n      .claim-audit>a,.evidence>a{display:inline-block;margin-top:8px;color:var(--blue);font-size:12px;font-weight:700}\n      .finding-head{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}\n      .timeline-provenance,.scope-provenance{margin:8px 0;color:#805c13;font-size:12px;font-weight:700}\n      .scope-limitation{margin:12px 0;padding:12px 14px;border:1px solid #ead9b4;border-left:4px solid #c58a2e;border-radius:9px;background:#fffaf0;color:#66542f}\n      .scope-limitation strong{display:block;margin-bottom:7px;color:#805c13}.scope-limitation-quote{margin:0 0 6px;color:#4f4636}\n      .scope-limitation-link{color:#805c13;font-size:12px;font-weight:700}\n      .status{border-radius:999px;padding:4px 10px;background:#eef4f1}.status.supported{color:#096c5d;background:#e8f5f1}\n      .status.not_found{color:#8c641b;background:#fbf3df}.status.unsupported{color:#8c641b;background:#fbf3df}\n      .status.conflicting,.status.conflict_to_clarify{color:#a33e38;background:#fbe9e7}\n      .relationship{border-radius:999px;padding:4px 10px;background:#eef4f1;color:#096c5d}.relationship.related{color:#475c9e;background:#eef1fc}.relationship.unsupported{color:#8c641b;background:#fbf3df}.relationship.conflicting{color:#a33e38;background:#fbe9e7}\n      .source-check-badge{display:inline-block;padding:2px 7px;border:1px solid #dce5ef;border-radius:99px;font-size:10px;font-weight:700}\n      .source-check-verified{border-color:#bfdfd0;background:#f2faf5;color:#236342}\n      .source-check-blocked{border-color:#edc5c2;background:#fff4f2;color:#963d39}\n      .source-check-none{background:#f7f9fc;color:#526177}\n      h2{font-size:19px;margin:14px 0 6px}.finding p,.empty{color:var(--muted)}\n      .transfer{padding:10px 12px;border-left:3px solid #667bc1;background:#f2f4fc;color:#39496e!important}.unproven{padding:10px 12px;border:1px solid #ead9b4;border-radius:8px;background:#fffaf0;color:#66542f}.unproven ul{margin:6px 0 0;padding-left:20px}\n      .certainty{display:inline-block;border-radius:999px;padding:4px 9px;background:#fff3d6;color:#83580b;font-size:12px;font-weight:700}\n      .evidence{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.evidence-meta{font-size:12px;color:var(--blue);font-weight:700}\n      blockquote{margin:8px 0 0;padding:12px 14px;background:#f2f6fc;border-left:3px solid var(--blue)}\n      .audit-summary{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--muted);font-size:13px}\n      .omitted-audit{margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}\n      .omitted-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}\n      .omitted-audit ul{margin:10px 0 0;padding-left:20px}.omitted-audit li{margin:8px 0}\n      .coverage-audit{margin:14px 0;padding:12px 14px;border:1px solid #c8d9f4;border-radius:10px;background:#f8fbff}\n      .coverage-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}.coverage-audit>p{color:var(--muted);font-size:13px}\n      .coverage-audit ol{margin:10px 0 0;padding-left:22px}.coverage-audit li{margin:9px 0}.coverage-audit li strong,.coverage-audit li span{display:block}.coverage-audit li span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}\n      .role-audit{margin:14px 0;padding:12px 14px;border:1px solid #dfd2b0;border-radius:10px;background:#fffaf0}\n      .role-audit summary{cursor:pointer;font-weight:700;color:#644f20}.role-audit>p{color:var(--muted);font-size:13px}\n      .role-audit h3{font-size:15px;margin:18px 0 8px}\n      .role-audit ol{margin:10px 0 0;padding-left:22px}.role-audit li{margin:12px 0}.role-audit li strong,.role-audit li span{display:block}\n      .role-audit li span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}.role-audit blockquote{margin:7px 0;padding:9px 11px;background:#fff;border-left:3px solid #c6a555}\n      .ocr-warning{margin:14px 0;padding:13px 15px;border:1px solid #e6c783;border-radius:10px;background:#fff8e8;color:#775415}\n      .ocr-warning strong{font-size:13px}.ocr-warning p{margin:5px 0 0;color:#746343;font-size:13px}\n      .omitted-audit li span{display:block;color:var(--muted);font-size:13px}\n      .rejected-audit{margin:14px 0;padding:12px 14px;border:1px solid #f0c9c5;border-radius:10px;background:#fffafa}\n      .rejected-audit summary{cursor:pointer;font-weight:700;color:#9b3f38}\n      .rejected-audit>p{color:var(--muted);font-size:13px}\n      .rejected-audit ol{margin:10px 0 0;padding-left:22px}\n      .rejected-item{margin:10px 0;padding:10px 12px;border-left:3px solid #d65b53;background:#fff}\n      .rejected-item>span{display:block;margin-top:4px;color:var(--muted);font-size:12px}\n      .rejected-item blockquote{margin:8px 0 0;padding:9px 11px;background:#fff5f4;border-left:2px solid #d65b53;overflow-wrap:anywhere}\n      .graph-row{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:16px;padding:16px 0;border-top:1px solid var(--line)}\n      .graph-requirement{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;align-self:start}\n      .graph-job-source{margin-top:10px;padding:9px 10px;border-left:3px solid #8295aa;border-radius:0 8px 8px 0;background:#f5f7fa}\n      .graph-requirement span,.graph-source span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}\n      .graph-requirement strong{display:block;margin-top:6px}.graph-links{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}\n      .graph-arrow{color:var(--blue);font-size:22px}.graph-source{min-width:210px;flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}\n      .graph-source.support{border-top:3px solid #1ba085}.graph-source.conflict{border-top:3px solid #de4d48}\n      .graph-source blockquote{font-size:13px;padding:8px 10px}.graph-empty{color:var(--muted);font-style:italic;padding:10px}\n      .human-review-record{border-top:1px solid var(--line);margin-top:18px;padding-top:12px;color:var(--muted);font-size:13px}\n      .human-review-record h3{font-size:14px;color:var(--ink);margin:0 0 6px}.human-review-record p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}\n      .clarification-brief{margin:22px 0;padding:18px;border:1px solid #c8d9f4;border-radius:14px;background:#f8fbff}\n      .clarification-brief>h2{margin:0 0 5px}.clarification-disclosure,.clarification-reason{color:var(--muted);font-size:13px}\n      .clarification-item{margin-top:14px;padding:15px;border:1px solid var(--line);border-radius:10px;background:#fff}\n      .clarification-meta{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}\n      .clarification-item h3{margin:6px 0;font-size:15px}.clarification-question{font-weight:700}\n      .clarification-item ul{padding-left:20px}.clarification-item li{margin:8px 0;font-size:12px;color:var(--muted)}\n      .clarification-item blockquote{margin-top:5px;font-weight:400;overflow-wrap:anywhere}\n      .candidate-response-record{margin-top:14px;padding:13px 15px;border:1px solid #c9d9f1;border-radius:9px;background:#f8fbff}\n      .candidate-response-record h4{margin:0 0 8px;font-size:14px}.candidate-response-record p{font-size:12px;color:var(--muted)}\n      .candidate-response-record blockquote{white-space:pre-wrap;overflow-wrap:anywhere;border-left-color:#6d7e96}\n      .source-legend{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:12px}\n      .source-legend span{display:inline-flex;align-items:center;gap:6px}.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;background:#1ba085}.swatch.conflict{background:#de4d48}\n      figure{margin:20px 0;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}\n      figcaption{font-weight:700;margin:4px 0 12px}img{display:block;width:100%;height:auto;border-radius:6px}\n      footer{border-top:1px solid var(--line);margin-top:34px;padding-top:16px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}\n      @media(max-width:650px){.graph-row{grid-template-columns:1fr}.graph-links{padding-left:10px}}\n      @media print{body{background:#fff}main{padding:0}.finding,figure,.graph-row{break-inside:avoid}}\n    </style></head><body><main><div class='brand'>EVIDENCETRAIL · MUSE SPARK EVIDENCE REVIEW</div><h1>Grounded requirement evidence pack</h1><p class='sub'>Muse returns requirement-level interpretations and proposed evidence in one structured analysis. EvidenceTrail then checks every displayed quote against the original PDF page and applies deterministic timeline checks. A human reviews the interpretation. This is not a hiring decision.</p><p class='audit-summary'>Local source check: 2 of 2 proposed citation(s) matched the original PDF page; 0 were rejected. Local checks anchored 2 citation span(s); 0 requirement(s) were marked ambiguous.</p><section class='timeline-audit'><h2>Timeline and tenure review</h2><p>Date arithmetic is deterministic and based on quote-verified CV dates. Any flag is a prompt to clarify, not a finding of dishonesty.</p><p>About 24 unique month(s) across the dated roles shown in this CV. Year-only endpoints use January boundaries; month-level dates count the stated endpoint month. Day-level precision is not inferred.</p><ol><li><strong>employment date overlap</strong><p>These dated roles overlap by at least three months. Confirm whether they were concurrent, part-time, or a date-entry issue.</p></li></ol><details><summary>Verified dated roles · 2</summary><ol><li><strong>I was a procurement lead continuously from</strong> · 2021–2023<small class='timeline-origin'>Dates found in CV text by local code</small> · CV page 1<blockquote>I was a procurement lead continuously from 2021 through 2023. In the same CV I wrote that I</blockquote></li><li><strong>Role not confirmed</strong> · 2021–2023<small class='timeline-origin'>Muse proposal · date quote checked locally</small> · CV page 1<blockquote>from 2021 through 2023</blockquote></li></ol></details></section><h2>Requirement-to-source graph</h2><div class='graph-row'><div class='graph-requirement'><span>R1 · conflicting</span><strong>Worked as a procurement lead continuously from 2021 through 2023</strong><div class='graph-job-source'><span>Job post · starts at line 1</span><blockquote>FICTIONAL ROLE Requirement: Worked as a procurement lead continuously from 2021 through 2023</blockquote></div></div><div class='graph-links'><span class='graph-arrow'>→</span><div class='graph-source support'><span>Page 1 · R1-Q1 · support</span><blockquote>I was a procurement lead continuously from 2021 through 2023.</blockquote></div><div class='graph-source conflict'><span>Page 1 · R1-Q2 · conflict</span><blockquote>was not employed as a procurement lead during 2022.</blockquote></div></div></div><article class='finding' data-finding-id='R1'><div class='finding-head'><span>R1</span><span class='status discrepancy_to_clarify'>Discrepancy to clarify</span><span class='relationship conflicting'>Discrepancy to clarify</span></div><h2>Worked as a procurement lead continuously from 2021 through 2023</h2><p>CV both asserts and denies procurement lead work in 2022. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.</p><div class='job-source'><span>Job post · starts at line 1</span><blockquote>FICTIONAL ROLE Requirement: Worked as a procurement lead continuously from 2021 through 2023</blockquote></div><div class='evidence'><div class='evidence-meta'>Discrepancy to clarify · source quote · <span class='source-check-badge source-check-verified'>Verified (Page 1)</span> · source R1-Q1</div><blockquote>I was a procurement lead continuously from 2021 through 2023.</blockquote></div><div class='evidence'><div class='evidence-meta'>Discrepancy to clarify · source quote · <span class='source-check-badge source-check-verified'>Verified (Page 1)</span> · source R1-Q2</div><blockquote>was not employed as a procurement lead during 2022.</blockquote></div></article><h2>Verified source pages</h2><figure id='page-1'><figcaption>CV page 1</figcaption><p class='source-legend'><span><i class='swatch'></i>Teal highlight: supporting passage</span> <span><i class='swatch conflict'></i>Red highlight: conflicting statement</span></p><img src='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAcFBQYFBAcGBgYIBwcICxILCwoKCxYPEA0SGhYbGhkWGRgcICgiHB4mHhgZIzAkJiorLS4tGyIyNTEsNSgsLSz/2wBDAQcICAsJCxULCxUsHRkdLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCz/wAARCAPoAwUDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6RooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiig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Oe7sZtWvhpD2dpYmJTHm6ihVhtf5MrwdpK7cgn2wAWdR+JEKaTfTW2nX0G1byG0u7hE8ia4t1kLJgOW/5ZOQSADtPOasw+Nwkststle6rfCV8W1pDGrKiRxM7ZeQBgDMgzkElgAvGao6f8ODPp01vrOpXjwtc380VojR+XCbh5l3qdm4ny5WwGJALHjpjUm8CWwumvLDVdQ069ZpCbiExltsiRI6YZCMfuY2BxkEdccUAPn8c2dtrdlp82n38K3kkcUdxKqRqXkXcq7GcSHrgkIQDwTwcZd78TYh4bvNSstG1Deulz6lafaBGqTrFtD9HyNpdc5xkZK7qtN8ObL+0/tsWqX6N9oguiG8uRmeJUVd0jIXYEIMgt1JNWZvAWmT6LDphuLsQw6XcaSrbl3eVNs3Mfl+8PLXB6cnINAHSQu0sEcjxPCzqGMbkFkJHQ4JGR7Ej3p9VbK0mtRIZr6e7aQqf3oQBMIqnaFUcEgsc55Y4wMAWqACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoorzHW7GDxJ491q11ZWubfTlt1tYzIyrEHj3NgKRkk45PPA9BTSuY1qvskmle56dRXln/CCeHP+gd/5Gk/+Ko/4QTw5/wBA7/yNJ/8AFU+U5vrU/wCVff8A8A9Toryz/hBPDn/QO/8AI0n/AMVR/wAIJ4c/6B3/AJGk/wDiqOUPrU/5V9//AAD1OivLP+EE8Of9A7/yNJ/8VR/wgnhz/oHf+RpP/iqOUPrU/wCVff8A8A9Toryz/hBPDn/QO/8AI0n/AMVR/wAIJ4c/6B3/AJGk/wDiqOUPrU/5V9//AAD1OivLP+EE8Of9A7/yNJ/8VR/wgnhz/oHf+RpP/iqOUPrU/wCVff8A8A9Toryz/hBPDn/QO/8AI0n/AMVR/wAIJ4c/6B3/AJGk/wDiqOUPrU/5V9//AAD1OivLP+EE8Of9A7/yNJ/8VR/wgnhz/oHf+RpP/iqOUPrU/wCVff8A8A9Toryz/hBPDn/QO/8AI0n/AMVR/wAIJ4c/6B3/AJGk/wDiqOUPrU/5V9//AAD1OivLP+EE8Of9A7/yNJ/8VR/wgnhv/oHf+RpP/iqOUPrU/wCVff8A8A9Toryz/hBPDn/QO/8AI0n/AMVR/wAIJ4c/6B3/AJGk/wDiqOUPrU/5V9//AAD1OivLP+EE8N/9A7/yNJ/8VR/wgnhz/oHf+RpP/iqOUPrU/wCVff8A8A9Toryz/hBPDn/QO/8AI0n/AMVR/wAIJ4c/6B3/AJGk/wDiqOUPrU/5V9//AAD1OivLP+EE8Of9A7/yNJ/8VR/wgnhv/oHf+RpP/iqOUPrU/wCVff8A8A9Toryz/hBPDn/QO/8AI0n/AMVR/wAIJ4c/6B3/AJGk/wDiqOUPrU/5V9//AAD1OivLP+EE8Of9A7/yNJ/8VR/wgnhz/oHf+RpP/iqOUPrU/wCVff8A8A9Toryz/hBPDf8A0Dv/ACNJ/wDFUf8ACCeHP+gd/wCRpP8A4qjlD61P+Vff/wAA9Toryz/hBPDf/QO/8jSf/FUf8IJ4c/6B3/kaT/4qjlD61P8AlX3/APAPU6K8s/4QTw5/0Dv/ACNJ/wDFUf8ACCeHP+gd/wCRpP8A4qjlD61P+Vff/wAA9Toryz/hBPDn/QO/8jSf/FUf8IJ4c/6B3/kaT/4qjlD61P8AlX3/APAPU6K8s/4QTw5/0Dv/ACNJ/wDFUf8ACCeHP+gd/wCRpP8A4qjlD61P+Vff/wAA9Toryz/hBPDn/QO/8jSf/FUf8IJ4c/6B3/kaT/4qjlD61P8AlX3/APAPU6K8s/4QTw3/ANA7/wAjSf8AxVH/AAgnhz/oHf8AkaT/AOKo5Q+tT/lX3/8AAPU6K8s/4QTw5/0Dv/I0n/xVH/CCeHP+gd/5Gk/+Ko5Q+tT/AJV9/wDwD1OivLP+EE8Of9A7/wAjSf8AxVH/AAgnhv8A6B3/AJGk/wDiqOUPrU/5V9//AAD1OivLP+EE8Of9A7/yNJ/8VR/wgnhz/oHf+RpP/iqOUPrU/wCVff8A8A9Toryz/hBPDn/QO/8AI0n/AMVR/wAIJ4c/6B3/AJGk/wDiqOUPrU/5V9//AAD1OivLP+EE8Of9A7/yNJ/8VWz8PibPWPEGjQuy6fYtA1vCzFhEXQl8E5OCRnGcZz6mhouniXKSjKNr+f8AwEd1RRRUnYFFFFABRRRQAUUUUAFFFFABRSM6oMuwUdMk4paACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACvFfHn/IZ8X/APXzpX/ocde1V5Hr8WmXnjfxTZanfJaRyvYyAmVUYmNVcY3e4GfY007HJiYuXKkr6/ozV8QanPpGnxXkSRtEtxElxvB+WJnCswweo3A/QGudi8bX1xPeWyW1uszX0UFjkNiSJpXjLtzzgRSNxjjFbupahoGq6Xc2Fzq1n5NzG0T7blAQCMZHPWsu207wpa32kXaavAZdJgMEO66jIcEEbn9W5bnj7xp8y7mHsKv8r+4r33i6/s9a8v7RpssIvktGtYo5JJVRnCb2lB2q3OdpHtnNSt4o1JfFTWMslhZxi7EEdtdRyJJPGcfvElJ2MTzhQD0xnNQTaRokkEttH4tMNqbn7XFCs8G2OXzPMzkjLDdzgkjn6YnuLLRLq5fzvFe+xkuFums2uYShcMGGGI3BdwB2g/pxRzLuHsKv8r+43PEWoz6XpXnwTWcDmRU827YhEBPJwCCx9FBGap+FNduNY/tGG5eGZ7KZY1niheFZVKBgdjkkdSOuD1FJrU+iaxDbj+37a1mtZxcQzRTxko4BHRsgjDEYI71HpDaNpN9e3X/CSxXb3pVpfPuIuXUbdw2gY4AGOnFHMu4ewq/yv7irPr/iF11y7tI9PFro87p5ciuXuFVFcgMGwhweDg5PYd1fxZfG51W7jitxpWl2yXTZVvOmDQ7wo5wDnvz6Y71mW9hp97da6LnxJ9jtb+9YyQRXUO24i2IM5OSueQcEEgVvqPDCtqIOp2bxajGsU0RuU2BFTZgY6DFHMu4ewq/yv7iv/b+r6RPaNrgs5ILyGWQC1jZWhZIzIVJZjvG0NzxyOnNImr+JYdHOrXEGnyW0llJdBIwytbsE3orEt+8B6EgLz7Uyzs9ChuIpL3xMmprbxNBBHc3EO2NWGG+6AWJHGTk4+pqO30zQIwkVz4n+2WsED29vby3UQWJGXaeVALHbwCxOB+dHMu4ewq/yv7jVl125judGjEcWL+3lmk4PBVFYY56ZNYa+L9XTQdIu7v7Bbz6yFaEiKR0gTy9zMwByxPGAMYzyTjNWbKx0O2uLSe48VfbXsongg825hARGAUjCgZOAOTzxU0lv4e/sfTbG38QRW0mlqq2tylzEZE2ps5z8pyvBBGDRzLuHsKv8r+4qxeLtUlskjijtZbr+0I7ITmKRIZUdSwkVSdwI6EZPIPPPDLjxH4ks7bV5pDpjro06xy7YXBuFYI3Hz/uyFcf3sn073ooNBEMIuPEaXU0d2t600t1HueQDAGBwFx2UCnXMPhu6ttWgfWoAuqyCSYrdR5UhFX5fThB1z3o5l3D2FX+V/cZ+qeNbyG/1L7G1qItNkMf2aSCV5boqoLbXU7U64GQeRzgVZvPEGtzzaydNWyhh0yCO4X7TE7NLuj37Dhht6deevSi8tNEubu6eHxV9jt71g91bwXUQWVsAEgkFlyAAdpGaulvDpk1Rv7Zth/acYjlAuY/lATYNvpx65o5l3D2FX+V/cVdJvtRvvHDym4RbGXSre4FvtYldzSd92N2QcnHIwO2TDrerjQvFGsal5fmmHSbfahOAzGeVVBPpkirlr/YVlqsF7Br9uPKs0smjNxEVkRCSpJ6ggsemKNQj8M6nc3k1zq9sxu7VLV1F0gAVWZlYdwwLHnPYUcy7h7Cr/K/uKdj4svzPdW80lleFbR7mOdIpLaJHXGUcuTxyCGz0B4qtb+Obm2e+N5NZ6jFb6c9+slpBJCuVIBQFyQwO4fMPxFWXsNEu7S8h1PxYdQ+0wfZt0l1EnlpnPyhQBuyAckHp6cUGw0S4vDc6h4qS/Z7aSzlWWeFUkifGVwoGORnI5/CjmXcPYVf5X9w1zrg8Y+Gv7XaycSee4+zIyeW3lHKHcx3dfvcdDxWzq2paidbttI0o20VxLA9zJNco0ioilVAChlJJLevAB61lWVnotvqVlfXPiw30lgrJbia5hARWXaQdoG44xyeeB75uarJo2o3UF5B4jhsL23Vo0ngniJKNjcpDZBGQD04Io5l3D2FX+V/cRjVvEN1fwaVHFY2N+lsbm5klVpo8byiBAGU/NtJ5PA45NQQeJtW1KTSbW0htLe4vBdJcNKrSLC8DqhKgEbgSTxkdRzwcsGn6DbpbPYeKBZ3UEbRNcrcwu8ys29t4cEE7iSDgYzxxxVqxh8M6fJpzwaxb50+OWNN10h3+aVZ2b1Ylc9upo5l3D2FX+V/cZsOr63qOtaCHuLaBkvbu1uUjjfZKYgwJA39CBwDnB556VJpms6g9vothplvY2v24XjMzI7LF5coAIXcCc7jkZHJznjBtfZfD8dxbT2/iCGKWC9lvQftETbjJnehB/hIYj1HrUljD4bsJrGSLWoGNis6x7rqM5ErBmz9CBjp+NHMu4ewq/wAr+4bpHiW/u7+wsruK382Sa8gneMMAWhYAFQTwDnoc00+JdSubhbC0jtUu5tQntY5JFZkjjiGSxUEFm6DAI6+1Ry2OgeZFNaeJUs7mK5muVmS4hY5lOXXDAgr6cZGBzTV03w7DZpHb+JFiuY7p7yO7+1RNIsjjD9Rgg5OQR3+lHMu4ewq/yv7ieLxLqMVylhdx2zXcWpx2UzxqwR0eLzFdQTlTjAwSehpNY8TalZz6rFa20biznt4xL5TyeUjruaRlU5YD0GKifT/D7ae0X/CSp9ta6W9N6bmLzTMBgHGNuAo27cYxSCw0NRcyr4sZb24mjuGuhdxbg6LtHy427cHG0jFHMu4ewq/yv7iCXVJtWsNGmmu7G7KazHGs1nkKwCtjcpJKNzypJ/WtDTvE95fSaVZeVANQlnnjvVAO2JYSVcgZyMsY8Zzw3eorey8PRESz+IYrm6N4l7JO9xEpkdV2KCFAAUDsAPrVfw7PpSeJNa12e5tbNr10SKKS6jLBVUBnwrEDcQOM/wAINHMu4ewq/wAr+4ueKILi68UeGYA9ubY3LyNHNEXBZY2YH7wGQM444OD2xVW38T65PpMF2YbFXv7w2Vom18KwdwZHOem1Cdo9OvPGxdXmg3eo2N5JrFoJLF3eMLcpglkKnP4H2qi1t4bOhRaYmuQxiCY3EM63UfmRyby+4Hp1YjBHTg0cy7h7Cr/K/uIb3xLrGlW+p21xHZ3GoWbWrRSIrRxypNL5fK5JUghu57H2qO61rxRbza1biTSmfSrdbvzPIkAlVlYhNu/5T8jfNk9uKlWx8PyW12t54jju7i8khkmuHuIlc+U4ZFAAChQR0x3Pc1cnbw7PPqcra1bhtTt1tpcXMeFVQ4BX0PznrntRzLuHsKv8r+40bnzNX8MOYrptPe7tsideTDuXOR06Z61xmINPGoav4Wt5LfTrPTLgyXHPl3coUGMqD9/btbL984ya6O/fw/qHhuTRX1yCO3khEBeO6jD7QAOpyOQOeO9VrKPSLXck/i57+3eMxNb3Nzb+WVIx0VVPT3o5l3D2FX+V/cU7XTItD1jw+NOd4pNSgliuZCxfzmEW8SMCeWDDr/tEVDpemWqa9pi6EZrmezkb+09Uy2yf5GDIxJw7FyDgZ246jpV2zstCtmQy+KBc+Rbta2vmXUQNujAA7SAMtgAbmyePrk0iz0fRRax2/jOeS2tgFS3kurfyyoGADhAf1o5l3D2FX+V/cTWFvcW/xLvRNfTXYk05JEEgUCIGVhtUKBxx1OT71N4rk1GO/wDDwsbqO3WXUPLkDIzb/wB1IQDhhkcHj12ntgzi80Aa62q/2xa+e1uLYr9pTbtDFs465yT3pmr3Oi6qtof7etreWzuFuY3jnjPzBWXBByCCGIo5l3D2FX+V/cYFhqOr6TYajfQ/YzYR61NE8LoxkkD3OwsHDALgt02np15q/P4n1aBNavPItDaadcG0ijwweaRtgTJzhVBcZ4OfbHNh4fDb6Vcaedag8q4uzeMftUe4OZRLge24Y+nfvTpIvDMun6nZyavbPFqUzTy5ukBViFGVI6Y2gjrzRzLuHsKv8r+4r33iDWtDS/h1D7Dczpps9/bSQxPGm6IDcjKWJIyy8gjIz0q3rfid9GktXeJHgewubyUDO7MQjICntneevtVOOz0GT7W2peJk1KW5tWsi81xCpSJvvKoQAZPGT14FPtvDlneW7XX9qy688NrLZIsk0YjKuoyjFF4JwMt1578UJp7ClSnFXkmgGra9b6rYWOpiweLUbeaUtbo6tEUUHZyx3fe+9xnngVR8Kajq9jo/hOK4Nm1jfwJbrGiMJY8QF1Yvuw2QnI2jGepxy7RNE1O412xur5dSjhsbWWH/AE2SFiC4UBU8v7wABy7cn5feuig8O2kFpo1uskxTR8eQSRlsRNH83HPDHpjmmZlXxVbadItpcaxdFdPgZt1ptLC6kYYQbRyxHOFwc59q5y2sLhl0nSL2Ga303UNRnmSzkc7lgWIskTc9Nw3bc8DA7V1WteHE1m+srz+0b2ynsg4ja2ZB98AEncrc4GPxPrTJPDXm2EUMurX81zbz/aILuQxmWJsbcDCBSuCQQQc7j7YAMBLO1S31rS7q/az0bTNQjkYM5w0TRI5hznIXe3QfTvUmkaF/aFvqUUSXOlaHdzwtb2zZjZ1XmTC5yivwMcHAJwM1pz+C7a4sI4G1G+Sdbz7c9yjIJJJsYBOUK4AxgADG0elTN4WE1i9vdaxqV23mJNDNK0e+B0OQybUA785BBoAzvB6C11/WrRbJ9KjCwvHp7sG2ghgZRtJXDEYwCfuc9afff8gH4rf9gj/21lrQg8NbFvJZdVvpb68RI3vAUSREUkqqALtUcntzk1PoOlQa7q3jzSLp5Et9QtoLWRoyA4V4XUkEgjODxkGh7FU/4sPX9GPtdc8T3F2+iaGdLt00/RbO8E95DJKWZxIPL2q68Hyx82eMHhsjG1Hrd7r/AMJE1y0MdjeX2lC7XILrEzRbiBgqTjJwcjtWjp/hiy07Urm9hlnaS4soLFg7AqEh37SMD7x8xs9uBwKk03w9Z6X4RtvDsTzSWdtaLZK0jDzCgTZkkADOPaoPVPNdBbxPd6/4TNvf2DajP4WMkt5cwSSKFMkJGU8wM7nKgkuBnLY/hq6/xO1GXS9Cty+n6dqOoJdPc3MltLcQxCCXyTsjQhiWbkZYAAHJPGev8P8Ag230KbTpzf3d7Pp2nnTYnlCKDDvVhkKo+YBFGfQc881UPw9tbe0sF0vVdQ029097gw3kXlu5WeQySRsrIVZS2CARkbRznqAXPA/iO48TeH3uryBYrmC4ktpGjR0jl2niRA/zBWBBwenIycZrmvC3jrWtW8WQ2GpT6TZvLJOkmkywy295AqbtjKznbPkAE7VAAOQTiu20LR00LSls0urq8be0klxdSb5JXYksxPAHJ6AAAcACsGy+H0dtqWny3WvapqFnpczXFlZ3JjKwuVZQS4QSPgOwG5j75xQBz9l8RNWbxXpdpPeaLeW+oX72T2tjDK7WuFcqTc7jG7fIAV2jqcdDTYfG3jO5sNF1KJNDFvq+py6WkDQy7oirSqsxbfhv9USUwM/3hnjXtPhhHZW+lWsXiPVjaaLcrcWFuwh2Q4yNpxHl/lZlyxJAPrzWvb+CNNttM0mxSe6MWlX7ahCSy7mkYyEhvl5X963TB4HPqAcrdfETWNI0e8t9R/s5tWh1z+xo7lIJBb4MCz+a0QZn4QkbQ3JA5APG94G8V3niC41WxvTDcvp7RlL23tpLeK4RwcYSQkqylWBGSOh74qxe+BNPu474pd3ttc3eorqqXMTrvtrhYkiBTKkY2pghg2dzdjxf0DQG0UXUtxql7qt5eOHmuLplHQYCqiBVRQOwHUknNAHKaboOleN/F/ii78SWMOpjTb0adaWt0vmR28YhjcuqHjc7SE7sZwAM8VS1/SbPwz4RttU0fUGv18Iaobnb5gke3tycT22eThYpCQDyAq11Oq+C/tWuzaxpOt6hoV9dIsd01oInS4C8KWSRGG4DgMMHHHNXdH8Kabo3hyXRY1lube48xrmS4ffJctJnzHkbuWyc/l0oAw9GK+Ifipq2sKwks9Ftk0y2YHKmWQCaZh/wEwr+Bp03/Jd7L/sXrj/0phrZ8IeE7DwX4bh0bTpLiaGJncy3Lh5ZGZiSWIABPbp0Aqw2gWr+LYvEJkm+1xWb2ITI8vYzq5OMZ3ZQd8YzxQBzfi3xrqPhvVr+yjt7aRpNMW40zeGHmXJmEJjfnkbpYOmD8xrCk+KerSeHLjU7SxtGew0OO/vI2Vjsu3lMfkj5uADHN15+7z69vr/hHTfEmqaNf3xmE2jXP2mDy2ADNwdrZByuVVsccqKzY/hpokOkeItOjku1i8Q3D3Nywdd0ZY7isfy4Cg7iAQeWNAFV9Y8Yz69D4dgl0WDUltDqF1cPbyywojSFI4kQSKWPytlyR04XnAx7XxLr2veKvBtytzb6fG7X9vf2gR3VpIH2SYIcAg7cpkHbnJznFdjrnhT+1dWg1ay1a90fUooWtjcWojbzIid2xlkVlODyDjIJPqarW/gOxsP7A+wXl3bNojysjErIbgSnMvmFgclzkkjByTigDkdD+Kmo6reaRej7HNYatdJALCGznFxbRyNhJGmJ2NjKlgFAAJwTjno/H8+sw6t4PXSr+K0SfWBFMrxu3mfuJmAO11yuFbKnOTtPG3Bm0zwBFpd3aLFrmqNpNhKZrXTC6CGJucDcFDsi5OFZiBx1wK1vEPh5NfXTm+2T2c+nXi3sEsIUneFZCCGBBBV2FAHnek614i8P6TrGq25006TD4nuYJLeSJ2nmWW+8tnWQMFQgvwCrZ29ecC74r+ImraBrF8YrzRXgsbiKL+zkhlnuZI2KBmeVG2wn5iQGU8AZPNdbJ4J06TQLzSDPdfZ7zUDqLsGXeJDcCfAO3G3eMYxnHfPNZOpfDKDUItXtV1/VLXT9VuGvJbSHytqzkglgxQvjcoO0nHHpxQBJ4Qn1mXx741ivr+K4s4L2FIIljcGIG2iYAEuQBg8gAZbLcZwDSv8AktfiP/sE2P8A6MuK2tK8Of2Vr+p6ouoXEx1MRNPC6pt8xI1j8wYAIJVFyM4qe30G1tvFF7rySTG6vbeK2kQkbAsZcqQMZz+8OefSgDTooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAryzWNHsde+IuvLqcJultVtkhDSMBGDHkgYPTOT9SfWvU68h8R39xpfxB1m8jlCWyXdjHdAgEGN4tmcnphmU5HpWNXZHfgd5+n6otf8IN4c/6Bq/8Af1//AIqj/hBvDn/QNX/v6/8A8VXP6P4o1jULm3spJwtxe3sdzERGo22LI0gGMf7BXPXn1p6a9qX9q2FzDqN3eWt1f/Z3/wBFSO02EsAEYgOSMD5skHB7VlY7jd/4Qbw5/wBA1f8Av6//AMVR/wAIN4c/6Bq/9/X/APiqybfVdWh8RxjUr+5tY5bxoY4zbI9pLGSQirIo3K54+8RzkYrZ8RXV/Fe6NaWN19lN7dNFK+xXOwRSNxkHn5QR79cjIosAz/hBvDn/AEDV/wC/r/8AxVIfA3hsddNUf9tX/wDiqyRq2rxSSaP/AGiXnbVhYpevEm9YzAJugAUt1UHGOelVNbk1GTz9In1SaU2Wo6e8dyI4w7LJKMBht25UrkEAZ4yDzksB0X/CDeHP+gav/f1//iqP+EG8Of8AQNX/AL+v/wDFVL4p1O50fw+ZbXc9zJLFbo+wMQXcLu28AnnIHTOK5251zXdO03WMSXjrDaCeC4voI0kSTdgrhAAy9xx6iiwG7/wg3hz/AKBq/wDf1/8A4qj/AIQbw5/0DV/7+v8A/FVmzJro1+80xfEU4jSxW8WQW8O9XLMu0fLjZ8ucEE/7XXMOk6jrfiO8hiXVzYI2k2l43kwxsxlkD5xuB+XjkewwRzksBqf8Ib4WFyLf7FF55TeI/PfcVzjON2cZI5qT/hBvDn/QNX/v6/8A8VXLHxLeBY9bZYmvU0eZc4/dlxcLHux/dyN30rcuDrmn6kulJrD3s1/ZTyQyywxq0EybcEBVAKHf0IOMdaLAXf8AhBvDn/QNX/v6/wD8VR/wg3hz/oGr/wB/X/8AiqxZfGd5cabc6pZAeTZaasssRXg3Mh4U9/kAOQCPvCmS6/reiQ3c8ovr2FLGWcm+t44dkqAEbdmMocnIOSMDnmiwGy/g3wtHNFE9lEkkuRGjTuC+Bk4G7nA5qT/hBvDn/QNX/v6//wAVWU1pqNp4w8NfbdXOoiUTsd0SJtbyudm0D5eehyenNania9niurG0tr+5tnmDu0dnbiaeQLjpuBVVBPJI7gCiwC/8IN4c/wCgav8A39f/AOKo/wCEG8Of9A1f+/r/APxVYMWs+IL3Q9Ok8y8AE1zFeSWkMTXP7uQoh2HK9vm2g84x1rq/Dt6dQ0C2uGvFvXIKvMIjFuYMQcofukYwR65osBS/4Qbw5/0DV/7+v/8AFUf8IN4c/wCgav8A39f/AOKrDs9e1JtW0udNRu721vrtoHJtUitShVyvlkgOSNo5yQefatvxHd6gmraLYWN6LMX00kcsnlq52rGzcbgRnjj+R6UWAX/hBvDn/QNX/v6//wAVR/wg3hz/AKBq/wDf1/8A4qsa51fW7aeTSI9RElxFqUFsLx4ULGKWMthlAC7l9sZ496sSTazcS6wsGtyW/wDYyrGmYYz9ocRLIXlyvQ7sYXb0JosBo/8ACDeHP+gav/f1/wD4qj/hBvDn/QNX/v6//wAVWbbanq3iV53tNS/shbezgmVRGjh5JE3/ADlgfkHAwMHrzViPWr42viOR7mJjY2ySQtEAUUmAOSD3G7kZzxRYC1/wg3hz/oGr/wB/X/8AiqP+EG8Of9A1f+/r/wDxVZ1vquq3GqSu16VtLPTbe9kiSJd0zsJCVzjgHbzj0GMc5raHrOuz3Ok3UzXs8V/j7RHLbxxwRhkLAxMPmODgck5BJ4osBtf8IN4c/wCgav8A39f/AOKo/wCEG8Of9A1f+/r/APxVYFpf+ILmz0G6OuOp1W4e2lQW8W1FCyMGX5c7sR98jnp2pX17WIUXS/tVzPOdSmtTdRQI03lJGH4XATdyBnGMAnFFgN7/AIQbw5/0DV/7+v8A/FUh8DeGx101R/21f/4qsf8AtjX1tI7UzTQyHU4rVLm5hQSPE6Encg4DA55GM4HHJqrrR1KT7Vpk+r3Eq2eqWBimMcQkxI6cHCbTtPI4HvkcUWA35/Bvha2i82eyihjyF3PO6jJIAGS3ckD6mpP+EG8Of9A1f+/r/wDxVHjMFfCxBYsRdWgyep/0iOsG+8Qa5NcapdWRvR9guXhht47eM28gTAPmO3zAsc8gjAx1osBvf8IN4c/6Bq/9/X/+Kpr+CfDMcbO+noiKMsxmcAD1PzVh+I9f1O2fU7ywv7txYFcW8NqhgjwqlllkYZJ5/gPAI71b1SfVdUTxI8Gpmyg0wNAluIkZZSIQ7NISM4O/A2kYxmiwGhF4K8MTRJLFYRyRuoZWWZyGB6EHdyKR/BvhaOeOF7KJZZQSiGdwzY64G7nGRTTqcujfDCDUIFVpYNOjZA33d2xQCfYZyaxdbTVdG1qxmm1h76VNPvZUaSGNSkixqcgKACvTg5xjqc0WA6D/AIQbw5/0DV/7+v8A/FVHJ4N8LRSxRyWUSPMxWNWncFyASQBu5OAT9BRNq94l3oMYmAF5azSyjaPmZY1IPTjk9qzdHvtVlg8KXd/fC5fVG3uvkooQfZZGwuBkEkAk59QMDiiwGt/wg3hz/oGr/wB/X/8AiqP+EG8Of9A1f+/r/wDxVYunanrZ07QtWuNVaX7beC2ltvJjEZQlgCCBu3fKDnOPaki1bWpNP0bWv7UIj1S+jie0MKbI42c4VTjduwMEknvjHFFgNebwZ4Xt4WmnsY4okGWd5nVVHuS1RQ+FvB9zZm7ghtpbZQSZkuWZBjr8wbFaHiZNNOnwS6qZGhguEkSFF3GeTkIm3B3ZJzj1APauWvdMuBKt3e2aWVrq+qWivZZBwiZwZMfLuZguQMjgDJosBtQeFPCN1afare3t5rfBPmx3DMmB15DYpLTwt4Pv4Wls4ba5jQ4Z4rlnAPoSGqheWulprHiW2vW+z6UIrO5nWMYBk3PlcAHO4IgIHJ6d6e2lQ3v9ratqludD0qezW3aIEJI6KxYu4GQvB2heTgnp0osBcs/C/g7UA5sobW6EZw/k3LPtPocNxRpHgrw/dfEBtNm08NaDTTP5YlcfP5oXOQ2elLo1lJd+IxrMWnDS7GO0NtFGyhJJwWUhmUfdA28A88np0rd0D/kqr/8AYHP/AKOFNaSRFSKlSmpK6saX/CrfB3/QH/8AJmb/AOLo/wCFW+Dv+gP/AOTM3/xddbRXXdnz31el/IvuRyX/AAq3wd/0B/8AyZm/+Lo/4Vb4O/6A/wD5Mzf/ABddbRRdh9XpfyL7kcl/wq3wd/0B/wDyZm/+Lo/4Vb4O/wCgP/5Mzf8AxddbRRdh9XpfyL7kcl/wq3wd/wBAf/yZm/8Ai639H0XTtB08WWmWq21uGL7VJJJPUknJJ+p6ADtV6ii7LjSpwd4xS+QUUUUjQKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAryzXYdOfxp4ntNaaKK0v47bas7+WJU8vBKnIzggjI6EV6nVS+0rTtT2fb7C1vPLzs8+JZNucZxkcZwPyqJx5lodOGrKlJuS0at+Kf6Hm8TeFodSh1CO7sFuoLf7JG/2kfLFnO3G7H49aoDSfB67AupRqsUomhQak22Fs5yi78Lznp6kV6Z/wivh7/oA6Z/4CR/4Uf8Ir4e/6AOmf+Akf+FZezkdn1uj2f4HnEVl4Tiv1ul1GD5ZjcLCb8mFZCclxHu2g5JPTqc1pXGoeH7q4tp5tRsnktHMkJ+0qNrFSpPB54Yjn1rtf+EV8Pf8AQB0z/wABI/8ACj/hFfD3/QB0z/wEj/wo9nIPrdHs/wADz+5TwrdxXKS3tn/pUy3EjLebWEiqFV1IbKkBR0x09zUIs/Cg02ayOowMs8qzyStf5maRSCreYW3ZBUY54xXo3/CK+Hv+gDpn/gJH/hR/wivh7/oA6Z/4CR/4UezkH1uj2f4HEXl94e1DT5LK71Gxmt5F2srXK5Poc5znIznrmqEVn4TjtbuCTUILgXihJnnvzJI6jou8tkAZ6A16N/wivh7/AKAOmf8AgJH/AIUf8Ir4e/6AOmf+Akf+FHs5B9bo9n+BxDXvh5r+S8OoWRuJIRAz/aV5QEnGM46k89a54aP4dbXJZTqdvBZx2UFpbfZ9RMbqqF9ykqwJUgp1Jzj2r1j/AIRXw9/0AdM/8BI/8KP+EV8Pf9AHTP8AwEj/AMKPZyD63R7P8Dz8R+EljWMXGneWtqbMJ9oXb5JxlcZx2HPWorNfDujma6sdQtri78kxxm51EyEKORGGYttXOOg/PFei/wDCK+Hv+gDpn/gJH/hR/wAIr4e/6AOmf+Akf+FHs5B9bo9n+B5poEWiWGiXdre3+lPJqM0txdRxzqYyZCcqM4yAuB+FTWVr4UsXlZdQt52kiNuTc33nYiPVBvY4X2Fei/8ACK+Hv+gDpn/gJH/hR/wivh7/AKAOmf8AgJH/AIUezkH1uj2f4HnFhY+EtOvILqHUIHmtgVgabUDJ5SkYKqGcgDB6fT0FWdSbw3qlxBcT6rBHPAGVJYL7yX2tjK5VgSDgce1d9/wivh7/AKAOmf8AgJH/AIUf8Ir4e/6AOmf+Akf+FHs5B9bo9n+B5mNK8IRwpHDqUdv5UjyRNDqJRoy+N4Vg2QpIyR0zzWrYX3h7S7GOztNRso4I84X7SrHJJJJJOSSSSSfWu3/4RXw9/wBAHTP/AAEj/wAKP+EV8Pf9AHTP/ASP/Cj2cg+t0ez/AAPM4tJ8IQmDy9SjAtpBLbr/AGkxWAg9EG/CjkjA7cU7xANI1vUtJeTVbL7PaSySSFbwRuMxkKVKnIIbB6ivSv8AhFfD3/QB0z/wEj/wo/4RXw9/0AdM/wDASP8Awo9nIPrdHs/wPPbaHwpawRxJfWj7LgXe+S93u0uMb2Ytljj1pmo2vhTVLuS4uNRtw8yhJhFfmNZ1HQOqsAw+vbjpXov/AAivh7/oA6Z/4CR/4Uf8Ir4e/wCgDpn/AICR/wCFHs5B9bo9n+B51qNr4U1SXzJ9Qt0YxiF/IvvJEkY6IwVhuXk8H1NMurDwheXEksl7bKssSwyxR33lxyoowoZFYA4HAzXpH/CK+Hv+gDpn/gJH/hR/wivh7/oA6Z/4CR/4UezkH1uj2f4HDW1z4bs53mgv7FJHhjgY/agcomdowW7bj+fNUrGz8J6dex3NvqFvug3eQj3xeODPXYhYhc9OB04r0b/hFfD3/QB0z/wEj/wo/wCEV8Pf9AHTP/ASP/Cj2cg+t0ez/A4KJvC8EFlDHe2Sx2Ehltx9rB2MQwJ+9zw7dc9aiuYvCt1DLG99aKZLj7UXjvdjrLjG9WDZU4GOP616F/wivh7/AKAOmf8AgJH/AIUf8Ir4e/6AOmf+Akf+FHs5B9bo9n+B57bReFbW3jhS+tGEdwLre95udpcY3sxbLH6069Xwvfi686/tA900byOl4FbdGQUYEN8pBA6V6B/wivh7/oA6Z/4CR/4Uf8Ir4e/6AOmf+Akf+FHs5B9bo9n+BxN3feH7+zFrdalZyxBkfBugDlGDKcg56qDWfd2XhK9vpLma/tyZWV5YlvtsUzLjBeMNtY8DqOcDNejf8Ir4e/6AOmf+Akf+FH/CK+Hv+gDpn/gJH/hR7OQfW6PZ/gea3um+EL+S7afUICl4d00K6gVidsY3lA2N2AOcdgetOurDwlezGSfUYWMkaxTAagVFwqjA8wBsP9TmvSP+EV8Pf9AHTP8AwEj/AMKP+EV8Pf8AQB0z/wABI/8ACj2cg+t0ez/A4kX3h0aYNON/YNaCLyPKa4VgUxjacnnisy107wfazCUX1vPIsbQq1xqBl2xsMFBuc4XHavSf+EV8Pf8AQB0z/wABI/8ACj/hFfD3/QB0z/wEj/wo9nIPrdHs/wADzixsfCWnzQyxahBJJAhiiabUDIY0IwVXcxwMdqtxS+GYYtPijvrJU00YtR9qB8v5Cn97n5SRzmu8/wCEV8Pf9AHTP/ASP/Cj/hFfD3/QB0z/AMBI/wDCj2cg+t0ez/A4JG8Lx2VraJe2Qgs5BNCv2sfI4JIOd2T1PWuZh06zfWLZ577SYYLa8N3vi1FmVuSRsgb5YySRuIJ74617H/wivh7/AKAOmf8AgJH/AIUf8Ir4e/6AOmf+Akf+FHs5B9bo9n+BwWrP4Z1yCKK/1C1kWGTzY9l75ZVsEZyjA9CfzqtHZ+EorG4sxfwPDcbS4l1FpCCpypUs5KkHnIxzj0r0b/hFfD3/AEAdM/8AASP/AAo/4RXw9/0AdM/8BI/8KPZyD63R7P8AA84ax8IyadLZTX9vNHPKs0rvqBMjuuNpL793GBjnjFM/svwd9kuLVr+OSG5ULIsmqSPkBgwxmQ45A5GK9K/4RXw9/wBAHTP/AAEj/wAKP+EV8Pf9AHTP/ASP/Cj2cg+t0ez/AAPOrS08J2LStDqSfvY2ifzNUkkBU9eGkOD7jmtTwcttJ8QS2nOs9nbaQIPMjfzFQ+aNqlsnnAPU5ODXY/8ACK+Hv+gDpn/gJH/hV6y0+y02Ew2NpBaRM24pDGEUnpnA78D8qapu92RPF03BxindliiiitzzQooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD//Z' alt='CV page 1 with verified evidence highlights'></figure><footer>Single-pass Muse Spark analysis via Meta Model API · Model muse-spark-1.3 · Created 2026-10-30T09:01:19+00:00 UTC<br>CV SHA-256: 449557bfb5078bce8a7dcd8f4fad2b288629438c20a5bdbe73b8d9bb764c3b46<br>Job description SHA-256: b49b83cb0afbb35cb7816b63cc105f452e448bd9a39ba3e423bc8832756b76b2<br>Page-labelled CV text and job criteria from the job description are sent to Meta Model API for this analysis. The original PDF is used locally for quote and page verification. EvidenceTrail does not write uploaded files to persistent application storage; temporary handling depends on the request runtime. This report embeds CV page images; review it before sharing.</footer></main></body></html>",
+    "model": "muse-spark-1.3",
+    "provider_mode": "muse",
+    "analysis_calls": 1,
+    "usage": {
+      "input_tokens": 2367,
+      "output_tokens": 646,
+      "cached_input_tokens": 2289,
+      "reasoning_tokens": 376,
+      "analysis_pass": {
+        "input_tokens": 2367,
+        "output_tokens": 646,
+        "cached_input_tokens": 2289,
+        "reasoning_tokens": 376,
+        "provider_response_id": "chatcmpl-01a18c0a-ca70-74df-b5c3-8aeb199722f5",
+        "api_latency_ms": 3186,
+        "client_setup_ms": 0,
+        "prompt_build_ms": 0,
+        "response_decode_ms": 0,
+        "response_validation_ms": 0,
+        "cv_text_characters": 262,
+        "vision_pages_supplied": 0,
+        "cv_page_count": 1,
+        "cv_ocr_page_count": 0
+      },
+      "local_verification": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cached_input_tokens": 0,
+        "reasoning_tokens": 0,
+        "mode": "local_deterministic"
+      }
+    },
+    "performance_ms": {
+      "upload_read_ms": 0,
+      "pdf_extract_and_ocr_ms": 2,
+      "pdf_open_ms": 0,
+      "pdf_structure_validation_ms": 0,
+      "pdf_page_dimension_checks_ms": 0,
+      "pdf_native_text_extraction_ms": 1,
+      "pdf_word_bbox_processing_ms": 0,
+      "pdf_ocr_detection_ms": 0,
+      "pdf_page_record_assembly_ms": 0,
+      "pdf_readability_validation_ms": 0,
+      "semantic_pass_total_ms": 3187,
+      "muse_api_ms": 3186,
+      "muse_client_setup_ms": 0,
+      "muse_prompt_build_ms": 0,
+      "muse_response_decode_ms": 0,
+      "muse_response_validation_ms": 0,
+      "proposal_grounding_ms": 0,
+      "timeline_audit_ms": 1,
+      "proposal_grounding_and_timeline_ms": 1,
+      "job_description_coverage_ms": 0,
+      "role_clarity_audit_ms": 0,
+      "requirement_priority_annotation_ms": 0,
+      "local_requirement_audits_ms": 0,
+      "local_quote_verification_ms": 1,
+      "timeline_flag_linking_ms": 0,
+      "verification_summary_ms": 0,
+      "local_verification_and_review_rules_ms": 1,
+      "page_preview_render_ms": 5,
+      "preview_pdf_open_ms": 0,
+      "preview_page_raster_ms": 2,
+      "preview_pixmap_to_rgb_ms": 1,
+      "preview_highlight_draw_ms": 0,
+      "preview_jpeg_encode_ms": 2,
+      "preview_base64_encode_ms": 0,
+      "evidence_graph_ms": 0,
+      "audit_hashes_ms": 0,
+      "html_evidence_pack_ms": 0,
+      "report_assembly_ms": 0,
+      "response_object_assembly_ms": 0,
+      "pipeline_ms": 3197
+    },
+    "cv_sha256": "449557bfb5078bce8a7dcd8f4fad2b288629438c20a5bdbe73b8d9bb764c3b46",
+    "job_sha256": "b49b83cb0afbb35cb7816b63cc105f452e448bd9a39ba3e423bc8832756b76b2",
+    "created_at": "2026-10-30T09:01:19+00:00",
+    "ocr_pages": [],
+    "input_document": {
+      "original_media_type": "application/pdf",
+      "original_sha256": "449557bfb5078bce8a7dcd8f4fad2b288629438c20a5bdbe73b8d9bb764c3b46",
+      "normalized_pdf_sha256": "449557bfb5078bce8a7dcd8f4fad2b288629438c20a5bdbe73b8d9bb764c3b46",
+      "locally_converted_image": false,
+      "vision_model_calls": 0,
+      "vision_pages_supplied": 0,
+      "vision_opt_in": false,
+      "quote_verification": "existing_page_checked_pdf_ocr_pipeline"
+    },
+    "verification_receipt": {
+      "schema": "evidencetrail/verification-receipt/v1",
+      "provider": {
+        "mode": "muse",
+        "model": "muse-spark-1.3",
+        "response_id": "chatcmpl-01a18c0a-ca70-74df-b5c3-8aeb199722f5",
+        "real_muse_response": true,
+        "source": "new_analysis",
+        "additional_model_calls_for_receipt": 0
+      },
+      "document": {
+        "cv_sha256": "449557bfb5078bce8a7dcd8f4fad2b288629438c20a5bdbe73b8d9bb764c3b46",
+        "extraction_mode": "pdf_text_no_ocr_reported",
+        "ocr_pages": [],
+        "cited_pages": [
+          1
+        ]
+      },
+      "quote_grounding": {
+        "proposed": 2,
+        "verified": 2,
+        "excluded": 0,
+        "citation_count": 2,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "semantic_overrides": {
+        "raw_vs_verified_status_changes": 0,
+        "unmodified_raw_labels": true
+      },
+      "input_guardrails": {
+        "prompt_injection_scan": {
+          "status": "not_recorded"
+        },
+        "hidden_text_scan": {
+          "status": "not_recorded"
+        },
+        "input_sanitization_check": {
+          "status": "not_recorded"
+        }
+      },
+      "timeline": {
+        "status": "recorded",
+        "audit": {
+          "status": "review_required",
+          "precision_note": "Year-only endpoints use January boundaries; month-level dates count the stated endpoint month. Day-level precision is not inferred.",
+          "dated_employment_months": 24,
+          "dated_employment_years_approx": 2.0,
+          "episodes": [
+            {
+              "id": "E1",
+              "source": "local_date_extraction",
+              "role": "I was a procurement lead continuously from",
+              "company": "",
+              "start_date": "2021",
+              "end_date": "2023",
+              "precision": "year_only",
+              "date_quote": "I was a procurement lead continuously from 2021 through 2023. In the same CV I wrote that I",
+              "date_page": 1,
+              "scope_quote": "",
+              "scope_page": null,
+              "experience_areas": [],
+              "duration_months": 24
+            },
+            {
+              "id": "E2",
+              "source": "muse_proposal",
+              "role": "Role not confirmed",
+              "company": "",
+              "start_date": "2021",
+              "end_date": "2023",
+              "precision": "year_only",
+              "date_quote": "from 2021 through 2023",
+              "date_page": 1,
+              "scope_quote": "I was a procurement lead continuously from 2021 through 2023.",
+              "scope_page": 1,
+              "experience_areas": [],
+              "duration_months": 24
+            }
+          ],
+          "tenure_by_area": [],
+          "experience_claims": [],
+          "overlaps": [
+            {
+              "type": "employment_date_overlap",
+              "episodes": [
+                "E1",
+                "E2"
+              ],
+              "roles": [
+                "I was a procurement lead continuously from",
+                "Role not confirmed"
+              ],
+              "overlap_months": 24,
+              "review_note": "These dated roles overlap by at least three months. Confirm whether they were concurrent, part-time, or a date-entry issue."
+            }
+          ],
+          "flags": [
+            {
+              "type": "employment_date_overlap",
+              "episodes": [
+                "E1",
+                "E2"
+              ],
+              "roles": [
+                "I was a procurement lead continuously from",
+                "Role not confirmed"
+              ],
+              "overlap_months": 24,
+              "review_note": "These dated roles overlap by at least three months. Confirm whether they were concurrent, part-time, or a date-entry issue."
+            }
+          ],
+          "excluded_proposals": [],
+          "requirement_links": []
+        }
+      },
+      "requirements": [
+        {
+          "requirement_index": 1,
+          "requirement": "Worked as a procurement lead continuously from 2021 through 2023",
+          "raw_muse_status": "conflicting",
+          "verified_status": "conflicting",
+          "review_label": "Discrepancy to clarify",
+          "override_applied": false,
+          "override_reason_code": null,
+          "verification_explanation": null,
+          "quote_citations": [
+            {
+              "page": 1,
+              "source_id": "R1-Q1",
+              "quote": "I was a procurement lead continuously from 2021 through 2023.",
+              "source_verified": true,
+              "match_method": null,
+              "char_span": null,
+              "bounding_boxes": null
+            },
+            {
+              "page": 1,
+              "source_id": "R1-Q2",
+              "quote": "was not employed as a procurement lead during 2022.",
+              "source_verified": true,
+              "match_method": null,
+              "char_span": null,
+              "bounding_boxes": null
+            }
+          ],
+          "timeline_review_flags": []
+        }
+      ],
+      "disclaimer": "PDF grounding confirms the supplied document passage, not real-world truth or a candidate hiring decision. Unknown checks are not passed checks."
+    }
+  },
+  "provider_response_id": "chatcmpl-01a18c0a-ca70-74df-b5c3-8aeb199722f5",
+  "provider_receipt_present": true,
+  "provider_mode": "muse",
+  "model": "muse-spark-1.3",
+  "analysis_calls": 1,
+  "finding_summary": [
+    {
+      "requirement": "Worked as a procurement lead continuously from 2021 through 2023",
+      "raw_status": "conflicting",
+      "final_status": "conflicting",
+      "evidence_type": "conflicting",
+      "evidence": [
+        {
+          "quote": "I was a procurement lead continuously from 2021 through 2023.",
+          "role": "supports",
+          "page": 1,
+          "boxes": [
+            [
+              48.0,
+              110.0,
+              387.5,
+              126.5
+            ]
+          ],
+          "source_id": "R1-Q1",
+          "evidence_type": "conflicting"
+        },
+        {
+          "quote": "was not employed as a procurement lead during 2022.",
+          "role": "contradicts",
+          "page": 1,
+          "boxes": [
+            [
+              48.0,
+              128.1,
+              337.5,
+              144.5
+            ]
+          ],
+          "source_id": "R1-Q2",
+          "evidence_type": "conflicting"
+        }
+      ]
+    }
+  ],
+  "estimated_standard_cost_usd_so_far": 0.0201655
+}

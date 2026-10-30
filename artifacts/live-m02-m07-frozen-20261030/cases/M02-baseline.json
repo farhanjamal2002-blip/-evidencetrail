@@ -1,0 +1,437 @@
+{
+  "case_id": "M02-baseline",
+  "pair_id": "M02",
+  "role": "baseline",
+  "single_change_factor": "agent_swap",
+  "expected_status": "supported",
+  "expected_relation": "must_change",
+  "challenge_sha256": "43c7168bb15faf0c1355428eff865dd3dda7810f8843c966fcb9ca5b4f06b62b",
+  "input_pdf_sha256": "6fbac1bec63c8a5367b51336f0d3e54097168ba3ffa8fab696fd8c73c7f30e97",
+  "frozen_release_sha": "8489e45ae0f87d8421562618bda556c31911372b",
+  "request_ordinal": 1,
+  "automatic_retries": 0,
+  "native_vision": false,
+  "http_status": 200,
+  "elapsed_seconds": 3.476,
+  "application_result": {
+    "requirements": [
+      {
+        "id": "R1",
+        "requirement": "Personally negotiated supplier agreements",
+        "job_source": {
+          "line": 1,
+          "text": "FICTIONAL ROLE Requirement: Personally negotiated supplier agreements",
+          "verified": true
+        },
+        "status": "supported",
+        "note": "CV states personal negotiation of supplier agreement terms. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+        "evidence": [
+          {
+            "quote": "I personally negotiated the terms of supplier agreements.",
+            "role": "supports",
+            "page": 1,
+            "boxes": [
+              [
+                48.0,
+                110.0,
+                350.8,
+                126.5
+              ]
+            ],
+            "source_id": "R1-Q1",
+            "evidence_type": "direct"
+          }
+        ],
+        "evidence_type": "direct",
+        "proposed_evidence_type": "direct",
+        "evidence_strength": "specific",
+        "strength_suppressed_supports": 0,
+        "transfer_explanation": null,
+        "unproven_aspects": [],
+        "follow_up_question": null,
+        "review_reason": "CV states personal negotiation of supplier agreement terms.",
+        "certainty": "clear",
+        "evidence_conflict_review": null,
+        "final_evidence_type": "direct",
+        "muse_evidence_type": "direct",
+        "raw_status": "supported",
+        "muse_status": "supported",
+        "effective_status": "supported"
+      }
+    ],
+    "evidence_graph": {
+      "nodes": [
+        {
+          "id": "JD-R1",
+          "kind": "job_description_source",
+          "label": "FICTIONAL ROLE Requirement: Personally negotiated supplier agreements",
+          "line": 1,
+          "source_type": "job_description",
+          "verified": true
+        },
+        {
+          "id": "R1",
+          "kind": "requirement",
+          "label": "Personally negotiated supplier agreements",
+          "status": "supported",
+          "evidence_type": "direct",
+          "certainty": "clear"
+        },
+        {
+          "id": "EV-R1-1",
+          "kind": "source_quote",
+          "source_id": "R1-Q1",
+          "page": 1,
+          "bbox": [
+            48.0,
+            110.0,
+            350.8,
+            126.5
+          ],
+          "quote": "I personally negotiated the terms of supplier agreements.",
+          "role": "supports",
+          "proposed_role": "supports",
+          "evidence_type": "direct"
+        }
+      ],
+      "edges": [
+        {
+          "from": "JD-R1",
+          "to": "R1",
+          "relation": "defines"
+        },
+        {
+          "from": "R1",
+          "to": "EV-R1-1",
+          "relation": "supports"
+        }
+      ],
+      "requirements": [
+        {
+          "id": "R1",
+          "requirement": "Personally negotiated supplier agreements",
+          "job_source": {
+            "line": 1,
+            "text": "FICTIONAL ROLE Requirement: Personally negotiated supplier agreements",
+            "verified": true
+          },
+          "status": "supported",
+          "evidence_type": "direct",
+          "transfer_explanation": null,
+          "unproven_aspects": [],
+          "follow_up_question": null,
+          "certainty": "clear",
+          "sources": [
+            {
+              "id": "EV-R1-1",
+              "kind": "source_quote",
+              "source_id": "R1-Q1",
+              "page": 1,
+              "bbox": [
+                48.0,
+                110.0,
+                350.8,
+                126.5
+              ],
+              "quote": "I personally negotiated the terms of supplier agreements.",
+              "role": "supports",
+              "proposed_role": "supports",
+              "evidence_type": "direct"
+            }
+          ]
+        }
+      ]
+    },
+    "timeline_audit": {
+      "status": "insufficient_data",
+      "precision_note": "Year-only endpoints use January boundaries; month-level dates count the stated endpoint month. Day-level precision is not inferred.",
+      "dated_employment_months": 0,
+      "dated_employment_years_approx": 0.0,
+      "episodes": [],
+      "tenure_by_area": [],
+      "experience_claims": [],
+      "overlaps": [],
+      "flags": [],
+      "excluded_proposals": [],
+      "requirement_links": []
+    },
+    "batch_rubric_alignment": {
+      "mode": "shared_job_description_items",
+      "required_count": 1,
+      "returned_count": 1,
+      "missing_model_entries": 0,
+      "extra_model_entries_dropped": 0
+    },
+    "job_item_coverage": {
+      "items": [],
+      "matched": 0,
+      "needs_review": 0,
+      "truncated": 0,
+      "method": "conservative lexical overlap; not semantic validation"
+    },
+    "role_clarity_audit": {
+      "criteria": [],
+      "criteria_count": 0,
+      "criteria_truncated": 0,
+      "items": [],
+      "count": 0,
+      "truncated": 0,
+      "disclosure": "Review and edit the job criteria before analyzing CVs."
+    },
+    "excluded_unverified_requirements": 0,
+    "omitted_requirement_audit": [],
+    "quote_audit": {
+      "proposed": 1,
+      "verified": 1,
+      "excluded": 0,
+      "verification_proposed": 1,
+      "verification_verified": 1,
+      "verification_excluded": 0,
+      "ambiguous_requirements": 0,
+      "locally_anchored_source_spans": 1
+    },
+    "verification_audit": {
+      "proposed": 1,
+      "verified": 1,
+      "accepted_citations": 1,
+      "excluded": 0,
+      "ambiguous_requirements": 0,
+      "evidence_conflict_review_findings": 0,
+      "strength_suppressed_supports": 0,
+      "rejected_citations": [],
+      "scope_boundary_review": {
+        "requirements_checked": 1,
+        "explicit_scope_limitations_detected": 0,
+        "direct_to_related_adjustments": 0,
+        "direct_to_conflict_adjustments": 0,
+        "direct_to_unsupported_adjustments": 0,
+        "adjusted_requirements": []
+      },
+      "status_invariants": {
+        "related_supported_demoted": 0,
+        "unsupported_supported_demoted": 0
+      },
+      "locally_anchored_source_spans": 1,
+      "verification_mode": "local_deterministic",
+      "semantic_review_clarifications": {
+        "single_scope_limits_clarified": 0,
+        "multi_scope_limits_clarified": 0,
+        "document_absences_clarified": 0,
+        "multi_quote_discrepancies_retained": 0,
+        "related_context_labeled": 0,
+        "unchanged": 1
+      },
+      "semantic_review_page_marks_reconciled": 0,
+      "timeline_gated_requirements": 0
+    },
+    "page_dimensions": {
+      "1": {
+        "width": 612.0,
+        "height": 792.0
+      }
+    },
+    "report_html": "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>EvidenceTrail evidence pack</title><style>\n      :root{color-scheme:light;--ink:#18212f;--muted:#627084;--line:#dce3ed;--paper:#f3f6fb;--blue:#0866ff}\n      *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 Arial,sans-serif}\n      main{max-width:980px;margin:0 auto;padding:42px 22px 70px}.brand{font-size:12px;letter-spacing:.16em;font-weight:800;color:var(--blue)}\n      h1{font-size:34px;line-height:1.12;margin:16px 0 10px}.sub{color:var(--muted);margin:0 0 28px}\n      .finding{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin:14px 0}\n      .timeline-audit{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin:18px 0}.timeline-audit blockquote{margin:6px 0 14px;padding:10px;border-left:3px solid #c7d8ee;background:#f7f9fc}\n      .job-source{margin:12px 0;padding:10px 12px;border-left:3px solid #8295aa;border-radius:0 8px 8px 0;background:#f5f7fa}\n      .job-source>span,.graph-job-source>span{display:block;margin-bottom:5px;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}\n      .job-source blockquote,.graph-job-source blockquote{margin:0;padding:8px 10px;background:#fff;border-left:2px solid #8295aa;color:#435269;font-size:13px;overflow-wrap:anywhere}\n      .application-claims{margin:24px 0;padding:18px;border:1px solid #c8d9f4;border-radius:14px;background:#f8fbff}\n      .application-claims>p{color:var(--muted);font-size:13px}.claim-audit{margin:12px 0;padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff}\n      .claim-audit>.draft-claim{margin:12px 0;padding:10px 12px;border-left:3px solid #6a7f9d;background:#f6f8fb;font-weight:650}\n      .claim-audit>a,.evidence>a{display:inline-block;margin-top:8px;color:var(--blue);font-size:12px;font-weight:700}\n      .finding-head{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}\n      .timeline-provenance,.scope-provenance{margin:8px 0;color:#805c13;font-size:12px;font-weight:700}\n      .scope-limitation{margin:12px 0;padding:12px 14px;border:1px solid #ead9b4;border-left:4px solid #c58a2e;border-radius:9px;background:#fffaf0;color:#66542f}\n      .scope-limitation strong{display:block;margin-bottom:7px;color:#805c13}.scope-limitation-quote{margin:0 0 6px;color:#4f4636}\n      .scope-limitation-link{color:#805c13;font-size:12px;font-weight:700}\n      .status{border-radius:999px;padding:4px 10px;background:#eef4f1}.status.supported{color:#096c5d;background:#e8f5f1}\n      .status.not_found{color:#8c641b;background:#fbf3df}.status.unsupported{color:#8c641b;background:#fbf3df}\n      .status.conflicting,.status.conflict_to_clarify{color:#a33e38;background:#fbe9e7}\n      .relationship{border-radius:999px;padding:4px 10px;background:#eef4f1;color:#096c5d}.relationship.related{color:#475c9e;background:#eef1fc}.relationship.unsupported{color:#8c641b;background:#fbf3df}.relationship.conflicting{color:#a33e38;background:#fbe9e7}\n      .source-check-badge{display:inline-block;padding:2px 7px;border:1px solid #dce5ef;border-radius:99px;font-size:10px;font-weight:700}\n      .source-check-verified{border-color:#bfdfd0;background:#f2faf5;color:#236342}\n      .source-check-blocked{border-color:#edc5c2;background:#fff4f2;color:#963d39}\n      .source-check-none{background:#f7f9fc;color:#526177}\n      h2{font-size:19px;margin:14px 0 6px}.finding p,.empty{color:var(--muted)}\n      .transfer{padding:10px 12px;border-left:3px solid #667bc1;background:#f2f4fc;color:#39496e!important}.unproven{padding:10px 12px;border:1px solid #ead9b4;border-radius:8px;background:#fffaf0;color:#66542f}.unproven ul{margin:6px 0 0;padding-left:20px}\n      .certainty{display:inline-block;border-radius:999px;padding:4px 9px;background:#fff3d6;color:#83580b;font-size:12px;font-weight:700}\n      .evidence{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.evidence-meta{font-size:12px;color:var(--blue);font-weight:700}\n      blockquote{margin:8px 0 0;padding:12px 14px;background:#f2f6fc;border-left:3px solid var(--blue)}\n      .audit-summary{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--muted);font-size:13px}\n      .omitted-audit{margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}\n      .omitted-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}\n      .omitted-audit ul{margin:10px 0 0;padding-left:20px}.omitted-audit li{margin:8px 0}\n      .coverage-audit{margin:14px 0;padding:12px 14px;border:1px solid #c8d9f4;border-radius:10px;background:#f8fbff}\n      .coverage-audit summary{cursor:pointer;font-weight:700;color:var(--ink)}.coverage-audit>p{color:var(--muted);font-size:13px}\n      .coverage-audit ol{margin:10px 0 0;padding-left:22px}.coverage-audit li{margin:9px 0}.coverage-audit li strong,.coverage-audit li span{display:block}.coverage-audit li span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}\n      .role-audit{margin:14px 0;padding:12px 14px;border:1px solid #dfd2b0;border-radius:10px;background:#fffaf0}\n      .role-audit summary{cursor:pointer;font-weight:700;color:#644f20}.role-audit>p{color:var(--muted);font-size:13px}\n      .role-audit h3{font-size:15px;margin:18px 0 8px}\n      .role-audit ol{margin:10px 0 0;padding-left:22px}.role-audit li{margin:12px 0}.role-audit li strong,.role-audit li span{display:block}\n      .role-audit li span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}.role-audit blockquote{margin:7px 0;padding:9px 11px;background:#fff;border-left:3px solid #c6a555}\n      .ocr-warning{margin:14px 0;padding:13px 15px;border:1px solid #e6c783;border-radius:10px;background:#fff8e8;color:#775415}\n      .ocr-warning strong{font-size:13px}.ocr-warning p{margin:5px 0 0;color:#746343;font-size:13px}\n      .omitted-audit li span{display:block;color:var(--muted);font-size:13px}\n      .rejected-audit{margin:14px 0;padding:12px 14px;border:1px solid #f0c9c5;border-radius:10px;background:#fffafa}\n      .rejected-audit summary{cursor:pointer;font-weight:700;color:#9b3f38}\n      .rejected-audit>p{color:var(--muted);font-size:13px}\n      .rejected-audit ol{margin:10px 0 0;padding-left:22px}\n      .rejected-item{margin:10px 0;padding:10px 12px;border-left:3px solid #d65b53;background:#fff}\n      .rejected-item>span{display:block;margin-top:4px;color:var(--muted);font-size:12px}\n      .rejected-item blockquote{margin:8px 0 0;padding:9px 11px;background:#fff5f4;border-left:2px solid #d65b53;overflow-wrap:anywhere}\n      .graph-row{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:16px;padding:16px 0;border-top:1px solid var(--line)}\n      .graph-requirement{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;align-self:start}\n      .graph-job-source{margin-top:10px;padding:9px 10px;border-left:3px solid #8295aa;border-radius:0 8px 8px 0;background:#f5f7fa}\n      .graph-requirement span,.graph-source span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}\n      .graph-requirement strong{display:block;margin-top:6px}.graph-links{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}\n      .graph-arrow{color:var(--blue);font-size:22px}.graph-source{min-width:210px;flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}\n      .graph-source.support{border-top:3px solid #1ba085}.graph-source.conflict{border-top:3px solid #de4d48}\n      .graph-source blockquote{font-size:13px;padding:8px 10px}.graph-empty{color:var(--muted);font-style:italic;padding:10px}\n      .human-review-record{border-top:1px solid var(--line);margin-top:18px;padding-top:12px;color:var(--muted);font-size:13px}\n      .human-review-record h3{font-size:14px;color:var(--ink);margin:0 0 6px}.human-review-record p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}\n      .clarification-brief{margin:22px 0;padding:18px;border:1px solid #c8d9f4;border-radius:14px;background:#f8fbff}\n      .clarification-brief>h2{margin:0 0 5px}.clarification-disclosure,.clarification-reason{color:var(--muted);font-size:13px}\n      .clarification-item{margin-top:14px;padding:15px;border:1px solid var(--line);border-radius:10px;background:#fff}\n      .clarification-meta{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}\n      .clarification-item h3{margin:6px 0;font-size:15px}.clarification-question{font-weight:700}\n      .clarification-item ul{padding-left:20px}.clarification-item li{margin:8px 0;font-size:12px;color:var(--muted)}\n      .clarification-item blockquote{margin-top:5px;font-weight:400;overflow-wrap:anywhere}\n      .candidate-response-record{margin-top:14px;padding:13px 15px;border:1px solid #c9d9f1;border-radius:9px;background:#f8fbff}\n      .candidate-response-record h4{margin:0 0 8px;font-size:14px}.candidate-response-record p{font-size:12px;color:var(--muted)}\n      .candidate-response-record blockquote{white-space:pre-wrap;overflow-wrap:anywhere;border-left-color:#6d7e96}\n      .source-legend{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:12px}\n      .source-legend span{display:inline-flex;align-items:center;gap:6px}.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;background:#1ba085}.swatch.conflict{background:#de4d48}\n      figure{margin:20px 0;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}\n      figcaption{font-weight:700;margin:4px 0 12px}img{display:block;width:100%;height:auto;border-radius:6px}\n      footer{border-top:1px solid var(--line);margin-top:34px;padding-top:16px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}\n      @media(max-width:650px){.graph-row{grid-template-columns:1fr}.graph-links{padding-left:10px}}\n      @media print{body{background:#fff}main{padding:0}.finding,figure,.graph-row{break-inside:avoid}}\n    </style></head><body><main><div class='brand'>EVIDENCETRAIL · MUSE SPARK EVIDENCE REVIEW</div><h1>Grounded requirement evidence pack</h1><p class='sub'>Muse returns requirement-level interpretations and proposed evidence in one structured analysis. EvidenceTrail then checks every displayed quote against the original PDF page and applies deterministic timeline checks. A human reviews the interpretation. This is not a hiring decision.</p><p class='audit-summary'>Local source check: 1 of 1 proposed citation(s) matched the original PDF page; 0 were rejected. Local checks anchored 1 citation span(s); 0 requirement(s) were marked ambiguous.</p><h2>Requirement-to-source graph</h2><div class='graph-row'><div class='graph-requirement'><span>R1 · supported</span><strong>Personally negotiated supplier agreements</strong><div class='graph-job-source'><span>Job post · starts at line 1</span><blockquote>FICTIONAL ROLE Requirement: Personally negotiated supplier agreements</blockquote></div></div><div class='graph-links'><span class='graph-arrow'>→</span><div class='graph-source support'><span>Page 1 · R1-Q1 · support</span><blockquote>I personally negotiated the terms of supplier agreements.</blockquote></div></div></div><article class='finding' data-finding-id='R1'><div class='finding-head'><span>R1</span><span class='status direct'>Direct</span><span class='relationship direct'>Direct</span></div><h2>Personally negotiated supplier agreements</h2><p>CV states personal negotiation of supplier agreement terms. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.</p><div class='job-source'><span>Job post · starts at line 1</span><blockquote>FICTIONAL ROLE Requirement: Personally negotiated supplier agreements</blockquote></div><div class='evidence'><div class='evidence-meta'>Direct · source quote · <span class='source-check-badge source-check-verified'>Verified (Page 1)</span> · source R1-Q1</div><blockquote>I personally negotiated the terms of supplier agreements.</blockquote></div></article><h2>Verified source pages</h2><figure id='page-1'><figcaption>CV page 1</figcaption><p class='source-legend'><span><i class='swatch'></i>Teal highlight: supporting passage</span> <span><i class='swatch conflict'></i>Red highlight: conflicting statement</span></p><img src='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAcFBQYFBAcGBgYIBwcICxILCwoKCxYPEA0SGhYbGhkWGRgcICgiHB4mHhgZIzAkJiorLS4tGyIyNTEsNSgsLSz/2wBDAQcICAsJCxULCxUsHRkdLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCz/wAARCAPoAwUDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6RooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiig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cPlGZYBED8wPzFFyelAFaDxn4isNd0iHxHoNrYadrkv2e2lgujLJbylSyRzKUAywUjKkgEY96o6z8RPEWhD+1NR0PTrPR/ti2wgmvit+6NKIxKse3b33bd2cd6tf2D4v8Q63oa+JE0u30/RLgXjSWkzySX06oyo20qBEo3FiMtzgZ71x83wt8TP4Wu9JGjeHJdT8/wC0PrsszPdX2JhIAcx5jJwASWYDoBzwAdZq3j7XW8X6vonh7SdMvJdGSNpYLu+MFxdlkD4hQKRjBxuY4zxV3XfG2oQ67a6Do1jZLqUlmt9cNql15EVsjEqqkqGLOSG4HA25z0rD8X+EPEviSe9iu/D3hzV4buNfsdxdTGKfS2KAModYy0gDZYEFTS6p8OtQttS0vVYtO0fxZcQ6XDpt5FrACmRo8lZ0co+GJZtwI5GOcigCC98WHxWvg+4e3FneWfir7DdwpKJUWVLeYna4xuUgqQcdDU1n41bR7OGDRPDqSTan4jvtP8k3bAGVWlJlLMDgFkyQB8oJwDgA3bLwDqkeneHhIuj2txZa2dVuobGAQQonlSII4wqDeQGQbmwTg89BS2HgDVbW/wBLne4sytn4hvdWcB2yYphKEUfL94eYuR04PJoAli+Il3pEPihPFWnW9tceHreK7JsZmlS4jk3bAu5VIbchXB4yRTdN8faxD4g0mx8Q6dpdvBrLmK3ewv8A7Q9vLsLiOUFR1AI3LkZGO+ak8Q/DyfxFqHi77RcwxWuu6dbWsDDLPHJE0jbmUjBGWTjPOD0qn4e8G6uniPTrq+8MeEtEgsNzTS6bAkkt3JtwpQmJTCoJz1LcAZxmgD0iiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooo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AMmZv/i662ii7D6vS/kX3I5L/hVvg7/oD/8AkzN/8XWzofhvSPDcEsWk2S2yzMGchmZmI6ZZiTgenTk+prUoouyo0acXeMUn6BRRRSNQooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/9k=' alt='CV page 1 with verified evidence highlights'></figure><footer>Single-pass Muse Spark analysis via Meta Model API · Model muse-spark-1.3 · Created 2026-10-30T09:01:11+00:00 UTC<br>CV SHA-256: 6fbac1bec63c8a5367b51336f0d3e54097168ba3ffa8fab696fd8c73c7f30e97<br>Job description SHA-256: 24918a1f83f9b6a15bf5f291947139c73f9c0cdb0560356810597931b1ff2cba<br>Page-labelled CV text and job criteria from the job description are sent to Meta Model API for this analysis. The original PDF is used locally for quote and page verification. EvidenceTrail does not write uploaded files to persistent application storage; temporary handling depends on the request runtime. This report embeds CV page images; review it before sharing.</footer></main></body></html>",
+    "model": "muse-spark-1.3",
+    "provider_mode": "muse",
+    "analysis_calls": 1,
+    "usage": {
+      "input_tokens": 2321,
+      "output_tokens": 351,
+      "cached_input_tokens": 0,
+      "reasoning_tokens": 225,
+      "analysis_pass": {
+        "input_tokens": 2321,
+        "output_tokens": 351,
+        "cached_input_tokens": 0,
+        "reasoning_tokens": 225,
+        "provider_response_id": "chatcmpl-01a18c0a-a8e5-7533-88ec-b02a7d8f7c9d",
+        "api_latency_ms": 3398,
+        "client_setup_ms": 41,
+        "prompt_build_ms": 0,
+        "response_decode_ms": 0,
+        "response_validation_ms": 0,
+        "cv_text_characters": 177,
+        "vision_pages_supplied": 0,
+        "cv_page_count": 1,
+        "cv_ocr_page_count": 0
+      },
+      "local_verification": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cached_input_tokens": 0,
+        "reasoning_tokens": 0,
+        "mode": "local_deterministic"
+      }
+    },
+    "performance_ms": {
+      "upload_read_ms": 0,
+      "pdf_extract_and_ocr_ms": 7,
+      "pdf_open_ms": 0,
+      "pdf_structure_validation_ms": 0,
+      "pdf_page_dimension_checks_ms": 0,
+      "pdf_native_text_extraction_ms": 5,
+      "pdf_word_bbox_processing_ms": 0,
+      "pdf_ocr_detection_ms": 0,
+      "pdf_page_record_assembly_ms": 0,
+      "pdf_readability_validation_ms": 0,
+      "semantic_pass_total_ms": 3440,
+      "muse_api_ms": 3398,
+      "muse_client_setup_ms": 41,
+      "muse_prompt_build_ms": 0,
+      "muse_response_decode_ms": 0,
+      "muse_response_validation_ms": 0,
+      "proposal_grounding_ms": 1,
+      "timeline_audit_ms": 0,
+      "proposal_grounding_and_timeline_ms": 1,
+      "job_description_coverage_ms": 0,
+      "role_clarity_audit_ms": 0,
+      "requirement_priority_annotation_ms": 0,
+      "local_requirement_audits_ms": 0,
+      "local_quote_verification_ms": 0,
+      "timeline_flag_linking_ms": 0,
+      "verification_summary_ms": 0,
+      "local_verification_and_review_rules_ms": 0,
+      "page_preview_render_ms": 15,
+      "preview_pdf_open_ms": 0,
+      "preview_page_raster_ms": 3,
+      "preview_pixmap_to_rgb_ms": 3,
+      "preview_highlight_draw_ms": 0,
+      "preview_jpeg_encode_ms": 8,
+      "preview_base64_encode_ms": 0,
+      "evidence_graph_ms": 0,
+      "audit_hashes_ms": 0,
+      "html_evidence_pack_ms": 0,
+      "report_assembly_ms": 0,
+      "response_object_assembly_ms": 0,
+      "pipeline_ms": 3464
+    },
+    "cv_sha256": "6fbac1bec63c8a5367b51336f0d3e54097168ba3ffa8fab696fd8c73c7f30e97",
+    "job_sha256": "24918a1f83f9b6a15bf5f291947139c73f9c0cdb0560356810597931b1ff2cba",
+    "created_at": "2026-10-30T09:01:11+00:00",
+    "ocr_pages": [],
+    "input_document": {
+      "original_media_type": "application/pdf",
+      "original_sha256": "6fbac1bec63c8a5367b51336f0d3e54097168ba3ffa8fab696fd8c73c7f30e97",
+      "normalized_pdf_sha256": "6fbac1bec63c8a5367b51336f0d3e54097168ba3ffa8fab696fd8c73c7f30e97",
+      "locally_converted_image": false,
+      "vision_model_calls": 0,
+      "vision_pages_supplied": 0,
+      "vision_opt_in": false,
+      "quote_verification": "existing_page_checked_pdf_ocr_pipeline"
+    },
+    "verification_receipt": {
+      "schema": "evidencetrail/verification-receipt/v1",
+      "provider": {
+        "mode": "muse",
+        "model": "muse-spark-1.3",
+        "response_id": "chatcmpl-01a18c0a-a8e5-7533-88ec-b02a7d8f7c9d",
+        "real_muse_response": true,
+        "source": "new_analysis",
+        "additional_model_calls_for_receipt": 0
+      },
+      "document": {
+        "cv_sha256": "6fbac1bec63c8a5367b51336f0d3e54097168ba3ffa8fab696fd8c73c7f30e97",
+        "extraction_mode": "pdf_text_no_ocr_reported",
+        "ocr_pages": [],
+        "cited_pages": [
+          1
+        ]
+      },
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "semantic_overrides": {
+        "raw_vs_verified_status_changes": 0,
+        "unmodified_raw_labels": true
+      },
+      "input_guardrails": {
+        "prompt_injection_scan": {
+          "status": "not_recorded"
+        },
+        "hidden_text_scan": {
+          "status": "not_recorded"
+        },
+        "input_sanitization_check": {
+          "status": "not_recorded"
+        }
+      },
+      "timeline": {
+        "status": "recorded",
+        "audit": {
+          "status": "insufficient_data",
+          "precision_note": "Year-only endpoints use January boundaries; month-level dates count the stated endpoint month. Day-level precision is not inferred.",
+          "dated_employment_months": 0,
+          "dated_employment_years_approx": 0.0,
+          "episodes": [],
+          "tenure_by_area": [],
+          "experience_claims": [],
+          "overlaps": [],
+          "flags": [],
+          "excluded_proposals": [],
+          "requirement_links": []
+        }
+      },
+      "requirements": [
+        {
+          "requirement_index": 1,
+          "requirement": "Personally negotiated supplier agreements",
+          "raw_muse_status": "supported",
+          "verified_status": "supported",
+          "review_label": null,
+          "override_applied": false,
+          "override_reason_code": null,
+          "verification_explanation": null,
+          "quote_citations": [
+            {
+              "page": 1,
+              "source_id": "R1-Q1",
+              "quote": "I personally negotiated the terms of supplier agreements.",
+              "source_verified": true,
+              "match_method": null,
+              "char_span": null,
+              "bounding_boxes": null
+            }
+          ],
+          "timeline_review_flags": []
+        }
+      ],
+      "disclaimer": "PDF grounding confirms the supplied document passage, not real-world truth or a candidate hiring decision. Unknown checks are not passed checks."
+    }
+  },
+  "provider_response_id": "chatcmpl-01a18c0a-a8e5-7533-88ec-b02a7d8f7c9d",
+  "provider_receipt_present": true,
+  "provider_mode": "muse",
+  "model": "muse-spark-1.3",
+  "analysis_calls": 1,
+  "finding_summary": [
+    {
+      "requirement": "Personally negotiated supplier agreements",
+      "raw_status": "supported",
+      "final_status": "supported",
+      "evidence_type": "direct",
+      "evidence": [
+        {
+          "quote": "I personally negotiated the terms of supplier agreements.",
+          "role": "supports",
+          "page": 1,
+          "boxes": [
+            [
+              48.0,
+              110.0,
+              350.8,
+              126.5
+            ]
+          ],
+          "source_id": "R1-Q1",
+          "evidence_type": "direct"
+        }
+      ]
+    }
+  ],
+  "estimated_standard_cost_usd_so_far": 0.004393
+}
