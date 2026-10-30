@@ -84,5 +84,27 @@ with sync_playwright() as engine:
     assert "fictional-scanned-cv.png" in main.locator("#file-name").inner_text()
     main.screenshot(path=str(OUT/"image-upload.png"),full_page=True)
     main.close()
+
+    # Second viewport: a real 390px phone-sized Chromium page, not CSS emulation.
+    # The reviewer must be able to inspect the saved source without sideways page scroll.
+    phone = browser.new_page(viewport={"width":390,"height":844},device_scale_factor=2)
+    phone.on("request", lambda req: calls.append(req.url) if "/api/analyze" in req.url else None)
+    phone.goto(BASE+"/demo20", wait_until="domcontentloaded")
+    phone.wait_for_function("document.getElementById('ready').textContent === '20'", timeout=30000)
+    phone.locator('#list [data-id="ET-003"]').click()
+    assert phone.locator("#verification-banner").is_visible()
+    phone.locator("#verification-banner").click()
+    assert phone.locator("#audit-drawer").is_visible()
+    mobile_dimensions=phone.evaluate("""() => ({
+      viewport: window.innerWidth,
+      page_width: document.documentElement.scrollWidth
+    })""")
+    (OUT/"mobile-layout.json").write_text(__import__("json").dumps(mobile_dimensions, indent=2))
+    assert mobile_dimensions["page_width"] <= mobile_dimensions["viewport"]+12, (
+        "Judge-facing phone layout forces horizontal scrolling: "+str(mobile_dimensions)
+    )
+    phone.screenshot(path=str(OUT/"phone-audit.png"),full_page=True)
+    phone.close()
+    assert not calls, "No saved evidence, review or mobile flow may invoke a new Muse call"
     browser.close()
-print("PASS: Recorded Muse replay, manual clarification, stage, CSV, zero new model calls")
+print("PASS: Recorded Muse replay, clarification, export, mobile viewport, zero new model calls")
