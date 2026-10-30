@@ -71,11 +71,16 @@ jobs:
           EVIDENCETRAIL_NO_KEY_URL=http://127.0.0.1:8001 \
             python scripts/browser_smoke_test.py
 
+          # Actual recruiter inbox, export integrity and mobile judge workflow.
+          EVIDENCETRAIL_SMOKE_URL=http://127.0.0.1:8001 python scripts/recruiter_workflow_browser_smoke.py
+
       - name: Upload browser evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: evidencetrail-browser-smoke
-          path: artifacts/browser-smoke
+          path: |
+            artifacts/browser-smoke
+            artifacts/recruiter-workflow-browser
           if-no-files-found: warn
           retention-days: 7
