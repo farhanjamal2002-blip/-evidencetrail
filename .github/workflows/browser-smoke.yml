@@ -79,7 +79,7 @@ jobs:
           EVIDENCETRAIL_SMOKE_URL=http://127.0.0.1:8001 python scripts/recruiter_workflow_browser_smoke.py
 
           # Eight-screen redesign prototype, receipt overlays and phone layout; no provider key.
-          python scripts/demo20_browser_smoke.py
+          python scripts/evidencetrail_prototype_smoke.py
 
       - name: Upload browser evidence
         if: always()
@@ -89,6 +89,6 @@ jobs:
           path: |
             artifacts/browser-smoke
             artifacts/recruiter-workflow-browser
-            artifacts/demo20-browser
+            artifacts/evidencetrail-prototype-browser
           if-no-files-found: warn
           retention-days: 7
