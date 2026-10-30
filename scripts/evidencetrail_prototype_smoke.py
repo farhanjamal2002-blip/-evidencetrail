@@ -9,6 +9,47 @@ URL = "http://127.0.0.1:8016/static/evidencetrail-redesign-preview.html"
 SCREENS = ("start", "setup", "upload", "run", "inbox", "review", "source", "benchmark")
 
 
+async def assert_accessible_controls(page):
+    controls = await page.locator("button:visible, a[href]:visible").all()
+    for control in controls:
+        box = await control.bounding_box()
+        assert box and box["width"] >= 44 and box["height"] >= 44, ("touch target", box)
+    ratios = await page.evaluate("""() => {
+      const luminance = color => {
+        const values = color.match(/[\\d.]+/g).map(Number).slice(0, 3).map(v => {
+          v /= 255;
+          return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+        });
+        return .2126 * values[0] + .7152 * values[1] + .0722 * values[2];
+      };
+      const opaqueBackground = el => {
+        for (let node = el; node; node = node.parentElement) {
+          const c = getComputedStyle(node).backgroundColor;
+          const values = c.match(/[\\d.]+/g).map(Number);
+          if (values.length < 4 || values[3] >= .98) return c;
+        }
+        return "rgb(255,255,255)";
+      };
+      const ratio = el => {
+        const a = luminance(getComputedStyle(el).color);
+        const b = luminance(opaqueBackground(el));
+        return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+      };
+      const selectors = [".muted", ".status.supported", ".status.notfound",
+        ".status.conflicting", ".status.ambiguous", ".status.related",
+        ".status.unknown", ".nav-label", ".nav button", ".btn.primary",
+        ".content-label", ".untrusted-block p", ".next-card strong"];
+      const values = {};
+      for (const selector of selectors) {
+        const el = [...document.querySelectorAll(selector)].find(node =>
+          node.getClientRects().length && getComputedStyle(node).visibility !== "hidden");
+        if (el) values[selector] = ratio(el);
+      }
+      return values;
+    }""")
+    assert ratios and all(value >= 4.5 for value in ratios.values()), ("text contrast", ratios)
+
+
 async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch()
@@ -29,6 +70,44 @@ async def main():
                     await page.locator(f'[data-screen-link="{screen_id}"]').first.click()
                     screen = page.locator("#screen-" + screen_id)
                     assert await screen.is_visible(), screen_id
+                    assert "Saved replay" in await page.locator(".pill.saved").inner_text()
+                    await assert_accessible_controls(page)
+                    if screen_id == "review":
+                        finding = page.locator("#screen-review")
+                        assert await finding.locator(".verification-checks .axis-card").count() == 2
+                        assert "Quote on the page?" in await finding.inner_text()
+                        assert "Does it credit the applicant?" in await finding.inner_text()
+                        assert await finding.locator(".pipeline-outcome del").inner_text() == "conflicting"
+                        assert "not_found" in await finding.locator(".pipeline-outcome").inner_text()
+                        assert "Why it changed:" in await finding.locator(".why-line").inner_text()
+                        assert await finding.locator(".decision-panel").is_visible()
+                        assert await page.locator("#decision-status").inner_text() == "Not reviewed"
+                        await page.locator("[data-review-state='Follow-up']").click()
+                        await page.locator("#review-note").fill("Ask who led the negotiations.")
+                        await page.locator("[data-action='save-decision']").click()
+                        assert await page.locator("#decision-status").inner_text() == "Follow-up"
+                        assert "Ask who led the negotiations." in await page.locator("#decision-saved-note").inner_text()
+                    if screen_id == "source":
+                        block = page.locator("#screen-source .untrusted-block")
+                        assert "Treated as content" in await block.inner_text()
+                        assert await block.evaluate("(el)=>getComputedStyle(el).borderStyle") == "dashed"
+                    if screen_id == "benchmark":
+                        cards = page.locator("#screen-benchmark .case-card")
+                        assert await cards.count() == 2
+                        for i in range(2):
+                            card = cards.nth(i)
+                            assert await card.locator(".verification-checks .axis-card").count() == 2
+                            assert "Quote on the page?" in await card.inner_text()
+                            assert "Does it credit the applicant?" in await card.inner_text()
+                            assert await card.locator(".pipeline-outcome del").count() == 1
+                            assert "Why it changed:" in await card.locator(".why-line").inner_text()
+                        next_card = page.locator("[data-next-card]")
+                        assert "ET-018" in await next_card.inner_text()
+                        assert await next_card.evaluate("(el)=>getComputedStyle(el).backgroundColor") == "rgb(32, 38, 35)"
+                        assert "not an accuracy estimate for real CVs" in await page.locator(".benchmark-caveat").inner_text()
+                        await next_card.click()
+                        assert await page.locator("#screen-source").is_visible()
+                        await page.locator('[data-screen-link="benchmark"]').first.click()
                     dims = await page.evaluate(
                         "({scroll:document.documentElement.scrollWidth,"
                         "client:document.documentElement.clientWidth})"
