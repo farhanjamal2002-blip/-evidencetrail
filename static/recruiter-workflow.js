@@ -56,6 +56,10 @@
       created_at: timestamp || null,
       updated_at: timestamp || null,
       comment: "",
+      candidate_reply: "",
+      candidate_reply_received_at: null,
+      reply_source: null,
+      reply_evidence_status: null,
       manually_marked_sent: false,
       // A follow-up does not alter evidence or automatically change a decision.
       evidence_status_at_creation: c.evidence_status,
@@ -70,9 +74,22 @@
     if (!question || question.length > 1200) throw Error("A concise clarification question is required");
     const comment = updates.comment === undefined ? task.comment : String(updates.comment).trim();
     if (comment.length > 1000) throw Error("Keep notes under 1000 characters");
+    const reply = updates.candidate_reply === undefined
+      ? String(task.candidate_reply || "") : String(updates.candidate_reply).trim();
+    if (reply.length > 2400) throw Error("Keep the candidate reply under 2400 characters");
+    if (nextStatus === "resolved" && !reply.trim())
+      throw Error("Record the candidate's actual reply before marking this follow-up resolved");
+    const replyChanged = reply !== String(task.candidate_reply || "");
+    const receivedAt = reply.trim()
+      ? (replyChanged ? (timestamp || null) : task.candidate_reply_received_at || timestamp || null)
+      : null;
     return {
       ...task,
       question, comment, status: nextStatus,
+      candidate_reply: reply,
+      candidate_reply_received_at: receivedAt,
+      reply_source: reply.trim() ? "recruiter_pasted_external_candidate_message" : null,
+      reply_evidence_status: reply.trim() ? "candidate_self_attested_unverified" : null,
       manually_marked_sent: nextStatus === "waiting_external" ? true :
         nextStatus === "draft" ? false : Boolean(task.manually_marked_sent),
       updated_at: timestamp || task.updated_at,
@@ -113,6 +130,29 @@
       "This request is for human review, not an automated hiring decision.\n\nThank you.";
   }
 
+  function messageForSelectedQuestions(questions, roleTitle) {
+    if (!Array.isArray(questions) || !questions.length)
+      throw Error("Select at least one unresolved requirement");
+    if (questions.length > 20) throw Error("Too many clarification questions");
+    const title = String(roleTitle || "the role").trim().slice(0, 180);
+    const seen = new Set();
+    const numbered = [];
+    for (const q of questions) {
+      const index = Number(q?.requirement_index);
+      const question = String(q?.question || "").trim().slice(0, 1000);
+      if (!question || !Number.isSafeInteger(index) || index < 0 || seen.has(index)) continue;
+      seen.add(index);
+      numbered.push(numbered.length + 1 + ". " + question);
+    }
+    if (!numbered.length) throw Error("No usable selected questions");
+    return "Subject: Clarifications about your application — " + title
+      + "\\n\\nHello,\\n\\nThank you for your application. Rather than assume a missing "
+      + "CV detail means missing experience, could you clarify the following?\\n\\n"
+      + numbered.join("\\n\\n")
+      + "\\n\\nYou may provide brief examples and dates. Your response will be read "
+      + "by a recruiter; it is not an automatic hiring decision.\\n\\nThank you.";
+  }
+
   function safeCsvValue(value) {
     let text = String(value == null ? "" : value).replace(/[\r\n]+/g, " ");
     // Stop Excel/Sheets interpreting user-controlled CV data as formulas.
@@ -123,7 +163,8 @@
   function exportWorkflowCsv(items, results, decisions, followups) {
     const columns = ["candidate_id", "evidence_state", "review_stage", "human_decision",
       "reviewed_at", "follow_up_requirement", "follow_up_status", "follow_up_question",
-      "follow_up_updated_at", "saved_muse_recording"];
+      "follow_up_updated_at", "candidate_reply", "reply_received_at",
+      "reply_evidence_status", "saved_muse_recording"];
     const lines = [columns.map(safeCsvValue).join(",")];
     for (const item of items || []) {
       const id = item.id, result = results.get(id), decision = decisions.get(id),
@@ -133,6 +174,8 @@
         reviewStage(id, result, decision, task), decision?.action || "",
         decision?.reviewed_at || "", task?.requirement_id || "",
         task?.status || "", task?.question || "", task?.updated_at || "",
+        task?.candidate_reply || "", task?.candidate_reply_received_at || "",
+        task?.reply_evidence_status || "",
         result?.saved_replay === true ? "recorded_muse" : "not_recorded",
       ];
       lines.push(values.map(safeCsvValue).join(","));
@@ -183,5 +226,6 @@
   }
 
   return { unresolvedFindings, clarificationFor, createFollowUp, updateFollowUp,
-    reviewStage, reviewSummary, messageFor, safeCsvValue, exportWorkflowCsv, buildInterviewKit, interviewKitText };
+    reviewStage, reviewSummary, messageFor, messageForSelectedQuestions,
+    safeCsvValue, exportWorkflowCsv, buildInterviewKit, interviewKitText };
 });
