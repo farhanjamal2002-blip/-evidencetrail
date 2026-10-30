@@ -10,7 +10,7 @@ SCREENS = ("start", "setup", "upload", "run", "inbox", "review", "source", "benc
 
 
 async def assert_accessible_controls(page):
-    controls = await page.locator("button:visible, a[href]:visible").all()
+    controls = await page.locator("button:visible, a[href]:visible, input:not([type=checkbox]):visible, select:visible, textarea:visible").all()
     for control in controls:
         box = await control.bounding_box()
         assert box and box["width"] >= 44 and box["height"] >= 44, ("touch target", box)
@@ -77,7 +77,7 @@ async def main():
                         assert await rows.count() == 5
                         assert await page.locator("#candidate-list button").count() == 1
                         await page.locator("#state-filter").select_option("conflicting")
-                        assert await page.locator("#candidate-list .candidate:visible").count() == 1
+                        assert await page.locator("#candidate-list .candidate:visible").count() == 1, (await page.locator("#state-filter").input_value(), await page.locator("#candidate-list").inner_text())
                         assert "ET-018" in await page.locator("#candidate-list").inner_text()
                         await page.locator("#state-filter").select_option("supported")
                         assert await page.locator("#candidate-list .candidate:visible").count() == 1
