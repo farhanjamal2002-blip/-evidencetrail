@@ -92,7 +92,19 @@ async def main():
                     assert "conflicting" in replay_text and "not_found" in replay_text
                     assert await page.locator("#inbox-layout").is_hidden()
                     await page.screenshot(path=str(OUT/"actor-swap-replay.png"),full_page=True)
-                    # Both run pages and the archived case-receipt link must resolve.
+                    # Run pages and full archive listing resolve; the compact case audit is public JSON.
+                    audit_response=await page.request.get("http://127.0.0.1:8016/static/replay-artifacts/m02-case-audit.json")
+                    assert audit_response.status==200,audit_response.status
+                    audit=await audit_response.json()
+                    assert audit["schema"]=="evidencetrail/public-m02-case-audit/v1"
+                    assert audit["source"]["workflow_run_id"]==41030259074
+                    assert audit["source"]["successful_authentic_receipts"]==4
+                    assert audit["source"]["automatic_retries"]==0
+                    cases={case["case_id"]:case for case in audit["cases"]}
+                    assert cases["M02-baseline"]["verification_receipt"]["quote_grounding"]["verified"]==1
+                    assert cases["M02-variant"]["finding_summary"][0]["raw_status"]=="conflicting"
+                    assert cases["M02-variant"]["finding_summary"][0]["final_status"]=="not_found"
+                    assert await page.locator("#m02-audit-json").get_attribute("href")=="/static/replay-artifacts/m02-case-audit.json"
                     for selector in (
                         "#benchmark-panel a[href*='/actions/runs/41030259074']",
                         "#benchmark-panel a[href*='/actions/runs/41031352414']",
