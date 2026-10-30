@@ -22,7 +22,7 @@
 
 
 
-**Release provenance:** the draft UI's current-head browser smoke passed in [GitHub Actions run 41078162194](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41078162194). This branch is not deployed. Public parity currently reports the hosted service at older SHA `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`; before presenting the new UI on the public host, confirm `/build-info` matches the reviewed release SHA.
+**Release provenance:** on head `ba9461a984d1b69cc1980f4cd0fe6424874eaf1c`, [20-CV acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424687), [judge-browser smoke](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424837), and [CI](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424646) passed. This branch is not deployed. [Public parity run 41079424887](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424887) reports the host is still on SHA `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`; confirm `/build-info` matches the reviewed release SHA before presenting this UI.
 
 ## Source quote geometry benchmark — October 29, 2026
 
