@@ -78,6 +78,7 @@ async def main():
                         assert "Quote on the page?" in await finding.inner_text()
                         assert "Does it credit the applicant?" in await finding.inner_text()
                         assert await finding.locator(".pipeline-outcome del").inner_text() == "conflicting"
+                        assert "→" in await finding.locator(".pipeline-outcome").inner_text()
                         assert "not_found" in await finding.locator(".pipeline-outcome").inner_text()
                         assert "Why it changed:" in await finding.locator(".why-line").inner_text()
                         assert await finding.locator(".decision-panel").is_visible()
@@ -100,6 +101,7 @@ async def main():
                             assert "Quote on the page?" in await card.inner_text()
                             assert "Does it credit the applicant?" in await card.inner_text()
                             assert await card.locator(".pipeline-outcome del").count() == 1
+                            assert "→" in await card.locator(".pipeline-outcome").inner_text()
                             assert "Why it changed:" in await card.locator(".why-line").inner_text()
                         next_card = page.locator("[data-next-card]")
                         assert "ET-018" in await next_card.inner_text()
