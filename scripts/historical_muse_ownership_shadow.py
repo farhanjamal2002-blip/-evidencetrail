@@ -29,8 +29,8 @@ def run() -> dict:
                 "requirement_id":issue.get("requirement_id"),
                 "source_page":issue.get("page"),
                 "historical_model_status":next((
-                    f.get("raw_status") for f in findings
-                    if f.get("id")==issue.get("requirement_id")
+                    f.get("raw_status") for number,f in enumerate(findings,start=1)
+                    if (f.get("id") or f"R{number}")==issue.get("requirement_id")
                 ),None),
                 "review_prompt":issue.get("suggested_question"),
                 "source_quote":issue.get("source_text"),
