@@ -100,6 +100,12 @@ async def main():
                     replay_text=await page.locator("#benchmark-panel").inner_text()
                     assert "19/24" in replay_text and "24/24" in replay_text and "25/25" in replay_text
                     assert "conflicting" in replay_text and "not_found" in replay_text
+                    assert await page.locator("#benchmark-panel .verification-checks").count()==4
+                    assert await page.locator("#benchmark-panel .pipeline-outcome del").count()==2
+                    assert await page.locator("#benchmark-panel .why-line").count()==2
+                    assert "quote on the page?" in replay_text.lower()
+                    assert "does it credit the applicant?" in replay_text.lower()
+                    assert "small, author-labelled fictional tests" in replay_text
                     assert await page.locator("#inbox-layout").is_hidden()
                     await page.screenshot(path=str(OUT/"actor-swap-replay.png"),full_page=True)
                     # Run pages and full archive listing resolve; the compact case audit is public JSON.
@@ -152,10 +158,10 @@ async def main():
                     await page.locator("#analyze-one").click()
                     await page.wait_for_function("document.querySelector('#ready').textContent==='1'",timeout=40000)
                     assert "simulation" in (await page.locator("#review").inner_text()).lower()
-                    await page.locator("#decision").select_option(label="Hold")
+                    await page.locator("#decision").select_option("reviewed")
                     await page.locator("#review-note").fill("Clarify source scope with the applicant.")
                     await page.locator("#save-decision").click()
-                    assert "Hold" in await page.locator("#review").inner_text()
+                    assert await page.locator("#decision").input_value()=="reviewed"
                     await page.locator("#filter").select_option("reviewed")
                     assert await page.locator("#list .item").count()==1
                     await page.locator("#filter").select_option("all")
@@ -163,6 +169,8 @@ async def main():
                     assert await page.locator("#next-review").is_disabled(), "No more analyzed applicants awaiting a human decision"
                     # Return to reviewed CV before testing rubric invalidation.
                     await page.locator('#list [data-id="ET-019"]').click()
+                    assert "Recruiter review" in await page.locator("#review").inner_text()
+                    assert await page.locator("#decision option").all_text_contents()==["Not reviewed","Reviewed","Follow-up needed"]
                     await page.screenshot(path=str(OUT/"review-selected.png"),full_page=True)
                     # Editing an approved rubric must invalidate old findings and decisions.
                     page.once("dialog",lambda dialog: asyncio.create_task(dialog.accept()))
