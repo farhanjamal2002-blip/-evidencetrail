@@ -290,3 +290,54 @@ Do not stage the challenger output or pre-author it as if Glimmer generated it. 
 - The story should lead with measured error detection and source provenance, not the number of models.
 
 This design uses Meta's hosted Muse Spark as the reasoning core and Meta's open-weight Muse Glimmer as a distinct challenger. It is a testable hypothesis; the papers' published improvements do not transfer automatically to fictional CV review.
+
+
+## Full Muse-family routing plan for the tournament
+
+“Use the whole Muse stack” should mean **route the right capability to the right evidence problem**. It does not mean making every CV go through every model. The tournament demo can show a family of cooperating capabilities around one auditable evidence record.
+
+| Muse capability | EvidenceTrail role to test | When it runs | Boundary |
+| --- | --- | --- | --- |
+| **Muse Spark 1.3** | Main CV/JD semantic analyst; structured requirement-to-source proposals | Standard text/OCR case | One response per CV remains the baseline; output is a proposal, not truth |
+| **Muse Glimmer 30B** (open weight) | Independent, blind counter-evidence challenger; optional local image/text analyst | Only on predeclared hard cases, disagreement, or low-quality scan | Log model checkpoint, quantization, runtime, and hardware; agreement with Spark is not correctness |
+| **Muse Wonder 1.0** | High-capability escalation / orchestration for unresolved, multi-criterion cases; coordinate tools and request focused evidence | Only after a concrete Spark/Glimmer disagreement or verifier exception | Preview and pay-as-you-go; test cost/latency. Do not use it for every easy CV |
+| **Muse Spark image input** | Read the page image when local OCR is uncertain or layout changes meaning | Low OCR quality, two-column ambiguity, or scan test fixture | Returned quote must still map to the original PDF page/span or stay unverified |
+| **SAM 3.1** | Segment a visually ambiguous region (e.g., a chart, table, stamp, or handwritten annotation) to give a visual locator | Only when the document contains a specific visual object that OCR/PyMuPDF cannot isolate | SAM returns geometry/masks for visual objects; it is not a text reader or semantic verifier. Keep quote and page checks separate |
+| **Muse Voice Transcribe 1.0** | Transcribe a candidate's optional spoken reply to a recruiter clarification | Only if the workflow accepts an audio reply with consent | Preserve the transcript as candidate self-attestation; label possible transcription errors; never turn it into verified credential evidence |
+| **Muse Image 1.0** | Generate controlled, fictional, non-evidentiary page-layout fixtures for OCR robustness tests | Development/evaluation fixture generation only | Do not use generated/edited images as original evidence or as proof about a candidate |
+| **Muse Spark Open** | Alternative self-hosted Spark-family evaluation or future local inference comparison | Separate model study if infrastructure supports it | 816B total / 42B active model is a substantial serving workload; checkpoint availability does not make it a cheap laptop model |
+| **Muse Code** | Optional coding/CI agent to implement and audit the evaluation harness | Development workflow only | It is not a runtime evidence model in the product and should not appear in product accuracy claims |
+
+Meta's current API documentation describes Muse Wonder as its most capable hosted agentic model and Muse Spark as the cost-sensitive/latency-sensitive option; both support structured output, tools, and multimodal inputs. Muse Glimmer is open-weight, text/image capable, and documented for quantized single-GPU serving. SAM segments visual objects into boxes/masks, Muse Voice is speech-to-text, and Muse Image generates/edits images. These capabilities have different jobs; only Spark, Glimmer, Wonder, and selective Spark image input directly affect CV reasoning. The others support narrowly defined evidence or testing needs.
+
+### Single coordinated flow
+
+1. **Extract locally first:** page text, OCR text, coordinates, reading-order warnings, page image thumbnails, and document hashes.
+2. **Spark proposes:** requirement tuple (actor/action/object/scope/time), finding, shortest relevant source spans, and what remains unproven.
+3. **Route by observable evidence condition:** standard text case stops after Spark plus source verification; low OCR/layout confidence gets a Spark image read; a fixed hard-case or disagreement trigger gets a blinded Glimmer challenge; a persistent material disagreement may get one Wonder escalation with the two outputs and verifier findings.
+4. **Use SAM only for visual localization:** if the issue is “where is this mark/table/object?”, segment the exact page region. The PDF's own page image remains the evidence source.
+5. **Use Voice only for clarification intake:** transcribe an optional audio response, link it to the asked requirement, and label it self-attested/unverified.
+6. **Arbitrate without an accuracy vote:** deterministic checks decide quote/page/date facts. Model consensus may be displayed as a signal; disagreements, shared errors, or missing verification lead to a clear unresolved state. Never allow a model to validate its own quote.
+7. **Return one review record:** raw model responses, model identities, source passages, verification receipt, any repair/escalation, and cost/latency are linked in one auditable record.
+
+### Priority for the current tournament window
+
+1. **P0:** Spark + Glimmer blind challenge on the already frozen 12 synthetic pairs. This is the smallest honest multi-model proof and directly tests whether the second Meta model contributes unique error detection.
+2. **P0:** One image-input comparison on the two existing scan fixtures, text/OCR-only versus OCR plus image. Keep source anchoring local.
+3. **P1:** Wonder escalation only for the small subset of cases with unresolved Spark/Glimmer disagreement. Compare against simply preserving disagreement; pay for the higher-capability pass only if it resolves specific cases without regression.
+4. **P1:** Muse Image to create a small set of controlled background/layout changes while the exact text is rendered programmatically. This expands document-layout tests without allowing generated text to become gold.
+5. **P2:** Voice Transcribe as a follow-up-channel extension after the core evidence loop is proven; record transcription word errors and keep spoken assertions separate from CV evidence.
+6. **P2:** SAM only if a specific visual element (not ordinary text) blocks evidence localization. Do not add a segmentation dependency for pages already handled by PyMuPDF/Tesseract.
+
+For each routed capability, report: eligible cases, actual routed cases, calls, success/failure/skip counts, model/runtime version, per-stage result, unique correction yield, regressions, and measured token/GPU/time cost. A successful API invocation is not a correctness result.
+
+### What would make the full-stack demo feel coherent
+
+Show the user-visible evidence chain instead of a list of model names:
+
+- Text CV: Spark proposes a claim; Glimmer independently points to the different actor or limiting scope; the verifier opens the exact pages; the UI preserves disagreement or shows a bounded correction.
+- Scanned CV: Spark's local OCR path and optional image read are compared; the quote only earns a verified badge after local page matching.
+- Clarification: if a finding remains unclear, the recruiter sends a question; an optional voice reply is transcribed, shown as self-attested, and attached to that requirement without overwriting the CV record.
+- Audit: Spark, Glimmer, Wonder, or tool outputs are each attributed to the component that produced them; source checks retain their own independent result.
+
+This gives the project a substantive Meta stack story while preserving one product goal: help a recruiter inspect what the documents support, locate uncertainty, and ask a focused question. The full-family design is a routing hypothesis until these experiments are run; there are no new full-stack performance results in this memo.
