@@ -318,7 +318,8 @@ function conflictPairHtml(result){
 function verificationBannerHtml(result){
  if(!result)return "";
  const receipt=result.verification_receipt, root=receipt?.quote_grounding||{};
- const known=[root.proposed,root.verified,root.excluded].every(x=>Number.isInteger(x)&&x>=0);
+ const known=root.aggregate_source_audit_consistent===true &&
+   [root.proposed,root.verified,root.excluded].every(x=>Number.isInteger(x)&&x>=0);
  const changes=receipt?.semantic_overrides?.raw_vs_verified_status_changes;
  const display=v=>known?String(v):"Not recorded";
  return '<button type="button" class="verification-banner" id="verification-banner" aria-expanded="'+
