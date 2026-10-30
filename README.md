@@ -1,5 +1,10 @@
 # EvidenceTrail
 
+> **AI can propose what a CV says. EvidenceTrail verifies where the supporting text actually appears before a recruiter acts.** Meta Muse Spark interprets the job and candidate document; independent local page checks and role-scope safeguards expose mistakes. The recruiter—not AI—owns the decision. A candidate's follow-up reply is clearly marked **self-attested, not independently verified**.
+
+> **Finalist-demo cut:** [75-second evidence-first demo script](demo/75_SECOND_JUDGE_VIDEO.md). This branch adds a visible source-verification receipt, two-sided discrepancy examples and manual clarification handoff. The public site may not yet run this branch.
+
+
 > **Meta Hackathon judge entry point (October 29, 2026):** Read [JUDGE_GUIDE.md](JUDGE_GUIDE.md) and [SUBMISSION_READY.md](SUBMISSION_READY.md). The [new public 20-fictional-applicant reviewer](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20) runs this feature branch on a **separate free, mock-only Render service** (no public paid Muse calls). Locally the path is `/demo20`. [Authentic 20-CV Muse recording: 20/20 receipts, 76 page-verified citations](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40892660190), [recorded-replay browser acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40893215283). The public Render service remains on older `main`, so do not confuse that deployment with the feature branch. Muse remains off in default mock mode. The portal deadline is **Nov 4 at 9 PM US Eastern (Nov 5 at 7:30 AM IST)**.
 
 EvidenceTrail is a recruiter-first, no-score CV review workflow. A recruiter supplies one job description and up to five CVs, reviews a shared job checklist, checks each evidence label against its cited page, records Advance, Hold, or Do not advance, and exports an evidence pack. Candidates remain in upload order; EvidenceTrail does not score or rank them.

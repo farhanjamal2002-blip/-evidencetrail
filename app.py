@@ -41,6 +41,7 @@ from muse_protocol import (
 )
 from timeline_audit import audit_employment_timeline
 from semantic_review import clarify_verified_findings, reconcile_scope_context_page_marks
+from multimodal_intake import prepare_cv, media_kind, optional_meta_vision_parts
 from verification_receipt import build_verification_receipt
 
 
@@ -76,6 +77,9 @@ TRUST_CF_CONNECTING_IP = os.getenv("EVIDENCETRAIL_TRUST_CF_CONNECTING_IP", "fals
 MODEL_ID = "muse-spark-1.3"
 API_BASE_URL = "https://api.meta.ai/v1"
 MUSE_ANALYSIS_CACHE_KEY = "evidencetrail-analysis-v2"
+MUSE_VISION_ENABLED = os.getenv("EVIDENCETRAIL_ENABLE_META_VISION", "false").strip().casefold() in {
+    "1", "true", "yes", "on"
+}
 MUSE_VERIFICATION_CACHE_KEY = "evidencetrail-verification-v2"
 
 MUSE_REASONING_LEVELS = ("minimal", "low", "medium", "high", "xhigh")
@@ -1252,6 +1256,8 @@ def call_muse(
     pages: list[dict[str, Any]],
     job_description: str,
     locked_requirements: list[str] | None = None,
+    *,
+    visual_parts: list[dict[str, Any]] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     api_key = configured_model_api_key()
     if not api_key:
@@ -1286,6 +1292,19 @@ def call_muse(
         + "\n\nPAGE-LABELLED CV TEXT (extracted locally from the original PDF)\n"
         + cv_text
     )
+    # Meta vision is an explicitly consented supplement for OCR pages only.
+    # Quotations must still be present in locally extracted CV text and pass
+    # the exact same independent PDF page verifier.
+    if visual_parts:
+        developer_prompt += (
+            "\nUse the attached page images only to understand layout and context. "
+            "Every exact quoted passage and cited page MUST be grounded in the "
+            "PAGE-LABELLED CV TEXT. Do not infer undocumented work from images."
+        )
+    user_content = (
+        [{"type": "text", "text": user_prompt}, *visual_parts]
+        if visual_parts else user_prompt
+    )
     prompt_build_ms = max(0, round((time.perf_counter() - prompt_started) * 1000))
 
     api_started = time.perf_counter()
@@ -1293,7 +1312,7 @@ def call_muse(
         model=MODEL_ID,
         messages=[
             {"role": "developer", "content": developer_prompt},
-            {"role": "user", "content": user_prompt},
+            {"role": "user", "content": user_content},
         ],
         response_format=OUTPUT_SCHEMA,
         store=False,
@@ -1326,6 +1345,9 @@ def call_muse(
     usage_summary["response_decode_ms"] = response_decode_ms
     usage_summary["response_validation_ms"] = response_validation_ms
     usage_summary["cv_text_characters"] = len(cv_text)
+    usage_summary["vision_pages_supplied"] = sum(
+        part.get("type") == "image_url" for part in (visual_parts or [])
+    )
     usage_summary["cv_page_count"] = len(pages)
     usage_summary["cv_ocr_page_count"] = sum(
         bool(page.get("ocr_used")) for page in pages
@@ -5632,17 +5654,26 @@ async def analyze(
     job_description: str = Form(...),
     consent: bool = Form(False),
     locked_rubric_json: str = Form(""),
+    visual_review: bool = Form(False),
 ) -> dict[str, Any]:
     provider_error = analysis_provider_error()
     if provider_error:
         raise HTTPException(status_code=503, detail=provider_error)
+    # Direct internal batch callers do not run FastAPI's Form default parsing.
+    # Treat the unparsed default Form object as disabled, never as consent.
+    visual_review = visual_review if type(visual_review) is bool else False
+    if visual_review and (MOCK_PROVIDER_ENABLED or not MUSE_VISION_ENABLED):
+        raise HTTPException(
+            status_code=400,
+            detail="Meta visual review is disabled on this server. Re-submit without the visual option.",
+        )
     if not consent:
         raise HTTPException(
             status_code=400,
             detail=(
                 "Confirm that this is a local workflow simulation."
                 if MOCK_PROVIDER_ENABLED
-                else "Confirm that locally extracted CV text and the job description may be sent to Meta Model API."
+                else "Confirm that CV text and the job description may be sent to Meta, plus optional scanned page images when visual review is selected."
             ),
         )
     if not job_description.strip():
@@ -5692,16 +5723,20 @@ async def analyze(
         performance_ms["upload_read_ms"] = max(
             0, round((time.perf_counter() - stage_started) * 1000)
         )
-        if not pdf_bytes.startswith(b"%PDF-"):
-            raise HTTPException(
-                status_code=400,
-                detail="The uploaded file is not a readable PDF.",
-            )
         if len(pdf_bytes) > MAX_PDF_BYTES:
             raise HTTPException(
                 status_code=413,
-                detail=f"Keep the CV PDF under {MAX_PDF_MB} MB.",
+                detail=f"Keep the CV under {MAX_PDF_MB} MB.",
             )
+        try:
+            prepared_cv = await run_in_threadpool(
+                prepare_cv, pdf_bytes, max_bytes=MAX_PDF_BYTES
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        # PNG/JPEG are normalized locally into a one-page image-only PDF.
+        # OCR and independent citation/page checks remain authoritative.
+        pdf_bytes = prepared_cv.pdf_bytes
 
         client_ip = client_ip_for_rate_limit(request)
         batch_reservation_lock = getattr(request_state, "batch_rate_lock", None)
@@ -5737,6 +5772,18 @@ async def analyze(
             }
         )
 
+        # Optional 1-request multimodal input, only after explicit consent,
+        # only for actual OCR pages, with bounded image data.
+        visual_parts: list[dict[str, Any]] = []
+        if visual_review:
+            try:
+                visual_parts = await run_in_threadpool(
+                    optional_meta_vision_parts, pdf_bytes,
+                    [int(p["number"]) for p in pages if p.get("ocr_used")]
+                )
+            except Exception as exc:
+                raise HTTPException(status_code=422,
+                    detail="Could not safely prepare scanned-page visual context.") from exc
         stage_started = time.perf_counter()
         try:
             if MOCK_PROVIDER_ENABLED:
@@ -5752,6 +5799,7 @@ async def analyze(
                     pages,
                     job_description.strip(),
                     locked_requirements=locked_requirements,
+                    visual_parts=visual_parts,
                 )
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -6046,6 +6094,16 @@ async def analyze(
         performance_ms["pipeline_ms"] = max(
             0, round((time.perf_counter() - pipeline_started) * 1000)
         )
+        response_payload["input_document"] = {
+            "original_media_type": prepared_cv.input_media_type,
+            "original_sha256": prepared_cv.original_sha256,
+            "normalized_pdf_sha256": prepared_cv.normalized_sha256,
+            "locally_converted_image": prepared_cv.converted_image_to_pdf,
+            "vision_model_calls": 1 if visual_parts else 0,
+            "vision_pages_supplied": sum(p.get("type") == "image_url" for p in visual_parts),
+            "vision_opt_in": bool(visual_review),
+            "quote_verification": "existing_page_checked_pdf_ocr_pipeline",
+        }
         response_payload["verification_receipt"] = build_verification_receipt(response_payload)
         return response_payload
     finally:
@@ -6095,11 +6153,13 @@ async def analyze_batch(
                 status_code=413,
                 detail=f"Each CV PDF must be under {MAX_PDF_MB} MB.",
             )
-        if not data.startswith(b"%PDF-"):
+        try:
+            media_kind(data)
+        except ValueError as exc:
             raise HTTPException(
                 status_code=400,
-                detail="Every selected file must be a readable PDF. No CV in the batch was analyzed.",
-            )
+                detail="Every selected CV must be a PDF, PNG or JPEG. No CV in the batch was analyzed.",
+            ) from exc
         total_bytes += len(data)
         await cv.seek(0)
     if total_bytes > MAX_BATCH_PDF_BYTES:

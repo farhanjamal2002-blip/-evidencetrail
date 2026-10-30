@@ -270,7 +270,7 @@ class MockScenarioTests(unittest.TestCase):
         landing = self.client.get("/")
         self.assertEqual(landing.status_code, 200)
         self.assertIn("Review the evidence behind every requirement.", landing.text)
-        self.assertIn('type="file" accept="application/pdf,.pdf" multiple', landing.text)
+        self.assertIn('type="file" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" multiple', landing.text)
         self.assertNotIn("Candidate statement", landing.text)
         self.assertNotIn("Gender Decoder", landing.text)
         self.assertIn("Layer 1 · Evidence status", landing.text)
