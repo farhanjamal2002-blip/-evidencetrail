@@ -146,11 +146,11 @@
     }
     if (!numbered.length) throw Error("No usable selected questions");
     return "Subject: Clarifications about your application — " + title
-      + "\\n\\nHello,\\n\\nThank you for your application. Rather than assume a missing "
-      + "CV detail means missing experience, could you clarify the following?\\n\\n"
-      + numbered.join("\\n\\n")
-      + "\\n\\nYou may provide brief examples and dates. Your response will be read "
-      + "by a recruiter; it is not an automatic hiring decision.\\n\\nThank you.";
+      + "\n\nHello,\n\nThank you for your application. Rather than assume a missing "
+      + "CV detail means missing experience, could you clarify the following?\n\n"
+      + numbered.join("\n\n")
+      + "\n\nYou may provide brief examples and dates. Your response will be read "
+      + "by a recruiter; it is not an automatic hiring decision.\n\nThank you.";
   }
 
   function safeCsvValue(value) {
@@ -222,7 +222,7 @@
         "CV page references: " + (item.source_pages.join(", ") || "Not established"));
     }
     lines.push("", "Questions are drafts. Verify all applicant claims independently.");
-    return lines.join("\\n") + "\\n";
+    return lines.join("\n") + "\n";
   }
 
   return { unresolvedFindings, clarificationFor, createFollowUp, updateFollowUp,
