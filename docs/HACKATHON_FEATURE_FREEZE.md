@@ -36,3 +36,20 @@ Use ET-018 only as a short supporting demo of instruction-like text treated as d
 ## Feature acceptance boundary
 
 The feature set is locked. Permit only release-blocking correctness, accessibility, or judge-path reliability fixes; no new capabilities or model routing. The UI should be frozen against this exact loop. After UI freeze, consolidate the repository into one reviewed release path and resolve the cumulative PR's mergeability; do not merge the stacked PR chain blindly.
+
+## Frozen judge UI acceptance
+
+- Warm paper surfaces and near-black body text. Yellow is reserved for source passages and source-page highlights; supported, conflicting, ambiguous, and not-found states keep distinct green, orange, purple, and grey labels.
+- Every finding presents **Quote on the page?** separately from **Does it credit the applicant?** Raw Muse status remains visible through the final pipeline label, with a short reason for any change.
+- Recruiter review is a separate panel with **Not reviewed**, **Reviewed**, and **Follow-up needed**, plus a note. It does not change the evidence status.
+- Stored findings carry a **Saved replay** badge. The M02 benchmark ends with a dark ET-018 source-review card and a small fictional-set caveat.
+- ET-018's instruction-like line is outlined from the generated PDF's exact PyMuPDF geometry and labeled **Treated as content**. If the exact source span is not found once, the UI does not draw a guessed highlight.
+- Named buttons and links have 44px minimum targets; key label and status color pairs are checked against 4.5:1; no emoji icons.
+
+## Current verification record
+
+- JavaScript syntax check: passed.
+- Python syntax checks for the ET-018 geometry endpoint and browser smoke: passed.
+- PyMuPDF check on the generated ET-018 fixture: exact instruction line found once at page coordinates [48.0, 181.25, 371.98, 194.99] on a 612 by 792 page.
+- Browser smoke assertions now cover the judge path, ET-018 outline, M02 evidence axes and caveat, reviewer states, touch targets, contrast, saved replay labeling, and no paid analysis calls. **The end-to-end browser run has not yet been observed passing on GitHub Actions.**
+- This UI is on the draft release branch only. It has not been merged or deployed.
