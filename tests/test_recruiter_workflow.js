@@ -70,3 +70,33 @@ test("interview prep is criteria-first and never scores or rejects applicants", 
   assert.equal(wf.buildInterviewKit("ET-005","Role",null),null);
   assert.equal(kit.questions.some(q => "score" in q || "rank" in q),false);
 });
+
+test("candidate reply is self-attested, time stamped, and cannot silently become verified", () => {
+ const task=wf.createFollowUp("ET-005",result,0,"2026-10-30T08:00:00Z");
+ assert.throws(()=>wf.updateFollowUp(task,{status:"resolved"}),/actual reply/);
+ const received=wf.updateFollowUp(task,{
+   status:"resolved",
+   candidate_reply:"I observed negotiations but never signed a supply agreement.",
+ },"2026-10-30T08:10:00Z");
+ assert.equal(received.status,"resolved");
+ assert.equal(received.reply_source,"recruiter_pasted_external_candidate_message");
+ assert.equal(received.reply_evidence_status,"candidate_self_attested_unverified");
+ assert.equal(received.candidate_reply_received_at,"2026-10-30T08:10:00Z");
+ assert.equal(task.status,"draft");
+ assert.equal(result.requirements[0].status,"not_found");
+ const map=new Map([["ET-005",received]]);
+ const csv=wf.exportWorkflowCsv([{id:"ET-005"}],new Map([["ET-005",result]]),new Map(),map);
+ assert.match(csv,/candidate_self_attested_unverified/);
+ assert.match(csv,/I observed negotiations/);
+ assert.equal(wf.reviewStage("ET-005",result,null,received),"clarification_received");
+});
+
+test("selected outreach is one message, politely asks all selected questions, makes no decisions", () => {
+ const first=wf.clarificationFor(result,0);
+ const copy=wf.messageForSelectedQuestions([first,{...first,requirement_index:1,question:"Can you confirm your purchase order access?"},first],"Procurement Lead");
+ assert.match(copy,/1\. Which contract terms/);
+ assert.match(copy,/2\. Can you confirm/);
+ assert.match(copy,/rather than assume a missing/i);
+ assert.equal(copy.includes(String.raw`\n`),false);
+ assert.throws(()=>wf.messageForSelectedQuestions([],"Role"),/Select/);
+});
