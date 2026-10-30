@@ -20,6 +20,16 @@ OUT = ROOT / "artifacts" / "academic-methods" / "metamorphic_live_run"
 PREDICTIONS = OUT / "predictions.jsonl"
 EXPECTED_APP_BLOB = "a39ffb15b3215659961793b14849c845355bf626"
 EXPECTED_CORPUS_SHA256 = "43c7168bb15faf0c1355428eff865dd3dda7810f8843c966fcb9ca5b4f06b62b"
+EXPECTED_RUNTIME_GIT_BLOBS = {
+    "app.py": "a39ffb15b3215659961793b14849c845355bf626",
+    "demo20_workflow.py": "b044ab59518d38a2394a99f82661226df023f288",
+    "muse_protocol.py": "d2c9c87d9f89d4812c632c169165513b1bd1476e",
+    "role_audit.py": "1b6336c72a60208c002714190f7d9adc9e61ba22",
+    "timeline_audit.py": "83364cab5fad9f7e2bab48f1b5cc4c4ade7314ba",
+    "semantic_review.py": "417ea128a6e6315c761ea03ee61c2417fc090263",
+    "multimodal_intake.py": "d809be166d7e5f05462fef9e2e0caa5cfb89e2aa",
+    "verification_receipt.py": "9f2dd512fcc9bd2884c4f1e71c129a93862f1f66",
+}
 
 # Refuse mock mode and keep process accounting bounded to this frozen corpus.
 os.environ["EVIDENCETRAIL_PROVIDER"] = "muse"
@@ -90,8 +100,15 @@ def cited_evidence(result: dict, source_text: str, fallback_page: int) -> tuple[
 def main() -> int:
     if not CORPUS.is_file() or digest(CORPUS) != EXPECTED_CORPUS_SHA256:
         raise SystemExit("Frozen metamorphic corpus fingerprint mismatch; no calls made.")
-    if git_blob_sha(ROOT / "app.py") != EXPECTED_APP_BLOB:
-        raise SystemExit("Frozen EvidenceTrail app.py fingerprint mismatch; no calls made.")
+    runtime_mismatches = [
+        path for path, expected in EXPECTED_RUNTIME_GIT_BLOBS.items()
+        if git_blob_sha(ROOT / path) != expected
+    ]
+    if runtime_mismatches:
+        raise SystemExit(
+            "Frozen EvidenceTrail runtime fingerprint mismatch: "
+            + ", ".join(runtime_mismatches) + "; no calls made."
+        )
     if app.ANALYSIS_PROVIDER != "muse" or not app.MUSE_PROVIDER_ENABLED:
         raise SystemExit("Muse provider preflight failed; no calls made.")
     if not app.configured_model_api_key():
@@ -106,6 +123,7 @@ def main() -> int:
     manifest = {
         "source_app_sha256": digest(ROOT / "app.py"),
         "source_app_git_blob": EXPECTED_APP_BLOB,
+        "runtime_git_blobs": EXPECTED_RUNTIME_GIT_BLOBS,
         "challenge_sha256": corpus_sha,
         "pairs": len(pairs),
         "planned_requests": 24,
