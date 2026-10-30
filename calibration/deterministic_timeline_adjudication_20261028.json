@@ -1,0 +1,132 @@
+{
+  "status": "derived_from_frozen_live_results_no_new_muse_calls",
+  "source_run": "live_semantic_results_20261028_strength_final.json",
+  "derived_at_utc": "2026-10-28",
+  "muse_only": {
+    "correct": 16,
+    "expected": 18,
+    "accuracy": 0.8889,
+    "confusion_matrix": {
+      "direct": {
+        "direct": 6,
+        "related": 0,
+        "unsupported": 0,
+        "conflicting": 0,
+        "unclassified": 0
+      },
+      "related": {
+        "direct": 0,
+        "related": 6,
+        "unsupported": 0,
+        "conflicting": 0,
+        "unclassified": 0
+      },
+      "unsupported": {
+        "direct": 0,
+        "related": 0,
+        "unsupported": 4,
+        "conflicting": 0,
+        "unclassified": 0
+      },
+      "conflicting": {
+        "direct": 2,
+        "related": 0,
+        "unsupported": 0,
+        "conflicting": 0,
+        "unclassified": 0
+      }
+    }
+  },
+  "with_deterministic_timeline_gate": {
+    "correct": 18,
+    "expected": 18,
+    "accuracy": 1.0,
+    "confusion_matrix": {
+      "direct": {
+        "direct": 6,
+        "related": 0,
+        "unsupported": 0,
+        "conflicting": 0,
+        "unclassified": 0
+      },
+      "related": {
+        "direct": 0,
+        "related": 6,
+        "unsupported": 0,
+        "conflicting": 0,
+        "unclassified": 0
+      },
+      "unsupported": {
+        "direct": 0,
+        "related": 0,
+        "unsupported": 4,
+        "conflicting": 0,
+        "unclassified": 0
+      },
+      "conflicting": {
+        "direct": 0,
+        "related": 0,
+        "unsupported": 0,
+        "conflicting": 2,
+        "unclassified": 0
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "india_public_procurement_manager",
+      "muse_only_correct": 3,
+      "expected_findings": 4,
+      "timeline_gated_findings": 1,
+      "adjudicated_findings": [
+        {
+          "gold_item": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "certainty": "ambiguous",
+          "adjudicated": "conflicting",
+          "adjudication_reason": "verified timeline discrepancy; deterministic human-review gate"
+        }
+      ]
+    },
+    {
+      "case_id": "uae_contract_supplier_manager",
+      "muse_only_correct": 3,
+      "expected_findings": 4,
+      "timeline_gated_findings": 1,
+      "adjudicated_findings": [
+        {
+          "gold_item": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "certainty": "ambiguous",
+          "adjudicated": "conflicting",
+          "adjudication_reason": "verified timeline discrepancy; deterministic human-review gate"
+        }
+      ]
+    },
+    {
+      "case_id": "semiconductor_supplier_operations_manager",
+      "muse_only_correct": 4,
+      "expected_findings": 4,
+      "timeline_gated_findings": 0,
+      "adjudicated_findings": []
+    },
+    {
+      "case_id": "nhs_procurement_director_credential_boundary",
+      "muse_only_correct": 3,
+      "expected_findings": 3,
+      "timeline_gated_findings": 0,
+      "adjudicated_findings": []
+    },
+    {
+      "case_id": "scanned_cv_procurement_credential_boundary",
+      "muse_only_correct": 3,
+      "expected_findings": 3,
+      "timeline_gated_findings": 0,
+      "adjudicated_findings": []
+    }
+  ],
+  "method_note": "The original frozen report stored per-item Muse categories and case-level counts of timeline-gated findings. The two gated findings each map to the single prewritten conflicting duration criterion in their corresponding case fixture. They are re-labeled Conflict to clarify by deterministic code; Muse labels remain unchanged. This derived comparison used no Muse requests and is not a model-only accuracy score.",
+  "disclosure": "Five fictional CVs and 18 prepared criteria; small calibration set, not a general accuracy estimate."
+}

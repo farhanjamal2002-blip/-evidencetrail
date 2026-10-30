@@ -1,0 +1,38 @@
+name: EvidenceTrail deterministic PDF quote geometry benchmark
+# Report historic audited 76 quotes versus 71 surviving citations without inventing locations.
+on:
+  push:
+    branches: [feat/pdf-quote-geometry-snap-20261029]
+    paths: [.github/workflows/quote-geometry-benchmark.yml]
+permissions:
+  contents: read
+jobs:
+  locate-source-passages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/pdf-quote-geometry-snap-20261029
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PyMuPDF and original fixture dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Measure actual 76 saved Muse quote citations against original PDFs
+        run: PYTHONPATH=. python scripts/quote_geometry_benchmark.py
+      - name: Save per-quote geometry measurement (no real applicant data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-source-geometry-benchmark
+          path: artifacts/quote-geometry/
+          retention-days: 14

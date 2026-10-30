@@ -12,11 +12,11 @@ EvidenceTrail helps recruiters compare job criteria against candidate CVs withou
 | If you have… | Open… | What to look for |
 | --- | --- | --- |
 | **30 seconds** | [EvidenceTrail's judge guide](https://github.com/farhanjamal2002-blip/-evidencetrail/blob/release/evidencetrail-judge-rc1-oct30/JUDGE_GUIDE.md) | The problem, Meta's role, and our independent source-verification boundary |
-| **2 minutes** | [Separate fictional recruiter demo](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20) | A 20-applicant *fictional* inbox and a clearly labeled saved genuine Muse replay; deployment may not include the newest release-candidate features |
+| **2 minutes** | [Isolated judge-release recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20) | A 20-applicant *fictional* inbox and saved genuine Muse replay; the public host is still on the older `bd9a0a1` build, so features in draft PR #28 may not appear |
 | **5 minutes** | [Release-candidate PR #28](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/28) | The newer, **unmerged** recruiter workflow and validation links |
 | **Technical review** | [Original live Meta replay receipt](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40892660190) | Genuine Meta response IDs, the fixed fictional corpus, and citation-verification provenance |
 
-**Important version note:** `main` is an earlier two-pass Muse/PDF-review implementation. PR #28 is the **unmerged judge release candidate** with the newer recruiter inbox, single-pass Muse path, deterministic safeguards, and workflow additions. Do not assume the public host, `main`, and the PR run identical code. Judge proof for an exact release SHA must be frozen before submission.
+**Important version note:** `main` is an earlier implementation. Cumulative PR #28 is the **unmerged judge release candidate**. Its current head `5c20bd2bdf620c00aa6f66938fc3ee09ca5f6674` passed current-head acceptance, browser smoke, and CI; the public host still reports `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`. The standalone redesign in draft PR #38 is not included. Do not present draft-only behavior as live; match the submitted video, repository commit, and hosted build before submission.
 
 ## The problem
 

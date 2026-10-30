@@ -1,0 +1,92 @@
+name: EvidenceTrail recruiter workflow and image CV acceptance
+on:
+  push:
+    branches: [feat/recruiter-workflow-multimodal-intake]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  workflow-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '1000'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '1000'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install OCR runtime and Python requirements
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Full Python suite including image-to-PDF OCR
+        run: python -m unittest discover -s tests -v
+      - name: Recruiter workflow, decision, and source checks
+        run: |
+          node --test tests/test_recruiter_workflow.js tests/test_recruiter_decision.js tests/test_requirement_coverage.js tests/test_interview_invite.js
+          python scripts/offline_stress_test.py
+      - name: Judge evidence provenance preflight (no paid calls)
+        run: python scripts/judge_readiness_gate.py
+      - name: Upload judge evidence manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: judge-evidence-preflight
+          path: artifacts/judge-readiness/preflight.json
+          retention-days: 14
+      - name: Syntax and static checks
+        run: |
+          python -m py_compile app.py multimodal_intake.py semantic_review.py
+          node --check static/recruiter-workflow.js
+          node --check static/coverage_matrix.js
+          git diff --check
+
+  recruiter-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      EVIDENCETRAIL_ENABLE_META_VISION: 'false'
+      MODEL_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install application and Chromium
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt playwright
+          python -m playwright install --with-deps chromium
+      - name: Test real browser UI and zero new Meta calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/recruiter-workflow-browser
+          python -m uvicorn app:app --host 127.0.0.1 --port 8017 >artifacts/recruiter-workflow-browser/server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8017/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8017/health >/dev/null
+          python scripts/recruiter_workflow_browser_smoke.py
+      - name: Attach screenshots and export
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recruiter-workflow-signed-out-browser
+          path: artifacts/recruiter-workflow-browser/
+          retention-days: 14

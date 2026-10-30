@@ -1,0 +1,63 @@
+name: EvidenceTrail real Muse two-at-once HTTP acceptance
+on:
+  push:
+    branches: [feat/recruiter-demo20-muse-inbox]
+    paths: [.github/workflows/live-muse-http-concurrency.yml]
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-live-meta-http-concurrency-once
+  cancel-in-progress: false
+jobs:
+  meta-http-two-at-once:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_HOUR_PER_IP: '5'
+      MAX_ANALYSES_PER_PROCESS: '5'
+      MAX_CONCURRENT_ANALYSES: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/recruiter-demo20-muse-inbox
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install real Meta client and OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Verify key exists (never display its value)
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then echo "No Meta API key; no live calls."; exit 2; fi
+      - name: Start actual application HTTP server with Muse enabled
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/muse-live-concurrency
+          nohup python -m uvicorn app:app --host 127.0.0.1 --port 8062 >artifacts/muse-live-concurrency/server.log 2>&1 &
+          ready=false
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8062/health >/dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+      - name: Exactly four fictional Muse requests, two at a time, zero retries
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python scripts/live_muse_http_concurrency.py
+      - name: Save original provider receipts and all test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-real-muse-concurrent-http
+          path: artifacts/muse-live-concurrency/
+          retention-days: 14
+          if-no-files-found: warn

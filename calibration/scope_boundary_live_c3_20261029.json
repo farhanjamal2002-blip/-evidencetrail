@@ -1,0 +1,175 @@
+{
+  "status": "completed",
+  "run_at_utc": "2026-10-29T04:55:40.726760+00:00",
+  "case_id": "unified_c3_career_switcher",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "medium",
+  "expected_live_requests": 1,
+  "live_calls_reported": 1,
+  "automatic_retries": 0,
+  "elapsed_seconds": 25.156,
+  "performance_ms": {
+    "upload_read_ms": 0,
+    "pdf_extract_and_ocr_ms": 9,
+    "pdf_open_ms": 1,
+    "pdf_structure_validation_ms": 0,
+    "pdf_page_dimension_checks_ms": 0,
+    "pdf_native_text_extraction_ms": 6,
+    "pdf_word_bbox_processing_ms": 1,
+    "pdf_ocr_detection_ms": 0,
+    "pdf_page_record_assembly_ms": 0,
+    "pdf_readability_validation_ms": 0,
+    "semantic_pass_total_ms": 25091,
+    "muse_api_ms": 25058,
+    "muse_client_setup_ms": 30,
+    "muse_prompt_build_ms": 0,
+    "muse_response_decode_ms": 2,
+    "muse_response_validation_ms": 0,
+    "proposal_grounding_ms": 2,
+    "timeline_audit_ms": 2,
+    "application_claim_grounding_ms": 0,
+    "proposal_grounding_and_timeline_ms": 4,
+    "job_description_coverage_ms": 0,
+    "role_clarity_audit_ms": 0,
+    "requirement_priority_annotation_ms": 0,
+    "local_requirement_audits_ms": 1,
+    "local_quote_verification_ms": 3,
+    "timeline_flag_linking_ms": 0,
+    "verification_summary_ms": 0,
+    "local_verification_and_review_rules_ms": 3,
+    "page_preview_render_ms": 24,
+    "preview_pdf_open_ms": 2,
+    "preview_page_raster_ms": 4,
+    "preview_pixmap_to_rgb_ms": 4,
+    "preview_highlight_draw_ms": 0,
+    "preview_jpeg_encode_ms": 13,
+    "preview_base64_encode_ms": 0,
+    "evidence_graph_ms": 0,
+    "clarification_brief_ms": 0,
+    "application_prep_ms": 0,
+    "audit_hashes_ms": 0,
+    "html_evidence_pack_ms": 0,
+    "report_assembly_ms": 1,
+    "response_object_assembly_ms": 0,
+    "pipeline_ms": 25131
+  },
+  "usage": {
+    "input_tokens": 2353,
+    "output_tokens": 3969,
+    "cached_input_tokens": 0,
+    "reasoning_tokens": 3158,
+    "analysis_pass": {
+      "input_tokens": 2353,
+      "output_tokens": 3969,
+      "cached_input_tokens": 0,
+      "reasoning_tokens": 3158,
+      "api_latency_ms": 25058,
+      "client_setup_ms": 30,
+      "prompt_build_ms": 0,
+      "response_decode_ms": 2,
+      "response_validation_ms": 0,
+      "cv_text_characters": 575,
+      "cv_page_count": 1,
+      "cv_ocr_page_count": 0
+    },
+    "local_verification": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cached_input_tokens": 0,
+      "reasoning_tokens": 0,
+      "mode": "local_deterministic"
+    }
+  },
+  "quote_audit": {
+    "proposed": 4,
+    "verified": 4,
+    "excluded": 0,
+    "verification_proposed": 4,
+    "verification_verified": 4,
+    "verification_excluded": 0,
+    "ambiguous_requirements": 0,
+    "locally_anchored_source_spans": 4
+  },
+  "verification_audit": {
+    "proposed": 4,
+    "verified": 4,
+    "accepted_citations": 4,
+    "excluded": 0,
+    "ambiguous_requirements": 0,
+    "strength_suppressed_supports": 0,
+    "rejected_citations": [],
+    "scope_boundary_review": {
+      "requirements_checked": 2,
+      "explicit_scope_limitations_detected": 2,
+      "direct_to_related_adjustments": 0,
+      "adjusted_requirements": []
+    },
+    "application_claims": {
+      "results": [],
+      "proposed": 0,
+      "verified": 0,
+      "excluded": 0,
+      "ambiguous_claims": 0,
+      "rejected_citations": [],
+      "extraction": {
+        "proposed": 0,
+        "accepted": 0,
+        "excluded": 0
+      }
+    },
+    "locally_anchored_source_spans": 4,
+    "verification_mode": "local_deterministic",
+    "timeline_gated_requirements": 0
+  },
+  "requirements": [
+    {
+      "requirement": "Minimum 5 years of relevant experience in semiconductor operations, outsourced manufacturing, OSAT management, sourcing or commodity management, supplier relationship management, contract negotiation, or continuous improvement.",
+      "muse_evidence_type": null,
+      "final_evidence_type": "related",
+      "certainty": "clear",
+      "evidence_strength": "stated",
+      "verified_quotes": [
+        {
+          "quote": "Managed cleaning, maintenance, and HVAC service vendors across four sites.",
+          "page": 1
+        },
+        {
+          "quote": "North Valley Hospital Group | 2018-2026",
+          "page": 1
+        }
+      ],
+      "scope_limitations": [],
+      "scope_boundary_review": null
+    },
+    {
+      "requirement": "Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+      "muse_evidence_type": null,
+      "final_evidence_type": "related",
+      "certainty": "clear",
+      "evidence_strength": "specific",
+      "verified_quotes": [
+        {
+          "quote": "Requested bids, compared supplier quotations, tracked service levels and corrective actions, and coordinated contract renewals.",
+          "page": 1
+        },
+        {
+          "quote": "The procurement team negotiated final prices and approved commercial terms; I did not own supplier negotiations or contract sign-off.",
+          "page": 1
+        }
+      ],
+      "scope_limitations": [],
+      "scope_boundary_review": null
+    }
+  ],
+  "fixture_expected": [
+    {
+      "requirement": "Minimum 5 years of relevant experience in semiconductor operations, outsourced manufacturing, OSAT management, sourcing or commodity management, supplier relationship management, contract negotiation, or continuous improvement.",
+      "evidence_type": "related"
+    },
+    {
+      "requirement": "Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+      "evidence_type": "related"
+    }
+  ],
+  "disclosure": "One live Muse Spark request on a fictional test CV. Local code checked cited quotes and applied the explicit CV scope-boundary rule. A verified quote establishes text presence, not qualification truth."
+}

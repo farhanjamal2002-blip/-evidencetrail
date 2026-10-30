@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, release/evidencetrail-judge-rc1-oct30]
+  push:
+    branches: [main, feat/evidencetrail-review-workflow, feat/judge-replay-benchmark-ui, release/evidencetrail-judge-rc1-oct30]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Entire test collection shares one Python process and TestClient limiter.
+    # Raise limits ONLY for synthetic mock CI; production defaults remain 5/IP/hour
+    # and 20/process. Never provide a real model credential in this job.
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      EVIDENCETRAIL_ENABLE_META_VISION: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '1000'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '1000'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install OCR runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes tesseract-ocr tesseract-ocr-eng tesseract-ocr-ara
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run Python suite
+        run: python -m unittest discover -s tests -v
+
+      - name: Run browser logic checks
+        run: node --test tests/test_interview_invite.js tests/test_recruiter_decision.js tests/test_requirement_coverage.js
+
+      - name: Run offline stress scenarios
+        run: python scripts/offline_stress_test.py
+
+      - name: Check syntax and patch whitespace
+        run: |
+          python -m py_compile app.py role_audit.py muse_protocol.py timeline_audit.py scripts/*.py
+          node --check static/app.js
+          node --check static/recruiter-decision.js
+          node --check static/interview-invite.js
+          git diff --check
+
+      - name: Build deployment container
+        run: docker build --tag evidencetrail:ci .

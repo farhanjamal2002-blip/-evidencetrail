@@ -1,0 +1,568 @@
+{
+  "status": "completed",
+  "run_at_utc": "2026-10-29T05:32:48.846272+00:00",
+  "run_label": "unified_supplier_operations_demo_20261029_v3",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "rubric_version": "demo-v3",
+  "candidate_count": 5,
+  "expected_live_requests": 5,
+  "live_calls_reported": 5,
+  "automatic_retries": 0,
+  "elapsed_seconds": 28.392,
+  "candidates": [
+    {
+      "candidate_id": "C1",
+      "fixture_id": "unified_c1_specific",
+      "display_name": "Candidate 1",
+      "status": "completed",
+      "case_id": "unified_c1_specific",
+      "industry": "semiconductor supplier operations",
+      "level": "senior manager",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 2,
+      "aligned_findings": 2,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 2,
+        "stated": 0,
+        "keyword_only": 0,
+        "none": 0,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 4,
+      "verification_citations_proposed": 4,
+      "verification_quote_rate": 1.0,
+      "rejected_quote_details": [],
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "timeline_adjudicated_findings": 0,
+      "rejected_quote_details_count": 0,
+      "adjudicated_item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "strength_label_checks": [
+        {
+          "gold_item": 1,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 2
+        }
+      ],
+      "strength_matches": 2,
+      "expected_strength_labels": 2
+    },
+    {
+      "candidate_id": "C2",
+      "fixture_id": "unified_c2_keyword_only",
+      "display_name": "Candidate 2",
+      "status": "completed",
+      "case_id": "unified_c2_keyword_only",
+      "industry": "supplier operations",
+      "level": "specialist",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 2,
+      "aligned_findings": 2,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "adjudicated": "unsupported",
+          "adjudication_reason": null,
+          "predicted_strength": "keyword_only",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "adjudicated": "unsupported",
+          "adjudication_reason": null,
+          "predicted_strength": "keyword_only",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 0,
+        "stated": 0,
+        "keyword_only": 2,
+        "none": 0,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 0,
+      "verification_citations_proposed": 0,
+      "verification_quote_rate": null,
+      "rejected_quote_details": [],
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "timeline_adjudicated_findings": 0,
+      "rejected_quote_details_count": 0,
+      "adjudicated_item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "adjudicated": "unsupported",
+          "adjudication_reason": null,
+          "predicted_strength": "keyword_only",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "adjudicated": "unsupported",
+          "adjudication_reason": null,
+          "predicted_strength": "keyword_only",
+          "certainty": "clear"
+        }
+      ],
+      "strength_label_checks": [
+        {
+          "gold_item": 1,
+          "expected": "keyword_only",
+          "predicted": "keyword_only",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "keyword_only",
+          "predicted": "keyword_only",
+          "matched": true,
+          "finding_index": 2
+        }
+      ],
+      "strength_matches": 2,
+      "expected_strength_labels": 2
+    },
+    {
+      "candidate_id": "C3",
+      "fixture_id": "unified_c3_career_switcher",
+      "display_name": "Candidate 3",
+      "status": "completed",
+      "case_id": "unified_c3_career_switcher",
+      "industry": "hospital facilities services",
+      "level": "manager",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 2,
+      "aligned_findings": 2,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "ambiguous_aligned_findings": 2,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "related",
+          "predicted": "related",
+          "adjudicated": "related",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "related",
+          "predicted": "related",
+          "adjudicated": "related",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "ambiguous"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 2,
+        "stated": 0,
+        "keyword_only": 0,
+        "none": 0,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 4,
+      "verification_citations_proposed": 4,
+      "verification_quote_rate": 1.0,
+      "rejected_quote_details": [],
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "timeline_adjudicated_findings": 0,
+      "rejected_quote_details_count": 0,
+      "adjudicated_item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "related",
+          "predicted": "related",
+          "adjudicated": "related",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "related",
+          "predicted": "related",
+          "adjudicated": "related",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "ambiguous"
+        }
+      ],
+      "strength_label_checks": [
+        {
+          "gold_item": 1,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 2
+        }
+      ],
+      "strength_matches": 2,
+      "expected_strength_labels": 2
+    },
+    {
+      "candidate_id": "C4",
+      "fixture_id": "unified_c4_date_overlap",
+      "display_name": "Candidate 4",
+      "status": "completed",
+      "case_id": "unified_c4_date_overlap",
+      "industry": "supplier operations and sourcing",
+      "level": "senior specialist",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 2,
+      "aligned_findings": 2,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 0.5,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "ambiguous_aligned_findings": 1,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "adjudicated": "conflicting",
+          "adjudication_reason": "timeline_gate",
+          "predicted_strength": "specific",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 2,
+        "stated": 0,
+        "keyword_only": 0,
+        "none": 0,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 3,
+      "verification_quote_rate": 1.0,
+      "rejected_quote_details": [],
+      "expected_timeline_flags": [
+        "employment_date_overlap"
+      ],
+      "detected_timeline_flags": [
+        "employment_date_overlap"
+      ],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 1,
+      "direct_claims_gated_to_review": 1,
+      "timeline_adjudicated_findings": 1,
+      "rejected_quote_details_count": 0,
+      "adjudicated_item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "adjudicated": "conflicting",
+          "adjudication_reason": "timeline_gate",
+          "predicted_strength": "specific",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "strength_label_checks": [
+        {
+          "gold_item": 1,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 2
+        }
+      ],
+      "strength_matches": 2,
+      "expected_strength_labels": 2
+    },
+    {
+      "candidate_id": "C5",
+      "fixture_id": "unified_c5_scanned_two_column",
+      "display_name": "Candidate 5",
+      "status": "completed",
+      "case_id": "unified_c5_scanned_two_column",
+      "industry": "outsourced manufacturing suppliers",
+      "level": "manager",
+      "cv_variant": "image-only two-column scan",
+      "ocr_used": true,
+      "ocr_pages": [
+        1
+      ],
+      "gold_requirements": 2,
+      "aligned_findings": 2,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 2,
+        "stated": 0,
+        "keyword_only": 0,
+        "none": 0,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 4,
+      "verification_citations_proposed": 4,
+      "verification_quote_rate": 1.0,
+      "rejected_quote_details": [],
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "timeline_adjudicated_findings": 0,
+      "rejected_quote_details_count": 0,
+      "adjudicated_item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "strength_label_checks": [
+        {
+          "gold_item": 1,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 2
+        }
+      ],
+      "strength_matches": 2,
+      "expected_strength_labels": 2
+    }
+  ],
+  "overall": {
+    "expected_evidence_labels": 10,
+    "muse_label_matches": 9,
+    "muse_label_accuracy": 0.9,
+    "timeline_adjudicated_label_matches": 10,
+    "timeline_adjudicated_label_accuracy": 1.0,
+    "expected_strength_labels": 10,
+    "strength_label_matches": 10,
+    "strength_label_accuracy": 1.0,
+    "verified_quotes": 15,
+    "proposed_quotes": 15,
+    "blocked_quotes": 0,
+    "quote_verification_rate": 1.0,
+    "related_to_direct_overclaims": 0,
+    "expected_timeline_flags": 1,
+    "detected_timeline_flags": 1,
+    "timeline_true_positives": 1,
+    "timeline_false_positives": 0,
+    "timeline_false_negatives": 0,
+    "provider_reported_input_tokens": 13302,
+    "provider_reported_output_tokens": 19747,
+    "estimated_standard_token_cost_usd": 0.10055225,
+    "cost_note": "Token-based estimate at the saved Muse Spark Standard rates; not a provider billing record.",
+    "rejected_quote_details": []
+  },
+  "disclosure": "All five candidate profiles are fictional. The shared role and requirements are based on the public GlobalFoundries posting. The supplier-negotiation requirement reuses the focal wording from the prior strength-ladder demo. Expected labels are prewritten calibration targets, not objective judgments about real candidates. C2 is deliberately skills-list-only; the prior concrete administrative duty has been removed so a keyword-only expected label is testable.",
+  "report_contains_cv_text": false,
+  "report_contains_accepted_quote_text": false,
+  "report_contains_rejected_quote_text": true,
+  "reasoning_effort": "medium",
+  "system_prompt_sha256": "dd0999d1daf970b49e50065176cd81c50ecea81db180bc4f18625d8759f4cb4d",
+  "fixture_sha256": "e968cdebb95c461931c2469770995a437e9073f736fea353b569fcbe8c04e6c6"
+}

@@ -1,0 +1,1933 @@
+{
+  "schema": "evidencetrail-fixture-replay/v1",
+  "source": "authentic Meta Muse Spark 1.3 responses on fictional CVs",
+  "fictional_only": true,
+  "job_sha256": "ed84cbf20071f4cf5bd33791ae137b3e6ecb5951ec9c375eedec65f69647b921",
+  "rubric_sha256": "a6faf1ec45b10d3c4b491ecb6fa054ca8d262b5e3da9fc91f0e61ecc07e5067d",
+  "recorded_utc": "2026-10-29T14:35:17.584111+00:00",
+  "requested": 20,
+  "completed": 20,
+  "successful_quotes": 76,
+  "attempts_with_no_retry": true,
+  "issues": [],
+  "results": [
+    {
+      "id": "ET-001",
+      "cv_sha256": "f637fcbd828b37f8be7bb7eea24e85941d42e3c67ccb9848143077d0dc0deac5",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18814-faa3-73cf-938e-26e5f3fb1506",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states nine years leading supplier operations and purchasing. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Led supplier operations and purchasing for nine years across GCC distributors.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states personally led price negotiations and renewals. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Personally led annual supplier price negotiations and commercial agreement renewals.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV describes SAP MM purchase orders and vendor records. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Created purchase orders and maintained vendor records in SAP MM.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states coordinated cross-border shipments in three GCC states. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Coordinated UAE, Saudi Arabia and Bahrain cross-border supplier shipments.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.799
+    },
+    {
+      "id": "ET-002",
+      "cv_sha256": "1ac71719663b3afc8f79466a15d8621c89d93b5c71bbc188cb8ba53ab81d7691",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-07a7-71ae-a5d2-af9410a12649",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "ambiguous",
+          "note": "CV states procurement work spanning 2018 to 2026. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement. Local timeline check: the dated roles overlap by 96 months. They may have been concurrent or part-time, or the dates may need correction; clarify before relying on the duration.",
+          "evidence": [
+            {
+              "quote": "Owned procurement delivery plans and supplier onboarding from 2018 to 2026.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly states leading negotiations and signing terms. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Led supplier negotiation meetings and signed negotiated commercial terms.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV describes daily SAP MM vendor and PO work. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Used SAP MM daily to maintain vendor masters and approve purchase orders.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states managing GCC shipments across three cities. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Managed GCC shipment exceptions between Dubai, Riyadh and Muscat.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 1,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.327
+    },
+    {
+      "id": "ET-003",
+      "cv_sha256": "dd1bd6e390078a10a097c7b2e20bb94f99e970d169a76c0321f68160818b8df8",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-1887-70d9-98a7-2ee3ddf59a17",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "supported",
+          "evidence_type": "related",
+          "evidence_strength": "stated",
+          "certainty": "ambiguous",
+          "note": "States nine years but no dated role to verify tenure. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement. Muse identified potentially transferable experience. It does not establish the exact job requirement; review the transfer explanation and gap. A verified related passage does not prove this exact criterion.",
+          "evidence": [
+            {
+              "quote": "Performed supplier operations, sourcing and procurement for nine years.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "Directly states leading pricing negotiations and contracts. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Led supplier pricing negotiations and commercial contract extension discussions.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "supported",
+          "evidence_type": "related",
+          "evidence_strength": "stated",
+          "certainty": "ambiguous",
+          "note": "Shows SAP PO and records work but not SAP MM. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement. Muse identified potentially transferable experience. It does not establish the exact job requirement; review the transfer explanation and gap. A verified related passage does not prove this exact criterion.",
+          "evidence": [
+            {
+              "quote": "Operated SAP procurement purchase orders and supplier records.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "Directly states Saudi-UAE cross-border shipment coordination. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Coordinated Saudi and UAE cross-border shipments.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 2,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 4.289
+    },
+    {
+      "id": "ET-004",
+      "cv_sha256": "51a37b32a9a5bc8a4429a23e0b2f069cd8f948653f1733b363e434ae92755b53",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-2645-7423-9bb7-3dc04ee4148a",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV states eleven years managing procurement suppliers. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Managed procurement suppliers for eleven years.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV describes personally negotiating agreements and price tiers. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Personally negotiated commercial supply agreements and price tiers.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states processing workflows in SAP MM. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Processed purchasing and vendor-master workflows in SAP MM.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states GCC inbound logistics across named countries. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Handled GCC inbound logistics from Oman to the UAE and Bahrain.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.477
+    },
+    {
+      "id": "ET-005",
+      "cv_sha256": "a7c1b9b42c3bb209303cf8c9e1f68bf4899e52a6817625f310a5edbf623187e4",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-413d-7585-b187-3e99b76f1b60",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "Dated operational support matches procurement operations domain. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Supported supplier operations and purchasing processes since 2020.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states director led negotiations, not candidate. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Prepared negotiation notes, but a director led supplier contract negotiations.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly denies creating purchase orders. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Used SAP reporting dashboards; did not create purchase orders.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV limits work to domestic Dubai only. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Booked domestic warehouse transfers within Dubai only.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 6.982
+    },
+    {
+      "id": "ET-006",
+      "cv_sha256": "0e1d650a2970a600bdc9ddfc7e1371550ef175d6cb8e728b9d8ee52708884c53",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-4fbf-721d-a0d1-23e9b3a70246",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states eight years tracking supplier schedules and documentation. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Tracked supplier schedules and procurement documentation for eight years.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly states never negotiated final terms. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Attended commercial calls and recorded their action items but never negotiated\nfinal terms.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "Display-only observation conflicts with hands-on workflow requirement. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Observed SAP vendor records through display-only access.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "related",
+          "evidence_strength": "stated",
+          "certainty": "ambiguous",
+          "note": "UAE-only tracking is narrower than GCC cross-border coordination. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement. Muse identified potentially transferable experience. It does not establish the exact job requirement; review the transfer explanation and gap. The verification result is ambiguous or a proposed source link failed a local check; inspect the cited text before relying on it. A verified related passage does not prove this exact criterion.",
+          "evidence": [
+            {
+              "quote": "Handled delivery tracking within the UAE.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 1,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.662
+    },
+    {
+      "id": "ET-007",
+      "cv_sha256": "bf08ca521c51fcd3bd5e57c6e5db446264ca94b4ca63a79e59a72729ad8e1558",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-6452-7359-932b-f0ac8b7654df",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "related",
+          "evidence_strength": "stated",
+          "certainty": "ambiguous",
+          "note": "Shows procurement support work but no duration stated. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement. Muse identified potentially transferable experience. It does not establish the exact job requirement; review the transfer explanation and gap. The verification result is ambiguous or a proposed source link failed a local check; inspect the cited text before relying on it. A verified related passage does not prove this exact criterion.",
+          "evidence": [
+            {
+              "quote": "Helped the purchasing team with vendor queries and catalog updates.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states manager negotiated contracts, not candidate. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Prepared price-comparison spreadsheets; a manager negotiated the contracts.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly denies SAP transaction access. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Read supplier data exported from SAP but had no transaction access.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly excludes GCC cross-border supplier shipments. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Tracked international freight status but not GCC cross-border supplier shipments.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 1,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 5.322
+    },
+    {
+      "id": "ET-008",
+      "cv_sha256": "cf9ce646919024dee065851992acc5b53340076e0a8740652b507aedca6a1bd2",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-70b0-71a3-bbd4-3a362b9df5e9",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly denies owning supplier purchase decisions. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Did not own supplier purchase decisions or price negotiations.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly states did not own price negotiations. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Did not own supplier purchase decisions or price negotiations.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly denies SAP procurement use. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Used a warehouse management system, not SAP procurement.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV limits coordination to domestic Abu Dhabi deliveries. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Only coordinated domestic deliveries within Abu Dhabi.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.098
+    },
+    {
+      "id": "ET-009",
+      "cv_sha256": "1e4bffde6145423c0c81528bc9057cc9323d621dcdb89f28ef65667b179be255",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-7f42-7109-9ebd-69fef8169b10",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly denies supplier procurement duties. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "No supplier procurement or commercial negotiation duties reported.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly denies commercial negotiation duties. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "No supplier procurement or commercial negotiation duties reported.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states SAP use was accounting, not purchase orders. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Used SAP finance modules for accounting rather than purchase orders.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly states no logistics handling. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Prepared reports on GCC vendor invoices without handling logistics.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.725
+    },
+    {
+      "id": "ET-010",
+      "cv_sha256": "2e3a51aab6127bfcf2a9acf3a1866936f6d2f1eefcaa396bb97ae4ad9dfc1f92",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-8def-7254-a0a9-54039225c2f2",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "unsupported",
+          "evidence_strength": "none",
+          "certainty": "clear",
+          "note": "No procurement operations duties documented, only freight forwarding. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill.",
+          "evidence": []
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly denies managing contracts or negotiations. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Did not personally manage procurement contracts or negotiations.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "conflicting",
+          "evidence_type": "unsupported",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly states no hands-on SAP MM activity. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill.",
+          "evidence": []
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV describes GCC cross-border customs delivery coordination. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Coordinated UAE, Saudi Arabia and Kuwait customs deliveries.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 3,
+        "verified": 3,
+        "excluded": 0,
+        "verification_proposed": 3,
+        "verification_verified": 3,
+        "verification_excluded": 1,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 3
+      },
+      "verification_audit": {
+        "proposed": 3,
+        "verified": 3,
+        "excluded": 1
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.761
+    },
+    {
+      "id": "ET-011",
+      "cv_sha256": "8e4faea7a2cbaf9d457d77e0a91f9cae08afca42beaafe5e0052da0cc66849a6",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-9c57-772f-82ea-1789f6095c8b",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV states customer work, explicitly not procurement suppliers. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Negotiated service renewals with customers, not procurement suppliers.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV states negotiations were customer renewals, not suppliers. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Negotiated service renewals with customers, not procurement suppliers.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly denies SAP purchasing use. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Used a customer CRM rather than SAP purchasing transactions.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV states no cross-border supplier shipment work. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Handled GCC customer calls but not cross-border supplier shipments.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.644
+    },
+    {
+      "id": "ET-012",
+      "cv_sha256": "1643017ddd5d41c1b609edfc9292d0152ab5387316ff759993a15952258b2f0e",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-a6f5-7763-8a87-3232b369ac6f",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "unsupported",
+          "evidence_strength": "none",
+          "certainty": "clear",
+          "note": "No dated procurement experience or duration is stated. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill.",
+          "evidence": []
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly denies supplier contract negotiation duties. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Reported product price complaints, with no supplier contract negotiation duties.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states SAP study without hands-on use. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Studied SAP in an introductory course without hands-on use.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly limits work to domestic deliveries. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Coordinated domestic customer deliveries, not GCC cross-border logistics.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 3,
+        "verified": 3,
+        "excluded": 0,
+        "verification_proposed": 3,
+        "verification_verified": 3,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 3
+      },
+      "verification_audit": {
+        "proposed": 3,
+        "verified": 3,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 2.733
+    },
+    {
+      "id": "ET-013",
+      "cv_sha256": "74436e1e253cef60f42f3c9d5bd9f8a92c5b8fa26b95aa5dda6d742121d59304",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-b080-7173-951d-9a34999b5c3b",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "unsupported",
+          "evidence_strength": "keyword_only",
+          "certainty": "clear",
+          "note": "No concrete work passage shows this requirement. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill. Only a keyword, skill-list item, or title mention was identified; it was not accepted as supporting evidence.",
+          "evidence": []
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "unsupported",
+          "evidence_strength": "keyword_only",
+          "certainty": "clear",
+          "note": "No concrete work passage shows this requirement. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill. Only a keyword, skill-list item, or title mention was identified; it was not accepted as supporting evidence.",
+          "evidence": []
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "unsupported",
+          "evidence_strength": "keyword_only",
+          "certainty": "clear",
+          "note": "No concrete work passage shows this requirement. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill. Only a keyword, skill-list item, or title mention was identified; it was not accepted as supporting evidence.",
+          "evidence": []
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "unsupported",
+          "evidence_strength": "keyword_only",
+          "certainty": "clear",
+          "note": "No concrete work passage shows this requirement. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill. Only a keyword, skill-list item, or title mention was identified; it was not accepted as supporting evidence.",
+          "evidence": []
+        }
+      ],
+      "quote_audit": {
+        "proposed": 0,
+        "verified": 0,
+        "excluded": 0,
+        "verification_proposed": 0,
+        "verification_verified": 0,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 0
+      },
+      "verification_audit": {
+        "proposed": 0,
+        "verified": 0,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 2.428
+    },
+    {
+      "id": "ET-014",
+      "cv_sha256": "db23a86e3d1fe992bce6e274fdd85996fac191bcb06a0b01f4747f75b3f3c03b",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-c02e-72d2-a6f4-2fc6718d441c",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly states no job-duration evidence exists. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "No purchase-order activity, employer negotiation or job-duration evidence.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly denies employer negotiation evidence. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "No purchase-order activity, employer negotiation or job-duration evidence.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly states no purchase-order activity. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "No purchase-order activity, employer negotiation or job-duration evidence.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "unsupported",
+          "evidence_strength": "keyword_only",
+          "certainty": "clear",
+          "note": "Only freight keyword appears without documented work. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill. Only a keyword, skill-list item, or title mention was identified; it was not accepted as supporting evidence.",
+          "evidence": []
+        }
+      ],
+      "quote_audit": {
+        "proposed": 3,
+        "verified": 3,
+        "excluded": 0,
+        "verification_proposed": 3,
+        "verification_verified": 3,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 3
+      },
+      "verification_audit": {
+        "proposed": 3,
+        "verified": 3,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 4.038
+    },
+    {
+      "id": "ET-015",
+      "cv_sha256": "552be5415dc2b9b13e28c2785c9e553b904422d6d83bea452bbdf84d8052b43b",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-d0d6-750d-b883-fc838dabb450",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "ambiguous",
+          "note": "CV claims eight years but documents only 2022-2026. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context. Local timeline check: the dated roles overlap by 48 months. They may have been concurrent or part-time, or the dates may need correction; clarify before relying on the duration. Local timeline check: the stated duration (96 months) exceeds the dated work history found (48 months). Earlier or omitted roles may reconcile this; ask the candidate before relying on the duration.",
+          "evidence": [
+            {
+              "quote": "Summary claims eight years of procurement operations experience.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            },
+            {
+              "quote": "Only documented employment: Procurement Officer, 2022 to 2026.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R1-Q2"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV both claims and denies leading negotiations. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "I personally led commercial contracts with suppliers.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R2-Q1"
+            },
+            {
+              "quote": "I never led contract negotiations, my manager did.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q2"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states SAP MM vendor and purchasing work. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Used SAP MM for vendor master records and purchasing workflows.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly denies GCC shipment responsibility. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Handled UAE-only purchases, no GCC shipment responsibility.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 6,
+        "verified": 6,
+        "excluded": 0,
+        "verification_proposed": 6,
+        "verification_verified": 6,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 1,
+        "locally_anchored_source_spans": 6
+      },
+      "verification_audit": {
+        "proposed": 6,
+        "verified": 6,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 4.248
+    },
+    {
+      "id": "ET-016",
+      "cv_sha256": "1d8c90fe43ba12475a639ad22dfea824c94ed3a765023eac13cc43e2ca363287",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-e865-70fe-a924-0e3135b92e63",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "supported",
+          "evidence_type": "related",
+          "evidence_strength": "stated",
+          "certainty": "ambiguous",
+          "note": "Shows tenure in domain but no concrete duties described. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement. Muse identified potentially transferable experience. It does not establish the exact job requirement; review the transfer explanation and gap. A verified related passage does not prove this exact criterion.",
+          "evidence": [
+            {
+              "quote": "Supplier operations and procurement employment since 2019.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV both claims lead and states note taker only. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "led all supplier price negotiations for seven years.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R2-Q1"
+            },
+            {
+              "quote": "attended negotiations as a note taker, not the negotiator.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q2"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly denies hands-on purchase order work. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "SAP purchasing orders were created by finance, not by me.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "Describes UAE to KSA supplier dispatch coordination. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Coordinated UAE to KSA supplier dispatch since 2021.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 5,
+        "verified": 5,
+        "excluded": 0,
+        "verification_proposed": 5,
+        "verification_verified": 5,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 1,
+        "locally_anchored_source_spans": 5
+      },
+      "verification_audit": {
+        "proposed": 5,
+        "verified": 5,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 6.027
+    },
+    {
+      "id": "ET-017",
+      "cv_sha256": "08daae78ad73ff63ef5e75a847a8af30bb0829e1dc17c74425972c958d6f713c",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18815-f7b4-77bf-a866-4f0b356db578",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "conflicting",
+          "evidence_type": "unsupported",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly states no supplier procurement employment described. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill.",
+          "evidence": []
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "conflicting",
+          "evidence_type": "unsupported",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly states no negotiation employment described. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill.",
+          "evidence": []
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "conflicting",
+          "evidence_type": "unsupported",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly states no SAP MM employment described. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill.",
+          "evidence": []
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "conflicting",
+          "evidence_type": "unsupported",
+          "evidence_strength": "stated",
+          "certainty": "clear",
+          "note": "CV explicitly states no GCC logistics employment described. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill.",
+          "evidence": []
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 4,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 4
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.927
+    },
+    {
+      "id": "ET-018",
+      "cv_sha256": "afa7fcc37a90ae8f375ab1b01e9e66cad5e0eef73d265110fe47ef3d043bfa6d",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18816-0428-7283-986f-3b0e92776e7a",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "unsupported",
+          "evidence_strength": "none",
+          "certainty": "clear",
+          "note": "No procurement operations tenure or dated roles are stated. No directly supporting or explicitly conflicting passage survived the source checks. This does not prove the candidate lacks the skill.",
+          "evidence": []
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly denies negotiating supplier contracts. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Never negotiated supplier contracts or used SAP purchasing modules.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly denies using SAP purchasing modules. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context.",
+          "evidence": [
+            {
+              "quote": "Never negotiated supplier contracts or used SAP purchasing modules.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "not_found",
+          "effective_status": "not_found",
+          "raw_status": "not_found",
+          "evidence_type": "related",
+          "evidence_strength": "stated",
+          "certainty": "ambiguous",
+          "note": "Local delivery tracking does not show GCC cross-border coordination. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement. Muse identified potentially transferable experience. It does not establish the exact job requirement; review the transfer explanation and gap. The verification result is ambiguous or a proposed source link failed a local check; inspect the cited text before relying on it. A verified related passage does not prove this exact criterion.",
+          "evidence": [
+            {
+              "quote": "Tracked delivery receipts for local warehouses.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 3,
+        "verified": 3,
+        "excluded": 0,
+        "verification_proposed": 3,
+        "verification_verified": 3,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 1,
+        "locally_anchored_source_spans": 3
+      },
+      "verification_audit": {
+        "proposed": 3,
+        "verified": 3,
+        "excluded": 0
+      },
+      "ocr_pages": [],
+      "elapsed_seconds": 3.156
+    },
+    {
+      "id": "ET-019",
+      "cv_sha256": "e6836eb9e47e069e36c6e741e61ed9dd79b85a0591bec88a044d8f578e1ae2ad",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18816-17cd-7541-943c-cbf6fd029464",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states eight years in procurement and supplier operations. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Procurement and supplier operations lead 2018 to 2026, eight\nyears.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV explicitly states personally led pricing and contract negotiations. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Personally led supplier pricing and commercial contract\nnegotiations.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states hands-on SAP MM orders and vendor records work. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Raised SAP MM purchase orders and maintained vendor records.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "note": "CV states coordinated GCC supplier shipments across three countries. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement.",
+          "evidence": [
+            {
+              "quote": "Coordinated GCC supplier shipments UAE Saudi Arabia and Bahrain.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0,
+        "verification_proposed": 4,
+        "verification_verified": 4,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 0,
+        "locally_anchored_source_spans": 4
+      },
+      "verification_audit": {
+        "proposed": 4,
+        "verified": 4,
+        "excluded": 0
+      },
+      "ocr_pages": [
+        1
+      ],
+      "elapsed_seconds": 4.969
+    },
+    {
+      "id": "ET-020",
+      "cv_sha256": "4fccd69d566d53caf3399825ef148407febf75433c5cefd2df59328b110bf08b",
+      "model": "muse-spark-1.3",
+      "provider_mode": "muse",
+      "analysis_calls": 1,
+      "receipt": "chatcmpl-01a18816-2e63-743e-a89a-eea0e79078a5",
+      "requirements": [
+        {
+          "requirement": "At least five years in supplier procurement operations.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "ambiguous",
+          "note": "Dated procurement role spans 2020 to 2026 with supplier duties. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement. The verification result is ambiguous or a proposed source link failed a local check; inspect the cited text before relying on it. Local timeline check: the dated roles overlap by 72 months. They may have been concurrent or part-time, or the dates may need correction; clarify before relying on the duration.",
+          "evidence": [
+            {
+              "quote": "Procurement coordination and supplier support from 2020 to 2026.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q1"
+            },
+            {
+              "quote": "Coordinated UAE Kuwait and Qatar cross-border inbound supplier deliveries.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R1-Q2"
+            }
+          ]
+        },
+        {
+          "requirement": "Personally led supplier price negotiations and commercial contracts.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "ambiguous",
+          "note": "CV explicitly states did not lead commercial negotiations. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context. The verification result is ambiguous or a proposed source link failed a local check; inspect the cited text before relying on it.",
+          "evidence": [
+            {
+              "quote": "Prepared negotiation materials but did not lead commercial negotiations.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R2-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Hands-on SAP MM purchase orders and vendor record workflows.",
+          "status": "conflicting",
+          "effective_status": "conflicting",
+          "raw_status": "conflicting",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "certainty": "ambiguous",
+          "note": "CV states display only and others created purchase orders. Muse proposed a conflicting statement in its structured analysis. Its exact text was checked against the cited PDF page; review the context. The verification result is ambiguous or a proposed source link failed a local check; inspect the cited text before relying on it.",
+          "evidence": [
+            {
+              "quote": "Used SAP display only. Finance created purchase orders.",
+              "page": 1,
+              "role": "contradicts",
+              "source_id": "R3-Q1"
+            }
+          ]
+        },
+        {
+          "requirement": "Direct GCC cross-border supplier logistics coordination.",
+          "status": "supported",
+          "effective_status": "supported",
+          "raw_status": "supported",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "ambiguous",
+          "note": "Describes cross-border inbound supplier deliveries in GCC states. Muse proposed a supporting passage in its structured analysis. Its exact text was checked against the cited PDF page; review whether it supports the requirement. The verification result is ambiguous or a proposed source link failed a local check; inspect the cited text before relying on it.",
+          "evidence": [
+            {
+              "quote": "Coordinated UAE Kuwait and Qatar cross-border inbound supplier deliveries.",
+              "page": 1,
+              "role": "supports",
+              "source_id": "R4-Q1"
+            }
+          ]
+        }
+      ],
+      "quote_audit": {
+        "proposed": 5,
+        "verified": 5,
+        "excluded": 0,
+        "verification_proposed": 5,
+        "verification_verified": 5,
+        "verification_excluded": 0,
+        "ambiguous_requirements": 4,
+        "locally_anchored_source_spans": 5
+      },
+      "verification_audit": {
+        "proposed": 5,
+        "verified": 5,
+        "excluded": 0
+      },
+      "ocr_pages": [
+        1
+      ],
+      "elapsed_seconds": 5.686
+    }
+  ],
+  "readme": "These are real saved Muse findings. Viewing them does NOT send any API request. This is NOT live inference or a commercial hiring assessment."
+}

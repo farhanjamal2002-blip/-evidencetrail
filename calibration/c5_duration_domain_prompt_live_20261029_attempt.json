@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "started_at_utc": "2026-10-29T05:24:04.867298+00:00",
+  "case_id": "unified_c5_scanned_two_column",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "medium",
+  "expected_live_requests": 1,
+  "automatic_retries": 0,
+  "api_key_value_saved": false,
+  "ocr_mode": "tesseract --psm 3",
+  "prompt_change": "One substantiated alternative domain is sufficient for minimum-years experience requirements; direct requires a dated role plus concrete same-role work.",
+  "finished_at_utc": "2026-10-29T05:24:22.029010+00:00",
+  "elapsed_seconds": 17.158,
+  "live_calls_reported": 1,
+  "raw_label_matches": 2,
+  "raw_label_count": 2,
+  "quote_verification": {
+    "verified": 4,
+    "proposed": 4,
+    "rejected_quote_details": []
+  }
+}
