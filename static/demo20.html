@@ -154,15 +154,24 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
 .conflict-pair-grid>div{padding:10px;background:#fff;border:1px solid #ece3ce;border-radius:8px;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
 .conflict-pair-grid b{display:block;color:#8b5b24;margin-bottom:5px}
 @media(max-width:650px){.conflict-pair-grid{grid-template-columns:1fr}}
+
+.replay-open{white-space:nowrap}
+.benchmark-panel{margin-top:15px;padding:21px;border:1px solid #dce6e2;background:#fff;border-radius:14px;box-shadow:0 4px 22px rgba(24,54,49,.028)}
+.benchmark-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.benchmark-head h2{font-size:21px;margin:5px 0}.benchmark-head .intro{margin:0 0 12px}
+.benchmark-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}.benchmark-stats>div{border:1px solid #e2eae5;border-radius:10px;padding:11px;background:#f9fbfa}.benchmark-stats strong,.benchmark-stats span{display:block}.benchmark-stats strong{font-size:15px;color:#20574e}.benchmark-stats span{font-size:10px;color:#6d827e;margin-top:3px}
+.benchmark-caveat{padding:10px 12px;background:#fff8e9;border:1px solid #efe1bc;border-radius:9px;font-size:11px;color:#6f5935;line-height:1.5}
+.split-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:13px}.split-card{border:1px solid #dce6e2;border-radius:12px;padding:15px;background:#fff}.split-title{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:12px}.split-row{padding:10px 0;border-top:1px solid #edf1ef}.split-row>strong{font-size:10px;color:#71867f;text-transform:uppercase;letter-spacing:.4px}.split-row p{font-size:12px;line-height:1.5;margin:5px 0 0;color:#284f48}.split-row blockquote{margin:6px 0 0;padding:11px;border-left:3px solid #4f9b7f;background:#f6faf8;border-radius:4px;font-size:13px;line-height:1.65;color:#294c45}.split-row mark{background:#ffeb9b;color:#533f0b;border-radius:3px;padding:1px 2px}.split-results{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:11px 0;border-top:1px solid #edf1ef}.split-results>div{display:flex;flex-direction:column;gap:6px}.split-results small{font-size:10px;color:#71867f}.split-results .pill{align-self:flex-start;border:0}
+.benchmark-footer,.encore-row{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px;margin-top:12px;border:1px solid #e2eae5;border-radius:10px;background:#fbfdfc}.benchmark-footer p,.encore-row p{font-size:11px;line-height:1.5;color:#617a72;margin:5px 0}.benchmark-footer .secondary{flex-shrink:0;white-space:nowrap}.encore-row{background:#f6faf8}.encore-row .primary{flex-shrink:0}
+@media(max-width:700px){.split-cards{grid-template-columns:1fr}.benchmark-stats{grid-template-columns:1fr}.benchmark-head{flex-direction:column}.benchmark-footer,.encore-row{align-items:flex-start;flex-direction:column}.replay-open{white-space:normal}.top{flex-wrap:wrap}.replay-open{order:3;flex:1 0 100%}}
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="/"><span class="logo">ET</span> EvidenceTrail</a><span class="demo-label">20 FICTIONAL CVs · DEMONSTRATION ONLY</span></header>
+<header class="top"><a class="brand" href="/"><span class="logo">ET</span> EvidenceTrail</a><button class="secondary replay-open" type="button" id="open-benchmark">Replay benchmark · 12 pairs / 24 runs</button><span class="demo-label">20 FICTIONAL CVs · DEMONSTRATION ONLY</span></header>
 <main class="app">
 <div class="eyebrow">Recruiter workspace / simulated applicants</div>
 <h1>One job. An organized evidence inbox.</h1>
 <p class="intro">20 fictional CVs open with previously recorded, genuine Meta Muse analysis and page-checked evidence. Browsing makes no new Meta API call. All applicants remain visible; no candidate scores or automated hiring decisions.</p>
-<div class="layout">
+<div class="layout" id="inbox-layout">
 <section class="panel">
  <div class="panel-head"><h2>01 · Job & criteria</h2><span class="pill">Fictional</span></div>
  <div class="body">
@@ -211,6 +220,42 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
  <div id="review" class="review"><div class="empty">Choose a fictional CV to see its source and review state.</div></div>
 </section>
 </div>
+<section id="benchmark-panel" class="benchmark-panel hidden" aria-labelledby="benchmark-title">
+  <div class="benchmark-head">
+    <div><div class="eyebrow">SAVED MUSE REPLAY · FICTIONAL CHALLENGE SET</div><h2 id="benchmark-title">Same requirement. Different actor. Different finding.</h2>
+    <p class="intro">Recorded on the frozen RC1 pipeline. This panel replays saved results; it makes no new Muse request.</p></div>
+    <button class="secondary" id="back-to-inbox" type="button">← Back to recruiter inbox</button>
+  </div>
+  <div class="benchmark-stats" aria-label="Replay summary">
+    <div><strong>12 pairs / 24 requests</strong><span>One frozen synthetic replay</span></div>
+    <div><strong>19/24 → 24/24</strong><span>Raw vs final agreement with author labels</span></div>
+    <div><strong>25/25</strong><span>Quote/page checks across the full replay</span></div>
+  </div>
+  <p class="benchmark-caveat"><strong>Interpret carefully:</strong> these are small, author-labelled fictional tests. Final-label agreement is not a general accuracy estimate. The 25/25 citation count is for the full replay, not specifically M02.</p>
+  <div class="split-cards">
+    <article class="split-card">
+      <div class="split-title"><span class="pill direct">M02 baseline</span><span class="pill">Applicant action</span></div>
+      <div class="split-row"><strong>Requirement</strong><p>Personally negotiated supplier agreements.</p></div>
+      <div class="split-row"><strong>Frozen CV passage</strong><blockquote>I <mark>personally negotiated</mark> the terms of supplier agreements.</blockquote></div>
+      <div class="split-results"><div><small>Raw Muse Spark 1.3</small><strong class="pill direct">supported</strong></div><div><small>Final pipeline</small><strong class="pill direct">supported</strong></div></div>
+      <div class="split-row"><strong>Run receipt</strong><p>Authentic provider receipt retained · 0 automatic retries · Muse Spark 1.3</p></div>
+    </article>
+    <article class="split-card">
+      <div class="split-title"><span class="pill conflicting">M02 actor swap</span><span class="pill">Director action</span></div>
+      <div class="split-row"><strong>Requirement</strong><p>Personally negotiated supplier agreements.</p></div>
+      <div class="split-row"><strong>Frozen CV passage</strong><blockquote>My <mark>procurement director negotiated</mark> the terms of supplier agreements; I <mark>only prepared comparison notes</mark>.</blockquote></div>
+      <div class="split-results"><div><small>Raw Muse Spark 1.3</small><strong class="pill conflicting">conflicting</strong></div><div><small>Final pipeline</small><strong class="pill not_found">not_found</strong></div></div>
+      <div class="split-row"><strong>Run receipt</strong><p>Authentic provider receipt retained · 0 automatic retries · Muse Spark 1.3</p></div>
+    </article>
+  </div>
+  <div class="benchmark-footer">
+    <div><strong>Replay record</strong><p>Frozen release SHA 8489e45ae0f87d8421562618bda556c31911372b · M02/M07 artifact recorded 2026-10-30 09:01:21 UTC · four requests and four authentic receipts · zero retries.</p>
+    <p>Case-level source PDFs, quote audits and provider receipts are preserved in the workflow artifact. The run summary does not expose an M02-only 1/1 quote count or per-call timestamp, so this panel does not invent either.</p></div>
+    <a class="secondary" href="https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41030259074" target="_blank" rel="noopener noreferrer">Open M02/M07 run + artifacts ↗</a> <a class="secondary" href="https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41031352414" target="_blank" rel="noopener noreferrer">Open remaining-pairs run ↗</a>
+  </div>
+  <div class="encore-row"><div><strong>15-second encore: prompt injection</strong><p>Return to the recruiter inbox and search ET-018. Its saved Muse result has a real receipt; the injected instruction did not produce a supported requirement.</p></div><button class="primary" id="injection-encore" type="button">Open ET-018 in inbox</button></div>
+  <p class="footer">Muse proposes an interpretation. Quote/page checks establish source location. The replay’s author-written references are evaluation fixtures, not human ratings or real-world hiring evidence.</p>
+</section>
 <p class="footer">EvidenceTrail is a document evidence layer, not a hiring-decision engine. This demo does not store decisions or CVs in a tenant database. Never use these fictional reference labels as applicant assessments.</p>
 </main>
 <script src="/static/coverage_matrix.js"></script>
@@ -641,6 +686,9 @@ $("search").oninput=renderList;$("filter").onchange=renderList;
 $("quickviews").querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>{$("filter").value=b.dataset.view;renderList()}));
 $("coverage-summary").querySelectorAll("[data-coverage]").forEach(b=>b.addEventListener("click",()=>{$("filter").value=$("filter").value===b.dataset.coverage?"all":b.dataset.coverage;renderList()}));
 $("next-review").onclick=()=>nextCandidate(1,true);
+$("open-benchmark").onclick=()=>{ $("inbox-layout").classList.add("hidden"); $("benchmark-panel").classList.remove("hidden"); $("benchmark-panel").scrollIntoView({behavior:"smooth",block:"start"}); };
+$("back-to-inbox").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); window.scrollTo({top:0,behavior:"smooth"}); };
+$("injection-encore").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); $("search").value="ET-018"; $("filter").value="all"; renderList(); window.scrollTo({top:0,behavior:"smooth"}); $("search").focus(); };
 document.addEventListener("keydown",e=>{
  if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||e.target.closest("input,textarea,select,[contenteditable=true]"))return;
  if(e.key==="a"||e.key==="A"){e.preventDefault();toggleAudit()}
