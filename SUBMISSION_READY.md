@@ -25,7 +25,7 @@ EvidenceTrail helps recruiters inspect whether a supplied CV supports a specific
 4. **0:48–1:04:** Click the dark ET-018 next card. Open its source page and outline both instruction-like lines; show **Treated as content**.
 5. **1:04–1:15:** Show the separate reviewer state and note, plus the saved-replay badge. The demo makes no new Muse call.
 
-The current UI work is on draft PR #28 and is not deployed. The current-head browser smoke passed in [GitHub Actions run 41078162194](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41078162194). Do not record or submit the new UI until the public `/build-info` reports the exact reviewed release SHA; parity currently fails because the hosted service is still on an older commit.
+The current UI work is on draft PR #28 and is not deployed. On head `ba9461a984d1b69cc1980f4cd0fe6424874eaf1c`, [20-CV mock acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424687), [judge-browser smoke](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424837), and [CI](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424646) passed. Do not record or submit the new UI until public `/build-info` reports the exact reviewed release SHA; [parity run 41079424887](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424887) reports the hosted service is still on SHA `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`.
 
 The default public service disables new paid Muse calls. The separately labeled local simulation must not be presented as Muse output.
 
