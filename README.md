@@ -1,10 +1,28 @@
 # EvidenceTrail
 
-EvidenceTrail helps a hiring reviewer check what a CV says about a job. Muse Spark turns the job description into requirements and interprets candidate passages; EvidenceTrail verifies each quote against the PDF, links it to the page, and creates a shareable HTML evidence pack.
+**Built for the [Meta Global AI Developer Hackathon 2026](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) · Build for Your World**
 
-The report describes supplied documents. It does not score or rank a candidate and it does not make a hiring decision.
+> ### AI can interpret a CV. EvidenceTrail makes the evidence inspectable.
+>
+> **Powered by Meta Muse Spark 1.3 + independently verified PDF citations.** Recruiters can trace an AI-proposed finding back to the words and page in a supplied CV. **No candidate scores. No automatic hiring decisions.**
 
-See [HACKATHON_COMPLIANCE.md](HACKATHON_COMPLIANCE.md) for the rule-focused submission checklist.
+[**Start with the hackathon showcase →**](HACKATHON_SHOWCASE.md) · [Judge release-candidate PR #28](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/28) · [Competition](https://cerebralvalley.ai/e/meta-ai-developer-hackathon)
+
+## The idea in 30 seconds
+
+Many AI-assisted reviews give an answer. EvidenceTrail adds a checkable **evidence trail**: a job requirement, the model's proposed source quotation, a local citation check against the original PDF/OCR page, and a clear path for a person to review or request clarification. *A source-checked quote is not proof that the claim is true in the real world.*
+
+The main branch demonstrates the original two-pass Muse analysis, source checks, interactive source viewer, and standalone HTML evidence report. The **newer, unmerged hackathon release candidate** in [PR #28](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/28) adds a fictional recruiter inbox, 20 genuine **saved** Muse responses, recruiter-controlled clarification and export workflows, and a revised single-pass Muse engine. These are **different revisions**: don't assume the current `main` code or an older public deployment already has everything in that PR.
+
+| What matters | EvidenceTrail's approach |
+| --- | --- |
+| **Meta AI with a real job** | Muse Spark 1.3 interprets job criteria and the supplied CV. |
+| **Verifiable sources** | Python/PDF and OCR checks independently test proposed quotations and page references. |
+| **Inspectability** | View linked source passages and an audit rather than an unexplained score. |
+| **Human control** | The recruiter decides; missing evidence is not proof of missing ability. |
+| **Demo integrity** | A simulated preview is labeled mock; historical Muse receipts are labeled saved replay, not live calls. |
+
+**Judge fast path:** [Project pitch, architecture, demo and proof links](HACKATHON_SHOWCASE.md). The app is an independently built hackathon submission project, not an official Meta product.
 
 ## Muse Spark integration and open-source stack
 
