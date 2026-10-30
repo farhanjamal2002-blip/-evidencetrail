@@ -9,7 +9,7 @@
 
 ## What judges should open
 
-1. **Start with the [isolated judge-release recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20)** (version fingerprint at [`/build-info`](https://evidencetrail-judge-rc1-2026.onrender.com/build-info); check matching release commit before judging). One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. The genuine 20-CV recorded Muse results load automatically, distinctly labeled as a **saved real recording**, not new inference.
+1. **Start with the [isolated judge-release recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20)** (version fingerprint at [`/build-info`](https://evidencetrail-judge-rc1-2026.onrender.com/build-info); check matching release commit before judging). One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. Clicking the replay control loads the genuine 20-CV recorded Muse results, distinctly labeled as a **saved replay**, not new inference.
 2. **Open Replay benchmark.** Compare the M02 baseline and actor swap. Point to the separate **Quote on the page?** and **Does it credit the applicant?** checks, then the struck-through raw Muse label, final evidence status, and one-line reason. Keep the caveat visible: the 12-pair set is small and fictional; 25/25 quote checks is the full-replay count, not an M02 score.
 
 3. **Inspect the saved M02 receipts.** Open the public case audit and workflow records. The replay uses stored provider responses and makes no new Muse call.
