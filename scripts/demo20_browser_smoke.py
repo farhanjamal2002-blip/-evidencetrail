@@ -106,6 +106,20 @@ async def main():
                     assert "quote on the page?" in replay_text.lower()
                     assert "does it credit the applicant?" in replay_text.lower()
                     assert "small, author-labelled fictional tests" in replay_text
+                    a11y=await page.evaluate("""() => {
+                      const visible=el=>!!(el.getClientRects().length)&&getComputedStyle(el).visibility!=="hidden";
+                      const targets=[...document.querySelectorAll(".benchmark-panel button,.benchmark-panel a,.brand")].filter(visible);
+                      const smallTargets=targets.filter(el=>el.getBoundingClientRect().height<44).map(el=>el.textContent.trim());
+                      const rgb=value=>{const m=value.match(/[\\d.]+/g);return m?m.slice(0,3).map(Number):[0,0,0]};
+                      const lum=value=>{const c=rgb(value).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+                      const background=el=>{for(let n=el;n;n=n.parentElement){const c=getComputedStyle(n).backgroundColor;if(c!=="transparent"&&!c.endsWith(", 0)"))return c}return "rgb(255,255,255)"};
+                      const contrast=el=>{const a=lum(getComputedStyle(el).color),b=lum(background(el));return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
+                      const textNodes=[...document.querySelectorAll(".axis-check span,.axis-check strong,.why-line,.benchmark-caveat,.encore-row p,.split-row>strong,.split-results small,.encore-row strong")].filter(visible);
+                      const lowContrast=textNodes.filter(el=>contrast(el)<4.5).map(el=>({text:el.textContent.trim().slice(0,50),ratio:contrast(el)}));
+                      return {smallTargets,lowContrast};
+                    }""")
+                    assert not a11y["smallTargets"],a11y["smallTargets"]
+                    assert not a11y["lowContrast"],a11y["lowContrast"]
                     assert await page.locator("#inbox-layout").is_hidden()
                     await page.screenshot(path=str(OUT/"actor-swap-replay.png"),full_page=True)
                     # Run pages and full archive listing resolve; the compact case audit is public JSON.
