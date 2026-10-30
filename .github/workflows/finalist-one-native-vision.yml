@@ -1,0 +1,50 @@
+name: One genuine Meta native-vision scanned CV probe — once
+on:
+  push:
+    branches: [eval/finalist-unseen-omissions-oct30]
+    paths: [.github/workflows/finalist-one-native-vision.yml]
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-first-native-vision-synthetic-once-20261030
+  cancel-in-progress: false
+jobs:
+  live-one-vision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      EVIDENCETRAIL_ENABLE_META_VISION: 'true'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_PROCESS: '1'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '1'
+      MAX_CONCURRENT_ANALYSES: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eval/finalist-unseen-omissions-oct30
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install OCR and app
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng fonts-dejavu-core
+          python -m pip install -r requirements.txt
+      - name: Verify synthetic image-only corpus and server key
+        run: |
+          PYTHONPATH=. python -m unittest tests.test_finalist_omission_corpus -v
+          test -n "$MODEL_API_KEY" || (echo 'No key: abort with zero calls'; exit 2)
+      - name: Exactly one consented U23 native vision request; never retry
+        run: PYTHONPATH=. python scripts/finalist_one_native_vision.py
+      - name: Save authentic provider receipt, cost and image audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finalist-first-true-meta-vision-one
+          path: artifacts/finalist-native-vision/
+          retention-days: 14
+          if-no-files-found: warn

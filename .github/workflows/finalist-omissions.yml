@@ -1,0 +1,44 @@
+name: Untouched fictional omission challenge — local mock only
+on:
+  push:
+    branches: [eval/finalist-unseen-omissions-oct30]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audited-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      EVIDENCETRAIL_ENABLE_META_VISION: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '1000'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '1000'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install OCR engine, dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng fonts-dejavu-core
+          python -m pip install -r requirements.txt
+      - name: Check corpus and reference labels
+        run: python -m unittest tests.test_finalist_omission_corpus -v
+      - name: Test conservative ownership-provenance shadow audit
+        run: python -m unittest tests.test_ownership_provenance -v
+      - name: Measure mock-only omissions; archive all mismatches
+        run: python scripts/finalist_omission_evaluate.py
+      - name: Shadow review of 20 authentic SAVED Muse receipts (no paid calls)
+        run: python scripts/historical_muse_ownership_shadow.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: finalist-untouched-omission-report
+          path: |
+            artifacts/finalist-unseen-omissions/report.json
+            artifacts/finalist-unseen-omissions/historic-muse-shadow.json
+          retention-days: 14
