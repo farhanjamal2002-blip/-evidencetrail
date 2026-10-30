@@ -529,6 +529,8 @@ function filterApplicants(){
   candidateRows.forEach(row=>{
     const visible=row.innerText.toLowerCase().includes(query)&&(state==="all"||row.dataset.evidence===state);
     row.hidden=!visible;
+    row.style.display=visible?"grid":"none";
+    row.setAttribute("aria-hidden",String(!visible));
     if(visible)shown++;
   });
   document.querySelector("#candidate-empty").hidden=shown!==0;
