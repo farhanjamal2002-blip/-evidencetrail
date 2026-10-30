@@ -1,22 +1,19 @@
-# EvidenceTrail — 75-second judge demo (proposed final cut)
+# EvidenceTrail — 75-second judge demo (draft cut)
 
-**Record only against the exact frozen build used in the submission.** All applicants, messages and CVs here are fictional. The inbox uses **saved genuine Muse results**; opening the saved replay does not generate new calls. Show the on-screen provider receipt so the distinction is unmistakable.
+**Record against the reviewed branch only after the browser smoke passes and the public `/build-info` SHA matches the build being recorded.** All documents and applicants are fictional. The M02 and 20-applicant views use saved Muse responses; they make no new model calls.
 
 | Time | What to show | Narration |
 |---|---|---|
-| 0:00–0:08 | A job and its recruiter-confirmed requirements; one applicant result | “AI can interpret a CV. But when its conclusion is wrong, who checks the source?” |
-| 0:08–0:19 | Open the 20 fictional CV inbox and select ET-005 | “EvidenceTrail uses Meta Muse Spark to propose requirement-level evidence, then our independent engine checks quotation presence, page location, role scope and inconsistent claims.” |
-| 0:19–0:31 | Click the prominent **Verification Receipt** banner; point to **real** quote counts and label overrides shown for this applicant | “The original Muse result is preserved beside the locally reviewed finding. Unsupported text cannot silently become an established qualification.” |
-| 0:31–0:42 | Click **Highlight on CV** next to a source-checked quote; show original page | “The recruiter sees the source on the CV itself—not just an AI explanation. A verified quote means the text exists, not that the claim is factually true.” |
-| 0:42–0:54 | Select unresolved criteria, click **Copy selected clarification message**, and display the question draft. Use a **prewritten fictional reply**, pasted into the response box | “When a requirement is unclear, we don't auto-reject. One action creates targeted questions. A received reply can be recorded without another model call.” |
-| 0:54–1:06 | Show **Candidate self-attested · Not independently verified** and export the HTML evidence pack | “That reply is recorded and timestamped, but it never rewrites the original CV evidence. A human reviews it and owns the final decision.” |
-| 1:06–1:15 | Show independent local verification receipt, authentic Meta response reference and final exported record | “Muse interprets. EvidenceTrail verifies the source and keeps the audit. The recruiter decides. No candidate scores or automatic hiring decisions.” |
+| 0:00–0:08 | Recruiter inbox and one job requirement | “A quote can be real and still credit the wrong person. EvidenceTrail makes the source check and the applicant-attribution check visible separately.” |
+| 0:08–0:20 | Open **Replay benchmark** and show the two M02 cards | “These are two fictional passages with the same requirement and action. In the second, the director negotiated; the applicant only prepared comparison notes.” |
+| 0:20–0:38 | Point to **Quote on the page?** and **Does it credit the applicant?** on both cards; then raw-to-final labels and reasons | “Both quotations are verified on the source page. Only the first credits the applicant. Muse’s raw `conflicting` label remains visible while the pipeline records `not_found` for applicant support.” |
+| 0:38–0:48 | Show M02 audit link and replay statistics/caveat | “The saved receipts are inspectable. The 25/25 citation result is for the full 12-pair fictional replay—not an M02 score or real-CV accuracy estimate.” |
+| 0:48–1:04 | Click the dark ET-018 next card; open ET-018 and choose **View outlined source instruction** | “This instruction-like text is part of the supplied CV. The source page outlines both exact lines and labels them ‘Treated as content.’ EvidenceTrail does not follow them.” |
+| 1:04–1:15 | Show reviewer panel and saved-replay badge | “The reviewer’s state and note sit apart from the evidence labels. The badge marks this as a saved replay, with no new Muse call.” |
 
-## Recording rules
-- **No fabricated provider results, rejection counts or accuracy figures**. Use exactly the counts shown by the selected recorded case and its audit receipt.
-- Do not call a pasted response “verified,” “fact checked,” or “confirmed qualification.” It is **candidate self-attested**.
-- The sample message must be explicitly labeled fictional; copy/paste is never an actual outgoing email.
-- Do not claim a universal fraction of “AI hiring tools” behaves a certain way without independent evidence.
-- Do not claim that quotes match byte-for-byte. The source verifier may use normalized text or OCR; it tests that the cited text can be grounded to the correct page.
-- Do not claim that new Meta vision mode ran unless there is a separate authentic vision-enabled receipt. Existing saved OCR examples do not prove image input was sent to Muse.
-- Record on a signed-out browser and verify source links, CSV/HTML exports and video all match the same build commit.
+## Capture checklist
+
+- Keep the M02 caveat and full-replay denominator legible.
+- Do not call 24/24 general accuracy or 25/25 an M02-specific result.
+- Do not describe the saved replay as live inference or the ET-018 instruction as a detected attack.
+- Keep the final capture on the same SHA shown by the public `/build-info`; the branch changes are not deployed yet.
