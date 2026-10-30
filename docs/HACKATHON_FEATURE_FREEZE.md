@@ -51,5 +51,6 @@ The feature set is locked. Permit only release-blocking correctness, accessibili
 - JavaScript syntax check: passed.
 - Python syntax checks for the ET-018 geometry endpoint and browser smoke: passed.
 - PyMuPDF check on the generated ET-018 fixture: first instruction line box [48.0, 181.25, 371.98, 194.99]; second wrapped instruction line union [48.0, 208.25, 382.60, 240.99], on a 612 by 792 page.
-- Browser smoke assertions now cover the judge path, ET-018 outline, M02 evidence axes and caveat, reviewer states, touch targets, contrast, saved replay labeling, and no paid analysis calls. **The end-to-end browser run has not yet been observed passing on GitHub Actions.**
+- GitHub Actions browser smoke passed on the current UI commit (`3bfd1ecd40b57462aea47a5267bca7812d0a2930`): [run 41078162194](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41078162194), including the judge path, ET-018 outline, M02 axes and caveat, reviewer states, touch targets, contrast, saved replay labeling, and no paid analysis calls. Its `evidencetrail-browser-smoke` artifact preserves the run evidence.
+- Public deployment parity separately remains red because the hosted service is still on `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`, not this draft head. That correctly blocks release verification; this PR is not deployed.
 - This UI is on the draft release branch only. It has not been merged or deployed.
