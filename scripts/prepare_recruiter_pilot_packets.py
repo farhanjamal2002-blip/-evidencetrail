@@ -19,11 +19,12 @@ PAIRS=[
     ("ET-015","ET-016","Conflicting CV statements"),
     ("ET-019","ET-020","Image-only scanned CV"),
 ]
+# Match the exact employer-approved checklist in the frozen judge build.
 CRITERIA=[
-    "Documented supplier procurement experience of at least eight years",
-    "Personally led supplier price negotiations and commercial contracts",
-    "Personally used SAP MM for purchase orders and procurement records",
-    "Personally coordinated GCC cross-border supplier shipments",
+    "At least five years in supplier procurement operations.",
+    "Personally led supplier price negotiations and commercial contracts.",
+    "Hands-on SAP MM purchase orders and vendor record workflows.",
+    "Direct GCC cross-border supplier logistics coordination.",
 ]
 BASE="https://evidencetrail-judge-rc1-2026.onrender.com"
 
