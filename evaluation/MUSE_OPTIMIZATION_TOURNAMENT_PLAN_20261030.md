@@ -216,3 +216,77 @@ Use a small paired schedule and report each axis separately:
 - Keep not_found, explicit internal conflicting, and ambiguous/needs-review states distinct.
 - Never ask Muse to reveal hidden reasoning. Request only concise, structured evidence and, if useful, a short rationale; the model's chain of thought is private and not a verifier.
 - No real CVs, demographics, outside credential checks, human ratings, unsupported confidence claims, or new paid calls are part of this memo.
+
+
+## Multi-model intelligence: collaboration with evidence, not majority vote
+
+The product can be a genuine multi-model system while keeping Muse Spark at its core. The useful distinction is **division of work**: separate models independently inspect the same relevant source, one model tries to find what the first missed, and deterministic code verifies source facts. Do not run several copies of the same prompt and call the vote intelligence.
+
+### What the literature says
+
+| Research / primary source | Useful result and caution | EvidenceTrail design consequence |
+| --- | --- | --- |
+| Meta, “Muse Glimmer 30B: An On-Device Agentic Model,” Oct 19, 2026. https://ai.meta.com/research/publications/muse-glimmer-30b-an-on-device-agentic-model/ | Meta released Muse Glimmer as an Apache 2.0 open-weight 30B model for text/image input; Meta describes an approximately 4-bit quantization for single-GPU inference. | Glimmer is a plausible distinct Meta model for an independent challenger, OCR/layout challenge, or local/private inference experiment. It needs suitable GPU/runtime; do not assume it runs well on the public free web service or the developer laptop. |
+| Meta Model API model documentation. https://dev.meta.ai/docs/models | Muse Spark 1.3 supports hosted text, image, video, and PDF input and tool calling; Glimmer is separately open-weight and self-hosted. | A Spark + Glimmer evaluation can demonstrate both hosted Muse reasoning and an open-weight Meta model in one evidence-focused system. Keep modality/input differences controlled during model comparisons. |
+| Meta, “Collaborative Reasoner: Self-improving Social Agents with Synthetic Conversations.” https://ai.meta.com/research/publications/collaborative-reasoner-self-improving-social-agents-with-synthetic-conversations/ | Meta reports that current models do not consistently collaborate better without training for collaborative behavior. | Role names alone do not guarantee complementary reasoning. Measure whether the challenger catches errors the primary misses and whether its presence improves the whole pipeline. |
+| Joshi et al., “Too Many Cooks Spoil The Broth,” EMNLP 2026. https://aclanthology.org/2026.emnlp-main.2164/ | In their medical QA study, agent consensus could be biased; the council used substantially more calls and sometimes trailed one larger model. This is not a CV benchmark, but it is a strong warning against “agreement = correct.” | Do not select labels by majority vote. Report error overlap, disagreement accuracy, unique corrections, and cost against the strongest single model. |
+| Cui et al., “Free-MAD: Consensus-Free Multi-Agent Debate,” Findings of ACL 2026. https://aclanthology.org/2026.findings-acl.1600/ | The paper identifies token overhead and conformity/error propagation as problems with iterative consensus debate. | Prefer independent first outputs and one evidence-bounded challenge over long agent debates. Preserve disagreement and stop after a fixed small number of calls. |
+| Zhang et al., “Perceive-Then-Adjudicate,” Findings of EMNLP 2026. https://aclanthology.org/2026.findings-emnlp.1445/ | Their fact-checking design separates a knowledge agent, an evidence agent, and an adjudicator rather than collapsing them into one response. | Adapt the separation: Muse proposes document interpretation; a challenger looks for counter-evidence; a deterministic arbiter verifies quotes/pages and exposes semantic disputes. The paper's factuality results belong to Snopes/PolitiFact, not EvidenceTrail. |
+
+### Candidate architecture: Spark + Glimmer + EvidenceTrail
+
+1. **Local document reader:** PyMuPDF/Tesseract extracts page-labelled text and regions. Preserve OCR warnings, page IDs, source hashes, and potentially opposing passages.
+2. **Primary analyst — Muse Spark 1.3:** receives the JD criteria plus the page-labelled CV text; outputs a structured interpretation, source quote IDs, actor/action/scope, and unproven details. Preserve the original response and provider receipt.
+3. **Independent challenger — Muse Glimmer 30B:** receives the same requirement and allowed source passages, but not Spark's label or conclusion. Its job is to find a missing actor/scope qualifier, an explicit negation, an opposing passage, or an overlooked scan/layout detail. It must cite source/page IDs and may return “no challenge found.” Glimmer is a challenger, not an automatic second vote.
+4. **Mechanical verifier:** checks both model outputs against the original page text/images: quote presence, page, source ID, OCR provenance, and deterministic timeline/scope rules. A model's assertion about a quote cannot override a failed source check.
+5. **Evidence arbiter:** compares the two independent claims and their source IDs. If they agree and the source checks pass, show that result with both evidence paths. If they differ, show the exact competing passages and the point of disagreement. If deterministic checks cannot settle it, retain “ambiguous / review” and generate a neutral follow-up; do not force consensus.
+6. **Optional bounded repair:** only on a located disagreement or verifier finding, send one model a minimal packet containing the criterion, competing source spans, and exact failed check. Preserve both original outputs and the repair output/receipt. No open-ended debate loop.
+
+This is more than an LLM wrapper because multiple model roles operate on the same document evidence, a source verifier can reject unsupported citations, and the orchestration explicitly handles disagreement and error recovery. Its advantage must be demonstrated through unique corrected cases, not asserted from the architecture.
+
+### Fair experiment before implementation
+
+**Use the already frozen 12-pair fictional corpus and existing Muse Spark receipts.** Run a one-time Glimmer comparison on the same exact PDF/JD inputs or page-labelled text. Freeze Glimmer checkpoint hash, runtime/quantization, prompt, decoding settings, input form, and output schema. For the initial comparison, make one pass per case, no retry, no real CVs, and no human ratings.
+
+Compare these systems on the same cases:
+
+- **Spark only:** existing frozen results.
+- **Glimmer only:** independent output on the same cases.
+- **Spark + blinded Glimmer challenge:** Glimmer gets the requirement and source passages but not Spark's label; a fixed EvidenceTrail arbiter uses the two outputs plus source-check results. It may preserve disagreement rather than force a label.
+- **Majority vote / debate:** optional negative-control implementation on a tiny predeclared subset, only to show whether it adds value over independent outputs and whether it causes regressions. Do not promote it by default.
+
+**Report:**
+
+- Each model's label agreement with the author-written synthetic reference, by case and class.
+- False-supported and missed-supported counts with their denominators.
+- **Error overlap:** which mistakes Spark and Glimmer share; agreement must not be counted as proof.
+- **Unique correction yield:** number of baseline errors detected and correctly resolved by the challenger without changing a correct baseline into an error.
+- Source quote/page validity, opposing-evidence recall, actor/action/scope case outcomes, and scan-specific results.
+- Disagreement rate, number of unresolved cases, and whether a disagreement correctly points judges/reviewers to the relevant source.
+- Total model calls, GPU seconds, wall-clock latency, input/output/reasoning/cache tokens where available, and cost estimate. Compare against the strongest single model at a matched budget; do not hide Glimmer's GPU inference cost.
+
+**Ship criterion:** multi-model routing stays research-only unless it reduces the predeclared false-supported errors or catches meaningful unique misses versus the strongest single-model baseline, while keeping supported-case regressions and latency within an acceptable bound. No gain from simple agreement alone. If the 12 cases do not establish a benefit, keep the architecture as a research result and do not add a second model to the judge UI.
+
+### Judge-facing demo concept
+
+Use one fictional actor-swap or scope-boundary CV. Show:
+
+- Muse Spark's first interpretation and its authentic provider receipt.
+- Glimmer's blinded challenge, independently pointing to the passage that names the director or limits the applicant's responsibility.
+- EvidenceTrail opening both source passages on their exact PDF pages and displaying the conflict point.
+- A visible disposition: “The quote is real; the models disagree about what it proves.” Then show either the evidence-bounded correction or a follow-up question if it remains unresolved.
+
+Narration: **“One model proposes the finding. A second model tries to break it. Our source checker tests both against the CV. Agreement never replaces the document.”**
+
+Do not stage the challenger output or pre-author it as if Glimmer generated it. Record a fresh, reproducible open-weight inference on the exact synthetic fixture, save the checkpoint/runtime/input/output hashes and logs, and label it as a local model result. If the challenger misses the case, show the miss honestly or choose a different predeclared case; do not quietly edit its result.
+
+### Cost and tournament constraints
+
+- Keep the existing frozen public RC1 replay unchanged until a full comparative run passes.
+- Use saved Spark results as the baseline; do not buy duplicate Spark calls.
+- A local Glimmer inference avoids a second hosted API charge but still consumes GPU time and requires a reproducible environment. Do not assume its 30B checkpoint is free to serve in production.
+- Start with one bounded evaluation run on fictional CVs. Save the exact model artifact revision, quantization/runtime, prompt/schema hashes, input fingerprints, generated outputs, and runtime/cost receipt.
+- The current hackathon entry should remain easy to open. If Glimmer cannot cold-start reliably, use a clearly labelled saved inference for the judge walkthrough and separately offer the reproducible run artifact.
+- The story should lead with measured error detection and source provenance, not the number of models.
+
+This design uses Meta's hosted Muse Spark as the reasoning core and Meta's open-weight Muse Glimmer as a distinct challenger. It is a testable hypothesis; the papers' published improvements do not transfer automatically to fictional CV review.
