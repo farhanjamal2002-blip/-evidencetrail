@@ -207,7 +207,8 @@ async def main():
                     page.once("dialog",lambda dialog: asyncio.create_task(dialog.accept()))
                     await page.locator("#unlock").click()
                     assert await page.locator("#ready").inner_text()=="0"
-                    assert "No decision" in await page.locator("#decision").inner_text()
+                    assert await page.locator("#decision").input_value()==""
+                    assert await page.locator("#decision option").first.inner_text()=="Not reviewed"
                     # Competition demo: instant authentic Muse results, with ZERO new model calls.
                     calls=[]
                     page.on("request",lambda req: calls.append(req.url) if "/api/analyze" in req.url else None)
