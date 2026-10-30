@@ -30,7 +30,7 @@ The public service deliberately disables new paid Muse calls. Click **“Explore
 
 ## Additional judge path: M02 actor-swap replay
 
-Open the [recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20), open the Replay benchmark, compare M02 baseline (`supported` → `supported`) with the director-attributed variant (raw Muse `conflicting` → final `not_found`), inspect the linked M02/M07 archived receipts, then click the encore button to open ET-018. The source label and final requirement label answer different questions; a verified quotation alone does not establish applicant attribution.
+Open the [recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20), open the Replay benchmark, compare M02 baseline (`supported` → `supported`) with the director-attributed variant (raw Muse `conflicting` → final `not_found`), open the [public M02 case audit JSON](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/m02-case-audit.json) without signing in. The linked GitHub run pages list full archived artifacts; ZIP download may require GitHub sign-in. Then click the encore button to open ET-018. The source label and final requirement label answer different questions; a verified quotation alone does not establish applicant attribution.
 
 **Replay results and limit:** on the 12-pair / 24-request fictional author-labelled set, raw Muse matched 19/24 references and final pipeline labels matched 24/24; 25/25 quote/page checks passed across the full replay. These results describe this frozen test set only. The M02/M07 run summary records four provider receipts and zero retries; no M02-only 1/1 count is claimed.
 

@@ -14,7 +14,7 @@ A quotation can be present on the cited page while failing to support the applic
 - **M02 baseline:** the source attributes personally negotiating supplier agreements to the applicant; raw Muse and final pipeline labels are both `supported`.
 - **M02 actor swap:** the source attributes the negotiation to a procurement director; raw Muse labels it `conflicting`, while the final requirement status is `not_found`.
 - **Recorded replay scope:** across 12 fictional pairs / 24 requests, raw Muse labels matched 19/24 author-written references and final labels matched 24/24. Across the full replay, 25/25 proposed citations passed local quote/page checks. These are results on this small, author-labelled set, not general résumé accuracy.
-- **Receipts:** [M02/M07 run and archived case receipts](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41030259074) · [remaining-pairs run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41031352414).
+- **Receipts:** [Public M02 case audit JSON](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/m02-case-audit.json) is directly readable without sign-in. The [M02/M07 workflow run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41030259074) and [remaining-pairs run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41031352414) list the archived full artifacts; GitHub may require sign-in to download their ZIPs.
 
 **Quick judge path:** Open the [recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20), open the replay benchmark, compare the two M02 cards, inspect the archived receipts, then use the encore button to open ET-018. The demo uses saved results; it makes no new Muse call.
 
