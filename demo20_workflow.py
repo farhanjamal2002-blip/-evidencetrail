@@ -197,9 +197,12 @@ def fictional_injection_geometry():
         boxes=[]
         for needle in needles:
             matches=page.search_for(needle)
-            if len(matches)!=1:
-                raise HTTPException(503,"Expected each exact ET-018 instruction line once; no highlight was fabricated.")
-            rect=matches[0]
+            expected_rows=len(textwrap.wrap(needle,width=80,break_long_words=False))
+            if not matches or len(matches)!=expected_rows:
+                raise HTTPException(503,"ET-018 instruction text did not match its expected wrapped source rows; no highlight was fabricated.")
+            rect=fitz.Rect(matches[0])
+            for fragment in matches[1:]:
+                rect|=fragment
             boxes.append({
                 "norm_x":rect.x0/page.rect.width,
                 "norm_y":rect.y0/page.rect.height,
