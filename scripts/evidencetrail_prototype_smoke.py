@@ -72,6 +72,26 @@ async def main():
                     assert await screen.is_visible(), screen_id
                     assert "Saved replay" in await page.locator("#saved-replay-indicator").inner_text()
                     await assert_accessible_controls(page)
+                    if screen_id == "start":
+                        await page.locator("#screen-start button[data-screen-link='inbox']").click()
+                        assert await page.locator("#screen-inbox").is_visible()
+                        await page.locator(".nav [data-screen-link='start']").click()
+                        await page.locator("#screen-start button[data-screen-link='benchmark']").click()
+                        assert await page.locator("#screen-benchmark").is_visible()
+                        await page.locator(".nav [data-screen-link='start']").click()
+                    if screen_id == "setup":
+                        await page.locator("#screen-setup button[data-screen-link='upload']").click()
+                        assert await page.locator("#screen-upload").is_visible()
+                        await page.locator(".nav [data-screen-link='setup']").click()
+                    if screen_id == "upload":
+                        assert await page.locator("#screen-upload input[type=checkbox]").is_disabled()
+                        await page.locator("#screen-upload button[data-screen-link='run']").click()
+                        assert await page.locator("#screen-run").is_visible()
+                        await page.locator(".nav [data-screen-link='upload']").click()
+                    if screen_id == "run":
+                        await page.locator("#screen-run button[data-screen-link='inbox']").click()
+                        assert await page.locator("#screen-inbox").is_visible()
+                        await page.locator(".nav [data-screen-link='run']").click()
                     if screen_id == "inbox":
                         rows = page.locator("#candidate-list .candidate")
                         assert await rows.count() == 5
@@ -88,6 +108,9 @@ async def main():
                         await page.locator("#applicant-search").fill("")
                         await page.locator("#state-filter").select_option("all")
                         await page.locator("#candidate-list button[data-screen-link='review']").click()
+                        assert await page.locator("#screen-review").is_visible()
+                        await page.locator(".nav [data-screen-link='inbox']").click()
+                        await page.locator("#screen-inbox button[data-screen-link='review']").click()
                         assert await page.locator("#screen-review").is_visible()
                         await page.locator(".nav [data-screen-link='inbox']").click()
                         assert await page.locator("#screen-inbox").is_visible()
@@ -108,6 +131,12 @@ async def main():
                         assert await page.locator("#decision-status").inner_text() == "Follow-up"
                         assert "Ask who led the negotiations." in await page.locator("#decision-saved-note").inner_text()
                         assert "Compare with M02 replay" in await finding.inner_text()
+                        await page.locator("#screen-review button[data-screen-link='benchmark']").first.click()
+                        assert await page.locator("#screen-benchmark").is_visible()
+                        await page.locator(".nav [data-screen-link='review']").click()
+                        await page.locator("#screen-review button[data-screen-link='benchmark']").last.click()
+                        assert await page.locator("#screen-benchmark").is_visible()
+                        await page.locator(".nav [data-screen-link='review']").click()
                         await page.reload(wait_until="domcontentloaded")
                         assert await page.locator("#screen-review").is_visible()
                         assert await page.locator("#decision-status").inner_text() == "Follow-up"
@@ -116,6 +145,9 @@ async def main():
                         assert "1 recruiter decision recorded" in await page.locator("#decision-count").inner_text()
                         await page.locator(".nav [data-screen-link='review']").click()
                     if screen_id == "source":
+                        await page.locator("#screen-source button[data-screen-link='review']").click()
+                        assert await page.locator("#screen-review").is_visible()
+                        await page.locator(".nav [data-screen-link='source']").click()
                         block = page.locator("#screen-source .untrusted-block")
                         assert "treated as content" in (await block.inner_text()).lower()
                         assert await block.evaluate("(el)=>getComputedStyle(el).borderStyle") == "dashed"
@@ -130,6 +162,9 @@ async def main():
                             assert await card.locator(".pipeline-outcome del").count() == 1
                             assert "→" in await card.locator(".pipeline-outcome").inner_text()
                             assert "Why it changed:" in await card.locator(".why-line").inner_text()
+                        await page.locator("#screen-benchmark [data-action='open-audit']").first.click()
+                        assert await page.locator("#audit-overlay").get_attribute("aria-hidden") == "false"
+                        await page.locator("#audit-overlay [data-action='close-audit']").first.click()
                         next_card = page.locator("[data-next-card]")
                         assert "ET-018" in await next_card.inner_text()
                         assert await next_card.evaluate("(el)=>getComputedStyle(el).backgroundColor") == "rgb(32, 38, 35)"
