@@ -77,6 +77,30 @@ class AcademicEvidenceMetricTests(unittest.TestCase):
                          attribution="supported",assessed=True)])
         self.assertEqual(r["domain_results"][0]["human_semantic_attribution"]["assessed"],1)
 
+    def test_joint_strict_support_requires_status_page_span_source_and_human_semantics(self):
+        rows=[
+            case("J1","supported","supported",pages=[1,2],cited=[1,2],
+                 spans=["s1","s2"],retrieved=["s1","s2"],source_verified=True,
+                 attribution="supported",assessed=True),
+            case("J2","supported","not_found",pages=[1],cited=[1],
+                 spans=["s1"],retrieved=["s1"],source_verified=True,
+                 attribution="supported",assessed=True),
+            case("J3","supported","supported",pages=[1,2],cited=[1],
+                 spans=["s1","s2"],retrieved=["s1"],source_verified=True,
+                 attribution="supported",assessed=True),
+            case("J4","supported","supported",pages=[1],cited=[1],
+                 spans=["s1"],retrieved=["s1"],source_verified=True,
+                 attribution="unsupported",assessed=True),
+            case("J5","supported","supported",pages=[1],cited=[1],
+                 spans=["s1"],retrieved=["s1"],source_verified=True),
+        ]
+        metric=evaluate(rows)["domain_results"][0]["joint_supported_answer_and_evidence"]
+        self.assertEqual(metric["passed"],1)
+        self.assertEqual(metric["human_assessed_supported_gold"],4)
+        self.assertEqual(metric["unassessed_or_missing_gold_spans"],1)
+        self.assertEqual(metric["rate"],0.25)
+        self.assertTrue(metric["adapted_from_citevqa_not_a_citevqa_benchmark_score"])
+
     def test_no_cross_domain_pooled_accuracy_or_synthetic_gold_masquerade(self):
         rows=[
             case("S1","supported","supported"),
