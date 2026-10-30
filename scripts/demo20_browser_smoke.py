@@ -102,7 +102,8 @@ async def main():
                     replay_text=await page.locator("#benchmark-panel").inner_text()
                     assert "19/24" in replay_text and "24/24" in replay_text and "25/25" in replay_text
                     assert "conflicting" in replay_text and "not_found" in replay_text
-                    assert await page.locator("#benchmark-panel .verification-checks").count()==4
+                    assert await page.locator("#benchmark-panel .verification-checks").count()==2
+                    assert await page.locator("#benchmark-panel .verification-checks .axis-check").count()==4
                     assert await page.locator("#benchmark-panel .pipeline-outcome del").count()==2
                     assert await page.locator("#benchmark-panel .why-line").count()==2
                     assert "quote on the page?" in replay_text.lower()
