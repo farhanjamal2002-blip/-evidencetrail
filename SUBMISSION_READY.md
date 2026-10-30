@@ -13,7 +13,7 @@
 
 **Short description (copy-friendly):**
 
-Recruiters often receive dozens of CVs but cannot quickly tell which claims actually support a job requirement. EvidenceTrail combines Meta Muse Spark 1.3's semantic interpretation with independent PDF-page quotation verification, date/scope checks, and a human-controlled evidence inbox. A recruiter sets objective criteria for one job, inspects 20 clearly fictional applicants, selects a candidate for consented Muse analysis, reviews exact supported/related/missing/conflicting passages on the original CV page, and exports a traceable review record. The AI does not score or rank applicants or make hiring decisions. Two fictional scanned PDFs and an embedded prompt-injection example demonstrate OCR and robustness.
+EvidenceTrail helps recruiters inspect whether a supplied CV supports a specific job requirement. Meta Muse Spark 1.3 interprets the job criteria and CV text and proposes structured evidence; local PDF/OCR checks verify proposed quotations against cited pages, while deterministic scope and timeline safeguards preserve the raw Muse label beside the final evidence status. The recruiter inspects the source and owns the decision. A frozen actor-swap replay shows why a real quotation may still fail to support an applicant-specific claim. EvidenceTrail does not score or rank applicants, automate hiring decisions, or claim that a CV statement is true in the real world.
 
 **Theme:** Build for Your World — improve an everyday document-intensive hiring workflow with a real model plus a source-grounding layer.
 
@@ -27,6 +27,12 @@ Recruiters often receive dozens of CVs but cannot quickly tell which claims actu
 6. **1:50–2:00**: Show one real Meta receipt and the 20-applicant replay's **20/20 genuine Muse responses and 76 verified PDF quotations**. No score or automated hiring. These figures apply only to the fictional demonstration.
 
 The public service deliberately disables new paid Muse calls. Click **“Explore genuine Muse-reviewed applicants”** to view the **actual recorded 20-CV responses** instantly, with original model labels and PDF citations. This is a saved real recording, **not live inference**. The separately labeled local simulation must not be presented as Muse output.
+
+## Additional judge path: M02 actor-swap replay
+
+Open the [recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20), open the Replay benchmark, compare M02 baseline (`supported` → `supported`) with the director-attributed variant (raw Muse `conflicting` → final `not_found`), inspect the linked M02/M07 archived receipts, then click the encore button to open ET-018. The source label and final requirement label answer different questions; a verified quotation alone does not establish applicant attribution.
+
+**Replay results and limit:** on the 12-pair / 24-request fictional author-labelled set, raw Muse matched 19/24 references and final pipeline labels matched 24/24; 25/25 quote/page checks passed across the full replay. These results describe this frozen test set only. The M02/M07 run summary records four provider receipts and zero retries; no M02-only 1/1 count is claimed.
 
 ## Required final deliverables
 
