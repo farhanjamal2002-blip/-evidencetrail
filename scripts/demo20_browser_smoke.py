@@ -183,7 +183,8 @@ async def main():
                     await page.locator("#recorded").click()
                     await page.wait_for_function("document.querySelector('#ready').textContent==='20'",timeout=30000)
                     assert await page.locator("#list").get_by_text("Recorded Muse").count()==20
-                    assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
+                    assert "Saved replay" in await page.locator("#review").inner_text()
+                    assert await page.locator("#review .saved-replay-badge").count()==1
                     assert "Authentic Meta response" in await page.locator("#review").inner_text()
                     start_id=await page.locator("#review .eyebrow").inner_text()
                     await page.locator("#next-review").click()
@@ -203,7 +204,7 @@ async def main():
                     page.once("dialog",lambda dialog: asyncio.create_task(dialog.dismiss()))
                     await page.locator("#analyze-one").click()
                     assert await page.locator("#ready").inner_text()=="20"
-                    assert "Recorded genuine Muse response" in await page.locator("#review").inner_text()
+                    assert "Saved replay" in await page.locator("#review").inner_text()
                     # Critical semantic acceptance: a scope limitation is NOT a CV self-contradiction.
                     await page.locator("#filter").select_option("scope_limit")
                     assert 0 < await page.locator("#list .item").count() <= 20
