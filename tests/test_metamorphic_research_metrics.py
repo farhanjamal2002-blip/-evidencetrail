@@ -51,7 +51,7 @@ class ResearchPairMetricsTests(unittest.TestCase):
     def test_fake_or_wrong_provider_configuration_is_rejected(self):
         for key,value,substring in [
             ("provider_mode","mock","Muse mode"),
-            ("provider_response_id","","Genuine Meta"),
+            ("provider_response_id","","nonempty declared provider receipt"),
             ("corpus_sha256","0"*64,"fingerprint"),
             ("source_quote_located","yes","boolean"),
             ("analysis_calls",2,"One authentic"),
