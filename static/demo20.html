@@ -527,7 +527,7 @@ async function showInjectionInstruction(row){
  if(!viewer||!img)return;
  const response=await fetch("/demo20/cv/ET-018/injection-geometry",{cache:"no-store"});
  const payload=await response.json();
- if(!response.ok||payload.schema!=="evidencetrail/fictional-injection-geometry/v1"||payload.candidate_id!=="ET-018"||payload.page!==1||payload.bounding_boxes?.length!==1){
+ if(!response.ok||payload.schema!=="evidencetrail/fictional-injection-geometry/v1"||payload.candidate_id!=="ET-018"||payload.page!==1||payload.source_texts?.length!==2||payload.bounding_boxes?.length!==2){
   throw new Error("Exact ET-018 source geometry is unavailable; no highlight was fabricated.");
  }
  viewer.hidden=false;layer.replaceChildren();
@@ -537,15 +537,18 @@ async function showInjectionInstruction(row){
  img.onload=()=>{
   if(state.selected!=="ET-018"||viewer.hidden)return;
   layer.replaceChildren();
-  const b=payload.bounding_boxes[0],coords=[b.norm_x,b.norm_y,b.norm_w,b.norm_h];
-  if(coords.some(v=>typeof v!=="number"||!Number.isFinite(v)||v<0||v>1)||b.norm_x+b.norm_w>1.01||b.norm_y+b.norm_h>1.01){
-   badge.textContent="Treated as content · invalid geometry";return;
+  let valid=0;
+  for(const b of payload.bounding_boxes){
+   const coords=[b.norm_x,b.norm_y,b.norm_w,b.norm_h];
+   if(coords.some(v=>typeof v!=="number"||!Number.isFinite(v)||v<0||v>1)||b.norm_x+b.norm_w>1.01||b.norm_y+b.norm_h>1.01){
+    layer.replaceChildren();badge.textContent="Treated as content · invalid geometry";return;
+   }
+   const outline=document.createElement("div");outline.className="pdf-bbox-highlight injection-bbox";
+   outline.style.left=(b.norm_x*100).toFixed(3)+"%";outline.style.top=(b.norm_y*100).toFixed(3)+"%";
+   outline.style.width=(b.norm_w*100).toFixed(3)+"%";outline.style.height=(b.norm_h*100).toFixed(3)+"%";
+   layer.append(outline);valid++;
   }
-  const outline=document.createElement("div");outline.className="pdf-bbox-highlight injection-bbox";
-  outline.style.left=(b.norm_x*100).toFixed(3)+"%";outline.style.top=(b.norm_y*100).toFixed(3)+"%";
-  outline.style.width=(b.norm_w*100).toFixed(3)+"%";outline.style.height=(b.norm_h*100).toFixed(3)+"%";
-  layer.append(outline);
-  badge.textContent="Treated as content · exact instruction line outlined";
+  badge.textContent=valid===2?"Treated as content · both instruction lines outlined":"Treated as content · incomplete outline";
   viewer.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
  };
  img.onerror=()=>{badge.textContent="Treated as content · page image unavailable";layer.replaceChildren()};
