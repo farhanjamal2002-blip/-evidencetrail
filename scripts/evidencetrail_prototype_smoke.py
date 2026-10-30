@@ -110,7 +110,7 @@ async def main():
                         await page.locator("#candidate-list button[data-screen-link='review']").click()
                         assert await page.locator("#screen-review").is_visible()
                         await page.locator(".nav [data-screen-link='inbox']").click()
-                        await page.locator("#screen-inbox button[data-screen-link='review']").click()
+                        await page.locator("#screen-inbox button[data-screen-link='review']").last.click()
                         assert await page.locator("#screen-review").is_visible()
                         await page.locator(".nav [data-screen-link='inbox']").click()
                         assert await page.locator("#screen-inbox").is_visible()
