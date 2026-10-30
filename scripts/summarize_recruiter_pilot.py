@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from statistics import median
 
-from prepare_recruiter_pilot_packets import assignments
+from scripts.prepare_recruiter_pilot_packets import assignments
 
 OUT=Path("artifacts/recruiter-human-pilot")
 ARMS=("manual","assisted")
