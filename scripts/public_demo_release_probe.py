@@ -13,7 +13,7 @@ import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-PUBLIC_URL = "https://evidencetrail-meta-hackathon-demo.onrender.com"
+PUBLIC_URL = (os.getenv("EVIDENCETRAIL_PUBLIC_URL") or "https://evidencetrail-judge-rc1-2026.onrender.com").rstrip("/")
 EXPECTED_SHA = (os.getenv("EVIDENCETRAIL_EXPECTED_SHA") or "").strip().lower()
 OUT = Path("artifacts/public-smoke/report.json")
 
