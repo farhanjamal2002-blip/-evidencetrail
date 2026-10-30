@@ -22,7 +22,7 @@
 
 
 
-**Release provenance:** this UI work is still on the draft branch and is not deployed. Before presenting it on the public host, confirm `/build-info` matches the reviewed release SHA. The current public service may show the earlier frozen UI.
+**Release provenance:** the draft UI's current-head browser smoke passed in [GitHub Actions run 41078162194](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41078162194). This branch is not deployed. Public parity currently reports the hosted service at older SHA `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`; before presenting the new UI on the public host, confirm `/build-info` matches the reviewed release SHA.
 
 ## Source quote geometry benchmark — October 29, 2026
 
