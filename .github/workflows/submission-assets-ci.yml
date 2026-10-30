@@ -1,0 +1,26 @@
+name: Hackathon submission asset validation
+on:
+  push:
+    branches: [submission/judge-video-capture-oct30]
+    paths: [.github/workflows/submission-assets-ci.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot-accounting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Ensure pilot maths reject fabricated time savings
+        run: |
+          python -m unittest tests.test_reviewer_pilot_evaluation -v
+          python scripts/evaluate_reviewer_pilot.py evaluation/reviewer_pilot_data_template.csv
+      - name: Validate demo-capture script syntax
+        run: |
+          python -m py_compile scripts/record_finalist_rehearsal.py
+          python -m py_compile scripts/evaluate_reviewer_pilot.py
+          python -m unittest tests.test_reviewer_pilot_evaluation -v

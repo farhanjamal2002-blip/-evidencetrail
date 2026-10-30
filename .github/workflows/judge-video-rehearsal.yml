@@ -1,0 +1,39 @@
+name: Authentic public EvidenceTrail judge video rehearsal (zero Meta calls)
+on:
+  push:
+    branches: [submission/judge-video-capture-oct30]
+    paths: [.github/workflows/judge-video-rehearsal.yml, scripts/record_finalist_rehearsal.py]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-silent-submission-video-rehearsal-2026
+  cancel-in-progress: false
+jobs:
+  video-rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    env:
+      EVIDENCETRAIL_DEMO_URL: https://evidencetrail-judge-rc1-2026.onrender.com
+      MODEL_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install playback, screenshots and video tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Verify exact public release and capture 80-sec silent judge story
+        run: python scripts/record_finalist_rehearsal.py
+      - name: Attach the actual public browser recording and source-proof shot log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-genuine-muse-demo-rehearsal
+          path: artifacts/submission-rehearsal/
+          retention-days: 14
+          if-no-files-found: warn
