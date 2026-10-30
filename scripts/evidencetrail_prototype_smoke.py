@@ -78,6 +78,12 @@ async def main():
                         await page.locator(".nav [data-screen-link='start']").click()
                         await page.locator("#screen-start button[data-screen-link='benchmark']").click()
                         assert await page.locator("#screen-benchmark").is_visible()
+                        await page.go_back()
+                        await page.wait_for_function("location.hash === '#start'")
+                        assert await page.locator("#screen-start").is_visible()
+                        await page.go_forward()
+                        await page.wait_for_function("location.hash === '#benchmark'")
+                        assert await page.locator("#screen-benchmark").is_visible()
                         await page.locator(".nav [data-screen-link='start']").click()
                     if screen_id == "setup":
                         await page.locator("#screen-setup button[data-screen-link='upload']").click()
@@ -107,6 +113,10 @@ async def main():
                         assert await page.locator("#candidate-empty").is_visible()
                         await page.locator("#applicant-search").fill("")
                         await page.locator("#state-filter").select_option("all")
+                        await page.locator("#applicant-search").fill("ET-018")
+                        assert await page.locator("#candidate-list .candidate:visible").count() == 1
+                        assert "ET-018" in await page.locator("#candidate-list").inner_text()
+                        await page.locator("#applicant-search").fill("")
                         await page.locator("#candidate-list button[data-screen-link='review']").click()
                         assert await page.locator("#screen-review").is_visible()
                         await page.locator(".nav [data-screen-link='inbox']").click()
@@ -125,6 +135,12 @@ async def main():
                         assert "Why it changed:" in await finding.locator(".why-line").inner_text()
                         assert await finding.locator(".decision-panel").is_visible()
                         assert await page.locator("#decision-status").inner_text() == "Not reviewed"
+                        await page.locator("[data-review-state='Not reviewed']").click()
+                        await page.locator("[data-action='save-decision']").click()
+                        assert await page.locator("#decision-status").inner_text() == "Not reviewed"
+                        await page.locator("[data-review-state='Reviewed']").click()
+                        await page.locator("[data-action='save-decision']").click()
+                        assert await page.locator("#decision-status").inner_text() == "Reviewed"
                         await page.locator("[data-review-state='Follow-up']").click()
                         await page.locator("#review-note").fill("Ask who led the negotiations.")
                         await page.locator("[data-action='save-decision']").click()
