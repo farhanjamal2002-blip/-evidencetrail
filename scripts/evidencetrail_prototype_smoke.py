@@ -90,7 +90,7 @@ async def main():
                         assert "Ask who led the negotiations." in await page.locator("#decision-saved-note").inner_text()
                     if screen_id == "source":
                         block = page.locator("#screen-source .untrusted-block")
-                        assert "Treated as content" in await block.inner_text()
+                        assert "treated as content" in (await block.inner_text()).lower()
                         assert await block.evaluate("(el)=>getComputedStyle(el).borderStyle") == "dashed"
                     if screen_id == "benchmark":
                         cards = page.locator("#screen-benchmark .case-card")
