@@ -11,7 +11,9 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from demo20_workflow import (
     CASES, CRITERIA, JOB, _load_verified_recording, make_cv_pdf,
 )
