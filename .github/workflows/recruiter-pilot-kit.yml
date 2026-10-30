@@ -1,0 +1,35 @@
+name: Human reviewer pilot packet — preregistered, no invented results
+on:
+  push:
+    branches: [feat/finalist-video-pilot-proof-oct30]
+    paths:
+      - scripts/prepare_recruiter_pilot_packets.py
+      - scripts/summarize_recruiter_pilot.py
+      - tests/test_reviewer_pilot_protocol.py
+      - .github/workflows/recruiter-pilot-kit.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  generate-honest-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify protocol counterbalancing and no fabricated data
+        run: python -m unittest tests.test_reviewer_pilot_protocol -v
+      - name: Prepare review packets and explicit unmeasured baseline
+        run: |
+          python scripts/prepare_recruiter_pilot_packets.py
+          python scripts/summarize_recruiter_pilot.py
+      - name: Attach assignments and reviewer tasks
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-preregistered-human-reviewer-pilot
+          path: artifacts/recruiter-human-pilot/
+          retention-days: 14
