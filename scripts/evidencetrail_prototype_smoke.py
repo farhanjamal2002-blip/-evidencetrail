@@ -70,7 +70,7 @@ async def main():
                     await page.locator(f'[data-screen-link="{screen_id}"]').first.click()
                     screen = page.locator("#screen-" + screen_id)
                     assert await screen.is_visible(), screen_id
-                    assert "Saved replay" in await page.locator(".pill.saved").inner_text()
+                    assert "Saved replay" in await page.locator(".topbar .pill.saved").inner_text()
                     await assert_accessible_controls(page)
                     if screen_id == "review":
                         finding = page.locator("#screen-review")
