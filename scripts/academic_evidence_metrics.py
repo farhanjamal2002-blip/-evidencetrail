@@ -104,6 +104,7 @@ def _metrics(rows: list[dict]):
     tp_pages=pred_pages=gold_pages=0
     tp_spans=pred_spans=gold_spans=0
     support_count=unsafe_count=attribution_count=0
+    joint_count=joint_pass=unassessed_supported=0
     for r in rows:
         gold=r["gold_pages"]; pred=r["cited_pages"]
         tp_pages += len(gold & pred)
@@ -117,6 +118,20 @@ def _metrics(rows: list[dict]):
             attribution_count += 1
             support_count += (r["semantic_attribution"]=="supported")
             unsafe_count += (r["semantic_attribution"]=="unsupported")
+        if r["gold_status"] == "supported":
+            human_labelled = r.get("attribution_human_reviewed", False) and r["semantic_attribution"] in {"supported", "unsupported", "ambiguous"}
+            has_complete_gold = bool(r["gold_pages"]) and bool(r["gold_span_ids"])
+            if not human_labelled or not has_complete_gold:
+                unassessed_supported += 1
+            else:
+                joint_count += 1
+                joint_pass += (
+                    r["predicted_status"] == "supported"
+                    and r["source_verified"]
+                    and r["gold_pages"].issubset(r["cited_pages"])
+                    and r["gold_span_ids"].issubset(r["pred_span_ids"])
+                    and r["semantic_attribution"] == "supported"
+                )
     per_class={}
     # Five-way prediction vocabulary: review_required is never silently
     # mapped to not_found, especially when legitimate evidence exists.
@@ -157,6 +172,14 @@ def _metrics(rows: list[dict]):
                                       "unsupported":unsafe_count,
                                       "supported_fraction":fraction(support_count,attribution_count),
                                       "not_counted_when_unassessed":True},
+        "joint_supported_answer_and_evidence":{
+            "passed":joint_pass,
+            "human_assessed_supported_gold":joint_count,
+            "unassessed_or_missing_gold_spans":unassessed_supported,
+            "rate":fraction(joint_pass,joint_count),
+            "rule":"Correct supported label, source verification, all gold pages and spans cited, and human semantic attribution judged supported",
+            "adapted_from_citevqa_not_a_citevqa_benchmark_score":True,
+        },
         "per_class":per_class,
         "macro_f1_all_comparable_labels":(
             round(sum(per_class[x]["f1"] for x in ("supported","not_found","conflicting"))/3,4)
