@@ -124,7 +124,7 @@ def audit_verified_findings(findings: list[dict[str, Any]]) -> list[dict[str, An
     same advisory on duplicate citations.
     """
     out=[]
-    for finding in findings:
+    for index,finding in enumerate(findings,start=1):
         if not isinstance(finding,dict):
             continue
         requirement=str(finding.get("requirement",""))
@@ -145,7 +145,7 @@ def audit_verified_findings(findings: list[dict[str, Any]]) -> list[dict[str, An
             warn=ownership_warning(requirement,str(quote))
             if warn:
                 out.append({
-                    "requirement_id":finding.get("id"),
+                    "requirement_id":finding.get("id") or f"R{index}",
                     "page":page,
                     "source_id":ev.get("source_id"),
                     "role_recorded_unchanged":ev.get("role"),
