@@ -114,7 +114,7 @@ async def main():
                       const lum=value=>{const c=rgb(value).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return .2126*c[0]+.7152*c[1]+.0722*c[2]};
                       const background=el=>{for(let n=el;n;n=n.parentElement){const c=getComputedStyle(n).backgroundColor;if(c!=="transparent"&&!c.endsWith(", 0)"))return c}return "rgb(255,255,255)"};
                       const contrast=el=>{const a=lum(getComputedStyle(el).color),b=lum(background(el));return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
-                      const textNodes=[...document.querySelectorAll(".axis-check span,.axis-check strong,.why-line,.benchmark-caveat,.encore-row p,.split-row>strong,.split-results small,.encore-row strong")].filter(visible);
+                      const textNodes=[...document.querySelectorAll(".benchmark-stats span,.pill,.axis-check span,.axis-check strong,.why-line,.benchmark-caveat,.encore-row p,.split-row>strong,.split-results small,.encore-row strong")].filter(visible);
                       const lowContrast=textNodes.filter(el=>contrast(el)<4.5).map(el=>({text:el.textContent.trim().slice(0,50),ratio:contrast(el)}));
                       return {smallTargets,lowContrast};
                     }""")
