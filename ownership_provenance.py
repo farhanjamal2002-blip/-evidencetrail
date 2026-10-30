@@ -90,7 +90,12 @@ def ownership_warning(requirement: str, quote: str) -> dict[str, Any] | None:
     split = SEPARATE_ROLE.search(quote)
     # A warning needs explicit provenance ambiguity, not just a third-party
     # employer name or the existence of a team.
-    if not denial and not (other_actor and (handoff or split)):
+    # A clearly named other actor doing the *required* action is relevant
+    # even when the sentence does not contain "but", "after", or "alone".
+    third_party_action = bool(other_actor) and any(
+        ACTIONS[name].search(quote) for name in action_names
+    )
+    if not denial and not (third_party_action or (other_actor and (handoff or split))):
         return None
     if any(SELF_ACTIONS[name].search(quote) for name in action_names) and not denial:
         # Both applicant and third party might genuinely share work. A future
