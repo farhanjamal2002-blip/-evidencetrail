@@ -92,10 +92,14 @@ async def main():
                     assert "conflicting" in replay_text and "not_found" in replay_text
                     assert await page.locator("#inbox-layout").is_hidden()
                     await page.screenshot(path=str(OUT/"actor-swap-replay.png"),full_page=True)
-                    # Both external run links must resolve from the actual app origin.
-                    for run_id in ("41030259074","41031352414"):
-                        run_link=page.locator(f"#benchmark-panel a[href*='/actions/runs/{run_id}']")
-                        href=await run_link.get_attribute("href")
+                    # Both run pages and the archived case-receipt link must resolve.
+                    for selector in (
+                        "#benchmark-panel a[href*='/actions/runs/41030259074']",
+                        "#benchmark-panel a[href*='/actions/runs/41031352414']",
+                        "#m02-audit-artifact",
+                    ):
+                        link=page.locator(selector)
+                        href=await link.get_attribute("href")
                         assert href and href.startswith("https://github.com/")
                         response=await page.request.get(href)
                         assert response.status==200,(href,response.status)
