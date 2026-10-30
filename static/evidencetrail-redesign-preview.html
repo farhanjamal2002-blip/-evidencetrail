@@ -224,7 +224,7 @@ button{padding-block:10px}
 .next-cta{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:8px;background:#fff;color:#16211a;font-size:12px;font-weight:800}
 .benchmark-caveat{margin-top:10px;color:#4e594f;font-size:12px;line-height:1.5}
 @media(max-width:720px){.verification-checks{grid-template-columns:minmax(0,1fr)}.next-card{padding:14px}.decision-controls{display:grid;grid-template-columns:1fr 1fr}}
-</style>
+\n.candidate:not(button){cursor:default}\n.candidate[hidden]{display:none}\n#candidate-empty[hidden]{display:none}\nselect.filter{cursor:pointer;min-width:155px}\n</style>
 </head>
 <body>
 <div class="app-shell">
@@ -329,15 +329,17 @@ button{padding-block:10px}
       <div class="topline"><div><p class="kicker">Step 4 of 4 · Human review</p><h1 id="inbox-title">Review the evidence in received order.</h1><p class="lede">Filters describe what the CV documents. They are not candidate ratings or recommendations.</p></div><span class="pill">20 fictional applicants</span></div>
       <div class="inbox-layout">
         <div class="card card-pad">
-          <div class="list-tools"><input class="search" aria-label="Search fictional applicants" placeholder="Search by ID or role"><button class="filter" type="button">All evidence states⌄</button></div>
-          <div class="candidate-list">
-            <button class="candidate" data-screen-link="review"><span class="avatar">05</span><span><strong>ET-005 · Supplier Coordinator</strong><small>Related evidence · 2 direct requirements</small></span><span class="status related">Review</span></button>
-            <button class="candidate active" data-screen-link="review"><span class="avatar">18</span><span><strong>ET-018 · Logistics Clerk</strong><small>Scope questions · 0/4 directly documented</small></span><span class="status conflicting">Review</span></button>
-            <button class="candidate" data-screen-link="review"><span class="avatar">19</span><span><strong>ET-019 · Procurement Assistant</strong><small>Scanned CV · OCR source checks</small></span><span class="status supported">Review</span></button>
-            <button class="candidate" data-screen-link="review"><span class="avatar">02</span><span><strong>ET-002 · Purchasing Officer</strong><small>Evidence ready · inspect requirements</small></span><span class="status notfound">Review</span></button>
-            <button class="candidate" data-screen-link="review"><span class="avatar">…</span><span><strong>16 more fictional applicants</strong><small>Received order preserved · no ranking</small></span><span class="status unknown">Open</span></button>
+          <div class="list-tools"><input id="applicant-search" class="search" aria-label="Search fictional applicants" placeholder="Search by ID or role"><select id="state-filter" class="filter" aria-label="Filter applicants by evidence state"><option value="all">All evidence states</option><option value="supported">Supported</option><option value="notfound">Not found</option><option value="conflicting">Conflicting</option><option value="related">Related</option><option value="unknown">Unclassified</option></select></div>
+          <div class="candidate-list" id="candidate-list">
+            <div class="candidate" data-evidence="related"><span class="avatar">05</span><span><strong>ET-005 · Supplier Coordinator</strong><small>Related evidence · 2 direct requirements</small></span><span class="status related">Preview row</span></div>
+            <button class="candidate active" data-evidence="conflicting" data-screen-link="review" aria-label="Open ET-018 candidate review"><span class="avatar">18</span><span><strong>ET-018 · Logistics Clerk</strong><small>Scope questions · 0/4 directly documented</small></span><span class="status conflicting">Review</span></button>
+            <div class="candidate" data-evidence="supported"><span class="avatar">19</span><span><strong>ET-019 · Procurement Assistant</strong><small>Scanned CV · OCR source checks</small></span><span class="status supported">Preview row</span></div>
+            <div class="candidate" data-evidence="notfound"><span class="avatar">02</span><span><strong>ET-002 · Purchasing Officer</strong><small>Evidence ready · inspect requirements</small></span><span class="status notfound">Preview row</span></div>
+            <div class="candidate" data-evidence="unknown"><span class="avatar">16+</span><span><strong>16 more fictional applicants</strong><small>Received order preserved · no ranking</small></span><span class="status unknown">Preview row</span></div>
           </div>
-          <p class="tiny muted" style="margin-top:11px">20 analyzed · 17 need clarification · 0 human decisions recorded in this browser.</p>
+          <p id="candidate-empty" class="note" hidden>No preview rows match. Clear the search or choose another evidence state.</p>
+          <p id="candidate-count" class="tiny muted" aria-live="polite" style="margin-top:11px">Showing 5 preview rows · 20 saved applicants in received order.</p>
+          <p id="decision-count" class="tiny muted">0 recruiter decisions recorded in this browser session.</p>
         </div>
         <div class="card">
           <div class="review-head"><div><p class="kicker">Selected applicant</p><h3 style="margin-top:5px">ET-018 · Logistics Clerk</h3><p class="tiny muted" style="margin-top:4px">2017–2026 · fictional CV · saved Muse result</p></div><button class="btn small-btn" data-screen-link="review">Open evidence review →</button></div>
@@ -353,7 +355,7 @@ button{padding-block:10px}
     <section class="screen" id="screen-review" aria-labelledby="review-title">
       <div class="topline">
         <div><p class="kicker">Candidate evidence · ET-018</p><h1 id="review-title">Separate source verification from applicant attribution.</h1><p class="lede">Each finding keeps the page check, applicant attribution, raw Muse label, and final pipeline status distinct.</p></div>
-        <button class="btn" data-action="open-audit">Open verification receipt</button>
+        <button class="btn" data-screen-link="benchmark">Compare with M02 replay</button>
       </div>
       <div class="card finding-card">
         <div class="review-head"><div><p class="kicker">R2 · Requirement</p><h3 class="finding-title">Personally led supplier price negotiations and commercial contracts.</h3></div><span class="status notfound">Not found for this requirement</span></div>
@@ -365,7 +367,7 @@ button{padding-block:10px}
           <div class="pipeline-outcome"><span class="outcome-label">Pipeline label</span><span class="raw-label"><del>conflicting</del></span><span class="transition-arrow" aria-hidden="true">→</span><strong class="final-label">not_found</strong></div>
           <p class="why-line"><strong>Why it changed:</strong> The verified passage denies the required work; it cannot support the qualification.</p>
           <div class="quote">“Never negotiated supplier contracts or used SAP purchasing modules.”<div class="quote-meta">PDF page 1 · exact source span verified · 1 of 3 proposed quotations</div></div>
-          <div class="footer-actions"><button class="btn" data-screen-link="source">Open highlighted PDF page</button><button class="btn" data-action="open-audit">Inspect audit details</button></div>
+          <div class="footer-actions"><button class="btn" data-screen-link="source">Open highlighted PDF page</button><button class="btn" data-screen-link="benchmark">Open M02 research receipt</button></div>
           <fieldset class="decision-panel">
             <legend>Recruiter decision · human-controlled</legend>
             <p class="small muted">This panel is separate from Muse and pipeline labels.</p>
@@ -514,7 +516,40 @@ document.querySelector("[data-action='save-decision']").addEventListener("click"
   document.querySelector("#decision-status").textContent=selectedDecision;
   const note=document.querySelector("#review-note").value.trim();
   document.querySelector("#decision-saved-note").textContent=note?"Saved note: "+note:"No note saved.";
+  try{sessionStorage.setItem("evidencetrail-demo-decision",JSON.stringify({status:selectedDecision,note}));}catch(_error){}
+  document.querySelector("#decision-count").textContent="1 recruiter decision recorded in this browser session.";
 });
+const applicantSearch=document.querySelector("#applicant-search");
+const stateFilter=document.querySelector("#state-filter");
+const candidateRows=[...document.querySelectorAll("#candidate-list .candidate")];
+function filterApplicants(){
+  const query=applicantSearch.value.trim().toLowerCase();
+  const state=stateFilter.value;
+  let shown=0;
+  candidateRows.forEach(row=>{
+    const visible=row.innerText.toLowerCase().includes(query)&&(state==="all"||row.dataset.evidence===state);
+    row.hidden=!visible;
+    if(visible)shown++;
+  });
+  document.querySelector("#candidate-empty").hidden=shown!==0;
+  document.querySelector("#candidate-count").textContent="Showing "+shown+" of "+candidateRows.length+" preview rows · 20 saved applicants in received order.";
+}
+applicantSearch.addEventListener("input",filterApplicants);
+stateFilter.addEventListener("change",filterApplicants);
+function restoreDecision(){
+  try{
+    const saved=JSON.parse(sessionStorage.getItem("evidencetrail-demo-decision")||"null");
+    if(!saved)return;
+    selectedDecision=saved.status;
+    document.querySelector("#decision-status").textContent=saved.status;
+    document.querySelector("#decision-choice").textContent="Selected: "+saved.status;
+    document.querySelector("#review-note").value=saved.note||"";
+    document.querySelector("#decision-saved-note").textContent=saved.note?"Saved note: "+saved.note:"No note saved.";
+    document.querySelectorAll("[data-review-state]").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.reviewState===saved.status)));
+    document.querySelector("#decision-count").textContent="1 recruiter decision recorded in this browser session.";
+  }catch(_error){}
+}
+restoreDecision();
 const initial=window.location.hash.slice(1);if(labels[initial])showScreen(initial);
 </script>
 </body>
