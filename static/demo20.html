@@ -416,12 +416,27 @@ if(result){
          question:$("followup-question").value,
          comment:$("followup-comment").value,
          status:$("followup-status").value,
+         candidate_reply:$("candidate-reply").value,
        },new Date().toISOString());
        state.followups.set(row.id,updated);renderList();renderReview();
        notice(updated.status==="waiting_external"?
          "Marked manually as sent. EvidenceTrail did NOT send a message.":
          "Follow-up saved locally. No external message sent.");
      }catch(e){notice(e.message,"bad")}
+   };
+   const copySelected=$("copy-selected");
+   if(copySelected)copySelected.onclick=async()=>{
+     try{
+       const indexes=Array.from(el.querySelectorAll("[data-clarification-index]:checked"))
+         .map(input=>Number(input.dataset.clarificationIndex));
+       const questions=indexes.map(index=>EvidenceWorkflow.clarificationFor(result,index))
+         .filter(q=>q&&indexes.includes(q.requirement_index));
+       const message=EvidenceWorkflow.messageForSelectedQuestions(
+         questions,state.manifest?.job_title||"the advertised role");
+       if(!navigator.clipboard?.writeText)throw Error("Clipboard unavailable");
+       await navigator.clipboard.writeText(message);
+       notice("Selected clarification questions copied. No message sent.");
+     }catch(e){notice(e.message,"warn")}
    };
    if(copy)copy.onclick=async()=>{
      const previous=state.followups.get(row.id);if(!previous)return;
@@ -447,20 +462,39 @@ if(result)$("export-interview-kit").onclick=()=>{
 };
 }
 function followUpHtml(row,result){
- if(!result)return '<section class="workflow-tools"><b>Clarification workflow</b><p class="muted">Load verified evidence before drafting a targeted question. No automated communication.</p></section>';
- const task=state.followups.get(row.id),suggested=EvidenceWorkflow.clarificationFor(result);
- const option=EvidenceWorkflow.unresolvedFindings(result).map(({finding,index})=>
+ if(!result)return '<section class="workflow-tools"><b>Clarification workflow</b><p class="muted">Load verified evidence before drafting a question. No automatic communication.</p></section>';
+ const task=state.followups.get(row.id);
+ const unresolved=EvidenceWorkflow.unresolvedFindings(result);
+ const option=unresolved.map(({finding,index})=>
    '<option value="'+index+'">R'+(index+1)+' · '+escapeHtml(String(finding.requirement||"").slice(0,120))+'</option>').join("");
+ const selected=unresolved.map(({finding,index})=>
+   '<label><input type="checkbox" checked data-clarification-index="'+index+'">'+
+   'R'+(index+1)+' · '+escapeHtml(String(finding.requirement||"").slice(0,110))+'</label>').join("");
+ const attestation=task?.candidate_reply?
+   '<div class="reply-attestation"><b>Candidate self-attested · Not independently verified</b>'+
+   '<p>Received response recorded: '+escapeHtml(task.candidate_reply_received_at||"timestamp unavailable")+
+   '. Original CV citation and evidence statuses remain unchanged.</p></div>':"";
  return '<section class="workflow-tools" aria-label="Recruiter clarification tasks"><div class="result-caption">Next step · human-controlled clarification</div>'+
- '<p class="muted">Generate a job-related follow-up from unresolved evidence. Nothing is sent automatically. Do not record a reply unless you actually received one.</p>'+
- (suggested?'<label for="followup-criterion">Unresolved criterion</label><select id="followup-criterion">'+option+'</select>':'<p>No unresolved criteria. Human review can still proceed.</p>')+
- '<label for="followup-question">Editable follow-up question</label><textarea id="followup-question" maxlength="1200" placeholder="Prepare a question linked to the evidence…">'+escapeHtml(task?.question||"")+'</textarea>'+
- '<label for="followup-comment">Recruiter note (optional)</label><textarea id="followup-comment" maxlength="1000" style="min-height:52px">'+escapeHtml(task?.comment||"")+'</textarea>'+
- '<label for="followup-status">Follow-up stage</label><select id="followup-status"><option value="draft">Draft (not sent)</option><option value="waiting_external">Manually marked as sent — awaiting reply</option><option value="resolved">Human recorded reply / resolved</option></select>'+
- '<div class="action"><button type="button" class="secondary" id="generate-followup" '+(!suggested?'disabled':'')+'>Prepare evidence question</button>'+
+ '<p class="muted">Ask for missing job-related detail; never interpret an unanswered question as proof a candidate lacks the ability. Nothing is sent automatically.</p>'+
+ (unresolved.length?'<label for="followup-criterion">Unresolved criterion</label><select id="followup-criterion">'+option+'</select>':'<p>No unresolved criteria. Human review can still proceed.</p>')+
+ '<label for="followup-question">Editable follow-up question</label>'+
+ '<textarea id="followup-question" maxlength="1200" placeholder="Prepare a question linked to the evidence…">'+escapeHtml(task?.question||"")+'</textarea>'+
+ '<label for="followup-comment">Recruiter note (optional)</label>'+
+ '<textarea id="followup-comment" maxlength="1000" style="min-height:52px">'+escapeHtml(task?.comment||"")+'</textarea>'+
+ '<label for="followup-status">Follow-up stage</label><select id="followup-status">'+
+ '<option value="draft">Draft (not sent)</option>'+
+ '<option value="waiting_external">Manually marked as sent — awaiting reply</option>'+
+ '<option value="resolved">Reply recorded — needs human assessment</option></select>'+
+ '<label for="candidate-reply">Paste candidate response (only if actually received)</label>'+
+ '<textarea id="candidate-reply" maxlength="2400" placeholder="Paste a real externally received reply. This is self-attested, not independently verified CV evidence.">'+escapeHtml(task?.candidate_reply||"")+'</textarea>'+
+ attestation+
+ '<div class="action"><button type="button" class="secondary" id="generate-followup" '+(!unresolved.length?'disabled':'')+'>Prepare evidence question</button>'+
  '<button type="button" class="secondary" id="save-followup" '+(!task?'disabled':'')+'>Save follow-up locally</button>'+
- '<button type="button" class="secondary" id="copy-followup" '+(!task?'disabled':'')+'>Copy message draft</button></div>'+
- '<p class="workflow-status">'+(task?'Current: '+escapeHtml(task.status.replaceAll("_"," "))+' · '+escapeHtml(task.requirement_id):'No follow-up created')+'</p>'+
+ '<button type="button" class="secondary" id="copy-followup" '+(!task?'disabled':'')+'>Copy single question</button></div>'+
+ (selected?'<div class="selected-clarifications"><b>One-click outreach · select disputed or missing requirements</b>'+
+ selected+'<button type="button" class="secondary" id="copy-selected">Copy selected clarification message</button></div>':"")+
+ '<p class="workflow-status">'+(task?'Current: '+escapeHtml(task.status.replaceAll("_"," "))+
+ ' · '+escapeHtml(task.requirement_id)+(task.candidate_reply?' · self-attested reply (unverified)':''):'No follow-up created')+'</p>'+
  '</section>';
 }
 function standaloneEvidenceReport(row,result,decision){
