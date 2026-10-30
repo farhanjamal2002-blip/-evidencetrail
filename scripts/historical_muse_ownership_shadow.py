@@ -59,4 +59,12 @@ if __name__=="__main__":
     OUT.parent.mkdir(parents=True,exist_ok=True)
     summary=run()
     OUT.write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    print(json.dumps({k:v for k,v in summary.items() if k!="flagged"},indent=2,ensure_ascii=False))
+    print(json.dumps({
+        **{k:v for k,v in summary.items() if k!="flagged"},
+        "advisory_samples":[{
+            "fictional_cv_id":x["fictional_cv_id"],
+            "requirement_id":x["requirement_id"],
+            "source_quote":str(x["source_quote"])[:240],
+            "historical_model_status":x.get("historical_model_status"),
+        } for x in summary["flagged"][:12]],
+    },indent=2,ensure_ascii=False))
