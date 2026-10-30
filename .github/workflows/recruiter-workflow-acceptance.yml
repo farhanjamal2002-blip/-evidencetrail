@@ -34,6 +34,15 @@ jobs:
         run: |
           node --test tests/test_recruiter_workflow.js tests/test_recruiter_decision.js tests/test_requirement_coverage.js tests/test_interview_invite.js
           python scripts/offline_stress_test.py
+      - name: Judge evidence provenance preflight (no paid calls)
+        run: python scripts/judge_readiness_gate.py
+      - name: Upload judge evidence manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: judge-evidence-preflight
+          path: artifacts/judge-readiness/preflight.json
+          retention-days: 14
       - name: Syntax and static checks
         run: |
           python -m py_compile app.py multimodal_intake.py semantic_review.py
