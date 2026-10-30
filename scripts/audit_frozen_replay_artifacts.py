@@ -106,6 +106,7 @@ def main() -> int:
             verification_audit = record.get("verification_audit") or payload.get("verification_audit")
             need(isinstance(quote_audit, dict), f"Quote audit missing: {case_id}")
             need(isinstance(verification_audit, dict), f"Verification audit missing: {case_id}")
+            record["_audited_quote_audit"] = quote_audit
             audit = quote_audit
             need(audit.get("verified", 0) + audit.get("excluded", 0) == audit.get("proposed", 0),
                  f"Quote audit accounting mismatch: {case_id}")
@@ -153,9 +154,9 @@ def main() -> int:
             raw_matches += finding["raw_status"] == record["expected_status"]
             final_matches += finding["final_status"] == record["expected_status"]
             observed[role] = finding["final_status"]
-            quote_proposed += record["quote_audit"]["proposed"]
-            quote_verified += record["quote_audit"]["verified"]
-            quote_excluded += record["quote_audit"]["excluded"]
+            quote_proposed += record["_audited_quote_audit"]["proposed"]
+            quote_verified += record["_audited_quote_audit"]["verified"]
+            quote_excluded += record["_audited_quote_audit"]["excluded"]
         invariant = observed["baseline"] == observed["variant"]
         expected_invariant = pair["expected_relation"] == "invariant"
         pair_results.append({
