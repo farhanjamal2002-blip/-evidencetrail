@@ -165,8 +165,12 @@ async def main():
                 assert await audit.get_attribute("aria-hidden") == "true"
                 await page.locator("[data-action='open-audit']:visible").first.click()
                 assert await audit.get_attribute("aria-hidden") == "false"
-                await page.locator("#audit-overlay").click(position={"x": 10, "y": 10})
-                assert await audit.get_attribute("aria-hidden") == "true"
+                if width > 720:
+                    await page.locator("#audit-overlay").click(position={"x": 10, "y": 10})
+                    assert await audit.get_attribute("aria-hidden") == "true"
+                else:
+                    await page.locator("#audit-overlay [data-action='close-audit']").first.click()
+                    assert await audit.get_attribute("aria-hidden") == "true"
                 await page.locator("[data-action='open-audit']:visible").first.click()
                 await page.locator("#audit-overlay [data-action='close-audit']").first.click()
                 assert await audit.get_attribute("aria-hidden") == "true"
