@@ -12,15 +12,6 @@ EvidenceTrail does not score or rank candidates, automate hiring decisions, or e
 
 The judge path uses saved results and does not make new Muse calls. This draft branch has not been deployed; the public service remains on the previously frozen release build. See the [judge guide](JUDGE_GUIDE.md), [75-second demo script](demo/75_SECOND_JUDGE_VIDEO.md), and [feature/UI freeze record](docs/HACKATHON_FEATURE_FREEZE.md).
 
-## What the replay demonstrates
-
-- **M02 actor swap:** the source quotation is present in both variants. Muse's raw `conflicting` label becomes final `not_found` when the source credits the director rather than the applicant.
-- **12-pair fictional replay:** raw Muse labels matched 19/24 author-written references; the final pipeline labels matched 24/24. These are results on this small, author-labeled set, not a general résumé accuracy estimate.
-- **Citation grounding:** 25/25 proposed citations passed page checks across the full replay. That is a full-replay count, not an M02-only score or proof that the conclusion is justified.
-- **20-applicant demo:** historical genuine Muse responses and provider receipts are available in the saved replay; viewing them makes no new model call.
-
-See the [public M02 case audit](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/m02-case-audit.json), [M02/M07 workflow run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41030259074), and [remaining-pairs workflow run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41031352414) for stored receipts and artifacts. GitHub may require sign-in to download workflow archives.
-
 ## Research replay: a real quote can still support the wrong person
 
 A quotation can be present on the cited page while failing to support the applicant-specific conclusion drawn from it. The M02 actor-swap replay holds the requirement and action language steady, then changes who the source names as responsible.
