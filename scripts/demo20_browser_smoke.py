@@ -244,7 +244,7 @@ async def main():
                     await page.locator('#list [data-id="ET-008"]').click()
                     review=await page.locator("#review").inner_text()
                     assert "Scope not established" in review
-                    assert "Model: conflicting" in review
+                    assert "Raw Muse" in review and "conflicting" in review
                     assert "status override" in await page.locator("#inspect-audit").inner_text()
                     assert await page.locator("#review .matrix .source-snap").count()>0
                     await page.locator("#review .matrix .source-snap").first.click()
