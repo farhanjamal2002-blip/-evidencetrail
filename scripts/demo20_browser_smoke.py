@@ -116,10 +116,20 @@ async def main():
                       const contrast=el=>{const a=lum(getComputedStyle(el).color),b=lum(background(el));return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
                       const textNodes=[...document.querySelectorAll(".benchmark-stats span,.pill,.axis-check span,.axis-check strong,.why-line,.benchmark-caveat,.encore-row p,.split-row>strong,.split-results small,.encore-row strong")].filter(visible);
                       const lowContrast=textNodes.filter(el=>contrast(el)<4.5).map(el=>({text:el.textContent.trim().slice(0,50),ratio:contrast(el)}));
-                      return {smallTargets,lowContrast};
+                      const palette={
+                        paper:getComputedStyle(document.body).backgroundColor,
+                        source:getComputedStyle(document.querySelector("#benchmark-panel blockquote")).backgroundColor,
+                        next:getComputedStyle(document.querySelector(".encore-row")).backgroundColor,
+                        mono:getComputedStyle(document.querySelector("#benchmark-panel .benchmark-stats strong")).fontFamily
+                      };
+                      return {smallTargets,lowContrast,palette};
                     }""")
                     assert not a11y["smallTargets"],a11y["smallTargets"]
                     assert not a11y["lowContrast"],a11y["lowContrast"]
+                    assert a11y["palette"]["paper"]=="rgb(245, 241, 231)",a11y["palette"]
+                    assert a11y["palette"]["source"]=="rgb(255, 246, 207)",a11y["palette"]
+                    assert a11y["palette"]["next"]=="rgb(36, 37, 31)",a11y["palette"]
+                    assert "monospace" in a11y["palette"]["mono"],a11y["palette"]
                     assert await page.locator("#inbox-layout").is_hidden()
                     await page.screenshot(path=str(OUT/"actor-swap-replay.png"),full_page=True)
                     # Run pages and full archive listing resolve; the compact case audit is public JSON.
