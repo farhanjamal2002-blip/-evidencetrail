@@ -502,6 +502,19 @@ document.addEventListener("click",e=>{
 });
 document.querySelectorAll(".audit-backdrop,.overlay-preview").forEach(el=>el.addEventListener("click",e=>{if(e.target===el)closeOverlay(el.id);}));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeOverlay("audit-overlay");closeOverlay("export-overlay");}});
+let selectedDecision="Not reviewed";
+document.querySelectorAll("[data-review-state]").forEach(button=>{
+  button.addEventListener("click",()=>{
+    selectedDecision=button.dataset.reviewState;
+    document.querySelectorAll("[data-review-state]").forEach(other=>other.setAttribute("aria-pressed",String(other===button)));
+    document.querySelector("#decision-choice").textContent="Selected: "+selectedDecision;
+  });
+});
+document.querySelector("[data-action='save-decision']").addEventListener("click",()=>{
+  document.querySelector("#decision-status").textContent=selectedDecision;
+  const note=document.querySelector("#review-note").value.trim();
+  document.querySelector("#decision-saved-note").textContent=note?"Saved note: "+note:"No note saved.";
+});
 const initial=window.location.hash.slice(1);if(labels[initial])showScreen(initial);
 </script>
 </body>
