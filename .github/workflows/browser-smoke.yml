@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [feat/evidencetrail-review-workflow]
+    branches: [feat/evidencetrail-review-workflow, release/evidencetrail-judge-rc1-oct30]
   workflow_dispatch:
 
 permissions:
