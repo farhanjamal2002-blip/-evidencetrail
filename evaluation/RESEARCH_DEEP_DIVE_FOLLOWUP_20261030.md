@@ -52,7 +52,7 @@
 ## Concrete implementation sequence
 
 1. Add the proposed answerability/OCR, structure-noise, conflict-preservation, and distribution-shift cases to a separate fictional test manifest. Keep their IDs, source files, expected labels, and perturbation rules frozen before model calls.
-2. Have two people who did not author the cases independently label whether each passage supports the applicant’s own requirement, whether the source is readable, and whether the document itself contains contradictory claims. Preserve disagreement; do not convert author expectations into independent gold.
+2. For the M02/M07 replay, use only the frozen author-written labels. Make their provenance explicit; do not call them independent gold. No human ratings are collected.
 3. Run extraction and source-location checks without a model first. Then run a single predeclared model configuration on all variants, retaining failures and authentic provider receipts. Do not retry only failed or surprising cases.
 4. Score each pipeline stage with its own numerator and denominator. Keep author-labelled synthetic, independently reviewed fictional, and published-dataset transfer results separate.
 5. Only after the offline tests pass integrity checks, run the small reviewer pilot. Do not change the frozen judge demo, add a candidate score, or claim hiring accuracy/fairness from these transfer tests.
