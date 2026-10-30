@@ -21,6 +21,20 @@ jobs:
           python-version: '3.12'
       - name: Verify benchmark methodology does not invent metrics
         run: python -m unittest tests.test_academic_evidence_metrics -v
+      - name: Validate research-backed paired perturbation corpus and integrity rules
+        run: python -m unittest tests.test_metamorphic_research_metrics -v
+      - name: Freeze paired research manifest but do not claim a model score
+        run: |
+          python scripts/metamorphic_research_metrics.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('artifacts/academic-methods/metamorphic_report.json').read_text())
+          assert not d['model_results_measured']
+          assert d['completed_pairs']==0
+          assert d['author_declared_pairs']==12
+          print('12 prespecified paired CV tests; NO LIVE MODEL RESULTS: PASS')
+          PY
       - name: Execute empty honest input; no claimed research performance
         run: |
           python scripts/academic_evidence_metrics.py evaluation/academic_metric_inputs.jsonl
@@ -37,6 +51,8 @@ jobs:
         if: always()
         with:
           name: academic-benchmark-integrity-report
-          path: artifacts/academic-methods/metric_report.json
+          path: |
+            artifacts/academic-methods/metric_report.json
+            artifacts/academic-methods/metamorphic_report.json
           retention-days: 14
           if-no-files-found: warn
