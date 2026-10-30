@@ -10,10 +10,19 @@
 ## What judges should open
 
 1. **Start with the [isolated judge-release recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20)** (version fingerprint at [`/build-info`](https://evidencetrail-judge-rc1-2026.onrender.com/build-info); check matching release commit before judging). One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. The genuine 20-CV recorded Muse results load automatically, distinctly labeled as a **saved real recording**, not new inference.
-2. **Confirm the role checklist** and inspect the applicants in upload/received order. Search for `ET-018` (injected prompt), `ET-019` (OCR scan), or `ET-005` (related-vs-direct negotiation) to show hard cases.
-3. **Click “Explore genuine Muse-reviewed applicants.”** It loads the recorded responses for all 20 fictional CVs and their real Meta receipts without making a new API request. No login, key, credits or wait. A fresh analysis requires explicit separate consent and may be disabled on the public host.
-4. Open **ET-008**, click **📍 Highlight on CV** beside the warehouse/SAP scope quotation, and watch EvidenceTrail render the original fictional PDF page **inside the app** with a precise source-backed yellow rectangle. Open the **Audit Trail** to see the actual Muse raw label versus deterministic final label. Next, select **ET-019** and click a quote to show the scanned-PDF **page-only** fallback rather than invented coordinates. **Verified quote ≠ proven job qualification.**
-5. Record a *human* Hold decision with a reason, then export the review/evidence. This is a demo browser-state record, not a durable database.
+2. **Open Replay benchmark.** Compare the M02 baseline and actor swap. Point to the separate **Quote on the page?** and **Does it credit the applicant?** checks, then the struck-through raw Muse label, final evidence status, and one-line reason. Keep the caveat visible: the 12-pair set is small and fictional; 25/25 quote checks is the full-replay count, not an M02 score.
+
+3. **Inspect the saved M02 receipts.** Open the public case audit and workflow records. The replay uses stored provider responses and makes no new Muse call.
+
+4. **Use the dark ET-018 next card.** Open ET-018 in the inbox and choose **View outlined source instruction**. Both instruction-like lines are outlined from exact PyMuPDF geometry and labeled **Treated as content**. The text is part of the fictional CV and is not followed by the app.
+
+5. **Show the independent reviewer panel.** It has **Not reviewed**, **Reviewed**, and **Follow-up needed**, with a note field. This records the recruiter's review state; it does not modify the evidence label. The record stays in browser memory unless exported.
+
+6. If there is time, open **ET-019** to show the scanned-PDF page-only OCR path. EvidenceTrail does not invent word-level coordinates for an image-only source.
+
+
+
+**Release provenance:** this UI work is still on the draft branch and is not deployed. Before presenting it on the public host, confirm `/build-info` matches the reviewed release SHA. The current public service may show the earlier frozen UI.
 
 ## Source quote geometry benchmark — October 29, 2026
 
