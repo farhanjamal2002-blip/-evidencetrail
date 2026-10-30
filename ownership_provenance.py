@@ -56,16 +56,20 @@ SELF_DENIAL = re.compile(
     r"coordinat\w*|develop\w*|build\w*|sign\w*)\b",
     re.I,
 )
-# First-person action sentences are a counter-signal; do not claim exclusive
-# third-party ownership when the quoted CV also independently claims the task.
-OWN_ACTION = re.compile(
-    r"\bI\s+(?:personally\s+)?(?:negotiat\w*|administrat\w*|operat\w*|"
-    r"authored|built|developed|led|directed|commanded|performed|ran|"
-    r"prepared|consolidated|maintained|allocated|approved|controlled|"
-    r"coordinated|designed|managed|owned|signed)\b",
-    re.I,
-)
-
+# First-person action only counts if it matches the REQUIRED action.
+# Preparing a comparison sheet is not personal contract negotiation.
+SELF_ACTIONS: dict[str,re.Pattern[str]] = {
+    "contract":re.compile(r"\bI\s+(?:personally\s+)?negotiat\w*\b",re.I),
+    "operate":re.compile(r"\bI\s+(?:personally\s+)?(?:operat\w*|administrat\w*|ran|managed)\b",re.I),
+    "build":re.compile(r"\bI\s+(?:personally\s+)?(?:built|developed|authored|created)\b",re.I),
+    "lead":re.compile(r"\bI\s+(?:personally\s+)?(?:led|directed|commanded|headed)\b",re.I),
+    "perform":re.compile(r"\bI\s+(?:personally\s+)?(?:performed|ran|conducted|executed)\b",re.I),
+    "prepare":re.compile(r"\bI\s+(?:personally\s+)?(?:prepared|consolidated|maintained)\b",re.I),
+    "control":re.compile(r"\bI\s+(?:personally\s+)?(?:controlled|allocated|approved|authorized|owned)\b",re.I),
+    "manage":re.compile(r"\bI\s+(?:personally\s+)?(?:managed|owned|renewed|signed|led)\b",re.I),
+    "coordinate":re.compile(r"\bI\s+(?:personally\s+)?(?:coordinated|supervised|assigned|managed)\b",re.I),
+    "design":re.compile(r"\bI\s+(?:personally\s+)?(?:designed|planned|created)\b",re.I),
+}
 
 def ownership_warning(requirement: str, quote: str) -> dict[str, Any] | None:
     """Advisory warning for an *already verified* CV quote; never a label."""
@@ -88,7 +92,7 @@ def ownership_warning(requirement: str, quote: str) -> dict[str, Any] | None:
     # employer name or the existence of a team.
     if not denial and not (other_actor and (handoff or split)):
         return None
-    if OWN_ACTION.search(quote) and not denial:
+    if any(SELF_ACTIONS[name].search(quote) for name in action_names) and not denial:
         # Both applicant and third party might genuinely share work. A future
         # semantic/human review can assess that, not this deterministic rule.
         return None
