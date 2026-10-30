@@ -46,7 +46,8 @@ class PilotAnalysisTests(unittest.TestCase):
             evaluate(rows)
         rows=[row("R-A","ET-001","assisted",120)]
         rows[0]["model_calls"]="1"
-        self.assertFalse(evaluate(rows)["claims_authorized"])
+        with self.assertRaisesRegex(ValueError,"unexpected new model call"):
+            evaluate(rows)
         rows[0]["condition"]="auto_reject"
         with self.assertRaisesRegex(ValueError,"Invalid reviewer"):
             evaluate(rows)
