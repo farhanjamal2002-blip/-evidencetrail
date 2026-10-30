@@ -6,7 +6,7 @@ Prepared October 30, 2026. This file is a paste-ready proposal; it does not chan
 
 Evidence-first CV review powered by Meta Muse Spark. Check each finding against its source text and page—no candidate scores or automated hiring decisions.
 
-(146 characters)
+(155 characters)
 
 ## Website
 
