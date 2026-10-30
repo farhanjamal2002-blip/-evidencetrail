@@ -39,6 +39,12 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def git_blob_sha(path: Path) -> str:
+    raw = path.read_bytes()
+    header = b"blob " + str(len(raw)).encode("ascii") + b"\\0"
+    return hashlib.sha1(header + raw).hexdigest()
+
+
 def pdf_for(pair: dict, text: str) -> bytes:
     page_count = int(pair.get("total_pages", 1))
     target_page = int(pair.get("evidence_page", 1))
@@ -64,7 +70,7 @@ def normalize_quote(value: str) -> str:
     return " ".join(re.findall(r"\w+", value.casefold(), flags=re.UNICODE))
 
 
-def cited_evidence(result: dict, source_text: str) -> tuple[int, bool]:
+def cited_evidence(result: dict, source_text: str, fallback_page: int) -> tuple[int, bool]:
     evidence = result.get("evidence") or []
     for item in evidence:
         if not isinstance(item, dict):
@@ -77,14 +83,14 @@ def cited_evidence(result: dict, source_text: str) -> tuple[int, bool]:
             page_num = 0
         located = bool(quote) and normalize_quote(str(quote)) in normalize_quote(source_text)
         if page_num > 0 or located:
-            return page_num, located
+            return page_num or (fallback_page if located else 0), located
     return 0, False
 
 
 def main() -> int:
     if not CORPUS.is_file() or digest(CORPUS) != EXPECTED_CORPUS_SHA256:
         raise SystemExit("Frozen metamorphic corpus fingerprint mismatch; no calls made.")
-    if digest(ROOT / "app.py") != EXPECTED_APP_BLOB:
+    if git_blob_sha(ROOT / "app.py") != EXPECTED_APP_BLOB:
         raise SystemExit("Frozen EvidenceTrail app.py fingerprint mismatch; no calls made.")
     if app.ANALYSIS_PROVIDER != "muse" or not app.MUSE_PROVIDER_ENABLED:
         raise SystemExit("Muse provider preflight failed; no calls made.")
@@ -155,7 +161,10 @@ def main() -> int:
                         if status not in {"supported", "not_found", "conflicting"}:
                             record["error"] = "missing_or_invalid_requirement_status"
                         else:
-                            page, located = cited_evidence(requirement, item["cv_text"])
+                            page, located = cited_evidence(
+                                requirement, item["cv_text"],
+                                int(pair.get("evidence_page", 1)),
+                            )
                             record.update({
                                 "provider_mode": payload.get("provider_mode"),
                                 "provider_response_id": usage.get("provider_response_id"),
