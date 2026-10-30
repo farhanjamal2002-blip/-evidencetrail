@@ -1,11 +1,25 @@
 # EvidenceTrail
 
-> **AI can propose what a CV says. EvidenceTrail verifies where the supporting text actually appears before a recruiter acts.** Meta Muse Spark interprets the job and candidate document; independent local page checks and role-scope safeguards expose mistakes. The recruiter—not AI—owns the decision. A candidate's follow-up reply is clearly marked **self-attested, not independently verified**.
+> **EvidenceTrail separates two questions: is the quotation on the cited page, and does that passage credit the applicant with the required work?** Muse Spark proposes a structured interpretation. Local PDF/OCR processing, page-level quote checks, and explicit scope safeguards make the evidence inspectable. The recruiter keeps control of the review.
 
-> **Judges' short route:** [Open the isolated mock-only reviewer](https://evidencetrail-judge-rc1-2026.onrender.com/demo20) · [75-second demo script](demo/75_SECOND_JUDGE_VIDEO.md) · [independent source provenance](https://evidencetrail-judge-rc1-2026.onrender.com/build-info). The candidate build adds a visible source-verification receipt, opposing CV passages, and human-controlled clarification handoff. The public version must pass the automated SHA-parity check before final submission.
+EvidenceTrail does not score or rank candidates, automate hiring decisions, or establish whether a CV claim is true in the real world. A verified citation shows where text appears in the supplied file; semantic support and the recruiter's assessment remain separate.
 
+## Judge path
 
-> **Meta Hackathon judge entry point (October 29, 2026):** Read [JUDGE_GUIDE.md](JUDGE_GUIDE.md) and [SUBMISSION_READY.md](SUBMISSION_READY.md). The [isolated judge-release reviewer](https://evidencetrail-judge-rc1-2026.onrender.com/demo20) runs on a **separate free, mock-only Render service** (no public paid Muse calls). Locally the path is `/demo20`. [Authentic 20-CV Muse recording: 20/20 receipts, 76 page-verified citations](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40892660190), [recorded-replay browser acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40893215283). The older `evidencetrail.onrender.com` and the previous `evidencetrail-meta-hackathon-demo.onrender.com` are different deployments. Check the new host's `/build-info` exact source SHA; reachability alone is insufficient. Muse remains off in default mock mode. The portal deadline is **Nov 4 at 9 PM US Eastern (Nov 5 at 7:30 AM IST)**.
+1. Open the [fictional recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20).
+2. Open **Replay benchmark** and compare M02: the same requirement and action language, with the actor changed.
+3. Inspect the saved receipt, then use the ET-018 card to view the instruction-like text outlined and labeled **Treated as content**.
+
+The judge path uses saved results and does not make new Muse calls. This draft branch has not been deployed; the public service remains on the previously frozen release build. See the [judge guide](JUDGE_GUIDE.md), [75-second demo script](demo/75_SECOND_JUDGE_VIDEO.md), and [feature/UI freeze record](docs/HACKATHON_FEATURE_FREEZE.md).
+
+## What the replay demonstrates
+
+- **M02 actor swap:** the source quotation is present in both variants. Muse's raw `conflicting` label becomes final `not_found` when the source credits the director rather than the applicant.
+- **12-pair fictional replay:** raw Muse labels matched 19/24 author-written references; the final pipeline labels matched 24/24. These are results on this small, author-labeled set, not a general résumé accuracy estimate.
+- **Citation grounding:** 25/25 proposed citations passed page checks across the full replay. That is a full-replay count, not an M02-only score or proof that the conclusion is justified.
+- **20-applicant demo:** historical genuine Muse responses and provider receipts are available in the saved replay; viewing them makes no new model call.
+
+See the [public M02 case audit](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/m02-case-audit.json), [M02/M07 workflow run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41030259074), and [remaining-pairs workflow run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41031352414) for stored receipts and artifacts. GitHub may require sign-in to download workflow archives.
 
 ## Research replay: a real quote can still support the wrong person
 
