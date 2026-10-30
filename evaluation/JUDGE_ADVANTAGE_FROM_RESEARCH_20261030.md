@@ -48,7 +48,7 @@ Show the challenge-pair manifest and integrity harness. Explain that the test co
 
 | Research lesson | What to show | Existing evidence in the branch | What is still needed for a result |
 |---|---|---|---|
-| Citation existence is not semantic support | M02 actor swap | Frozen fictional pair and metric harness | Authentic end-to-end model output; two blind human sufficiency ratings |
+| Citation existence is not semantic support | M02 actor swap | Frozen fictional pair and metric harness | Authentic end-to-end model output on both variants; author-written targets only, not independent gold |
 | One-sided citation can hide disagreement | M07 or M12 conflict | Frozen pair; separate conflict label | Confirm both passages are surfaced by the live pipeline |
 | Position and OCR structure can affect retrieval | M08 plus proposed OCR fixture families | Page-position pair; research protocol | Actual rendered fixtures and measured retrieval/page outcomes |
 | Abstention can over-refuse or fail under shift | Clear positive controls beside unreadable/ambiguous cases | Research follow-up plan | Frozen answerability set, observed model output and denominators |
@@ -69,8 +69,8 @@ Show the challenge-pair manifest and integrity harness. Explain that the test co
 
 1. Run the existing frozen pairs only after the model version, prompt, parser, and receipt-capture method are frozen.
 2. Preserve raw response, final EvidenceTrail label, page/quote verification, failure stage, and genuine provider receipt for every variant. Keep all failed cases.
-3. Ask two people who did not author the fictional examples to rate semantic sufficiency independently. Report agreement and disagreement; do not let the model grade itself.
+3. Compare raw and final Muse labels with the frozen author-written references only; report their provenance and keep every failure. No human ratings are part of this run.
 4. Add OCR fixtures only when the exact images, gold passages, page numbers, and rendering perturbations are versioned and fixed before inference.
 5. Keep the reviewer study last. A planned study or a tiny exploratory pilot is not evidence of real-world hiring impact.
 
-**Current status:** the research PR contains the academic-methods protocol, 12 frozen fictional perturbation pairs, integrity tests, deep-dive matrices, and this judge playbook. It does not yet contain new live Muse results, independent ratings, or measured reviewer outcomes.
+**Current status:** the research PR contains the academic-methods protocol, 12 frozen fictional perturbation pairs, integrity tests, deep-dive matrices, and this judge playbook. It now contains a four-request live Muse replay of M02/M07. No human ratings or reviewer outcomes were collected.
