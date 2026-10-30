@@ -1,5 +1,10 @@
 # EvidenceTrail
 
+**Built for the [Meta Global AI Developer Hackathon 2026](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) · Build for Your World**
+
+[Hackathon showcase and judge path](HACKATHON_SHOWCASE.md) · [Judge release candidate PR #28](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/28)
+
+
 > **EvidenceTrail separates two questions: is the quotation on the cited page, and does that passage credit the applicant with the required work?** Muse Spark proposes a structured interpretation. Local PDF/OCR processing, page-level quote checks, and explicit scope safeguards make the evidence inspectable. The recruiter keeps control of the review.
 
 EvidenceTrail does not score or rank candidates, automate hiring decisions, or establish whether a CV claim is true in the real world. A verified citation shows where text appears in the supplied file; semantic support and the recruiter's assessment remain separate.
