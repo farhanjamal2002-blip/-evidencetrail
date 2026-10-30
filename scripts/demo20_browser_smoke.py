@@ -83,6 +83,40 @@ async def main():
                 assert small["scroll"]<=small["client"]+3,small
                 await page.screenshot(path=str(OUT/f"inbox-{width}.png"),full_page=True)
                 if width==1440:
+                    # The saved replay tab must be self-contained and must not make a paid call.
+                    await page.locator("#open-benchmark").click()
+                    await page.locator("#benchmark-panel").wait_for(state="visible")
+                    assert await page.locator("#benchmark-panel .split-card").count()==2
+                    replay_text=await page.locator("#benchmark-panel").inner_text()
+                    assert "19/24" in replay_text and "24/24" in replay_text and "25/25" in replay_text
+                    assert "conflicting" in replay_text and "not_found" in replay_text
+                    assert await page.locator("#inbox-layout").is_hidden()
+                    await page.screenshot(path=str(OUT/"actor-swap-replay.png"),full_page=True)
+                    # Both run pages and the archived case-receipt link must resolve.
+                    for selector in (
+                        "#benchmark-panel a[href*='/actions/runs/41030259074']",
+                        "#benchmark-panel a[href*='/actions/runs/41031352414']",
+                        "#m02-audit-artifact",
+                    ):
+                        link=page.locator(selector)
+                        href=await link.get_attribute("href")
+                        assert href and href.startswith("https://github.com/")
+                        response=await page.request.get(href)
+                        assert response.status==200,(href,response.status)
+                    # Encore returns to the same inbox and selects ET-018 without reload.
+                    await page.locator("#injection-encore").click()
+                    await page.locator("#benchmark-panel").wait_for(state="hidden")
+                    assert await page.locator("#inbox-layout").is_visible()
+                    assert await page.locator("#search").input_value()=="ET-018"
+                    assert await page.locator("#list .item").count()==1
+                    assert "selected" in (await page.locator('#list [data-id="ET-018"]').get_attribute("class") or "")
+                    assert not paid_calls,"Replay and ET-018 encore must not call the analysis API"
+                    # Reopen M02, return again, and ensure the inbox filter/selection survive.
+                    await page.locator("#open-benchmark").click()
+                    await page.locator("#benchmark-panel").wait_for(state="visible")
+                    await page.locator("#back-to-inbox").click()
+                    assert await page.locator("#search").input_value()=="ET-018"
+                    assert "selected" in (await page.locator('#list [data-id="ET-018"]').get_attribute("class") or "")
                     await page.locator('#search').fill("ET-018")
                     assert await page.locator("#list .item").count()==1
                     await page.locator('#search').fill("")

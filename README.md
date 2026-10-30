@@ -7,6 +7,17 @@
 
 > **Meta Hackathon judge entry point (October 29, 2026):** Read [JUDGE_GUIDE.md](JUDGE_GUIDE.md) and [SUBMISSION_READY.md](SUBMISSION_READY.md). The [isolated judge-release reviewer](https://evidencetrail-judge-rc1-2026.onrender.com/demo20) runs on a **separate free, mock-only Render service** (no public paid Muse calls). Locally the path is `/demo20`. [Authentic 20-CV Muse recording: 20/20 receipts, 76 page-verified citations](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40892660190), [recorded-replay browser acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40893215283). The older `evidencetrail.onrender.com` and the previous `evidencetrail-meta-hackathon-demo.onrender.com` are different deployments. Check the new host's `/build-info` exact source SHA; reachability alone is insufficient. Muse remains off in default mock mode. The portal deadline is **Nov 4 at 9 PM US Eastern (Nov 5 at 7:30 AM IST)**.
 
+## Research replay: a real quote can still support the wrong person
+
+A quotation can be present on the cited page while failing to support the applicant-specific conclusion drawn from it. The M02 actor-swap replay holds the requirement and action language steady, then changes who the source names as responsible.
+
+- **M02 baseline:** the source attributes personally negotiating supplier agreements to the applicant; raw Muse and final pipeline labels are both `supported`.
+- **M02 actor swap:** the source attributes the negotiation to a procurement director; raw Muse labels it `conflicting`, while the final requirement status is `not_found`.
+- **Recorded replay scope:** across 12 fictional pairs / 24 requests, raw Muse labels matched 19/24 author-written references and final labels matched 24/24. Across the full replay, 25/25 proposed citations passed local quote/page checks. These are results on this small, author-labelled set, not general résumé accuracy.
+- **Receipts:** [M02/M07 run and archived case receipts](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41030259074) · [remaining-pairs run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41031352414).
+
+**Quick judge path:** Open the [recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20), open the replay benchmark, compare the two M02 cards, inspect the archived receipts, then use the encore button to open ET-018. The demo uses saved results; it makes no new Muse call.
+
 EvidenceTrail is a recruiter-first, no-score CV review workflow. A recruiter supplies one job description and up to five CVs, reviews a shared job checklist, checks each evidence label against its cited page, records Advance, Hold, or Do not advance, and exports an evidence pack. Candidates remain in upload order; EvidenceTrail does not score or rank them.
 
 **Default new analyses are local simulation, while the separate judge replay contains REAL SAVED MUSE RESULTS.** Click **“Explore genuine Muse-reviewed applicants”** in `/demo20` to load all 20 actual Meta Muse Spark 1.3 responses (October 29; provider receipts and 76 page-verified citations) instantly with no new model calls or key. Fresh requests remain disabled by default and require explicit server-side Meta configuration and consent. The replay is a saved genuine recording, not live inference.
