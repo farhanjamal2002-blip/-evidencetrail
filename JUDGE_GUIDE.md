@@ -22,7 +22,7 @@
 
 
 
-**Release provenance:** on head `ba9461a984d1b69cc1980f4cd0fe6424874eaf1c`, [20-CV acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424687), [judge-browser smoke](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424837), and [CI](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424646) passed. This branch is not deployed. [Public parity run 41079424887](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41079424887) reports the host is still on SHA `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`; confirm `/build-info` matches the reviewed release SHA before presenting this UI.
+**Release provenance:** on tested implementation/main-sync SHA `eb1916d166f34bc04bf436707d24ed0c389d1b46`, [20-CV acceptance](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080426015), [judge-browser smoke](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080426198), and [CI](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080425782) passed. This branch is not deployed. [Public parity run 41080415297](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080415297) reports the host is still on SHA `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`; confirm `/build-info` matches the reviewed release SHA before presenting this UI.
 
 ## Source quote geometry benchmark — October 29, 2026
 
