@@ -1,0 +1,41 @@
+name: Finalist factual judge recording — frozen public release
+on:
+  push:
+    branches: [feat/finalist-video-pilot-proof-oct30]
+    paths:
+      - scripts/record_finalist_judge_walkthrough.py
+      - .github/workflows/finalist-recording.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  record-judge-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      EVIDENCETRAIL_JUDGE_URL: https://evidencetrail-judge-rc1-2026.onrender.com
+      EVIDENCETRAIL_EXPECTED_RELEASE_SHA: 8489e45ae0f87d8421562618bda556c31911372b
+      MODEL_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser tools and video encoder
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Record exact public judge build, without paid API calls
+        run: python scripts/record_finalist_judge_walkthrough.py
+      - name: Attach MP4, original WebM, screenshots and proof of provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-factual-judge-video-cut
+          path: artifacts/finalist-judge-video/
+          if-no-files-found: warn
+          retention-days: 14
