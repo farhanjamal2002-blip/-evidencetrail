@@ -19,14 +19,15 @@ EvidenceTrail helps recruiters inspect whether a supplied CV supports a specific
 
 ## What the judge should see (one smooth story)
 
-1. **0:00–0:20**: 100 CVs create a real review burden; percentages hide why. Open EvidenceTrail's 20 **fictional** CVs and click **Explore genuine Muse-reviewed applicants** to reveal their saved real evidence instantly.
-2. **0:20–0:42**: Employer writes a procurement job and confirms four criteria. Show search/filters; nothing starts as “AI analyzed.”
-3. **0:42–1:10**: Select `ET-005` and show **related experience is not proof** of direct negotiations. The raw Muse label is preserved; the final status is grounded.
-4. **1:10–1:30**: Open `ET-019`: scanned CV → OCR → exact page-verified quote. Then `ET-018`: malicious instructions on CV did not yield a supported qualification.
-5. **1:30–1:50**: Human recruiter records Hold with a reason, opens the original PDF, exports an evidence pack.
-6. **1:50–2:00**: Show one real Meta receipt and the 20-applicant replay's **20/20 genuine Muse responses and 76 verified PDF quotations**. No score or automated hiring. These figures apply only to the fictional demonstration.
+1. **0:00–0:08:** Open the fictional recruiter inbox. State the design question: a quotation can be real while crediting the wrong person.
+2. **0:08–0:38:** Open the saved M02 benchmark. Compare the applicant and director passages. Point to **Quote on the page?** and **Does it credit the applicant?** separately, then the struck-through raw Muse label, final evidence status, and reason.
+3. **0:38–0:48:** Inspect the M02 receipt links and full-replay caveat. Say clearly that 25/25 is the 12-pair replay's citation total, not an M02-only measure or real-CV accuracy estimate.
+4. **0:48–1:04:** Click the dark ET-018 next card. Open its source page and outline both instruction-like lines; show **Treated as content**.
+5. **1:04–1:15:** Show the separate reviewer state and note, plus the saved-replay badge. The demo makes no new Muse call.
 
-The public service deliberately disables new paid Muse calls. Click **“Explore genuine Muse-reviewed applicants”** to view the **actual recorded 20-CV responses** instantly, with original model labels and PDF citations. This is a saved real recording, **not live inference**. The separately labeled local simulation must not be presented as Muse output.
+The current UI work is on draft PR #28 and is not deployed. Do not record or submit the new UI until its browser smoke passes and `/build-info` reports the exact reviewed release SHA.
+
+The default public service disables new paid Muse calls. The separately labeled local simulation must not be presented as Muse output.
 
 ## Additional judge path: M02 actor-swap replay
 
@@ -43,33 +44,33 @@ Open the [recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/dem
 - [x] Judge-facing README: [JUDGE_GUIDE.md](JUDGE_GUIDE.md).
 - [ ] **Judges' build:** choose **one commit** after final PR review, pin its SHA and share a working runnable/deployed version.
 - [ ] **Public final-version parity:** [isolated 20-fictional-CV judge reviewer](https://evidencetrail-judge-rc1-2026.onrender.com/demo20) is on a separate free, mock-only Render service. Verify [exact deployed SHA](https://evidencetrail-judge-rc1-2026.onrender.com/build-info) against release PR #28 using the [automated public parity workflow](.github/workflows/public-demo-parity.yml). The older two services are not the final judge target; free hosting may cold-start.
-- [ ] **Video:** record a tight 2-minute demo *from that same build*. Video length is a recommendation here; entrant must verify organizer's actual field limits.
-- [ ] **Repository landing page:** point judges immediately to demo URL, 2-minute video, run instructions and genuine Muse receipts.
+- [ ] **Video:** record the 75-second M02 → receipt → ET-018 demo *from that same build*. Video length is a recommendation here; entrant must verify organizer's actual field limits.
+- [ ] **Repository landing page:** point judges immediately to demo URL, 75-second video, run instructions and genuine Muse receipts.
 - [ ] **Participant portal:** confirm selected track, rules acceptance, eligibility, required fields, team representative, final submission.
 - [ ] **Signed-out test:** video, GitHub, demo URL all accessible from an anonymous browser.
 - [ ] **Submit before internal Nov 4 IST deadline**, save confirmation receipt. **Submitting a PR is not submitting to the event.**
 
 ## Freeze scope for the sprint
 
-**IN:** criteria → 20 fictional applicants → verified evidence → human Hold/Advance → original PDF → standalone export; reliable replay when offline; fast loading; visibly clear Muse vs simulation; real authenticated receipt evidence.
+**IN:** criteria → saved fictional replay → separate quote and applicant-attribution checks → human review state/note → source inspection → receipts; reliable replay when offline; fast loading; visibly clear saved Muse results vs simulation.
 
-**OUT until after Nov 4:** actual ATS integration, employer accounts, persistent database, auto-ranking/screening, interview scheduling, multi-tenant scalability, payment processing, 100k CV stress campaigns. None is required to show the hackathon's core AI innovation.
+**OUT until after Nov 4:** actual ATS integration, employer accounts, persistent database, auto-ranking/screening, interview scheduling, multi-tenant scalability, payment processing, new model routing, or expanded benchmark claims. None is required to show the hackathon's core AI innovation.
 
 ## Tight schedule (India time)
 
 | Date | Goal and stop condition |
 | --- | --- |
 | Oct 29 | Lock feature list and judge narrative; commit current receipts/script |
-| Oct 30 | One stable public demo build; anonymized fictional data; no exposed API key |
-| Oct 31 | Reproduce the exact screen flow; fix only crashes or quote/consent defects |
-| Nov 1 | Capture original 2-minute demonstration and a backup local recording |
-| Nov 2 | Record a single updated cut if needed; complete judge README and receipt references |
+| Oct 30 | Freeze feature/UI scope; make the exact ET-018 geometry and M02 browser smoke pass; no exposed API key |
+| Oct 31 | Reproduce the exact screen flow on the final candidate build; fix only release-blocking UI, accessibility, or source-grounding defects |
+| Nov 1 | Capture the 75-second demonstration from the verified SHA and a backup local recording |
+| Nov 2 | Review the cut, README, judge guide, and receipt references; no feature additions |
 | Nov 3 | Signed-out, clean-room demo from submission commit; freeze all feature work |
 | Nov 4 | **Submit early India time**, save portal confirmation; no last-minute feature builds |
 
 ## Failure fallbacks
 
-- **Muse credentials missing on demo host:** use saved real five-CV test receipts and label simulation truthfully; never fake a live request.
+- **Muse credentials missing on demo host:** use the saved 20-CV and 12-pair receipts, label them as saved replays, and never fake a live request.
 - **Cold start or demo site unavailable:** use locally recorded screen capture with actual provider receipt evidence and runnable GitHub instructions; don't claim a live hosted result.
 - **One candidate fails:** leave it in the queue as Failed, show explicit error; don't silently drop, rerun or fabricate success.
 - **Time running out:** submission video + GitHub + authentic recorded test are more valuable than a half-built ATS.
