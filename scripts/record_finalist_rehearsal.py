@@ -186,9 +186,13 @@ with sync_playwright() as engine:
     browser.close()
 
 mp4=OUT/"evidencetrail-judge-rehearsal-silent.mp4"
+# Browser recording starts during the Render free-host cold-start and other
+# preparatory requests. Remove that non-demo loading time automatically; the
+# first caption marks the start of actual usable judge footage.
+cut_start=max(0, float(TIMELINE[0]["at_seconds"])-0.25)
 subprocess.run([
     "ffmpeg","-y","-hide_banner","-loglevel","error",
-    "-i",str(video_path),"-c:v","libx264",
+    "-ss",f"{cut_start:.2f}","-i",str(video_path),"-c:v","libx264",
     "-preset","veryfast","-crf","25","-pix_fmt","yuv420p",
     "-movflags","+faststart","-an",str(mp4),
 ],check=True,timeout=110)
@@ -196,6 +200,7 @@ if not mp4.exists() or mp4.stat().st_size < 40_000:
     raise RuntimeError("Recorded MP4 missing or implausibly empty")
 print("REHEARSAL_PASS="+json.dumps({
     "sha":EXPECTED_SHA,"new_model_calls":0,
-    "duration_seconds":elapsed(),"mp4_bytes":mp4.stat().st_size,
+    "source_capture_seconds":elapsed(),"trimmed_prelude_seconds":cut_start,
+    "mp4_bytes":mp4.stat().st_size,
     "source":"anonymous real public judge app",
 }))
