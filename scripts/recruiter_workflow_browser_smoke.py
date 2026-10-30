@@ -22,6 +22,10 @@ with sync_playwright() as engine:
     assert response and response.status == 200
     page.wait_for_function("document.getElementById('ready').textContent === '20'", timeout=30000)
     assert page.locator("#visual-consent").is_disabled()
+    page.locator('#list [data-id="ET-015"]').click()
+    assert page.locator(".conflict-pair").count() >= 1, "A genuine two-sided CV discrepancy must remain inspectable"
+    assert "Claim A" in page.locator(".conflict-pair").first.inner_text()
+    assert "Claim B" in page.locator(".conflict-pair").first.inner_text()
     page.locator('#list [data-id="ET-005"]').click()
     assert "proposed quotes" in page.locator("#verification-banner").inner_text()
     page.locator("#verification-banner").click()
