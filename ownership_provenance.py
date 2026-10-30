@@ -17,7 +17,7 @@ from typing import Any
 # to any particular benchmark CV, employer or applicant.
 ACTIONS: dict[str, re.Pattern[str]] = {
     "contract": re.compile(r"\b(?:negotiat\w*|contract\s+terms|agreement\s+terms)\b", re.I),
-    "operate": re.compile(r"\b(?:operat\w*|administrat\w*|run|ran|manag\w*\s+(?:production|clusters?))\b", re.I),
+    "operate": re.compile(r"\b(?:operat\w*|administ\w*|run|ran|manag\w*\s+(?:production|clusters?))\b", re.I),
     "build": re.compile(r"\b(?:built|build\w*|develop\w*|author\w*|creat\w*)\b", re.I),
     "lead": re.compile(r"\b(?:lead|led|direct\w*|command\w*|head\w*)\b", re.I),
     "perform": re.compile(r"\b(?:perform\w*|ran|run|execut\w*|conduct\w*)\b", re.I),
@@ -60,7 +60,7 @@ SELF_DENIAL = re.compile(
 # Preparing a comparison sheet is not personal contract negotiation.
 SELF_ACTIONS: dict[str,re.Pattern[str]] = {
     "contract":re.compile(r"\bI\s+(?:personally\s+)?negotiat\w*\b",re.I),
-    "operate":re.compile(r"\bI\s+(?:personally\s+)?(?:operat\w*|administrat\w*|ran|managed)\b",re.I),
+    "operate":re.compile(r"\bI\s+(?:personally\s+)?(?:operat\w*|administ\w*|ran|managed)\b",re.I),
     "build":re.compile(r"\bI\s+(?:personally\s+)?(?:built|developed|authored|created)\b",re.I),
     "lead":re.compile(r"\bI\s+(?:personally\s+)?(?:led|directed|commanded|headed)\b",re.I),
     "perform":re.compile(r"\bI\s+(?:personally\s+)?(?:performed|ran|conducted|executed)\b",re.I),
