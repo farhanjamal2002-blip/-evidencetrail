@@ -1,0 +1,86 @@
+name: Frozen RC1 M02 M07 genuine Muse replay
+on:
+  pull_request:
+    types: [synchronize]
+    branches:
+      - release/evidencetrail-judge-rc1-oct30
+    paths:
+      - .github/workflows/frozen-m02-m07-live.yml
+permissions:
+  contents: write
+concurrency:
+  group: frozen-m02-m07-live-once-20261030
+  cancel-in-progress: false
+jobs:
+  frozen-muse-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      EVIDENCETRAIL_ENABLE_META_VISION: 'false'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_PROCESS: '4'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '4'
+      MAX_CONCURRENT_ANALYSES: '1'
+      EVIDENCETRAIL_FROZEN_SHA: 8489e45ae0f87d8421562618bda556c31911372b
+      EVIDENCETRAIL_FROZEN_ROOT: ${{ github.workspace }}/frozen
+      PYTHONPATH: ${{ github.workspace }}/frozen
+    steps:
+      - name: Checkout frozen judge pipeline by exact SHA
+        uses: actions/checkout@v4
+        with:
+          repository: farhanjamal2002-blip/-evidencetrail
+          ref: 8489e45ae0f87d8421562618bda556c31911372b
+          path: frozen
+          persist-credentials: false
+      - name: Checkout research fixtures and one-shot runner
+        uses: actions/checkout@v4
+        with:
+          repository: farhanjamal2002-blip/-evidencetrail
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: research
+      - name: Preflight fixed scope and credentials; do not probe provider
+        run: |
+          test -n "$MODEL_API_KEY"
+          test -f frozen/app.py
+          test -f research/scripts/run_frozen_m02_m07.py
+          test -f research/evaluation/RESEARCH_METAMORPHIC_PAIRS.json
+          test ! -e research/artifacts/live-m02-m07-frozen-20261030/attempt_started.json
+          git -C frozen rev-parse HEAD
+          git -C research rev-parse HEAD
+      - name: Install the exact release dependencies and OCR runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng fonts-dejavu-core
+          python -m pip install -r frozen/requirements.txt
+      - name: Run exactly four predeclared M02 and M07 variants, no retries
+        run: python research/scripts/run_frozen_m02_m07.py
+      - name: Upload full case results and receipt IDs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-rc1-m02-m07-results
+          path: research/artifacts/live-m02-m07-frozen-20261030/
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Commit durable synthetic results and provider receipts to research branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_BRANCH: eval/academic-methods-oct30
+        run: |
+          if [ ! -d research/artifacts/live-m02-m07-frozen-20261030 ]; then
+            echo "No attempt record exists; nothing to preserve in Git."
+            exit 0
+          fi
+          git -C research config user.name "github-actions[bot]"
+          git -C research config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C research add artifacts/live-m02-m07-frozen-20261030/
+          if git -C research diff --cached --quiet; then
+            echo "No new result files to commit."
+            exit 0
+          fi
+          git -C research commit -m "Save frozen RC1 M02 M07 Muse receipts"
+          git -C research -c http.extraheader="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)" push origin "HEAD:refs/heads/$TARGET_BRANCH"
