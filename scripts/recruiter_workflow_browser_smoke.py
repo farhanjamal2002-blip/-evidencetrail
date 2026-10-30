@@ -23,6 +23,9 @@ with sync_playwright() as engine:
     page.wait_for_function("document.getElementById('ready').textContent === '20'", timeout=30000)
     assert page.locator("#visual-consent").is_disabled()
     page.locator('#list [data-id="ET-005"]').click()
+    assert "proposed quotes" in page.locator("#verification-banner").inner_text()
+    page.locator("#verification-banner").click()
+    assert page.locator("#audit-drawer").count() == 1
     page.locator("#generate-followup").click()
     question = page.locator("#followup-question")
     assert "contract" in question.input_value().casefold()
@@ -36,6 +39,25 @@ with sync_playwright() as engine:
     assert "did NOT send" in page.locator("#apistatus").inner_text()
     page.locator("#filter").select_option("waiting_external")
     assert page.locator('#list [data-id="ET-005"]').count() == 1
+    # A received reply is a self-attested record, never an authenticated CV quote.
+    page.locator("#candidate-reply").fill(
+        "I prepared comparisons, while the director negotiated and signed the agreements."
+    )
+    page.locator("#followup-status").select_option("resolved")
+    page.locator("#save-followup").click()
+    assert "self-attested" in page.locator(".reply-attestation").inner_text()
+    page.locator("#filter").select_option("clarification_received")
+    assert page.locator('#list [data-id="ET-005"]').count() == 1
+    with page.expect_download() as evidence_export:
+        page.locator("#export-report").click()
+    evidence = evidence_export.value
+    assert evidence.suggested_filename == "ET-005-evidence.html"
+    evidence_path = OUT/"evidence-with-candidate-reply.html"
+    evidence.save_as(evidence_path)
+    evidence_text = evidence_path.read_text()
+    assert "Candidate reply — self-attested" in evidence_text
+    assert "the director negotiated" in evidence_text
+    assert "original CV pages" in evidence_text.lower() or "original CV" in evidence_text
     with page.expect_download() as download:
         page.locator("#export-workflow").click()
     d = download.value
@@ -43,7 +65,8 @@ with sync_playwright() as engine:
     target = OUT/"workflow.csv"
     d.save_as(target)
     body = target.read_text()
-    assert "waiting_external" in body and "ET-005" in body
+    assert "clarification_received" in body and "ET-005" in body
+    assert "candidate_self_attested_unverified" in body
     assert not calls, "Review/export should never call the Muse analysis endpoint"
     page.screenshot(path=str(OUT/"review-workflow.png"),full_page=True)
     # Main application uploader must accept scanned images, not only PDFs.
