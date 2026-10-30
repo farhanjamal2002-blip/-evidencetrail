@@ -138,3 +138,81 @@ This shows genuine Meta interpretation and a useful independent safeguard in und
 - Chia et al., EMNLP 2025: https://aclanthology.org/2025.emnlp-main.469/
 
 All paper-to-product interventions above are hypotheses to test on EvidenceTrail; published results belong to their authors and their evaluated tasks.
+
+
+## System-level intelligence: build a measured loop around Muse
+
+The strategic framing is **Muse as the reasoning core, with EvidenceTrail improving the quality of the work it can do**. Do not imply that the application changes Muse's weights or makes the model intrinsically smarter. The system can improve task performance by preparing relevant evidence, exposing specific verification failures, and spending extra inference only when there is a reason.
+
+### Research that supports this framing
+
+| Research / primary source | What it suggests | EvidenceTrail adaptation |
+| --- | --- | --- |
+| Gou et al., “CRITIC: Large Language Models Can Self-Correct with Tool-Interactive Critiquing,” ICLR 2024. https://proceedings.iclr.cc/paper_files/paper/2024/hash/fef126561bbf9d4467dbb8d27334b8fe-Abstract-Conference.html | External tools can validate parts of a model's initial output and provide feedback for revision; the authors emphasize external feedback. | Let deterministic PDF/source checks return concrete error codes and locations. A repair call receives those observations instead of a vague “think again.” |
+| Huang et al., “Large Language Models Cannot Self-Correct Reasoning Yet,” ICLR 2024. https://proceedings.iclr.cc/paper_files/paper/2024/hash/8b4add8b0aa8749d80a34ca5d941c355-Abstract-Conference.html | Intrinsic self-correction without external feedback can fail and sometimes degrade the original answer. | Do not add an unconditional Muse self-critique pass. Preserve the first answer and only test a constrained repair after an external check identifies a concrete issue. |
+| Tyen et al., “LLMs cannot find reasoning errors, but can correct them given the error location,” Findings of ACL 2024. https://aclanthology.org/2024.findings-acl.826/ | The authors find that models struggle to locate reasoning mistakes but can correct more reliably when given the error location. | EvidenceTrail's source audit can point to the failed quote, source page, missing actor, or conflicting span. Test error localization and correction as separate stages; never count a successful rewrite as proof that the detector found every error. |
+| Kamoi et al., “When Can LLMs Actually Correct Their Own Mistakes?,” TACL 2024. https://aclanthology.org/2024.tacl-1.78/ | Their survey finds stronger evidence for correction with reliable external feedback than for prompted self-critique alone. | Prefer measurable source, schema, OCR, and date checks as feedback. Keep semantic support limitations explicit where the check is not deterministic. |
+| Snell et al., “Scaling LLM Test-Time Compute Optimally…,” ICLR 2025. https://proceedings.iclr.cc/paper_files/paper/2025/hash/1b623663fd9b874366f3ce019fdfdd44-Abstract-Conference.html | The best amount of extra inference varies by problem difficulty; adaptive allocation can be more compute-efficient than spending equally on every prompt. | Keep minimal effort for ordinary cases; test extra effort only on defined hard cases and account for quality, tokens, and latency together. Their reported gains are for math reasoning, not CV review. |
+| Zhou et al., “When More Thinking Hurts,” Findings of ACL 2026. https://aclanthology.org/2026.findings-acl.1199/ | Additional reasoning can have diminishing returns, and longer reasoning can sometimes overturn a correct answer; the best budget varies with difficulty. | Include regression rate—previously correct baseline cases that become wrong—in every effort-level comparison. Never assume higher effort is automatically better. |
+| Trivedi et al., “Interleaving Retrieval with Chain-of-Thought Reasoning,” ACL 2023. https://aclanthology.org/2023.acl-long.557/ | For multi-step QA, one initial retrieval can be insufficient; retrieval and reasoning can inform each other. | Adapt cautiously: after Muse identifies a missing or competing evidence need, retrieve additional page-labelled source spans locally, then run at most one targeted reassessment. Keep full-document opposing evidence reachable to avoid retrieval blind spots. |
+| Zhou et al., “Plan and Budget,” ICLR 2026. https://proceedings.iclr.cc/paper_files/paper/2026/hash/ae8d4084f418bb51575c2ca6c658a05b-Abstract-Conference.html | Decomposing a problem into subquestions and allocating compute by difficulty is studied as a model-agnostic inference-time strategy. | Break each job requirement into actor/action/scope/time constraints and track which parts are resolved by the source. Allocate an extra Muse pass to unresolved material requirements only. This is an adaptation, not their method or benchmark result. |
+
+### Proposed EvidenceTrail intelligence loop
+
+1. **Prepare the input.** Extract page-labelled text and OCR locally; preserve page and region provenance. Keep CV instructions untrusted. Measure extraction quality instead of silently treating OCR text as certain.
+2. **Compile the requirement.** Represent each material criterion as the requested actor, action, object, scope/authority, and time or threshold where present. Keep the exact original job wording and source location.
+3. **Find evidence broadly.** Retrieve candidate passages from the CV with page IDs. Include both supporting and potentially opposing passages; retrieval should focus Muse's context without hiding contradictions.
+4. **Ask Muse for a structured first result.** For each requirement, require the model to link its label to the smallest exact source passages and mark which requirement dimensions each passage addresses. Strict JSON Schema and local schema validation remain in place.
+5. **Check externally.** Deterministic code checks quote presence, cited page, source IDs, OCR provenance, and supported date/scope rules. These checks can verify source anchoring and specific mechanical constraints; they cannot universally prove semantic entailment or the truth of a CV statement.
+6. **Repair only located failures.** When a check finds a concrete issue, send Muse the affected requirement, first result, precise failure location/reason, and allowed source passages. Ask it to revise only that requirement and return a replacement proposal. Keep the original and revised results side by side, with separate receipts.
+7. **Stop with a visible unresolved state.** Limit to one repair round in the tournament experiment. If the result still lacks sufficient support or the sources conflict, keep it ambiguous/needs review and show the relevant evidence. Do not loop until the answer looks favorable.
+8. **Choose effort by observed need.** Test higher reasoning effort for specific hard conditions, not because the model reports a low certainty string. Record each route decision and its token/latency cost.
+
+This architecture treats the model as the reasoning core while using local tools as its eyes and checkers. “More intelligent” means better measured answers per case and per token, with fewer unsupported conclusions and preserved evidence—not a bigger prompt or more calls by default.
+
+### Experiment: does grounded feedback help Muse correct its own outputs?
+
+**Corpus:** the 12 predeclared synthetic pairs and saved baseline responses. Start with six cases selected before seeing variant outcomes: actor swap (M02), responsibility/action mismatch (M03 or M05), internal contradiction (M07), prompt injection (M09), adjacent-skill transfer (M10 or M11), and page-position shift (M08). Retain at least one clearly supported control so a correction policy cannot improve by turning everything into not_found.
+
+**Arms:**
+
+- **A — Frozen baseline:** existing minimal-effort single-pass result from the 24-request replay.
+- **B — Blind re-critique:** one extra Muse call asks it to recheck its answer but gives no new verifier findings. This is the control for generic self-reflection.
+- **C — Located external feedback:** one extra Muse call is made only when the fixed verifier/test harness identifies a predeclared error location or unresolved criterion; it receives the exact error and allowed source spans. If no trigger occurs, no second call is made.
+- Freeze inputs, model, effort, schema and exact code revision. Never retry a failed paid request selectively; preserve failed attempts and provider IDs.
+
+**Score each arm separately:**
+
+- False-supported changes and false-supported remaining, with the non-supported denominator.
+- Supported-case regressions and missed-supported cases.
+- Pair-relation consistency and correct handling of actor, action, scope, negation, contradiction and position.
+- Quote/page verification before and after repair.
+- How often a repair changes the label, whether that change matches the synthetic gold, and whether a correct baseline was made worse.
+- Calls, tokens, cached tokens, reasoning tokens, latency, and estimated cost per corrected synthetic error.
+- Stage of failure: extraction/OCR, evidence retrieval, first Muse interpretation, mechanical verifier, repair, or final status derivation.
+
+**Decision rule:** C is worth keeping only if it beats both A and B on the predeclared hard-case error profile without creating a supported-case regression that outweighs its gains, and if the additional calls/latency fit the demo. Report every case and every arm. Six synthetic cases are a mechanism check, not proof of general accuracy. A second model or self-critique must not be used as ground truth; gold remains the prewritten synthetic reference.
+
+### Experiment: allocate extra inference and retrieval separately
+
+Do not mix evidence access with reasoning effort in one experiment. For the same selected cases, first test an evidence axis (full extracted CV vs page-labelled retrieved candidates plus opposing spans) at fixed minimal effort. Separately test an effort axis (minimal vs medium) with identical complete input and prompt. This reveals whether a failure comes from the model needing more reasoning or from not receiving the useful passage.
+
+Use a small paired schedule and report each axis separately:
+
+| Axis | Baseline | Variant | Main failure signal |
+| --- | --- | --- | --- |
+| Evidence access | Full page-labelled extracted text | Locally selected passages with page IDs plus all known opposing/date/scope passages | Relevant page/span recall, unsupported conclusions, missed contradictions |
+| Reasoning budget | Minimal effort | Medium effort on predeclared hard cases | False support corrected, supported regressions, tokens, latency |
+| Repair feedback | No repair | One repair with located external verifier feedback | Correction precision and regression rate |
+| Scan modality | OCR text only | OCR text plus same page image | Exact source recovery, quote/page validation, added cost |
+
+**Priority order for a winning demo:** make the located-feedback loop reliable on one vivid actor/scope failure; show it in the verification receipt; then decide whether multimodal scan handling adds a second compelling case. Do not add infrastructure that the demo cannot visibly prove.
+
+### Safety and integrity boundaries for this loop
+
+- A failed quote/page check is objective feedback; a semantic “this quote does not prove the person did the work” is not automatically objective unless grounded in explicit actor/scope text or a predeclared synthetic reference.
+- Preserve the original Muse response; never overwrite it with a repaired result.
+- A corrected status is a pipeline outcome on this dataset, not standalone Muse accuracy.
+- Keep not_found, explicit internal conflicting, and ambiguous/needs-review states distinct.
+- Never ask Muse to reveal hidden reasoning. Request only concise, structured evidence and, if useful, a short rationale; the model's chain of thought is private and not a verifier.
+- No real CVs, demographics, outside credential checks, human ratings, unsupported confidence claims, or new paid calls are part of this memo.
