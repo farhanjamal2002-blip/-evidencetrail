@@ -102,9 +102,11 @@ def main() -> int:
             need(usage.get("provider_response_id") == receipt, f"Receipt ID mismatch: {case_id}")
             need(isinstance(usage.get("input_tokens"), int), f"Input-token count missing: {case_id}")
             need(isinstance(usage.get("output_tokens"), int), f"Output-token count missing: {case_id}")
-            need(isinstance(record.get("quote_audit"), dict), f"Quote audit missing: {case_id}")
-            need(isinstance(record.get("verification_audit"), dict), f"Verification audit missing: {case_id}")
-            audit = record["quote_audit"]
+            quote_audit = record.get("quote_audit") or payload.get("quote_audit")
+            verification_audit = record.get("verification_audit") or payload.get("verification_audit")
+            need(isinstance(quote_audit, dict), f"Quote audit missing: {case_id}")
+            need(isinstance(verification_audit, dict), f"Verification audit missing: {case_id}")
+            audit = quote_audit
             need(audit.get("verified", 0) + audit.get("excluded", 0) == audit.get("proposed", 0),
                  f"Quote audit accounting mismatch: {case_id}")
             need(audit.get("verification_verified", 0) + audit.get("verification_excluded", 0)
