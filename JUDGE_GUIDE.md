@@ -9,7 +9,7 @@
 
 ## What judges should open
 
-1. **Start with the [public fictional recruiter inbox](https://evidencetrail-meta-hackathon-demo.onrender.com/demo20)** (verified live October 29) running the feature branch. One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. The genuine 20-CV recorded Muse results load automatically, distinctly labeled as a **saved real recording**, not new inference.
+1. **Start with the [isolated judge-release recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20)** (version fingerprint at [`/build-info`](https://evidencetrail-judge-rc1-2026.onrender.com/build-info); check matching release commit before judging). One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. The genuine 20-CV recorded Muse results load automatically, distinctly labeled as a **saved real recording**, not new inference.
 2. **Confirm the role checklist** and inspect the applicants in upload/received order. Search for `ET-018` (injected prompt), `ET-019` (OCR scan), or `ET-005` (related-vs-direct negotiation) to show hard cases.
 3. **Click “Explore genuine Muse-reviewed applicants.”** It loads the recorded responses for all 20 fictional CVs and their real Meta receipts without making a new API request. No login, key, credits or wait. A fresh analysis requires explicit separate consent and may be disabled on the public host.
 4. Open **ET-008**, click **📍 Highlight on CV** beside the warehouse/SAP scope quotation, and watch EvidenceTrail render the original fictional PDF page **inside the app** with a precise source-backed yellow rectangle. Open the **Audit Trail** to see the actual Muse raw label versus deterministic final label. Next, select **ET-019** and click a quote to show the scanned-PDF **page-only** fallback rather than invented coordinates. **Verified quote ≠ proven job qualification.**
@@ -66,7 +66,7 @@ This hackathon demo **does not** yet offer real ATS webhooks, durable queues for
 
 **“Not found” means not supported by the supplied document; it is not proof that a person lacks a qualification.** Real employment uses require privacy, legal and fairness evaluation beyond this demo.
 
-**Hosting:** The isolated free Render demo has intentionally disabled live Muse to avoid anonymous paid API abuse. It may cold-start; the recorded real Muse runs above are authoritative for model evidence. The older `https://evidencetrail.onrender.com` is **not** this build.
+**Hosting:** The isolated free [judge-release demo](https://evidencetrail-judge-rc1-2026.onrender.com/demo20) intentionally disables paid Muse to prevent anonymous API use. The recorded real Muse runs above provide model provenance, while `/build-info` proves the exact current deployment SHA when available. The older `evidencetrail.onrender.com` and `evidencetrail-meta-hackathon-demo.onrender.com` are separate deployments. Free hosting may cold-start.
 
 **Official event:** https://cerebralvalley.ai/e/meta-ai-developer-hackathon . The organizer's accepted-participant rules and portal control the actual required submission fields, IP/eligibility terms and deadline.
 
