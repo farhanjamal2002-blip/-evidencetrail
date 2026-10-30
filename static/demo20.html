@@ -688,7 +688,7 @@ $("coverage-summary").querySelectorAll("[data-coverage]").forEach(b=>b.addEventL
 $("next-review").onclick=()=>nextCandidate(1,true);
 $("open-benchmark").onclick=()=>{ $("inbox-layout").classList.add("hidden"); $("benchmark-panel").classList.remove("hidden"); $("benchmark-panel").scrollIntoView({behavior:"smooth",block:"start"}); };
 $("back-to-inbox").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); window.scrollTo({top:0,behavior:"smooth"}); };
-$("injection-encore").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); $("search").value="ET-018"; $("filter").value="all"; renderList(); window.scrollTo({top:0,behavior:"smooth"}); $("search").focus(); };
+$("injection-encore").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); $("search").value="ET-018"; $("filter").value="all"; pickCandidate("ET-018"); window.scrollTo({top:0,behavior:"smooth"}); $("search").focus(); };
 document.addEventListener("keydown",e=>{
  if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||e.target.closest("input,textarea,select,[contenteditable=true]"))return;
  if(e.key==="a"||e.key==="A"){e.preventDefault();toggleAudit()}
