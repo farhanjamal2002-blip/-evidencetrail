@@ -279,6 +279,14 @@ async def main():
                     assert "prompt injection scan" in text.lower() and "not_recorded" in text.lower()
                     assert "not establish that a detector fired" in text.lower()
                     assert "Treated as content." in await page.locator("#review").inner_text()
+                    assert await page.locator("#review .pill.related").count()>0
+                    related_contrast=await page.locator("#review .pill.related").first.evaluate("""el=>{
+                      const rgb=v=>v.match(/[\\d.]+/g).slice(0,3).map(Number);
+                      const lum=v=>{const c=rgb(v).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4});return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+                      const fg=lum(getComputedStyle(el).color),bg=lum(getComputedStyle(el).backgroundColor);
+                      return (Math.max(fg,bg)+.05)/(Math.min(fg,bg)+.05);
+                    }""")
+                    assert related_contrast>=4.5,related_contrast
                     geometry_response=await page.request.get("http://127.0.0.1:8016/demo20/cv/ET-018/injection-geometry")
                     assert geometry_response.status==200
                     injection_geometry=await geometry_response.json()
