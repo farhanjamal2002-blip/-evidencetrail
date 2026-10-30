@@ -82,10 +82,20 @@ async def main():
                 small=await page.evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})")
                 assert small["scroll"]<=small["client"]+3,small
                 await page.screenshot(path=str(OUT/f"inbox-{width}.png"),full_page=True)
+                if width==375:
+                    # The replay's receipt links must wrap cleanly on a phone viewport.
+                    await page.locator("#open-benchmark").click()
+                    await page.locator("#benchmark-panel").wait_for(state="visible")
+                    mobile_replay=await page.evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})")
+                    assert mobile_replay["scroll"]<=mobile_replay["client"]+3,mobile_replay
+                    await page.locator("#back-to-inbox").click()
+                    await page.locator("#benchmark-panel").wait_for(state="hidden")
                 if width==1440:
                     # The saved replay tab must be self-contained and must not make a paid call.
                     await page.locator("#open-benchmark").click()
                     await page.locator("#benchmark-panel").wait_for(state="visible")
+                    desktop_replay=await page.evaluate("({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth})")
+                    assert desktop_replay["scroll"]<=desktop_replay["client"]+3,desktop_replay
                     assert await page.locator("#benchmark-panel .split-card").count()==2
                     replay_text=await page.locator("#benchmark-panel").inner_text()
                     assert "19/24" in replay_text and "24/24" in replay_text and "25/25" in replay_text
