@@ -50,7 +50,7 @@ class ResearchPairMetricsTests(unittest.TestCase):
 
     def test_fake_or_wrong_provider_configuration_is_rejected(self):
         for key,value,substring in [
-            ("provider_mode","mock","Genuine Meta"),
+            ("provider_mode","mock","Muse mode"),
             ("provider_response_id","","Genuine Meta"),
             ("corpus_sha256","0"*64,"fingerprint"),
             ("source_quote_located","yes","boolean"),
@@ -67,7 +67,7 @@ class ResearchPairMetricsTests(unittest.TestCase):
         # not actual model outputs or a benchmark result.
         r=evaluate(self.rows(),self.corpus,self.sha)
         self.assertEqual(r["pairs"],12)
-        self.assertEqual(r["genuine_provider_records"],24)
+        self.assertEqual(r["self_reported_muse_records"],24)
         self.assertEqual(r["relation_matches_author_expectation"],12)
         self.assertEqual(r["variant_label_matches_author_reference"],24)
         self.assertEqual(r["source_quotes_located"],0)
