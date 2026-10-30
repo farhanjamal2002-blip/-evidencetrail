@@ -5445,6 +5445,33 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/build-info")
+def build_info() -> JSONResponse:
+    """Public, non-secret version fingerprint for independent judge parity checks.
+
+    Render supplies RENDER_GIT_COMMIT and RENDER_GIT_BRANCH automatically.
+    Unknown or malformed values are reported as unavailable, never guessed.
+    This route does not invoke a model, open CVs, or reveal credentials.
+    """
+    sha = (os.getenv("RENDER_GIT_COMMIT") or os.getenv("EVIDENCETRAIL_BUILD_SHA") or "").strip()
+    valid_sha = bool(re.fullmatch(r"[a-fA-F0-9]{40}", sha))
+    return JSONResponse(
+        {
+            "application": "EvidenceTrail",
+            "source_commit": sha.lower() if valid_sha else None,
+            "source_provenance_available": valid_sha,
+            "source_branch": (os.getenv("RENDER_GIT_BRANCH") or "").strip() or None,
+            "judge_demo_mode": (
+                "mock_only"
+                if MOCK_PROVIDER_ENABLED and not MUSE_PROVIDER_ENABLED
+                else "review_server_configuration"
+            ),
+            "saved_replay_route": "/demo20/recorded-muse",
+        },
+        headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow"},
+    )
+
+
 @app.get("/demo/cv.pdf")
 def demo_cv() -> Response:
     return Response(
