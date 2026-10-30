@@ -373,7 +373,7 @@ button{padding-block:10px}
             <p class="small muted">This panel is separate from Muse and pipeline labels.</p>
             <p class="decision-current">Decision: <strong id="decision-status" aria-live="polite">Not reviewed</strong></p>
             <p class="tiny muted" id="decision-choice">No decision selected.</p>
-            <div class="decision-controls"><button class="btn" type="button" data-review-state="Reviewed" aria-pressed="false">Reviewed</button><button class="btn" type="button" data-review-state="Follow-up" aria-pressed="false">Follow-up</button></div>
+            <div class="decision-controls"><button class="btn" type="button" data-review-state="Not reviewed" aria-pressed="true">Not reviewed</button><button class="btn" type="button" data-review-state="Reviewed" aria-pressed="false">Reviewed</button><button class="btn" type="button" data-review-state="Follow-up" aria-pressed="false">Follow-up</button></div>
             <label class="field-label" for="review-note">Follow-up note</label>
             <textarea id="review-note" rows="3" placeholder="Add a question or context for your review."></textarea>
             <p class="tiny muted" id="decision-saved-note" aria-live="polite">No note saved.</p>
@@ -487,7 +487,7 @@ function showScreen(id){
   document.querySelectorAll("[data-screen-link]").forEach(b=>b.classList.toggle("active",b.dataset.screenLink===id));
   document.querySelector("#crumb-name").textContent=labels[id];
   document.title="EvidenceTrail · "+labels[id];
-  window.location.hash=id;
+  if(window.location.hash!=="#"+id)window.location.hash=id;
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function toast(message){const t=document.querySelector("#toast");t.textContent=message;t.classList.add("show");window.setTimeout(()=>t.classList.remove("show"),2400);}
@@ -552,6 +552,7 @@ function restoreDecision(){
   }catch(_error){}
 }
 restoreDecision();
+window.addEventListener("hashchange",()=>{const id=window.location.hash.slice(1);if(labels[id])showScreen(id);});
 const initial=window.location.hash.slice(1);if(labels[initial])showScreen(initial);
 </script>
 </body>
