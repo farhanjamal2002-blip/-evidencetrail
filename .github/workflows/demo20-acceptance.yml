@@ -12,12 +12,24 @@ on:
     paths:
       - .github/workflows/demo20-acceptance.yml
       - static/demo20.html
+      - demo20_workflow.py
+      - pdf_quote_geometry.py
+      - semantic_review.py
+      - verification_receipt.py
+      - app.py
+      - requirements.txt
       - scripts/demo20_browser_smoke.py
   pull_request:
     branches: [main]
     paths:
       - .github/workflows/demo20-acceptance.yml
       - static/demo20.html
+      - demo20_workflow.py
+      - pdf_quote_geometry.py
+      - semantic_review.py
+      - verification_receipt.py
+      - app.py
+      - requirements.txt
       - scripts/demo20_browser_smoke.py
   workflow_dispatch:
 permissions:
