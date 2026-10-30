@@ -116,7 +116,7 @@ async def main():
                     assert cases["M02-variant"]["finding_summary"][0]["final_status"]=="not_found"
                     assert await page.locator("#m02-audit-json").get_attribute("href")=="/static/replay-artifacts/m02-case-audit.json"
                     for selector in (
-                        "#benchmark-panel a[href*='/actions/runs/41030259074']",
+                        "#benchmark-panel a[href*='/actions/runs/41030259074']:not(#m02-audit-artifact)",
                         "#benchmark-panel a[href*='/actions/runs/41031352414']",
                         "#m02-audit-artifact",
                     ):
