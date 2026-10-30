@@ -8,8 +8,17 @@ name: EvidenceTrail 20-CV recruiter inbox acceptance
 # Rerun with updated offline stress import shims for the new demo router.
 on:
   push:
-    branches: [feat/recruiter-demo20-muse-inbox]
-    paths: [.github/workflows/demo20-acceptance.yml]
+    branches: [feat/recruiter-demo20-muse-inbox, release/evidencetrail-judge-rc1-oct30]
+    paths:
+      - .github/workflows/demo20-acceptance.yml
+      - static/demo20.html
+      - scripts/demo20_browser_smoke.py
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/demo20-acceptance.yml
+      - static/demo20.html
+      - scripts/demo20_browser_smoke.py
   workflow_dispatch:
 permissions:
   contents: read
