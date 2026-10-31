@@ -38,6 +38,7 @@ jobs:
           mkdir -p artifacts/browser-smoke
           ready_log="$RUNNER_TEMP/evidencetrail-ready.log"
           no_key_log="$RUNNER_TEMP/evidencetrail-no-key.log"
+          prototype_log="$RUNNER_TEMP/evidencetrail-prototype.log"
 
           EVIDENCETRAIL_PROVIDER=muse EVIDENCETRAIL_ENABLE_MUSE=true MODEL_API_KEY=evidencetrail-ci-dummy-key MAX_CONCURRENT_ANALYSES=1 \
             python -m uvicorn app:app --host 127.0.0.1 --port 8000 >"$ready_log" 2>&1 &
@@ -45,13 +46,16 @@ jobs:
           MODEL_API_KEY= EVIDENCETRAIL_PROVIDER=muse EVIDENCETRAIL_ENABLE_MUSE=true MAX_CONCURRENT_ANALYSES=1 \
             python -m uvicorn app:app --host 127.0.0.1 --port 8001 >"$no_key_log" 2>&1 &
           no_key_pid=$!
+          MODEL_API_KEY= EVIDENCETRAIL_PROVIDER=muse EVIDENCETRAIL_ENABLE_MUSE=true MAX_CONCURRENT_ANALYSES=1 \
+            python -m uvicorn app:app --host 127.0.0.1 --port 8016 >"$prototype_log" 2>&1 &
+          prototype_pid=$!
           cleanup() {
-            kill "$ready_pid" "$no_key_pid" 2>/dev/null || true
-            wait "$ready_pid" "$no_key_pid" 2>/dev/null || true
+            kill "$ready_pid" "$no_key_pid" "$prototype_pid" 2>/dev/null || true
+            wait "$ready_pid" "$no_key_pid" "$prototype_pid" 2>/dev/null || true
           }
           trap cleanup EXIT
 
-          for port in 8000 8001; do
+          for port in 8000 8001 8016; do
             ready=false
             for attempt in $(seq 1 45); do
               if curl --fail --silent "http://127.0.0.1:$port/health" >/dev/null; then
@@ -61,7 +65,7 @@ jobs:
               sleep 1
             done
             if [ "$ready" != true ]; then
-              cat "$ready_log" "$no_key_log" > artifacts/browser-smoke/server-start-failure.txt
+              cat "$ready_log" "$no_key_log" "$prototype_log" > artifacts/browser-smoke/server-start-failure.txt
               echo "EvidenceTrail server on port $port did not become healthy."
               exit 1
             fi
@@ -74,6 +78,9 @@ jobs:
           # Actual recruiter inbox, export integrity and mobile judge workflow.
           EVIDENCETRAIL_SMOKE_URL=http://127.0.0.1:8001 python scripts/recruiter_workflow_browser_smoke.py
 
+          # Eight-screen redesign prototype, receipt overlays and phone layout; no provider key.
+          python scripts/evidencetrail_prototype_smoke.py
+
       - name: Upload browser evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -82,5 +89,6 @@ jobs:
           path: |
             artifacts/browser-smoke
             artifacts/recruiter-workflow-browser
+            artifacts/evidencetrail-prototype-browser
           if-no-files-found: warn
           retention-days: 7
