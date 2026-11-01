@@ -4,6 +4,8 @@
 
 *Recorded from the live judge site; fictional documents and saved Muse responses, with no new model calls.*
 
+[Watch the smoother MP4 walkthrough](https://evidencetrail-judge-rc1-2026.onrender.com/static/judge-path.mp4).
+
 **The quote is real. But who did the work?**
 
 EvidenceTrail is a CV evidence reviewer built with **Meta Muse Spark 1.3** for the [Meta Global AI Developer Hackathon 2026](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) · *Build for Your World*. It checks every quoted passage against the PDF page, then checks separately whether that passage credits the applicant — and leaves the decision to a person.
