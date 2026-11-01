@@ -22,7 +22,7 @@
 
 
 
-**Release provenance — current draft snapshot:** PR #28 head `5c20bd2bdf620c00aa6f66938fc3ee09ca5f6674` passed [20-CV mock acceptance 41080741919](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080741919), [judge-browser smoke 41080742057](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080742057), and [CI 41080742170](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080742170). PR #28 remains draft and is not deployed. [Public parity run 41080729614](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41080729614) reports the public host is still on SHA `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`. Check `/build-info` against the reviewed release SHA before directing judges to the hosted build. The separate eight-screen prototype in [draft PR #38](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/38) is not part of PR #28.
+**Release status:** the judge build is merged into `main` (PR #28, release commit `e529b9e`, which passed backend, browser, browser-smoke and CI checks). Confirm `/build-info` on the hosted demo shows the same commit before recording or submitting. The separate eight-screen prototype in [draft PR #38](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/38) is not part of the submitted UI.
 
 ## Source quote geometry benchmark — October 29, 2026
 

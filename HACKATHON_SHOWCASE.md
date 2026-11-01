@@ -11,12 +11,12 @@ EvidenceTrail helps recruiters compare job criteria against candidate CVs withou
 
 | If you have… | Open… | What to look for |
 | --- | --- | --- |
-| **30 seconds** | [EvidenceTrail's judge guide](https://github.com/farhanjamal2002-blip/-evidencetrail/blob/release/evidencetrail-judge-rc1-oct30/JUDGE_GUIDE.md) | The problem, Meta's role, and our independent source-verification boundary |
-| **2 minutes** | [Isolated judge-release recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20) | A 20-applicant *fictional* inbox and saved genuine Muse replay; the public host is still on the older `bd9a0a1` build, so features in draft PR #28 may not appear |
-| **5 minutes** | [Release-candidate PR #28](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/28) | The newer, **unmerged** recruiter workflow and validation links |
+| **30 seconds** | [Live demo home](https://evidencetrail-judge-rc1-2026.onrender.com/) | The core idea and the M02 side-by-side on one screen |
+| **2 minutes** | [M02 proof](https://evidencetrail-judge-rc1-2026.onrender.com/demo20?view=replay) → ET-018 card | Same words, different actor, different finding; then a CV with instructions aimed at the AI, treated as content |
+| **5 minutes** | [Judge guide](https://github.com/farhanjamal2002-blip/-evidencetrail/blob/main/JUDGE_GUIDE.md) | The problem, Meta's role, and our independent source-verification boundary |
 | **Technical review** | [Original live Meta replay receipt](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40892660190) | Genuine Meta response IDs, the fixed fictional corpus, and citation-verification provenance |
 
-**Important version note:** `main` is an earlier implementation. Cumulative PR #28 is the **unmerged judge release candidate**. Its current head `5c20bd2bdf620c00aa6f66938fc3ee09ca5f6674` passed current-head acceptance, browser smoke, and CI; the public host still reports `bd9a0a1e5a95da4dbeec3e995a9bd3089a984c6a`. The standalone redesign in draft PR #38 is not included. Do not present draft-only behavior as live; match the submitted video, repository commit, and hosted build before submission.
+**Release status:** the judge build is merged into `main` (PR #28, release commit `e529b9e`, which passed backend, browser, browser-smoke and CI checks). Confirm `/build-info` on the hosted demo shows the same commit before recording or submitting. The separate eight-screen prototype in [draft PR #38](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/38) is not part of the submitted UI.
 
 ## The problem
 
