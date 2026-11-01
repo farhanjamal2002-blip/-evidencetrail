@@ -166,6 +166,7 @@ select{max-width:100%}.result-caption{font-size:11px;font-weight:760;color:#3059
 @media(max-width:650px){.conflict-pair-grid{grid-template-columns:1fr}}
 
 .replay-open{white-space:nowrap}
+#injection-content-note{scroll-margin:96px}.encore-flash{outline:3px solid #c4651c;outline-offset:3px;transition:outline-color .6s}
 .benchmark-panel{margin-top:15px;padding:21px;border:1px solid #dce6e2;background:#fff;border-radius:14px;box-shadow:0 4px 22px rgba(24,54,49,.028)}
 .benchmark-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.benchmark-head h2{font-size:21px;margin:5px 0}.benchmark-head .intro{margin:0 0 12px}
 .benchmark-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}.benchmark-stats>div{border:1px solid #e2eae5;border-radius:10px;padding:11px;background:#f9fbfa}.benchmark-stats strong,.benchmark-stats span{display:block}.benchmark-stats strong{font-size:15px;color:#20574e}.benchmark-stats span{font-size:10px;color:#6d827e;margin-top:3px}
@@ -788,7 +789,7 @@ $("next-review").onclick=()=>nextCandidate(1,true);
 $("open-benchmark").onclick=()=>{ $("inbox-layout").classList.add("hidden"); $("benchmark-panel").classList.remove("hidden"); $("benchmark-panel").scrollIntoView({behavior:"smooth",block:"start"}); };
 try{if(new URLSearchParams(location.search).get("view")==="replay"){$("inbox-layout").classList.add("hidden");$("benchmark-panel").classList.remove("hidden");}}catch(e){}
 $("back-to-inbox").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); window.scrollTo({top:0,behavior:"smooth"}); };
-$("injection-encore").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); $("search").value="ET-018"; $("filter").value="all"; pickCandidate("ET-018"); window.scrollTo({top:0,behavior:"smooth"}); $("search").focus(); };
+$("injection-encore").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); $("search").value="ET-018"; $("filter").value="all"; pickCandidate("ET-018"); $("search").focus({preventScroll:true}); let tries=0; const goNote=()=>{const note=document.getElementById("injection-content-note"); if(note){note.scrollIntoView({behavior:"smooth",block:"center"}); note.classList.add("encore-flash"); setTimeout(()=>note.classList.remove("encore-flash"),2200);} else if(tries++<40){setTimeout(goNote,50);} else {window.scrollTo({top:0,behavior:"smooth"});}}; goNote(); };
 document.addEventListener("keydown",e=>{
  if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||e.target.closest("input,textarea,select,[contenteditable=true]"))return;
  if(e.key==="a"||e.key==="A"){e.preventDefault();toggleAudit()}
