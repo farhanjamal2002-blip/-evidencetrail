@@ -29,12 +29,13 @@ The public judge path replays saved genuine Muse responses, with provider respon
 - [M02 proof and full 12-pair table](https://evidencetrail-judge-rc1-2026.onrender.com/demo20?view=replay)
 - [Public replay summary](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/twelve-pair-summary.json)
 - [Source code](https://github.com/farhanjamal2002-blip/-evidencetrail)
-- Video URL: pending the entrant's recording and upload; follow [the three-minute script](demo/3_MINUTE_JUDGE_VIDEO.md).
+- Video URL: [finished three-minute judge film](https://evidencetrail-judge-rc1-2026.onrender.com/static/evidencetrail-judge.mp4), with synthesized narration and actual live-site footage. [Transcript and proof map](demo/3_MINUTE_JUDGE_VIDEO.md).
 - Before submission, confirm the deployed `/build-info` commit matches both `main` and the judge release branch.
 
 ## Entrant's final checklist
 
-- [ ] Record and upload the judge video from the verified deployed build.
+- [x] Create the three-minute judge film from the verified live build; publish its narration, captions, and proof map.
+- [ ] Attach the video URL or upload the film in the participant portal as required.
 - [ ] Check that the video, public repository, and live demo open while signed out.
 - [ ] Confirm selected track, eligibility, rules acceptance, and required portal fields.
 - [ ] Submit in the participant portal before the deadline and save the confirmation receipt. A merged PR is not an event submission.

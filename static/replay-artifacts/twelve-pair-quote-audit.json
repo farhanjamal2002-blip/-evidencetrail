@@ -1,0 +1,476 @@
+{
+  "schema": "evidencetrail/twelve-pair-quote-audit/v1",
+  "provenance": "Derived without model calls from the two existing saved workflow artifacts. Case response IDs and labels cross-checked against twelve-pair-summary.json. No new inference.",
+  "pairs": 12,
+  "requests": 24,
+  "raw_matches_author_key": 19,
+  "final_matches_author_key": 24,
+  "quote_grounding_totals": {
+    "proposed": 25,
+    "verified": 25,
+    "excluded": 0
+  },
+  "limitations": [
+    "Small fictional author-labelled set; not real-CV accuracy.",
+    "Quote verification confirms the supplied document passage, not real-world truth.",
+    "Provider receipts prove recorded calls occurred, not that their labels are correct."
+  ],
+  "cases": [
+    {
+      "case_id": "M02-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c0a-a8e5-7533-88ec-b02a7d8f7c9d",
+      "source_artifact_id": 12966405588,
+      "source_workflow_run_id": 41030259074,
+      "source_case_file": "cases/M02-baseline.json",
+      "source_case_sha256": "5af59b2df385dd8d49c53decf0c6bd039f48b29bf3d4ef16de19fd85aaaa77cf"
+    },
+    {
+      "case_id": "M02-variant",
+      "raw_muse": "conflicting",
+      "final": "not_found",
+      "author_key": "not_found",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c0a-b026-7153-9dfa-ac9fb569b9a4",
+      "source_artifact_id": 12966405588,
+      "source_workflow_run_id": 41030259074,
+      "source_case_file": "cases/M02-variant.json",
+      "source_case_sha256": "f407d134053f74f4899620fd07d2a43f9f9abdf2f0eadf8e27137d537fd9e490"
+    },
+    {
+      "case_id": "M07-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c0a-bdfe-77b3-9159-a039478af8ff",
+      "source_artifact_id": 12966405588,
+      "source_workflow_run_id": 41030259074,
+      "source_case_file": "cases/M07-baseline.json",
+      "source_case_sha256": "bd168f63b12cd2f756d2905831e1c95813fac10e953c47bb0fd385246862f475"
+    },
+    {
+      "case_id": "M07-variant",
+      "raw_muse": "conflicting",
+      "final": "conflicting",
+      "author_key": "conflicting",
+      "quote_grounding": {
+        "proposed": 2,
+        "verified": 2,
+        "excluded": 0,
+        "citation_count": 2,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c0a-ca70-74df-b5c3-8aeb199722f5",
+      "source_artifact_id": 12966405588,
+      "source_workflow_run_id": 41030259074,
+      "source_case_file": "cases/M07-variant.json",
+      "source_case_sha256": "5106d13dcbfb7bf0c67e460891bf9603044ad7af7d461c20c32beaa9b054d471"
+    },
+    {
+      "case_id": "M01-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-8832-76c7-8129-65063017708b",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M01-baseline.json",
+      "source_case_sha256": "2a38fec81f86fc66deb71db98aca053d51b88acbadb92c516bc2a7fb67db8d32"
+    },
+    {
+      "case_id": "M01-variant",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-8d46-70e5-b622-9f1c4ff0b1e8",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M01-variant.json",
+      "source_case_sha256": "e6f0c06b268637f250802e71a02905bb3a8de025e0aebf102928e0a6f59845b9"
+    },
+    {
+      "case_id": "M03-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-964d-7367-b6b0-49402f38a25a",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M03-baseline.json",
+      "source_case_sha256": "cdddfc24fd0d389b98194e290c3502c7ae440f4a201e4cf1707bda6b5eb4fbe7"
+    },
+    {
+      "case_id": "M03-variant",
+      "raw_muse": "conflicting",
+      "final": "not_found",
+      "author_key": "not_found",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-9e55-735b-905b-c0bba15ee5eb",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M03-variant.json",
+      "source_case_sha256": "2849aa54d0e445c6157a3f3ea69e6236bba93d0276cc8cb2de37f6f6fdd05c79"
+    },
+    {
+      "case_id": "M04-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-a4f7-76ce-8f0c-2a32189146be",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M04-baseline.json",
+      "source_case_sha256": "7952a2a8a1e01b25c26e566256d8e68759b2153737a42a407969f36a913df333"
+    },
+    {
+      "case_id": "M04-variant",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-aa98-75eb-87df-939e2c7d8ef5",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M04-variant.json",
+      "source_case_sha256": "2e7be436386c3b86ccbc9baa57e8140697c0807290cf0a2a9155c0dd11552f88"
+    },
+    {
+      "case_id": "M05-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-b1de-7275-bd8f-0ef1a4c779e6",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M05-baseline.json",
+      "source_case_sha256": "42b63d06436f56a0890cbfc08446d747712eba10a2465a1611692ef109b5e7b3"
+    },
+    {
+      "case_id": "M05-variant",
+      "raw_muse": "conflicting",
+      "final": "not_found",
+      "author_key": "not_found",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-bd20-74ea-805c-f80bc8a94a65",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M05-variant.json",
+      "source_case_sha256": "ec9bd64c5c169f59daaff350db3fad68bb81858a01bbf5dc9b86f19a9e9826a9"
+    },
+    {
+      "case_id": "M06-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-c8f9-712c-9d8d-54b1376bcdab",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M06-baseline.json",
+      "source_case_sha256": "33f3655c3e0951708c7e67c1f810faa84c397f293a3d8409adc172ae9c12eae6"
+    },
+    {
+      "case_id": "M06-variant",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-cd34-74bf-a66e-ec6fd14db303",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M06-variant.json",
+      "source_case_sha256": "bed2ec70e971cdd10b72fb12feedcfe0c60131be3e3fb0c40b9834d11327e78c"
+    },
+    {
+      "case_id": "M08-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-d3b4-7024-8e2a-c790acb1c544",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M08-baseline.json",
+      "source_case_sha256": "94c0ebc25e4be19a3eda0c36db71d3575834359f2cf830dffb9f74365776a766"
+    },
+    {
+      "case_id": "M08-variant",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-d763-773a-b187-a9010e715916",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M08-variant.json",
+      "source_case_sha256": "6787bbb90840158f1c23b3103d5b39fc5aadc4e83cdbd624be1b35a7a4ae534b"
+    },
+    {
+      "case_id": "M09-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-dd11-7746-8ac2-4c3f6fb4c0b7",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M09-baseline.json",
+      "source_case_sha256": "d378399693121ceec0a1fd35485832235a08a0120359895d4905c9bad2ef86c7"
+    },
+    {
+      "case_id": "M09-variant",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-e46d-745e-ad92-9d6b2d22e51f",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M09-variant.json",
+      "source_case_sha256": "cec21767ab02191fb25faf321f2322f539627b16132d1c74b743b26fddde6fbb"
+    },
+    {
+      "case_id": "M10-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-eabf-71ae-8110-f893238913ca",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M10-baseline.json",
+      "source_case_sha256": "2e3c6b79c52393ed267e89093d57e2ac62d69b370d939a76e141cb91c02225ac"
+    },
+    {
+      "case_id": "M10-variant",
+      "raw_muse": "conflicting",
+      "final": "not_found",
+      "author_key": "not_found",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-f569-714c-851a-5d63f55e9b1c",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M10-variant.json",
+      "source_case_sha256": "4927de841498e4c42161ec3ea10878ebfe4c8625a948fb7bca297e4893c46aba"
+    },
+    {
+      "case_id": "M11-baseline",
+      "raw_muse": "supported",
+      "final": "supported",
+      "author_key": "supported",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c12-faba-7074-b66c-17043c6516b8",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M11-baseline.json",
+      "source_case_sha256": "5e02d48cb8ed4481b469985097164339a71e75e1b3c75e031721da32be24c28a"
+    },
+    {
+      "case_id": "M11-variant",
+      "raw_muse": "not_found",
+      "final": "not_found",
+      "author_key": "not_found",
+      "quote_grounding": {
+        "proposed": 0,
+        "verified": 0,
+        "excluded": 0,
+        "citation_count": 0,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c13-0cff-7433-8b0e-5cc2f2c4084b",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M11-variant.json",
+      "source_case_sha256": "d935fc7e3ae241ed1aa9f0b5a1d6ea6e52232c3c735c5ca2752064e5847edda5"
+    },
+    {
+      "case_id": "M12-baseline",
+      "raw_muse": "conflicting",
+      "final": "not_found",
+      "author_key": "not_found",
+      "quote_grounding": {
+        "proposed": 1,
+        "verified": 1,
+        "excluded": 0,
+        "citation_count": 1,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c13-149e-760e-b439-864dd295efef",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M12-baseline.json",
+      "source_case_sha256": "519cbe558d3b868d88d49f2b0b8346896e2b5317613384a34c6874887bdd9bde"
+    },
+    {
+      "case_id": "M12-variant",
+      "raw_muse": "conflicting",
+      "final": "conflicting",
+      "author_key": "conflicting",
+      "quote_grounding": {
+        "proposed": 2,
+        "verified": 2,
+        "excluded": 0,
+        "citation_count": 2,
+        "aggregate_source_audit_consistent": true,
+        "method_detail": "not_recorded"
+      },
+      "provider_response_id": "chatcmpl-01a18c13-225e-7578-a3f4-e190ca33cc70",
+      "source_artifact_id": 12966350907,
+      "source_workflow_run_id": 41031352414,
+      "source_case_file": "cases/M12-variant.json",
+      "source_case_sha256": "5ed97cad5846e037f58fa5b796226416d3184b351942ba5937c99cf7a2d14688"
+    }
+  ]
+}
