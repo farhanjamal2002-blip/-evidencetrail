@@ -1,0 +1,23 @@
+name: keep-demo-awake
+
+# Render's free plan sleeps after ~15 idle minutes. During judging, ping the
+# public demo so a judge's first click does not wait for a cold start.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping health and judge pages
+        run: |
+          for path in /health / /demo20; do
+            curl -fsS -o /dev/null -m 90 --retry 2 --retry-delay 10 \
+              "https://evidencetrail-judge-rc1-2026.onrender.com${path}" \
+              && echo "ok ${path}" || echo "::warning::${path} did not respond"
+          done
