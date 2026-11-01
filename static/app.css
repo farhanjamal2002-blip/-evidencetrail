@@ -985,3 +985,8 @@ textarea::placeholder { color: #8793a3; }
 .proof-stats strong{display:block;font:700 22px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;color:#0f172a}
 .proof-stats span{font-size:12px;color:#475569;line-height:1.4}
 @media(max-width:900px){.proof-hero{grid-template-columns:minmax(0,1fr);gap:26px}.proof-stats{grid-template-columns:minmax(0,1fr)}.proof-checks{grid-template-columns:minmax(0,1fr)}}
+
+/* Judge handoff: the full video stays visible beside the proof entry point. */
+.judge-video-link{margin:14px 0!important;display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px}
+.judge-video-link a{display:inline-flex;align-items:center;min-height:44px;font-weight:700;color:#0f625a;text-underline-offset:4px}
+.judge-video-link span{font-size:13px;color:#475569}

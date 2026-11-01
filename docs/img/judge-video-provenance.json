@@ -25,8 +25,8 @@
     "/static/replay-artifacts/twelve-pair-summary.json",
     "/static/replay-artifacts/twelve-pair-quote-audit.json"
   ],
-  "media_sha256": "021bedc0bf3bc57ad5287fed0f36566059eec0d8e0962c406c006212674593cf",
-  "media_bytes": 16324903,
+  "media_sha256": "5f02c9f2cc162393a688998a363c4fabe277db078d6793b52c7c12f284fae3b9",
+  "media_bytes": 15783618,
   "chapters": [
     {
       "start": 0,
@@ -148,5 +148,15 @@
       "text": "Muse Spark proposes. EvidenceTrail checks the source and applicant attribution. A human decides. Saved fictional results, with no new model calls. EvidenceTrail: evidence you can inspect."
     }
   ],
-  "scope": "Fictional author-labelled saved replay. No real-CV accuracy, real-world CV truth, generalized injection protection, or fresh Muse inference claim."
+  "scope": "Fictional author-labelled saved replay. No real-CV accuracy, real-world CV truth, generalized injection protection, or fresh Muse inference claim.",
+  "judge_review_revision": {
+    "reviewed_source_commit": "d0bacc3529f932cfcebd36440f1187929398dcde",
+    "changes": [
+      "Punctuated, non-overlapping captions aligned to the original narration word boundaries",
+      "Explicit conflicting-to-not_found scope clarification at 1:20",
+      "Usable judge-path URL on the end card"
+    ],
+    "narration_unchanged": true,
+    "captured_proof_unchanged": true
+  }
 }

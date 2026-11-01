@@ -1,4 +1,5 @@
 import json
+import html
 import pathlib
 import re
 import unittest
@@ -41,6 +42,33 @@ class TwelvePairSummaryTests(unittest.TestCase):
         self.assertEqual(len(re.findall(r"<tr(?: class=\"pair-changed\")?><td", table)), 24)
         changed = sum(c["raw_muse"] != c["final"] for p in self.data["pairs"] for c in (p["baseline"], p["variant"]))
         self.assertEqual(table.count('class="pair-changed"'), changed)
+
+    def test_quote_audit_totals_and_source_context_match_existing_receipts(self):
+        audit = json.loads((ROOT / "static/replay-artifacts/twelve-pair-quote-audit.json").read_text(encoding="utf-8"))
+        cases = {c["case_id"]: c for p in self.data["pairs"] for c in (p["baseline"], p["variant"])}
+        self.assertEqual({r["case_id"] for r in audit["cases"]}, set(cases))
+        self.assertEqual(len(audit["cases"]), 24)
+        citations = []
+        for row in audit["cases"]:
+            self.assertEqual(row["provider_response_id"], cases[row["case_id"]]["provider_response_id"])
+            self.assertEqual(len(row["verified_citations"]), row["quote_grounding"]["verified"])
+            self.assertTrue(all(q["source_verified"] and q["page"] >= 1 for q in row["verified_citations"]))
+            citations.extend(row["verified_citations"])
+        self.assertEqual(len(citations), 25)
+        self.assertEqual(audit["quote_grounding_totals"], {"proposed": 25, "verified": 25, "excluded": 0})
+        changed = [(c["raw_muse"], c["final"]) for c in cases.values() if c["raw_muse"] != c["final"]]
+        self.assertEqual(changed, [("conflicting", "not_found")] * 5)
+
+    def test_table_exposes_requirements_and_additional_verified_context(self):
+        document = DEMO.read_text(encoding="utf-8")
+        audit = json.loads((ROOT / "static/replay-artifacts/twelve-pair-quote-audit.json").read_text(encoding="utf-8"))
+        self.assertEqual(document.count('class="pair-requirement"'), 24)
+        for pair in self.data["pairs"]:
+            self.assertIn("Requirement: " + html.escape(pair["requirement"]), document)
+        for row in audit["cases"]:
+            if len(row["verified_citations"]) > 1:
+                for citation in row["verified_citations"]:
+                    self.assertIn(html.escape(citation["quote"]), document)
 
 
 if __name__ == "__main__":
