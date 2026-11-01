@@ -1,0 +1,39 @@
+{
+  "source": "https://evidencetrail-judge-rc1-2026.onrender.com",
+  "build_info": {
+    "application": "EvidenceTrail",
+    "source_commit": "0edbb7c0499295cc4b3d575593932113b040c79c",
+    "source_provenance_available": true,
+    "source_branch": "release/evidencetrail-judge-rc1-oct30",
+    "judge_demo_mode": "mock_only",
+    "saved_replay_route": "/demo20/recorded-muse"
+  },
+  "new_analysis_requests": [],
+  "proof": "Unmodified live DOM screenshots; injection crop retains actual source outlines",
+  "format": "Edited launch film using exact crops of live proof, large editorial typography, and original synthesized sound; not a continuous UI recording",
+  "duration_seconds": 20,
+  "video_dimensions": [
+    1920,
+    1080
+  ],
+  "video_fps": 30,
+  "gif_dimensions": [
+    1120,
+    630
+  ],
+  "gif_frames": 216,
+  "gif_duration_seconds": 20.0,
+  "claims_source": "static/replay-artifacts/twelve-pair-summary.json",
+  "raw_matches": 19,
+  "final_matches": 24,
+  "requests": 24,
+  "pairs": 12,
+  "limitation": "Small fictional author-labelled set; not real-CV accuracy",
+  "five_corrected_cases": [
+    "M02-variant",
+    "M03-variant",
+    "M05-variant",
+    "M10-variant",
+    "M12-baseline"
+  ]
+}

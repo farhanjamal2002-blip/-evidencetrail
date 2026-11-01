@@ -1,10 +1,10 @@
 # EvidenceTrail
 
-![30-second live judge walkthrough: home, M02 proof, all 12 pairs, ET-018 and outlined source instruction](docs/img/judge-path.gif)
+![EvidenceTrail launch film: real quotes, applicant attribution, five saved corrections, and outlined source instructions](docs/img/evidencetrail-launch.gif)
 
-*Recorded from the live judge site; fictional documents and saved Muse responses, with no new model calls.*
+*20-second launch film · actual proof cropped from the live saved replay · fictional CVs · no new model calls.*
 
-[Watch the smoother MP4 walkthrough](https://evidencetrail-judge-rc1-2026.onrender.com/static/judge-path.mp4).
+**[Watch the launch film with sound](https://evidencetrail-judge-rc1-2026.onrender.com/static/evidencetrail-launch.mp4)** · [Continuous judge walkthrough](https://evidencetrail-judge-rc1-2026.onrender.com/static/judge-path.mp4) · [Film sources and scope](demo/20_SECOND_LAUNCH.md).
 
 **The quote is real. But who did the work?**
 
