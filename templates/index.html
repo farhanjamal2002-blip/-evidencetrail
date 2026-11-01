@@ -18,8 +18,8 @@
         <div id="model-pill" class="model-pill mode-{{ 'simulation' if mock_mode else ('unavailable' if muse_disabled or not model_ready else 'ready') }}" data-server-mode="{{ 'simulation' if mock_mode else ('unavailable' if muse_disabled or not model_ready else 'ready') }}" data-model-id="{{ model_id }}" aria-live="polite" aria-atomic="true" aria-label="Current analysis mode and availability">
           <span class="model-symbol" aria-hidden="true">✦</span>
           <span class="model-copy">
-            <strong id="model-status-title">{{ 'LOCAL SIMULATION' if mock_mode else ('SAVED MUSE DEMO' if muse_disabled else ('MUSE READY' if model_ready else 'SAVED MUSE DEMO')) }}</strong>
-            <small id="model-status-detail">{{ 'Deterministic heuristics · no model calls' if mock_mode else ('Live calls off · saved Muse runs only' if muse_disabled else ('Server key present · API connection not verified' if model_ready else 'Live calls off · saved Muse runs only')) }}</small>
+            <strong id="model-status-title">{{ 'SAVED MUSE DEMO' if mock_mode else ('SAVED MUSE DEMO' if muse_disabled else ('MUSE READY' if model_ready else 'SAVED MUSE DEMO')) }}</strong>
+            <small id="model-status-detail">{{ 'Saved Muse runs · new uploads use a local simulation' if mock_mode else ('Live calls off · saved Muse runs only' if muse_disabled else ('Server key present · API connection not verified' if model_ready else 'Live calls off · saved Muse runs only')) }}</small>
           </span>
           <span class="config-dot" aria-hidden="true"></span>
         </div>

@@ -34,7 +34,7 @@ function setModeBadge(mode, title, detail) {
 
 function resetModeBadge() {
   if (mockMode) {
-    setModeBadge("simulation", "LOCAL SIMULATION", "Deterministic heuristics · no model calls");
+    setModeBadge("simulation", "SAVED MUSE DEMO", "Saved Muse runs · new uploads use a local simulation");
   } else if (modelReady) {
     setModeBadge("ready", "MUSE READY", "Server key present · API connection not verified");
   } else if (museDisabled) {
