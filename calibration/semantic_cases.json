@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "disclosure": "All candidate profiles are fictional. Job criteria are paraphrased from the linked public postings for calibration and are not full reproductions.",
+  "cases": [
+    {
+      "id": "india_public_procurement_manager",
+      "industry": "public-sector procurement",
+      "level": "manager",
+      "job_source": {
+        "title": "Manager – Procurement",
+        "organization": "National e-Governance Division, Government of India",
+        "url": "https://negd.gov.in/wp-content/uploads/2025/12/Manager-Procurement-Advertisement.pdf"
+      },
+      "job_description": "Role: Manager – Procurement\nRequirements:\n1. Minimum 10 years of procurement and contract-management experience.\n2. Lead procurement contracts from RFP preparation through negotiation, award, and administration.\n3. Apply public procurement rules and systems, including GFR, CVC guidance, and GeM.\n4. CIPS, PMP, or an equivalent procurement qualification is desirable.",
+      "cv_pages": [
+        "FICTIONAL CV — Asha Example\nPROCUREMENT / CONTRACT OPERATIONS\nProfile: 12 years in procurement and contract work.\nProcurement Analyst | 2018–2024\nBuyer | 2024–2026\nPrivate-sector technology procurement. Dates are crowded beside the titles.",
+        "RFP to award: drafted RFPs, compared technical and commercial bids, negotiated vendor pricing, prepared award files, and tracked contract obligations.\nMaintained internal bid audit trails and documented corrective actions. No GFR, CVC, or GeM work is listed.\nCredentials: no CIPS or PMP credential listed."
+      ],
+      "cv_layout": [
+        "single_column",
+        "single_column"
+      ],
+      "expected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "expected": [
+        {
+          "requirement": "Minimum 10 years of procurement and contract-management experience.",
+          "evidence_type": "conflicting",
+          "gold_note": "The profile claims 12 years while the dated roles cover about eight years; do not silently choose one."
+        },
+        {
+          "requirement": "Lead procurement contracts from RFP preparation through negotiation, award, and administration.",
+          "evidence_type": "direct",
+          "gold_note": "The CV explicitly names RFPs, bid evaluation, negotiation, award files, and contract obligations."
+        },
+        {
+          "requirement": "Apply public procurement rules and systems, including GFR, CVC guidance, and GeM.",
+          "evidence_type": "related",
+          "gold_note": "Internal bid audit trails may transfer to public procurement controls; GFR, CVC, and GeM remain unproven."
+        },
+        {
+          "requirement": "CIPS, PMP, or an equivalent procurement qualification is desirable.",
+          "evidence_type": "unsupported",
+          "gold_note": "No listed professional procurement credential."
+        }
+      ]
+    },
+    {
+      "id": "uae_contract_supplier_manager",
+      "industry": "government contracting and supplier management",
+      "level": "senior specialist",
+      "job_source": {
+        "title": "Contract and supplier management opportunity, JO-00043",
+        "organization": "Tawazun Job Portal, Abu Dhabi",
+        "url": "https://jobs.tawazun.gov.ae/Opportunity/43"
+      },
+      "job_description": "Role: Contract and Supplier Management Lead\nRequirements:\n1. At least eight years of relevant contract or supplier-management experience.\n2. Manage contract amendments, renewals, service levels, claims, and disputes.\n3. Build supplier monitoring plans and corrective-action processes.\n4. Maintain reliable contract records and audit documentation.",
+      "cv_pages": [
+        "FICTIONAL CV — Omar Example\nContract ops / regional suppliers\nProfile: 9 yrs in contract + supplier management.\nVendor Coordinator | 2019–2024\nContract Administrator | 2024–2026\nEarlier note in profile: this experience covers 2017–2026.",
+        {
+          "layout": "two_column",
+          "left": "AMENDMENTS & SERVICE\nProcessed amendments and renewals; tracked service-level milestones; escalated claims; supported settlement discussions.\nMaintained contract files and audit records.",
+          "right": "SUPPLIER IMPROVEMENT\nFollowed up weekly on late deliveries. Coordinated factory corrective actions. No formal scorecard or monitoring-plan ownership described."
+        }
+      ],
+      "cv_layout": [
+        "single_column",
+        "two_column"
+      ],
+      "expected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "expected": [
+        {
+          "requirement": "At least eight years of relevant contract or supplier-management experience.",
+          "evidence_type": "conflicting",
+          "gold_note": "The summary and dated roles disagree on the length of relevant experience."
+        },
+        {
+          "requirement": "Manage contract amendments, renewals, service levels, claims, and disputes.",
+          "evidence_type": "direct",
+          "gold_note": "The CV explicitly lists amendments, renewals, service levels, claims, and settlements."
+        },
+        {
+          "requirement": "Build supplier monitoring plans and corrective-action processes.",
+          "evidence_type": "related",
+          "gold_note": "Delivery follow-up and factory corrective actions are relevant; formal monitoring-plan and scorecard ownership remain unproven."
+        },
+        {
+          "requirement": "Maintain reliable contract records and audit documentation.",
+          "evidence_type": "direct",
+          "gold_note": "The CV directly states contract-file and audit-record maintenance."
+        }
+      ]
+    },
+    {
+      "id": "semiconductor_supplier_operations_manager",
+      "industry": "semiconductor manufacturing and supplier operations",
+      "level": "manager",
+      "job_source": {
+        "title": "OSAT Supplier and Operations Manager",
+        "organization": "GlobalFoundries",
+        "url": "https://globalfoundries.wd1.myworkdayjobs.com/en-US/External/job/OSAT-Supplier-and-Operations-Manager_JR-2605085"
+      },
+      "job_description": "Role: Supplier and Operations Manager\nRequirements:\n1. Working knowledge of semiconductor assembly and test operations.\n2. Lead supplier recovery for material shortages, quality problems, delivery misses, and capacity constraints.\n3. Support supplier negotiations, pricing analysis, and commercial contract implementation.\n4. Coordinate operations across planning, production, quality, logistics, and engineering.",
+      "cv_pages": [
+        {
+          "layout": "two_column",
+          "left": "FICTIONAL CV — Leena Example\nAUTOMOTIVE COMPONENT OPERATIONS\nSupplier Operations Lead\n2018–2026\nLed recovery plans for component shortages and late deliveries. Coordinated incoming-quality investigations and worked with suppliers to restore production capacity.",
+          "right": "COMMERCIAL SUPPORT\nPrepared price comparisons + PO reports.\nCategory manager led contract negotiations.\nPlanning / production / quality / logistics teams."
+        },
+        {
+          "layout": "two_column",
+          "left": "INDUSTRY BACKGROUND\nAutomotive components only. No semiconductor, wafer-fab, assembly, or test operations listed.",
+          "right": "COORDINATION\nWorked across planning, production, quality, and logistics. No engineering coordination example listed.\nCV note: some role dates sit in a narrow right-hand column."
+        }
+      ],
+      "cv_layout": [
+        "two_column",
+        "two_column"
+      ],
+      "expected_timeline_flags": [],
+      "expected": [
+        {
+          "requirement": "Working knowledge of semiconductor assembly and test operations.",
+          "evidence_type": "unsupported",
+          "gold_note": "The CV explicitly describes automotive components and says no semiconductor operations are listed."
+        },
+        {
+          "requirement": "Lead supplier recovery for material shortages, quality problems, delivery misses, and capacity constraints.",
+          "evidence_type": "direct",
+          "gold_note": "The CV describes the same recovery tasks in automotive components."
+        },
+        {
+          "requirement": "Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+          "evidence_type": "related",
+          "gold_note": "Price comparisons and purchase-order reporting are relevant; the CV says another person led negotiations."
+        },
+        {
+          "requirement": "Coordinate operations across planning, production, quality, logistics, and engineering.",
+          "evidence_type": "related",
+          "gold_note": "Planning, production, quality, and logistics are evidenced; engineering coordination is not."
+        }
+      ]
+    },
+    {
+      "id": "nhs_procurement_director_credential_boundary",
+      "industry": "public healthcare procurement",
+      "level": "director",
+      "job_source": {
+        "title": "Procurement Director",
+        "organization": "NHS Commercial Solutions",
+        "url": "https://apps.trac.jobs/job-advert/7425380?ShowJobAdvert=&feedid=9005"
+      },
+      "job_description": "Role: Procurement Director\nRequirements:\n1. MCIPS professional qualification.\n2. MBA or MSc or other higher degree or equivalent.\n3. Expert knowledge of procurement, UK and EU legislation and regulations.",
+      "cv_pages": [
+        {
+          "layout": "two_column",
+          "left": "FICTIONAL CV — Raj Example\nPROCUREMENT AND CONTRACTS\nProcurement Director | 2016–2026\nLed sourcing and contract management across Indian public-sector health and infrastructure portfolios.\nApplied India's General Financial Rules (GFR), CVC guidance, and GeM procurement workflows; maintained tender approvals and audit files.",
+          "right": "QUALIFICATIONS\nMaster of Business Administration (MBA), 2015\nProfessional credentials: no MCIPS qualification is listed.\n\nCOMMERCIAL EXPERIENCE\nLed supplier negotiations, contract awards, and supplier performance reviews."
+        }
+      ],
+      "cv_layout": [
+        "two_column"
+      ],
+      "expected_timeline_flags": [],
+      "expected": [
+        {
+          "requirement": "MCIPS professional qualification.",
+          "evidence_type": "unsupported",
+          "gold_note": "The CV lists an MBA and states no MCIPS qualification is listed; adjacent work does not prove this named professional qualification."
+        },
+        {
+          "requirement": "MBA or MSc or other higher degree or equivalent.",
+          "evidence_type": "direct",
+          "gold_note": "The CV explicitly lists an MBA."
+        },
+        {
+          "requirement": "Expert knowledge of procurement, UK and EU legislation and regulations.",
+          "evidence_type": "related",
+          "gold_note": "The CV describes applying Indian public procurement rules; that experience may transfer, but knowledge of UK and EU law is not established."
+        }
+      ]
+    },
+    {
+      "id": "scanned_cv_procurement_credential_boundary",
+      "industry": "public healthcare procurement",
+      "level": "director",
+      "job_source": {
+        "title": "Procurement Director",
+        "organization": "NHS Commercial Solutions",
+        "url": "https://apps.trac.jobs/job-advert/7425380?ShowJobAdvert=&feedid=9005"
+      },
+      "job_description": "Role: Procurement Director\nRequirements:\n1. MCIPS professional qualification.\n2. MBA or MSc or other higher degree or equivalent.\n3. Expert knowledge of procurement, UK and EU legislation and regulations.",
+      "cv_pages": [
+        {
+          "layout": "scanned_two_column",
+          "left": "FICTIONAL CV — Sara Example\nPROCUREMENT AND CONTRACTS\nProcurement Director | 2015–2026\nLed public tendering and contract management for an Indian public health network.\nApplied General Financial Rules, CVC guidance, and GeM procurement workflows.",
+          "right": "QUALIFICATIONS\nMaster of Business Administration, 2014\nProfessional credentials: no MCIPS qualification is listed.\n\nCOMMERCIAL EXPERIENCE\nLed supplier negotiations and contract awards; maintained procurement audit files."
+        }
+      ],
+      "cv_layout": [
+        "scanned_two_column"
+      ],
+      "expected_timeline_flags": [],
+      "expected": [
+        {
+          "requirement": "MCIPS professional qualification.",
+          "evidence_type": "unsupported",
+          "gold_note": "The CV lists an MBA and states no MCIPS qualification is listed; adjacent work does not prove this named professional qualification."
+        },
+        {
+          "requirement": "MBA or MSc or other higher degree or equivalent.",
+          "evidence_type": "direct",
+          "gold_note": "The CV explicitly lists an MBA."
+        },
+        {
+          "requirement": "Expert knowledge of procurement, UK and EU legislation and regulations.",
+          "evidence_type": "related",
+          "gold_note": "The CV describes applying Indian public procurement rules; that experience may transfer, but knowledge of UK and EU law is not established."
+        }
+      ],
+      "cv_variant": "image-only two-column scan"
+    }
+  ]
+}

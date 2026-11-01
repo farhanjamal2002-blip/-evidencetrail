@@ -1,0 +1,68 @@
+name: EvidenceTrail one-time twenty-fictional-CV Muse recording
+# Second controlled recording: PDF trailer IDs fixed for stable fingerprints; no results from first run were published.
+on:
+  push:
+    branches: [feat/recruiter-demo20-muse-inbox]
+    paths: [.github/workflows/record-20-real-muse.yml]
+permissions:
+  contents: write
+concurrency:
+  group: evidencetrail-record20-once
+  cancel-in-progress: false
+jobs:
+  record-once:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    env:
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_PROCESS: '25'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '30'
+      MAX_CONCURRENT_ANALYSES: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/recruiter-demo20-muse-inbox
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install OCR and app
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Credential gate and no-duplicate replay
+        run: |
+          test -n "$MODEL_API_KEY" || (echo 'No Muse key; no requests' && exit 2)
+          test ! -f data/demo20_muse_replay.json || (echo 'Existing replay; refusing duplicate calls' && exit 2)
+      - name: One genuine structured Muse request per fictional CV, no retries
+        shell: bash
+        run: PYTHONPATH=. python scripts/record_demo20_muse_replay.py
+      - name: Publish ONLY recorded fictional Muse evidence to demo branch
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -s data/demo20_muse_replay.json ]; then
+            echo 'No verified recording to publish.'
+            exit 0
+          fi
+          python -m unittest tests.test_demo20_saved_replay -v
+          git config user.name "EvidenceTrail CI"
+          git config user.email "evidencetrail-ci@users.noreply.github.com"
+          git add data/demo20_muse_replay.json
+          git commit -m "demo: pin actual Muse replies for fictional 20-CV judge replay"
+          git push origin HEAD:feat/recruiter-demo20-muse-inbox
+      - name: Preserve real model attempt diagnostics without CV text
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-authentic-20-cv-muse-attempt
+          path: |
+            artifacts/demo20-replay/
+            data/demo20_muse_replay.json
+          retention-days: 14
+          if-no-files-found: warn

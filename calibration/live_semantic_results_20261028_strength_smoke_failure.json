@@ -1,0 +1,83 @@
+{
+  "status": "completed_with_case_failures",
+  "cases": [
+    {
+      "case_id": "india_public_procurement_manager",
+      "status": "failed",
+      "http_status": 502,
+      "reason": "Muse source adjudication failed. No result was generated; check the API key and retry."
+    }
+  ],
+  "overall": {
+    "gold_requirements": 0,
+    "aligned_findings": 0,
+    "strict_category_accuracy": null,
+    "coverage": null,
+    "false_related_transfers": 0,
+    "false_transfer_rate_on_nonrelated_gold": null,
+    "missed_related_transfers": 0,
+    "missed_transfer_rate_on_related_gold": null,
+    "related_to_direct_overclaims": 0,
+    "ambiguous_findings": 0,
+    "verified_citations": 0,
+    "proposed_citations": 0,
+    "quote_verification_rate": null,
+    "missing_gold_requirements": 0,
+    "unmatched_model_findings": 0,
+    "timeline_flags_expected": 0,
+    "timeline_flags_detected": 0,
+    "timeline_review_gated_findings": 0,
+    "direct_claims_gated_to_review": 0,
+    "timeline_flag_precision": 1.0,
+    "timeline_flag_recall": 1.0,
+    "timeline_false_positives": 0,
+    "timeline_missed_flags": 0,
+    "provider_reported_input_tokens": 0,
+    "provider_reported_output_tokens": 0,
+    "evidence_strength_distribution": {
+      "specific": 0,
+      "stated": 0,
+      "keyword_only": 0,
+      "none": 0,
+      "not_reported": 0
+    }
+  },
+  "confusion_matrix": {
+    "direct": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "related": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "unsupported": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "conflicting": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    }
+  },
+  "disclosure": "All CVs are fictional; each job description is paraphrased from a linked public posting. Scores are calibration evidence, not a hiring recommendation.",
+  "failed_cases": 1,
+  "live_requests_expected": 2,
+  "live_calls_reported_for_completed_cases": 0,
+  "live_calls_for_failed_cases": "unknown; no automatic retry was made",
+  "model": "muse-spark-1.3",
+  "run_label": "pre_fix_single_case_smoke_failed_before_case_results",
+  "usage_note": "The endpoint returned a generic 502 and did not return provider token usage; actual billed usage is unknown."
+}

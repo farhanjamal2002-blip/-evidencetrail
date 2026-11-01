@@ -1,0 +1,44 @@
+name: Conflict-pair calibration regression (no paid calls)
+on:
+  push:
+    branches: [fix/conflict-pair-semantic-gate-oct29]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  semantic-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '1000'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '1000'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Python and OCR dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Single-quote, multi-quote, timeline and five genuine cases
+        run: python -m unittest tests.test_semantic_review -v
+      - name: Entire Python regression suite
+        run: python -m unittest discover -s tests -v
+      - name: Existing JS regression suite
+        run: node --test tests/test_interview_invite.js tests/test_recruiter_decision.js tests/test_requirement_coverage.js
+      - name: Offline stress and policy scenarios
+        run: |
+          python scripts/offline_stress_test.py
+          PYTHONPATH=. python scripts/semantic_policy_benchmark_1000.py
+      - name: Syntax checks
+        run: |
+          python -m py_compile semantic_review.py app.py scripts/hard_cv_corpus.py
+          node --check static/app.js

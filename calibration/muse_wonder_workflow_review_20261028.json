@@ -1,0 +1,40 @@
+{
+  "model": "muse-wonder-1.0",
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": "response received but no parseable review was captured",
+      "usage": null,
+      "cost_usd": null,
+      "note": "A response object was received, but the first review script failed while parsing empty/non-JSON content before saving response metadata; billing/usage remains unknown."
+    },
+    {
+      "attempt": 2,
+      "status": "response received",
+      "request_id": "chatcmpl-01a18302-38af-76a2-ab7f-58f5bf2bd8a7",
+      "finish_reason": "length",
+      "usage": {
+        "completion_tokens": 1800,
+        "prompt_tokens": 8277,
+        "total_tokens": 10077,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 1798,
+          "rejected_prediction_tokens": null
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cache_write_tokens": null,
+          "cached_tokens": 0
+        }
+      },
+      "reasoning_effort": "low",
+      "cost_estimate_usd": 0.069108,
+      "cost_estimate_note": "Token estimate at saved Wonder Standard rates ($4/M input, $20/M output); provider billing is not exposed here."
+    }
+  ],
+  "successful_attempt_reasoning_effort": "low",
+  "review_parse_error": "JSONDecodeError",
+  "raw_review": ""
+}

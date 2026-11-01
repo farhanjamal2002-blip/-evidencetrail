@@ -1,0 +1,221 @@
+warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+{
+  "status": "completed",
+  "cases": [
+    {
+      "case_id": "nhs_procurement_director_credential_boundary",
+      "industry": "public healthcare procurement",
+      "level": "director",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 3,
+      "aligned_findings": 3,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 1,
+      "strict_category_accuracy": 1.0,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "ambiguous_aligned_findings": 1,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "adjudicated": "unsupported",
+          "adjudication_reason": null,
+          "predicted_strength": "none",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "stated",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "result_finding_index": 4,
+          "expected": "related",
+          "predicted": "related",
+          "adjudicated": "related",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 2,
+        "stated": 1,
+        "keyword_only": 0,
+        "none": 1,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 3,
+      "verification_quote_rate": 1.0,
+      "rejected_quote_details": [],
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "timeline_adjudicated_findings": 0,
+      "rejected_quote_details_count": 0,
+      "adjudicated_item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "adjudicated": "unsupported",
+          "adjudication_reason": null,
+          "predicted_strength": "none",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "stated",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "result_finding_index": 4,
+          "expected": "related",
+          "predicted": "related",
+          "adjudicated": "related",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "provider_reported_input_tokens": 5851,
+      "provider_reported_output_tokens": 7073
+    }
+  ],
+  "overall": {
+    "gold_requirements": 3,
+    "aligned_findings": 3,
+    "strict_category_accuracy": 1.0,
+    "deterministic_adjudicated_accuracy": 1.0,
+    "coverage": 1.0,
+    "false_related_transfers": 0,
+    "false_transfer_rate_on_nonrelated_gold": 0.0,
+    "missed_related_transfers": 0,
+    "missed_transfer_rate_on_related_gold": 0.0,
+    "related_to_direct_overclaims": 0,
+    "ambiguous_findings": 1,
+    "verified_citations": 3,
+    "proposed_citations": 3,
+    "rejected_quote_count": 0,
+    "quote_verification_rate": 1.0,
+    "missing_gold_requirements": 0,
+    "unmatched_model_findings": 1,
+    "timeline_flags_expected": 0,
+    "timeline_flags_detected": 0,
+    "timeline_review_gated_findings": 0,
+    "direct_claims_gated_to_review": 0,
+    "timeline_adjudicated_findings": 0,
+    "timeline_flag_precision": 1.0,
+    "timeline_flag_recall": 1.0,
+    "timeline_false_positives": 0,
+    "timeline_missed_flags": 0,
+    "provider_reported_input_tokens": 5851,
+    "provider_reported_output_tokens": 7073,
+    "evidence_strength_distribution": {
+      "specific": 2,
+      "stated": 1,
+      "keyword_only": 0,
+      "none": 1,
+      "not_reported": 0
+    }
+  },
+  "confusion_matrix": {
+    "direct": {
+      "direct": 1,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "related": {
+      "direct": 0,
+      "related": 1,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "unsupported": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 1,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "conflicting": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    }
+  },
+  "deterministic_adjudicated_confusion_matrix": {
+    "direct": {
+      "direct": 1,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "related": {
+      "direct": 0,
+      "related": 1,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "unsupported": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 1,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "conflicting": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    }
+  },
+  "disclosure": "All CVs are fictional; each job description is paraphrased from a linked public posting. Rejected quote snippets are retained with cited page and reason for calibration review. Scores are calibration evidence, not a hiring recommendation.",
+  "failed_cases": 0,
+  "live_requests_expected": 2,
+  "live_calls_reported_for_completed_cases": 2,
+  "live_calls_for_failed_cases": "unknown; no automatic retry was made",
+  "model": "muse-wonder-1.0",
+  "reasoning_effort": "model default; parameter omitted",
+  "mapping_prompt_sha256": "ba3a3d6624367c5ee2bd64d6d8f9e20dc3d31bd39dcdaa39ca9f8c2eefcf0df9",
+  "verification_prompt_sha256": "1ab39f71e695310ad88058447a6d05471e06070f0e2950ad57a07f8bc5699e28",
+  "estimated_standard_token_cost_usd": 0.164864,
+  "cost_estimate_note": "Token-based estimate at full Standard input/output rates for the selected model. It does not apply cached-input discounts and is not a provider billing record.",
+  "automatic_retries": 0,
+  "report_contains_cv_text": false,
+  "report_contains_accepted_quote_text": false,
+  "report_contains_rejected_quote_text": true
+}

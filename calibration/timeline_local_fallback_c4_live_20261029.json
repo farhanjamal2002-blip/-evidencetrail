@@ -1,0 +1,114 @@
+{
+  "status": "completed",
+  "run_at_utc": "2026-10-29T05:18:06.180011+00:00",
+  "case_id": "unified_c4_date_overlap",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "low",
+  "expected_live_requests": 1,
+  "live_calls_reported": 1,
+  "automatic_retries": 0,
+  "elapsed_seconds": 13.069,
+  "expected_timeline_flags": [
+    "employment_date_overlap"
+  ],
+  "detected_timeline_flags": [
+    "employment_date_overlap"
+  ],
+  "timeline_flag_details": [
+    {
+      "type": "employment_date_overlap",
+      "episodes": [
+        "E1",
+        "E2"
+      ],
+      "roles": [
+        "Role not confirmed",
+        "Role not confirmed"
+      ],
+      "overlap_months": 36,
+      "review_note": "These dated roles overlap by at least three months. Confirm whether they were concurrent, part-time, or a date-entry issue."
+    }
+  ],
+  "timeline_episodes": [
+    {
+      "id": "E1",
+      "source": "muse_proposal",
+      "role": "Role not confirmed",
+      "company": "",
+      "start_date": "Jan 2018",
+      "end_date": "Dec 2023",
+      "precision": "month_or_better",
+      "date_quote": "Jan 2018-Dec 2023",
+      "date_page": 1,
+      "scope_quote": "compared supplier prices, supported commercial negotiations, maintained contract records, and coordinated implementation with manufacturing partners.",
+      "scope_page": 1,
+      "experience_areas": [
+        "contract records maintenance"
+      ],
+      "duration_months": 72
+    },
+    {
+      "id": "E2",
+      "source": "muse_proposal",
+      "role": "Role not confirmed",
+      "company": "",
+      "start_date": "Jan 2021",
+      "end_date": "Dec 2026",
+      "precision": "month_or_better",
+      "date_quote": "Jan 2021-Dec 2026",
+      "date_page": 1,
+      "scope_quote": "compared supplier prices, supported commercial negotiations, maintained contract records, and coordinated implementation with manufacturing partners.",
+      "scope_page": 1,
+      "experience_areas": [
+        "contract records maintenance"
+      ],
+      "duration_months": 72
+    }
+  ],
+  "muse_label_accuracy": 0.5,
+  "adjudicated_label_accuracy": 1.0,
+  "item_labels": [
+    {
+      "gold_item": 1,
+      "result_finding_index": 1,
+      "expected": "conflicting",
+      "predicted": "related",
+      "adjudicated": "conflicting",
+      "adjudication_reason": "timeline_gate",
+      "predicted_strength": "stated",
+      "certainty": "ambiguous"
+    },
+    {
+      "gold_item": 2,
+      "result_finding_index": 2,
+      "expected": "direct",
+      "predicted": "direct",
+      "adjudicated": "direct",
+      "adjudication_reason": null,
+      "predicted_strength": "specific",
+      "certainty": "clear"
+    }
+  ],
+  "performance_ms": {
+    "muse_api_ms": 12927,
+    "timeline_audit_ms": 3,
+    "pdf_extract_and_ocr_ms": 24,
+    "page_preview_render_ms": 31,
+    "pipeline_ms": 13043
+  },
+  "usage": {
+    "input_tokens": 2463,
+    "output_tokens": 2266,
+    "cached_input_tokens": 2417,
+    "reasoning_tokens": 1625,
+    "api_latency_ms": 12927,
+    "client_setup_ms": 40,
+    "prompt_build_ms": 0,
+    "response_decode_ms": 0,
+    "response_validation_ms": 0,
+    "cv_text_characters": 453,
+    "cv_page_count": 1,
+    "cv_ocr_page_count": 0
+  },
+  "disclosure": "Single fictional CV live confirmation; one request, no retry. Timeline dates were extracted and checked locally; flags are for recruiter clarification, not an accusation."
+}

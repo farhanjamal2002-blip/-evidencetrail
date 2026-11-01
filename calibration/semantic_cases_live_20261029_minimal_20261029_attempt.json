@@ -1,0 +1,25 @@
+{
+  "status": "completed",
+  "started_at_utc": "2026-10-29T05:41:55.066831+00:00",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "minimal",
+  "fixture": "calibration/semantic_cases.json",
+  "fixture_sha256": "2f4fbd447c3c8e56c42df2eb1a7971fd39d5369b1fd630bb6665133065761fc4",
+  "system_prompt_sha256": "dd0999d1daf970b49e50065176cd81c50ecea81db180bc4f18625d8759f4cb4d",
+  "expected_live_requests": 5,
+  "automatic_retries": 0,
+  "case_ids": [
+    "india_public_procurement_manager",
+    "uae_contract_supplier_manager",
+    "semiconductor_supplier_operations_manager",
+    "nhs_procurement_director_credential_boundary",
+    "scanned_cv_procurement_credential_boundary"
+  ],
+  "api_key_saved": false,
+  "warning": "A started run may incur provider usage even if the runner does not receive a final report. No automatic retry is authorized.",
+  "finished_at_utc": null,
+  "live_calls_reported": 5,
+  "estimated_standard_token_cost_usd": 0.0474,
+  "result_file": "calibration/semantic_cases_live_20261029_minimal_20261029.json"
+}

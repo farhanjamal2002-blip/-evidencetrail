@@ -1,0 +1,31 @@
+{
+  "run_id": "semantic_cases_live_20261028_wonder1",
+  "status": "interrupted_without_result",
+  "started_at_utc": "2026-10-28T14:09:07.684950+00:00",
+  "provider": "muse",
+  "model": "muse-wonder-1.0",
+  "reasoning_effort": "omitted; model default",
+  "prompt_profile": "named_system_transfer_boundary_v2",
+  "dataset": "calibration/semantic_cases.json",
+  "dataset_sha256": "2f4fbd447c3c8e56c42df2eb1a7971fd39d5369b1fd630bb6665133065761fc4",
+  "selected_cases": [
+    "india_public_procurement_manager",
+    "uae_contract_supplier_manager",
+    "semiconductor_supplier_operations_manager",
+    "nhs_procurement_director_credential_boundary",
+    "scanned_cv_procurement_credential_boundary"
+  ],
+  "expected_live_requests": 10,
+  "automatic_retries": 0,
+  "estimate_at_prior_spark_token_volume_usd": 0.987084,
+  "estimate_note": "Estimate at current Wonder Standard rates using the previous Spark run token volume; not a spend cap or provider billing record.",
+  "report_contains_cv_text": false,
+  "report_contains_accepted_quote_text": false,
+  "report_contains_rejected_quote_text": true,
+  "finished_at_utc": "2026-10-28T14:15:08.929659+00:00",
+  "termination": "operator interrupted the local evaluator after approximately four minutes with no candidate output",
+  "process_exit_code": 130,
+  "actual_provider_request_count": "unknown; no automatic retries were configured",
+  "provider_usage": "unknown; check Meta usage dashboard before another attempt",
+  "model_results_saved": false
+}

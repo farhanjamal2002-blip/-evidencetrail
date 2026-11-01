@@ -1,0 +1,486 @@
+{
+  "status": "completed",
+  "run_at_utc": "2026-10-29T05:25:38.397447+00:00",
+  "demo_id": "unified_supplier_operations_demo_20261028_v2",
+  "rubric_version": "demo-v2",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "medium",
+  "analysis_prompt_sha256": "7d88bf9434c992945efe1f6ff491194d51e8c56eecff29966cdd4631fa9bed5c",
+  "expected_live_requests": 5,
+  "live_calls_reported": 5,
+  "automatic_retries": 0,
+  "elapsed_seconds": 29.884,
+  "overall": {
+    "expected_labels": 10,
+    "raw_label_matches": 9,
+    "final_label_matches": 10,
+    "expected_strength_labels": 10,
+    "strength_matches": 9,
+    "verified_quotes": 16,
+    "proposed_quotes": 16,
+    "related_to_direct_overclaims": 0,
+    "expected_timeline_flags": 1,
+    "timeline_true_positives": 1,
+    "timeline_false_positives": 0,
+    "timeline_false_negatives": 0,
+    "input_tokens": 12961,
+    "output_tokens": 21696,
+    "cached_input_tokens": 12213,
+    "reasoning_tokens": 18823,
+    "analysis_calls": 5,
+    "failed_candidates": 0
+  },
+  "strict_category_accuracy": 0.9,
+  "adjudicated_category_accuracy": 1.0,
+  "strength_label_accuracy": 0.9,
+  "quote_verification_rate": 1.0,
+  "estimated_standard_token_cost_usd": 0.10840925,
+  "candidates": [
+    {
+      "candidate_id": "C1",
+      "fixture_id": "unified_c1_specific",
+      "status": "completed",
+      "strict_category_accuracy": 1.0,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "strength_labels": [
+        {
+          "gold_item": 1,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 2
+        }
+      ],
+      "quote_verification": {
+        "verified": 3,
+        "proposed": 3,
+        "rejected_quote_details": []
+      },
+      "timeline": {
+        "flags": [],
+        "verified_episode_count": 1,
+        "dated_employment_months": 108
+      },
+      "timing_ms": {
+        "muse_api_ms": 18041,
+        "pdf_extract_and_ocr_ms": 98,
+        "pdf_ocr_execution_ms": null,
+        "timeline_audit_ms": 3,
+        "page_preview_render_ms": 17,
+        "pipeline_ms": 18212
+      },
+      "usage": {
+        "input_tokens": 2589,
+        "output_tokens": 3495,
+        "cached_input_tokens": 2417,
+        "reasoning_tokens": 2993,
+        "api_latency_ms": 18041
+      },
+      "findings": [
+        {
+          "muse_evidence_type": "direct",
+          "final_evidence_type": "direct",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "status": "supported"
+        },
+        {
+          "muse_evidence_type": "direct",
+          "final_evidence_type": "direct",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "status": "supported"
+        }
+      ]
+    },
+    {
+      "candidate_id": "C2",
+      "fixture_id": "unified_c2_keyword_only",
+      "status": "completed",
+      "strict_category_accuracy": 1.0,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "related",
+          "predicted": "related",
+          "adjudicated": "related",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "adjudicated": "unsupported",
+          "adjudication_reason": null,
+          "predicted_strength": "none",
+          "certainty": "clear"
+        }
+      ],
+      "strength_labels": [
+        {
+          "gold_item": 1,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "keyword_only",
+          "predicted": "none",
+          "matched": false,
+          "finding_index": 2
+        }
+      ],
+      "quote_verification": {
+        "verified": 2,
+        "proposed": 2,
+        "rejected_quote_details": []
+      },
+      "timeline": {
+        "flags": [],
+        "verified_episode_count": 1,
+        "dated_employment_months": 60
+      },
+      "timing_ms": {
+        "muse_api_ms": 19301,
+        "pdf_extract_and_ocr_ms": 98,
+        "pdf_ocr_execution_ms": null,
+        "timeline_audit_ms": 1,
+        "page_preview_render_ms": 11,
+        "pipeline_ms": 19461
+      },
+      "usage": {
+        "input_tokens": 2558,
+        "output_tokens": 4071,
+        "cached_input_tokens": 2417,
+        "reasoning_tokens": 3516,
+        "api_latency_ms": 19301
+      },
+      "findings": [
+        {
+          "muse_evidence_type": "related",
+          "final_evidence_type": "related",
+          "evidence_type": "related",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "status": "supported"
+        },
+        {
+          "muse_evidence_type": "unsupported",
+          "final_evidence_type": "unsupported",
+          "evidence_type": "unsupported",
+          "evidence_strength": "none",
+          "certainty": "clear",
+          "status": "not_found"
+        }
+      ]
+    },
+    {
+      "candidate_id": "C3",
+      "fixture_id": "unified_c3_career_switcher",
+      "status": "completed",
+      "strict_category_accuracy": 1.0,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "related",
+          "predicted": "related",
+          "adjudicated": "related",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "related",
+          "predicted": "related",
+          "adjudicated": "related",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "strength_labels": [
+        {
+          "gold_item": 1,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 2
+        }
+      ],
+      "quote_verification": {
+        "verified": 4,
+        "proposed": 4,
+        "rejected_quote_details": []
+      },
+      "timeline": {
+        "flags": [],
+        "verified_episode_count": 1,
+        "dated_employment_months": 96
+      },
+      "timing_ms": {
+        "muse_api_ms": 29680,
+        "pdf_extract_and_ocr_ms": 98,
+        "pdf_ocr_execution_ms": null,
+        "timeline_audit_ms": 2,
+        "page_preview_render_ms": 17,
+        "pipeline_ms": 29851
+      },
+      "usage": {
+        "input_tokens": 2598,
+        "output_tokens": 6869,
+        "cached_input_tokens": 2417,
+        "reasoning_tokens": 6146,
+        "api_latency_ms": 29680
+      },
+      "findings": [
+        {
+          "muse_evidence_type": "related",
+          "final_evidence_type": "related",
+          "evidence_type": "related",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "status": "supported"
+        },
+        {
+          "muse_evidence_type": "related",
+          "final_evidence_type": "related",
+          "evidence_type": "related",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "status": "supported"
+        }
+      ]
+    },
+    {
+      "candidate_id": "C4",
+      "fixture_id": "unified_c4_date_overlap",
+      "status": "completed",
+      "strict_category_accuracy": 0.5,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "adjudicated": "conflicting",
+          "adjudication_reason": "timeline_gate",
+          "predicted_strength": "specific",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "strength_labels": [
+        {
+          "gold_item": 1,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 2
+        }
+      ],
+      "quote_verification": {
+        "verified": 3,
+        "proposed": 3,
+        "rejected_quote_details": []
+      },
+      "timeline": {
+        "flags": [
+          "employment_date_overlap"
+        ],
+        "verified_episode_count": 2,
+        "dated_employment_months": 108
+      },
+      "timing_ms": {
+        "muse_api_ms": 18752,
+        "pdf_extract_and_ocr_ms": 98,
+        "pdf_ocr_execution_ms": null,
+        "timeline_audit_ms": 1,
+        "page_preview_render_ms": 13,
+        "pipeline_ms": 18925
+      },
+      "usage": {
+        "input_tokens": 2588,
+        "output_tokens": 3885,
+        "cached_input_tokens": 2417,
+        "reasoning_tokens": 3275,
+        "api_latency_ms": 18752
+      },
+      "findings": [
+        {
+          "muse_evidence_type": "direct",
+          "final_evidence_type": "conflicting",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "ambiguous",
+          "status": "supported"
+        },
+        {
+          "muse_evidence_type": "direct",
+          "final_evidence_type": "direct",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "status": "supported"
+        }
+      ]
+    },
+    {
+      "candidate_id": "C5",
+      "fixture_id": "unified_c5_scanned_two_column",
+      "status": "completed",
+      "strict_category_accuracy": 1.0,
+      "deterministic_adjudicated_accuracy": 1.0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "result_finding_index": 1,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "result_finding_index": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "adjudicated": "direct",
+          "adjudication_reason": null,
+          "predicted_strength": "specific",
+          "certainty": "clear"
+        }
+      ],
+      "strength_labels": [
+        {
+          "gold_item": 1,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 1
+        },
+        {
+          "gold_item": 2,
+          "expected": "specific",
+          "predicted": "specific",
+          "matched": true,
+          "finding_index": 2
+        }
+      ],
+      "quote_verification": {
+        "verified": 4,
+        "proposed": 4,
+        "rejected_quote_details": []
+      },
+      "timeline": {
+        "flags": [],
+        "verified_episode_count": 1,
+        "dated_employment_months": 84
+      },
+      "timing_ms": {
+        "muse_api_ms": 17735,
+        "pdf_extract_and_ocr_ms": 2087,
+        "pdf_ocr_execution_ms": 2057,
+        "timeline_audit_ms": 1,
+        "page_preview_render_ms": 23,
+        "pipeline_ms": 19852
+      },
+      "usage": {
+        "input_tokens": 2628,
+        "output_tokens": 3376,
+        "cached_input_tokens": 2545,
+        "reasoning_tokens": 2893,
+        "api_latency_ms": 17735
+      },
+      "findings": [
+        {
+          "muse_evidence_type": "direct",
+          "final_evidence_type": "direct",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "status": "supported"
+        },
+        {
+          "muse_evidence_type": "direct",
+          "final_evidence_type": "direct",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "certainty": "clear",
+          "status": "supported"
+        }
+      ]
+    }
+  ],
+  "disclosure": "Five fictional CVs against one locked JD. One live Muse request per CV, no retries. Metrics are for this fixed demo set and are not generalized accuracy claims. No CV text or accepted quote text is stored.",
+  "timeline_flag_precision": 1.0,
+  "timeline_flag_recall": 1.0
+}

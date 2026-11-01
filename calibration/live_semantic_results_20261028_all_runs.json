@@ -1,0 +1,657 @@
+{
+  "schema_version": 1,
+  "run_date_utc": "2026-10-28",
+  "run_label": "all_live_batches_through_final_five_case_run",
+  "status": "completed",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "batches": [
+    {
+      "run_label": "post_local_fixes",
+      "report": "live_semantic_results_20261028_iter2.json",
+      "live_requests_expected": 6,
+      "live_calls_reported": 6
+    },
+    {
+      "run_label": "targeted_hard_credential_and_transfer_boundary",
+      "report": "live_semantic_results_20261028_iter3_credential_boundary.json",
+      "live_requests_expected": 2,
+      "live_calls_reported": 2
+    },
+    {
+      "run_label": "image_only_scanned_cv_ocr_semantics",
+      "report": "live_semantic_results_20261028_iter4_scanned.json",
+      "live_requests_expected": 2,
+      "live_calls_reported": 2
+    },
+    {
+      "run_label": "final_frozen_five_case_live_calibration",
+      "report": "live_semantic_results_20261028_final.json",
+      "live_requests_expected": 10,
+      "live_calls_reported": 10
+    }
+  ],
+  "live_requests_expected": 20,
+  "live_calls_reported": 20,
+  "automatic_retries": 0,
+  "report_contains_cv_or_model_quotes": false,
+  "case_evaluations": 10,
+  "unique_fictional_cv_fixtures": 5,
+  "unique_public_job_sources": 4,
+  "cases": [
+    {
+      "case_id": "india_public_procurement_manager",
+      "industry": "public-sector procurement",
+      "level": "manager",
+      "gold_requirements": 4,
+      "aligned_findings": 4,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 0.75,
+      "ambiguous_aligned_findings": 2,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 4,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 5,
+      "verification_citations_proposed": 5,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "detected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 1,
+      "direct_claims_gated_to_review": 1,
+      "provider_reported_input_tokens": 8692,
+      "provider_reported_output_tokens": 10406,
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "job_source_url": "https://negd.gov.in/wp-content/uploads/2025/12/Manager-Procurement-Advertisement.pdf",
+      "verification_citations_excluded": 0
+    },
+    {
+      "case_id": "uae_contract_supplier_manager",
+      "industry": "government contracting and supplier management",
+      "level": "senior specialist",
+      "gold_requirements": 4,
+      "aligned_findings": 4,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 0.75,
+      "ambiguous_aligned_findings": 2,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 4,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 7,
+      "verification_citations_proposed": 7,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "detected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 1,
+      "direct_claims_gated_to_review": 1,
+      "provider_reported_input_tokens": 8731,
+      "provider_reported_output_tokens": 9222,
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "job_source_url": "https://jobs.tawazun.gov.ae/Opportunity/43",
+      "verification_citations_excluded": 0
+    },
+    {
+      "case_id": "semiconductor_supplier_operations_manager",
+      "industry": "semiconductor manufacturing and supplier operations",
+      "level": "manager",
+      "gold_requirements": 4,
+      "aligned_findings": 4,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 4,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 4,
+      "verification_citations_proposed": 4,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "provider_reported_input_tokens": 8814,
+      "provider_reported_output_tokens": 10250,
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "job_source_url": "https://globalfoundries.wd1.myworkdayjobs.com/en-US/External/job/OSAT-Supplier-and-Operations-Manager_JR-2605085",
+      "verification_citations_excluded": 0
+    },
+    {
+      "case_id": "nhs_procurement_director_credential_boundary",
+      "industry": "public healthcare procurement",
+      "level": "director",
+      "gold_requirements": 3,
+      "aligned_findings": 3,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 3,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "provider_reported_input_tokens": 5493,
+      "provider_reported_output_tokens": 6897,
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "job_source_url": "https://apps.trac.jobs/job-advert/7425380?ShowJobAdvert=&feedid=9005",
+      "verification_citations_excluded": 0
+    },
+    {
+      "case_id": "scanned_cv_procurement_credential_boundary",
+      "industry": "scanned public procurement CV review",
+      "level": "director",
+      "ocr_used": true,
+      "ocr_pages": [
+        1
+      ],
+      "gold_requirements": 3,
+      "aligned_findings": 3,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 3,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "provider_reported_input_tokens": 5976,
+      "provider_reported_output_tokens": 14322,
+      "cv_variant": "image-only two-column scan",
+      "job_source_url": "https://apps.trac.jobs/job-advert/7425380?ShowJobAdvert=&feedid=9005",
+      "verification_citations_excluded": 0
+    },
+    {
+      "case_id": "india_public_procurement_manager",
+      "industry": "public-sector procurement",
+      "level": "manager",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 4,
+      "aligned_findings": 4,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 0.75,
+      "ambiguous_aligned_findings": 2,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 4,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 4,
+      "verification_quote_rate": 0.75,
+      "expected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "detected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 1,
+      "direct_claims_gated_to_review": 1,
+      "provider_reported_input_tokens": 8550,
+      "provider_reported_output_tokens": 12081,
+      "job_source_url": "https://negd.gov.in/wp-content/uploads/2025/12/Manager-Procurement-Advertisement.pdf",
+      "verification_citations_excluded": 1
+    },
+    {
+      "case_id": "uae_contract_supplier_manager",
+      "industry": "government contracting and supplier management",
+      "level": "senior specialist",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 4,
+      "aligned_findings": 4,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 0.75,
+      "ambiguous_aligned_findings": 1,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 4,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 7,
+      "verification_citations_proposed": 7,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "detected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 1,
+      "direct_claims_gated_to_review": 1,
+      "provider_reported_input_tokens": 8829,
+      "provider_reported_output_tokens": 7651,
+      "job_source_url": "https://jobs.tawazun.gov.ae/Opportunity/43",
+      "verification_citations_excluded": 0
+    },
+    {
+      "case_id": "semiconductor_supplier_operations_manager",
+      "industry": "semiconductor manufacturing and supplier operations",
+      "level": "manager",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 4,
+      "aligned_findings": 4,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 4,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 3,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "provider_reported_input_tokens": 8687,
+      "provider_reported_output_tokens": 8901,
+      "job_source_url": "https://globalfoundries.wd1.myworkdayjobs.com/en-US/External/job/OSAT-Supplier-and-Operations-Manager_JR-2605085",
+      "verification_citations_excluded": 0
+    },
+    {
+      "case_id": "nhs_procurement_director_credential_boundary",
+      "industry": "public healthcare procurement",
+      "level": "director",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 3,
+      "aligned_findings": 3,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 3,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "provider_reported_input_tokens": 5493,
+      "provider_reported_output_tokens": 6468,
+      "job_source_url": "https://apps.trac.jobs/job-advert/7425380?ShowJobAdvert=&feedid=9005",
+      "verification_citations_excluded": 0
+    },
+    {
+      "case_id": "scanned_cv_procurement_credential_boundary",
+      "industry": "public healthcare procurement",
+      "level": "director",
+      "cv_variant": "image-only two-column scan",
+      "ocr_used": true,
+      "ocr_pages": [
+        1
+      ],
+      "gold_requirements": 3,
+      "aligned_findings": 3,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        }
+      ],
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 3,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "provider_reported_input_tokens": 5976,
+      "provider_reported_output_tokens": 6221,
+      "job_source_url": "https://apps.trac.jobs/job-advert/7425380?ShowJobAdvert=&feedid=9005",
+      "verification_citations_excluded": 0
+    }
+  ],
+  "overall": {
+    "gold_requirements": 36,
+    "aligned_findings": 36,
+    "strict_category_accuracy": 0.8889,
+    "coverage": 1.0,
+    "false_related_transfers": 0,
+    "false_transfer_rate_on_nonrelated_gold": 0.0,
+    "missed_related_transfers": 0,
+    "missed_transfer_rate_on_related_gold": 0.0,
+    "related_to_direct_overclaims": 0,
+    "ambiguous_findings": 7,
+    "verified_citations": 41,
+    "proposed_citations": 42,
+    "quote_verification_rate": 0.9762,
+    "excluded_citation_proposals": 1,
+    "timeline_flags_expected": 4,
+    "timeline_flags_detected": 4,
+    "timeline_review_gated_findings": 4,
+    "direct_claims_gated_to_review": 4,
+    "timeline_flag_precision": 1.0,
+    "timeline_flag_recall": 1.0,
+    "ocr_case_evaluations": 2,
+    "provider_reported_input_tokens": 75241,
+    "provider_reported_output_tokens": 92419
+  },
+  "confusion_matrix": {
+    "direct": {
+      "direct": 12,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "related": {
+      "direct": 0,
+      "related": 12,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "unsupported": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 8,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "conflicting": {
+      "direct": 4,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    }
+  },
+  "disclosure": "Aggregate of four separate live batches. There are five unique fictional CV fixtures; the final batch reruns all five. Expected labels are preserved across runs. Calibration counts are not objective truth or candidate recommendations.",
+  "estimated_standard_token_cost_usd": 0.486832,
+  "cost_estimate_note": "Sum of provider-reported input/output tokens at published Standard Muse Spark rates; assumes no cached-input discounts and is not a billing record."
+}

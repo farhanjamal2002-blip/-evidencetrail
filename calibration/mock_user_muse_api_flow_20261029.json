@@ -1,0 +1,286 @@
+{
+  "status": "completed",
+  "run_at_utc": "2026-10-29T06:18:57Z",
+  "scenario": "Mock recruiter interaction using the app manifest, local JD preflight, five PDF downloads, and the browser-equivalent per-CV /api/analyze endpoint.",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "minimal",
+  "automatic_retries": 0,
+  "preflight": {
+    "homepage_status": 200,
+    "homepage_ms": 65,
+    "analysis_button_text_present": true,
+    "manifest_status": 200,
+    "manifest_ms": 5,
+    "rubric_version": "demo-v3",
+    "candidate_count": 5,
+    "jd_characters": 428,
+    "role_audit_status": 200,
+    "role_audit_ms": 6,
+    "role_audit_model_calls": 0,
+    "all_fixture_pdfs_valid": true,
+    "pdf_download_ms": 17
+  },
+  "analysis": {
+    "expected_requests": 5,
+    "completed_requests": 5,
+    "first_result_ms": 10953,
+    "all_results_ms": 11957,
+    "records": [
+      {
+        "candidate_id": "C1",
+        "status": 200,
+        "elapsed_ms": 10952,
+        "api_ms": 10758,
+        "pipeline_ms": 10941,
+        "extract_ocr_ms": 114,
+        "ocr_execution_ms": 0,
+        "preview_ms": 10,
+        "report_ms": 0,
+        "output_tokens": 1205,
+        "input_tokens": 2605,
+        "reasoning_tokens": 707,
+        "content_encoding": "gzip",
+        "compressed_content_length": "35331",
+        "response_bytes_decoded": 88701,
+        "provider_mode": "muse",
+        "model": "muse-spark-1.3",
+        "model_calls": 1,
+        "quote_verified": 4,
+        "quote_proposed": 4,
+        "quote_excluded": 0,
+        "timeline_flag_count": 0,
+        "ocr_pages": [],
+        "label_counts": {
+          "direct": 2,
+          "related": 0,
+          "unsupported": 0,
+          "conflicting": 0
+        },
+        "strength_counts": {
+          "specific": 2,
+          "stated": 0,
+          "keyword_only": 0,
+          "none": 0
+        },
+        "requirement_ids": [
+          "R1",
+          "R2"
+        ],
+        "report_html_valid": true,
+        "report_html_bytes": 71946
+      },
+      {
+        "candidate_id": "C2",
+        "status": 200,
+        "elapsed_ms": 11949,
+        "api_ms": 11775,
+        "pipeline_ms": 11945,
+        "extract_ocr_ms": 113,
+        "ocr_execution_ms": 0,
+        "preview_ms": 0,
+        "report_ms": 1,
+        "output_tokens": 1010,
+        "input_tokens": 2565,
+        "reasoning_tokens": 644,
+        "content_encoding": "gzip",
+        "compressed_content_length": "7798",
+        "response_bytes_decoded": 37180,
+        "provider_mode": "muse",
+        "model": "muse-spark-1.3",
+        "model_calls": 1,
+        "quote_verified": 0,
+        "quote_proposed": 0,
+        "quote_excluded": 0,
+        "timeline_flag_count": 0,
+        "ocr_pages": [],
+        "label_counts": {
+          "direct": 0,
+          "related": 0,
+          "unsupported": 2,
+          "conflicting": 0
+        },
+        "strength_counts": {
+          "specific": 0,
+          "stated": 0,
+          "keyword_only": 2,
+          "none": 0
+        },
+        "requirement_ids": [
+          "R1",
+          "R2"
+        ],
+        "report_html_valid": true,
+        "report_html_bytes": 21036
+      },
+      {
+        "candidate_id": "C3",
+        "status": 200,
+        "elapsed_ms": 11452,
+        "api_ms": 11266,
+        "pipeline_ms": 11448,
+        "extract_ocr_ms": 113,
+        "ocr_execution_ms": 0,
+        "preview_ms": 12,
+        "report_ms": 0,
+        "output_tokens": 1264,
+        "input_tokens": 2614,
+        "reasoning_tokens": 740,
+        "content_encoding": "gzip",
+        "compressed_content_length": "38369",
+        "response_bytes_decoded": 99149,
+        "provider_mode": "muse",
+        "model": "muse-spark-1.3",
+        "model_calls": 1,
+        "quote_verified": 4,
+        "quote_proposed": 4,
+        "quote_excluded": 0,
+        "timeline_flag_count": 0,
+        "ocr_pages": [],
+        "label_counts": {
+          "direct": 0,
+          "related": 2,
+          "unsupported": 0,
+          "conflicting": 0
+        },
+        "strength_counts": {
+          "specific": 2,
+          "stated": 0,
+          "keyword_only": 0,
+          "none": 0
+        },
+        "requirement_ids": [
+          "R1",
+          "R2"
+        ],
+        "report_html_valid": true,
+        "report_html_bytes": 79464
+      },
+      {
+        "candidate_id": "C4",
+        "status": 200,
+        "elapsed_ms": 11007,
+        "api_ms": 10806,
+        "pipeline_ms": 10997,
+        "extract_ocr_ms": 110,
+        "ocr_execution_ms": 0,
+        "preview_ms": 17,
+        "report_ms": 1,
+        "output_tokens": 1202,
+        "input_tokens": 2604,
+        "reasoning_tokens": 629,
+        "content_encoding": "gzip",
+        "compressed_content_length": "31369",
+        "response_bytes_decoded": 88739,
+        "provider_mode": "muse",
+        "model": "muse-spark-1.3",
+        "model_calls": 1,
+        "quote_verified": 3,
+        "quote_proposed": 3,
+        "quote_excluded": 0,
+        "timeline_flag_count": 1,
+        "ocr_pages": [],
+        "label_counts": {
+          "direct": 2,
+          "related": 0,
+          "unsupported": 0,
+          "conflicting": 0
+        },
+        "strength_counts": {
+          "specific": 2,
+          "stated": 0,
+          "keyword_only": 0,
+          "none": 0
+        },
+        "requirement_ids": [
+          "R1",
+          "R2"
+        ],
+        "report_html_valid": true,
+        "report_html_bytes": 68052
+      },
+      {
+        "candidate_id": "C5",
+        "status": 200,
+        "elapsed_ms": 11730,
+        "api_ms": 10664,
+        "pipeline_ms": 11721,
+        "extract_ocr_ms": 1025,
+        "ocr_execution_ms": 1013,
+        "preview_ms": 27,
+        "report_ms": 0,
+        "output_tokens": 1434,
+        "input_tokens": 2644,
+        "reasoning_tokens": 988,
+        "content_encoding": "gzip",
+        "compressed_content_length": "51699",
+        "response_bytes_decoded": 110784,
+        "provider_mode": "muse",
+        "model": "muse-spark-1.3",
+        "model_calls": 1,
+        "quote_verified": 4,
+        "quote_proposed": 4,
+        "quote_excluded": 0,
+        "timeline_flag_count": 0,
+        "ocr_pages": [
+          1
+        ],
+        "label_counts": {
+          "direct": 2,
+          "related": 0,
+          "unsupported": 0,
+          "conflicting": 0
+        },
+        "strength_counts": {
+          "specific": 2,
+          "stated": 0,
+          "keyword_only": 0,
+          "none": 0
+        },
+        "requirement_ids": [
+          "R1",
+          "R2"
+        ],
+        "report_html_valid": true,
+        "report_html_bytes": 93931
+      }
+    ],
+    "token_totals": {
+      "input": 13032,
+      "output": 6115,
+      "reasoning": 3708
+    },
+    "response_bytes": {
+      "compressed": 164566,
+      "decoded": 424553
+    },
+    "estimated_standard_cost_usd": 0.04227875
+  },
+  "decision_simulation": {
+    "scope": "Browser rendering was not automated because Chromium is absent. The real recruiter-decision helper was exercised with these run results; no decisions were persisted.",
+    "candidate_order": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5"
+    ],
+    "advance_without_reason": {
+      "accepted": true,
+      "decision": "advance"
+    },
+    "hold_without_reason_or_requirement": {
+      "accepted": false,
+      "blocked_message": "Choose a job-related reason before recording Hold or Do not advance."
+    },
+    "hold_with_job_reason_and_linked_requirement": {
+      "accepted": true,
+      "decision": "hold",
+      "linked_requirement_count": 1
+    },
+    "current_c1_requirement_count": 2
+  },
+  "cost_note": "Per-request token counts are recorded. Do not infer billing from tokens without verifying current Meta rates; estimates belong in the calibration report only.",
+  "contains_cv_text": false,
+  "contains_accepted_quote_text": false
+}

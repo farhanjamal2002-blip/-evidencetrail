@@ -1,0 +1,47 @@
+name: EvidenceTrail calibrated semantics — real Meta Muse acceptance
+on:
+  push:
+    branches: [fix/evidence-conflict-calibration-20261029]
+    paths: [.github/workflows/live-semantic-calibration.yml]
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-semantic-live-once
+  cancel-in-progress: false
+jobs:
+  verify-real-meta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_PROCESS: '5'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '5'
+      MAX_CONCURRENT_ANALYSES: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/evidence-conflict-calibration-20261029
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install real Meta client and PDF OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Credential preflight
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then echo "No Meta key; refusing live calls"; exit 2; fi
+      - name: Four real, consented, fictional Muse analyses without retries
+        run: PYTHONPATH=. python scripts/live_semantic_calibration_probe.py
+      - name: Keep source-free test receipt metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-semantic-real-meta
+          path: artifacts/muse-semantic-calibration/
+          retention-days: 14

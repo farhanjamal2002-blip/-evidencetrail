@@ -1,0 +1,381 @@
+{
+  "status": "completed",
+  "cases": [
+    {
+      "case_id": "india_public_procurement_manager",
+      "industry": "public-sector procurement",
+      "level": "manager",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 4,
+      "aligned_findings": 4,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 0.75,
+      "ambiguous_aligned_findings": 1,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 4,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 2,
+        "stated": 1,
+        "keyword_only": 0,
+        "none": 1,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 6,
+      "verification_citations_proposed": 6,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "detected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 1,
+      "direct_claims_gated_to_review": 1,
+      "provider_reported_input_tokens": 8858,
+      "provider_reported_output_tokens": 12434
+    },
+    {
+      "case_id": "uae_contract_supplier_manager",
+      "industry": "government contracting and supplier management",
+      "level": "senior specialist",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 4,
+      "aligned_findings": 4,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 0.75,
+      "ambiguous_aligned_findings": 1,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "conflicting",
+          "predicted": "direct",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 4,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 3,
+        "stated": 1,
+        "keyword_only": 0,
+        "none": 0,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 5,
+      "verification_citations_proposed": 5,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "detected_timeline_flags": [
+        "claimed_tenure_exceeds_dated_evidence"
+      ],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 1,
+      "direct_claims_gated_to_review": 1,
+      "provider_reported_input_tokens": 8751,
+      "provider_reported_output_tokens": 8962
+    },
+    {
+      "case_id": "semiconductor_supplier_operations_manager",
+      "industry": "semiconductor manufacturing and supplier operations",
+      "level": "manager",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 4,
+      "aligned_findings": 4,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 4,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 3,
+        "stated": 0,
+        "keyword_only": 0,
+        "none": 1,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 6,
+      "verification_citations_proposed": 6,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "provider_reported_input_tokens": 9292,
+      "provider_reported_output_tokens": 9631
+    },
+    {
+      "case_id": "nhs_procurement_director_credential_boundary",
+      "industry": "public healthcare procurement",
+      "level": "director",
+      "cv_variant": "searchable text PDF",
+      "ocr_used": false,
+      "ocr_pages": [],
+      "gold_requirements": 3,
+      "aligned_findings": 3,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "ambiguous_aligned_findings": 0,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 1,
+        "stated": 1,
+        "keyword_only": 0,
+        "none": 1,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 3,
+      "verification_quote_rate": 1.0,
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "provider_reported_input_tokens": 5659,
+      "provider_reported_output_tokens": 7137
+    },
+    {
+      "case_id": "scanned_cv_procurement_credential_boundary",
+      "industry": "public healthcare procurement",
+      "level": "director",
+      "cv_variant": "image-only two-column scan",
+      "ocr_used": true,
+      "ocr_pages": [
+        1
+      ],
+      "gold_requirements": 3,
+      "aligned_findings": 3,
+      "missing_gold_requirements": 0,
+      "unmatched_model_findings": 0,
+      "strict_category_accuracy": 1.0,
+      "ambiguous_aligned_findings": 1,
+      "false_related_transfers": 0,
+      "missed_related_transfers": 0,
+      "related_to_direct_overclaims": 0,
+      "item_labels": [
+        {
+          "gold_item": 1,
+          "expected": "unsupported",
+          "predicted": "unsupported",
+          "certainty": "ambiguous"
+        },
+        {
+          "gold_item": 2,
+          "expected": "direct",
+          "predicted": "direct",
+          "certainty": "clear"
+        },
+        {
+          "gold_item": 3,
+          "expected": "related",
+          "predicted": "related",
+          "certainty": "clear"
+        }
+      ],
+      "evidence_strength_distribution": {
+        "specific": 1,
+        "stated": 2,
+        "keyword_only": 0,
+        "none": 0,
+        "not_reported": 0
+      },
+      "verification_citations_verified": 3,
+      "verification_citations_proposed": 4,
+      "verification_quote_rate": 0.75,
+      "expected_timeline_flags": [],
+      "detected_timeline_flags": [],
+      "timeline_flag_precision": 1.0,
+      "timeline_flag_recall": 1.0,
+      "timeline_review_gated_findings": 0,
+      "direct_claims_gated_to_review": 0,
+      "provider_reported_input_tokens": 6142,
+      "provider_reported_output_tokens": 7127
+    }
+  ],
+  "overall": {
+    "gold_requirements": 18,
+    "aligned_findings": 18,
+    "strict_category_accuracy": 0.8889,
+    "coverage": 1.0,
+    "false_related_transfers": 0,
+    "false_transfer_rate_on_nonrelated_gold": 0.0,
+    "missed_related_transfers": 0,
+    "missed_transfer_rate_on_related_gold": 0.0,
+    "related_to_direct_overclaims": 0,
+    "ambiguous_findings": 3,
+    "verified_citations": 23,
+    "proposed_citations": 24,
+    "quote_verification_rate": 0.9583,
+    "missing_gold_requirements": 0,
+    "unmatched_model_findings": 0,
+    "timeline_flags_expected": 2,
+    "timeline_flags_detected": 2,
+    "timeline_review_gated_findings": 2,
+    "direct_claims_gated_to_review": 2,
+    "timeline_flag_precision": 1.0,
+    "timeline_flag_recall": 1.0,
+    "timeline_false_positives": 0,
+    "timeline_missed_flags": 0,
+    "provider_reported_input_tokens": 38702,
+    "provider_reported_output_tokens": 45291,
+    "evidence_strength_distribution": {
+      "specific": 10,
+      "stated": 5,
+      "keyword_only": 0,
+      "none": 3,
+      "not_reported": 0
+    }
+  },
+  "confusion_matrix": {
+    "direct": {
+      "direct": 6,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "related": {
+      "direct": 0,
+      "related": 6,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "unsupported": {
+      "direct": 0,
+      "related": 0,
+      "unsupported": 4,
+      "conflicting": 0,
+      "unclassified": 0
+    },
+    "conflicting": {
+      "direct": 2,
+      "related": 0,
+      "unsupported": 0,
+      "conflicting": 0,
+      "unclassified": 0
+    }
+  },
+  "disclosure": "All CVs are fictional; each job description is paraphrased from a linked public posting. Scores are calibration evidence, not a hiring recommendation.",
+  "failed_cases": 0,
+  "live_requests_expected": 10,
+  "live_calls_reported_for_completed_cases": 10,
+  "live_calls_for_failed_cases": "unknown; no automatic retry was made",
+  "model": "muse-spark-1.3",
+  "run_label": "five_case_strength_ladder_calibration",
+  "estimated_standard_token_cost_usd": 0.24086425,
+  "cost_estimate_note": "Computed from provider-reported input/output tokens at the saved Standard Muse Spark rates ($1.25/M input, $4.25/M output); no cached-input discount assumed; not a billing record."
+}

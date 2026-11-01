@@ -1,0 +1,18 @@
+{
+  "status": "completed",
+  "started_at_utc": "2026-10-29T05:17:53.107966+00:00",
+  "case_id": "unified_c4_date_overlap",
+  "provider": "muse",
+  "model": "muse-spark-1.3",
+  "reasoning_effort": "low",
+  "expected_live_requests": 1,
+  "automatic_retries": 0,
+  "api_key_value_saved": false,
+  "purpose": "Verify deterministic local timeline extraction and gate after the low-effort batch missed its planted overlap.",
+  "finished_at_utc": "2026-10-29T05:18:06.180816+00:00",
+  "elapsed_seconds": 13.069,
+  "live_calls_reported": 1,
+  "detected_timeline_flags": [
+    "employment_date_overlap"
+  ]
+}

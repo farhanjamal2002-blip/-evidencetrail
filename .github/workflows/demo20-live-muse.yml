@@ -1,0 +1,46 @@
+name: EvidenceTrail 20-applicant live Muse acceptance subset
+on:
+  push:
+    branches: [feat/recruiter-demo20-muse-inbox]
+    paths: [.github/workflows/demo20-live-muse.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: demo20-live-muse-once
+  cancel-in-progress: false
+jobs:
+  live-five:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_HOUR_PER_IP: '5'
+      MAX_ANALYSES_PER_PROCESS: '5'
+      MAX_CONCURRENT_ANALYSES: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install application and image-only PDF OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Secure credential gate without exposing key
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then echo 'No MODEL_API_KEY exposed; no Muse calls.'; exit 2; fi
+      - name: Five consented fictional CV analyses, one request each, zero retries
+        run: PYTHONPATH=. python scripts/demo20_live_probe.py
+      - name: Save synthetic-only results and provider receipt presence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-demo20-live-subset
+          path: artifacts/demo20-live/
+          retention-days: 14
+          if-no-files-found: warn

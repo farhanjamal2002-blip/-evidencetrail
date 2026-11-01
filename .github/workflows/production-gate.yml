@@ -1,0 +1,164 @@
+name: EvidenceTrail production semantic and latency gate
+on:
+  push:
+    branches: [fix/production-semantic-latency-gates-20261029]
+    paths: [.github/workflows/production-gate.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-production-gate
+  cancel-in-progress: false
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install OCR and frozen app
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng tesseract-ocr-ara
+          python -m pip install -r requirements.txt
+      - name: Full Python tests
+        run: python -m unittest discover -s tests -v
+      - name: JS tests
+        run: node --test tests/test_interview_invite.js tests/test_recruiter_decision.js tests/test_requirement_coverage.js
+      - name: Fake Muse and hostile PDF stress
+        run: python scripts/offline_stress_test.py
+      - name: Syntax and no hidden diffs
+        run: |
+          python -m py_compile app.py role_audit.py muse_protocol.py timeline_audit.py scripts/*.py
+          node --check static/app.js
+          node --check static/recruiter-decision.js
+          node --check static/interview-invite.js
+          git diff --check
+      - name: Build deployment image
+        run: docker build -t evidencetrail:hardening .
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser and app
+        run: |
+          python -m pip install -r requirements.txt playwright
+          python -m playwright install --with-deps chromium
+      - name: Browser consent, replay, evidence map
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/browser-smoke
+          MODEL_API_KEY=ci-dummy EVIDENCETRAIL_PROVIDER=muse EVIDENCETRAIL_ENABLE_MUSE=true python -m uvicorn app:app --host 127.0.0.1 --port 8000 >/tmp/server-ready.log 2>&1 &
+          a=$!
+          MODEL_API_KEY= EVIDENCETRAIL_PROVIDER=muse EVIDENCETRAIL_ENABLE_MUSE=true python -m uvicorn app:app --host 127.0.0.1 --port 8001 >/tmp/server-no-key.log 2>&1 &
+          b=$!
+          trap 'kill "$a" "$b" 2>/dev/null || true' EXIT
+          for port in 8000 8001; do
+            up=false
+            for i in $(seq 1 40); do
+              if curl -fsS http://127.0.0.1:$port/health >/dev/null; then up=true; break; fi
+              sleep 1
+            done
+            test "$up" = true
+          done
+          python scripts/browser_smoke_test.py
+      - name: Preserve screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-gate-browser
+          path: artifacts/browser-smoke
+          retention-days: 10
+
+  matched-muse-latency:
+    needs: [offline, browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        effort: [minimal, medium]
+    env:
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MUSE_REASONING_EFFORT: ${{ matrix.effort }}
+      MAX_CONCURRENT_ANALYSES: '5'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: OCR and app
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Credential gate
+        run: |
+          test -n "$MODEL_API_KEY" || (echo 'Key missing, no Muse call' && exit 2)
+      - name: One live five-CV batch at this reasoning effort, no retries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/production-gate
+          python scripts/run_unified_demo.py --preflight-only --fixture calibration/unified_supplier_operations_demo_20261029_v3.json --run-suffix production_gate_${{ matrix.effort }}_20261029 > artifacts/production-gate/preflight.json
+          python scripts/run_unified_demo.py --confirm-live-call --fixture calibration/unified_supplier_operations_demo_20261029_v3.json --run-suffix production_gate_${{ matrix.effort }}_20261029 > artifacts/production-gate/runner.log
+      - name: Verify audit fidelity, five provider receipts and no overclaim
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          effort="${{ matrix.effort }}"
+          root=Path("calibration")
+          metrics=json.loads((root/f"unified_demo_metrics_production_gate_{effort}_20261029.json").read_text())
+          replay=json.loads((root/f"unified_demo_replay_production_gate_{effort}_20261029.json").read_text())
+          findings=[r for x in replay["results"] for r in x["result"].get("requirements",[])]
+          results=replay["results"]
+          receipt_count=sum(bool(x["result"].get("usage",{}).get("analysis_pass",{}).get("provider_response_id")) for x in results)
+          raw_count=sum(bool(r.get("raw_status")) for r in findings)
+          overclaims=sum(r.get("status")=="supported" and r.get("evidence_type")!="direct" for r in findings)
+          incomplete=sum(r.get("effective_status")!=r.get("status") for r in findings)
+          summary={
+            "reasoning_effort":effort,"candidate_count":len(results),"provider_receipts":receipt_count,
+            "raw_status_coverage":f"{raw_count}/{len(findings)}","non_direct_supported":overclaims,
+            "effective_status_mismatches":incomplete,"seconds":metrics.get("elapsed_seconds"),
+            "raw_label_matches":metrics.get("overall",{}).get("muse_label_matches"),
+            "after_timeline_matches":metrics.get("overall",{}).get("timeline_adjudicated_label_matches"),
+            "verified_quotes":metrics.get("overall",{}).get("verified_quotes"),
+            "proposed_quotes":metrics.get("overall",{}).get("proposed_quotes"),
+            "estimated_usd":metrics.get("overall",{}).get("estimated_standard_token_cost_usd"),
+            "note":"Five fictional CVs; no auto retries; saved metric cost is an estimate, not a provider bill."
+          }
+          Path("artifacts/production-gate/summary.json").write_text(json.dumps(summary,indent=2)+"\n")
+          print("PRODUCTION_LIVE_SUMMARY="+json.dumps(summary))
+          assert len(results)==5 and receipt_count==5
+          assert raw_count==len(findings), "Missing raw model status"
+          assert overclaims==0 and incomplete==0, "An overclaim or stale effective status survived"
+          PY
+      - name: Persist full reproducible fictional replay and metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-gate-muse-${{ matrix.effort }}
+          path: |
+            artifacts/production-gate/
+            calibration/unified_demo_attempt_production_gate_${{ matrix.effort }}_20261029.json
+            calibration/unified_demo_metrics_production_gate_${{ matrix.effort }}_20261029.json
+            calibration/unified_demo_replay_production_gate_${{ matrix.effort }}_20261029.json
+          retention-days: 14
+          if-no-files-found: warn

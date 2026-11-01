@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "demo_id": "unified_supplier_operations_demo_20261028_v1",
+  "rubric_version": "demo-v1",
+  "disclosure": "All five candidate profiles are fictional. The shared role and requirements are based on the public GlobalFoundries posting. The supplier-negotiation requirement reuses the focal wording from the prior strength-ladder demo. Expected labels are prewritten calibration targets, not objective judgments about real candidates.",
+  "job_source": {
+    "organization": "GlobalFoundries",
+    "title": "OSAT Supplier and Operations Manager",
+    "url": "https://globalfoundries.wd1.myworkdayjobs.com/en-US/External/job/OSAT-Supplier-and-Operations-Manager_JR-2605085"
+  },
+  "job_description": "Role: OSAT Supplier and Operations Manager\nCompany: GlobalFoundries\nRubric version: demo-v1\nRequirements:\n1. Minimum 5 years of relevant experience in semiconductor operations, outsourced manufacturing, OSAT management, sourcing or commodity management, supplier relationship management, contract negotiation, or continuous improvement.\n2. Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+  "candidates": [
+    {
+      "id": "unified_c1_specific",
+      "display_name": "Candidate 1",
+      "industry": "semiconductor supplier operations",
+      "level": "senior manager",
+      "cv_layout": ["single_column"],
+      "cv_pages": ["FICTIONAL CV — Candidate 1\nSUPPLIER OPERATIONS MANAGER\nZenith Components | 2017–2026\nNine years in supplier operations and sourcing.\nCompared quotations from four outsourced assembly suppliers; negotiated a three-year supply agreement with two component manufacturers; built price tiers and an annual cost-reduction plan; drafted commercial schedules; coordinated signature, purchase-order setup, and contract implementation.\nLed monthly supplier reviews covering cost, delivery, quality, and capacity."],
+      "expected_timeline_flags": [],
+      "expected": [
+        {
+          "requirement": "Minimum 5 years of relevant experience in semiconductor operations, outsourced manufacturing, OSAT management, sourcing or commodity management, supplier relationship management, contract negotiation, or continuous improvement.",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "gold_note": "Dated supplier operations role spans nine years and names outsourced assembly suppliers."
+        },
+        {
+          "requirement": "Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "gold_note": "A three-year agreement, named counterparties, price tiers, and implementation steps are stated."
+        }
+      ]
+    },
+    {
+      "id": "unified_c2_keyword_only",
+      "display_name": "Candidate 2",
+      "industry": "supplier operations",
+      "level": "specialist",
+      "cv_layout": ["single_column"],
+      "cv_pages": ["FICTIONAL CV — Candidate 2\nSUPPLIER OPERATIONS ASSOCIATE\n2021–2026\nProcessed purchase-order changes and maintained supplier records.\nCORE SKILLS\nSupplier negotiations\nPricing analysis\nCommercial contract implementation\nSupplier management\nResults-driven contracts professional with a proven track record of delivering value through strategic procurement excellence."],
+      "expected_timeline_flags": [],
+      "expected": [
+        {
+          "requirement": "Minimum 5 years of relevant experience in semiconductor operations, outsourced manufacturing, OSAT management, sourcing or commodity management, supplier relationship management, contract negotiation, or continuous improvement.",
+          "evidence_type": "direct",
+          "evidence_strength": "stated",
+          "gold_note": "Five dated years in supplier operations are shown; the described duties are limited to purchase-order changes and records."
+        },
+        {
+          "requirement": "Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+          "evidence_type": "unsupported",
+          "evidence_strength": "keyword_only",
+          "gold_note": "The skills list and generic filler mention the concepts without a work example."
+        }
+      ]
+    },
+    {
+      "id": "unified_c3_career_switcher",
+      "display_name": "Candidate 3",
+      "industry": "hospital facilities services",
+      "level": "manager",
+      "cv_layout": ["single_column"],
+      "cv_pages": ["FICTIONAL CV — Candidate 3\nFACILITIES CONTRACT COORDINATOR\nNorth Valley Hospital Group | 2018–2026\nManaged cleaning, maintenance, and HVAC service vendors across four sites. Requested bids, compared supplier quotations, tracked service levels and corrective actions, and coordinated contract renewals. Escalated pricing proposals to the procurement team.\nThe procurement team negotiated final prices and approved commercial terms; I did not own supplier negotiations or contract sign-off. No semiconductor or outsourced assembly experience is listed."],
+      "expected_timeline_flags": [],
+      "expected": [
+        {
+          "requirement": "Minimum 5 years of relevant experience in semiconductor operations, outsourced manufacturing, OSAT management, sourcing or commodity management, supplier relationship management, contract negotiation, or continuous improvement.",
+          "evidence_type": "related",
+          "evidence_strength": "specific",
+          "gold_note": "Eight years of detailed facilities-vendor management may transfer to supplier relationship work; semiconductor/OSAT experience remains unproven."
+        },
+        {
+          "requirement": "Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+          "evidence_type": "related",
+          "evidence_strength": "specific",
+          "gold_note": "Bid comparison, renewals, service-level tracking, and pricing escalation are adjacent; negotiation authority and contract sign-off are explicitly absent."
+        }
+      ]
+    },
+    {
+      "id": "unified_c4_date_overlap",
+      "display_name": "Candidate 4",
+      "industry": "supplier operations and sourcing",
+      "level": "senior specialist",
+      "cv_layout": ["single_column"],
+      "cv_pages": ["FICTIONAL CV — Candidate 4\nSUPPLIER OPERATIONS AND SOURCING\nProcurement Analyst, full-time | Jan 2018–Dec 2023\nSupplier Contract Manager, full-time | Jan 2021–Dec 2026\nAcross these roles, compared supplier prices, supported commercial negotiations, maintained contract records, and coordinated implementation with manufacturing partners. Both roles are listed as full-time; the CV gives no explanation for the overlapping dates."],
+      "expected_timeline_flags": ["employment_date_overlap"],
+      "expected": [
+        {
+          "requirement": "Minimum 5 years of relevant experience in semiconductor operations, outsourced manufacturing, OSAT management, sourcing or commodity management, supplier relationship management, contract negotiation, or continuous improvement.",
+          "evidence_type": "conflicting",
+          "evidence_strength": "specific",
+          "gold_note": "Two full-time supplier/procurement roles overlap for three years; deterministic timeline review should route the duration evidence to clarification."
+        },
+        {
+          "requirement": "Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "gold_note": "Supplier price comparisons, negotiation support, and implementation are described."
+        }
+      ]
+    },
+    {
+      "id": "unified_c5_scanned_two_column",
+      "display_name": "Candidate 5",
+      "industry": "outsourced manufacturing suppliers",
+      "level": "manager",
+      "cv_layout": ["scanned_two_column"],
+      "cv_variant": "image-only two-column scan",
+      "cv_pages": [
+        {
+          "layout": "scanned_two_column",
+          "left": "FICTIONAL CV — Candidate 5\nSUPPLIER OPERATIONS\nOSAT Supplier Analyst | 2019–2026\nSupported outsourced assembly suppliers across cost, delivery, and quality.\nCompared supplier quotations and prepared monthly pricing analyses.\nCoordinated implementation of approved commercial terms and purchase-order changes.",
+          "right": "COMMERCIAL SUPPORT\nJoined supplier calls and documented negotiation actions.\nThe sourcing lead owned final negotiation positions and commercial approval.\nMaintained supplier scorecards and followed corrective actions for delivery and capacity issues.\nSeven years in supplier operations."
+        }
+      ],
+      "expected_timeline_flags": [],
+      "expected": [
+        {
+          "requirement": "Minimum 5 years of relevant experience in semiconductor operations, outsourced manufacturing, OSAT management, sourcing or commodity management, supplier relationship management, contract negotiation, or continuous improvement.",
+          "evidence_type": "direct",
+          "evidence_strength": "specific",
+          "gold_note": "Seven years in OSAT supplier operations are stated with a dated role."
+        },
+        {
+          "requirement": "Support supplier negotiations, pricing analysis, and commercial contract implementation.",
+          "evidence_type": "related",
+          "evidence_strength": "specific",
+          "gold_note": "Pricing analysis, negotiation documentation, and implementation are evidenced; final negotiation authority belongs to the sourcing lead. OCR reading order may affect proposed quote anchoring."
+        }
+      ]
+    }
+  ]
+}

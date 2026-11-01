@@ -1,0 +1,38 @@
+name: Judge public release parity (no paid calls)
+on:
+  push:
+    branches: [release/evidencetrail-judge-rc1-oct30]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-demo-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify anonymous public demo and exact deployed commit
+        env:
+          EVIDENCETRAIL_EXPECTED_SHA: ${{ github.sha }}
+        run: python scripts/public_demo_release_probe.py
+      - name: Install signed-out browser dependencies
+        run: |
+          python -m pip install -r requirements.txt playwright
+          python -m playwright install --with-deps chromium
+      - name: Real public browser verification (no model calls)
+        env:
+          EVIDENCETRAIL_SMOKE_URL: https://evidencetrail-judge-rc1-2026.onrender.com
+        run: python scripts/recruiter_workflow_browser_smoke.py
+      - name: Preserve public probe result even when blocked
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: judge-public-deployment-parity
+          path: |
+            artifacts/public-smoke/report.json
+            artifacts/recruiter-workflow-browser/
+          if-no-files-found: warn
+          retention-days: 14

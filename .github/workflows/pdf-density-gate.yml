@@ -1,0 +1,37 @@
+name: EvidenceTrail max-density searchable and scanned CV stress
+on:
+  push:
+    branches: [fix/production-semantic-latency-gates-20261029]
+    paths: [.github/workflows/pdf-density-gate.yml]
+permissions:
+  contents: read
+jobs:
+  density:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      EVIDENCETRAIL_PROVIDER: mock
+      EVIDENCETRAIL_ENABLE_MUSE: 'false'
+      MODEL_API_KEY: ''
+      MAX_ANALYSES_PER_PROCESS: '150'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '150'
+      MAX_CONCURRENT_ANALYSES: '5'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies and OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: Run 5 concurrent 20-page CVs and 3 concurrent multi-page OCR scans
+        run: PYTHONPATH=. python scripts/pdf_density_stress.py
+      - name: Save performance and resident-memory evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencetrail-pdf-density-stress
+          path: artifacts/pdf-density/
+          retention-days: 14

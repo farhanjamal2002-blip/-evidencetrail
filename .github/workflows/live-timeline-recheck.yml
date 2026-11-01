@@ -1,0 +1,46 @@
+name: EvidenceTrail one corrected real Muse timeline case
+on:
+  push:
+    branches: [eval/semantic-benchmark-oct29]
+    paths: [.github/workflows/live-timeline-recheck.yml]
+permissions:
+  contents: read
+concurrency:
+  group: evidencetrail-one-timeline-correction
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      EVIDENCETRAIL_PROVIDER: muse
+      EVIDENCETRAIL_ENABLE_MUSE: 'true'
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      MUSE_REASONING_EFFORT: minimal
+      MAX_ANALYSES_PER_PROCESS: '1'
+      MAX_ANALYSES_PER_HOUR_PER_IP: '2'
+      MAX_CONCURRENT_ANALYSES: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: eval/semantic-benchmark-oct29
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PDF and real Meta client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install -r requirements.txt
+      - name: One real response to prevalidated contradictory dates
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then echo "No key; no calls"; exit 2; fi
+          PYTHONPATH=. python scripts/live_timeline_recheck.py
+      - name: Save authentic response and verification audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corrected-timeline-meta-audit
+          path: artifacts/live-timeline-recheck/
+          retention-days: 14
