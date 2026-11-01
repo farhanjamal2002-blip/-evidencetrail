@@ -1,54 +1,43 @@
-# EvidenceTrail — November 4 Hackathon Submission Checklist
+# EvidenceTrail — submission draft and final checklist
 
 **Contest:** Meta Global AI Developer Hackathon (worldwide, including India).
 **Official project deadline:** Nov 4, 2026, **9 PM US Eastern** = Nov 5, **7:30 AM India**.
 **Internal safety deadline:** Nov 4, 2026, **11:59 PM IST**.
 **Suggested submission:** Indie Developer / Build for Your World, **only if that matches the entrant's accepted track**. Do not change tracks without checking the portal.
 
-## Submit this idea
+## Title
 
-**Title:** EvidenceTrail — Proof, not a black-box hiring score
+EvidenceTrail
 
-**Tagline:** Inspectable, source-verified CV evidence powered by Meta Muse Spark.
+## Tagline
 
-**Short description (copy-friendly):**
+The quote is real. But who did the work?
 
-EvidenceTrail helps recruiters inspect whether a supplied CV supports a specific job requirement. Meta Muse Spark 1.3 interprets the job criteria and CV text and proposes structured evidence; local PDF/OCR checks verify proposed quotations against cited pages, while deterministic scope and timeline safeguards preserve the raw Muse label beside the final evidence status. The recruiter inspects the source and owns the decision. A frozen actor-swap replay shows why a real quotation may still fail to support an applicant-specific claim. EvidenceTrail does not score or rank applicants, automate hiring decisions, or claim that a CV statement is true in the real world.
+## Description (150 words)
 
-**Theme:** Build for Your World — improve an everyday document-intensive hiring workflow with a real model plus a source-grounding layer.
+EvidenceTrail helps recruiters inspect what a CV actually supports against a job checklist. Meta Muse Spark reads extracted, page-labelled CV text and proposes structured findings with quotations. EvidenceTrail independently checks that each quote appears on the cited PDF page, then checks whether the passage credits the applicant for the required work. The interface keeps the original Muse label beside the final status, links evidence to its source, and leaves every decision to a human reviewer. The public demo uses fictional CVs and saved Muse responses; browsing makes no new model calls. In the saved twelve-pair replay, raw Muse labels match nineteen of twenty-four author references; final labels match all twenty-four. All twenty-five proposed quotes were found on their cited pages. These results describe a small fictional set, not accuracy on real CVs. Reviewers can inspect outlined source instructions, record notes, and export evidence without candidate scores, rankings, or automated rejections.
 
-## What the judge should see (one smooth story)
+## How we used Meta Muse Spark
 
-1. **0:00–0:08:** Open the fictional recruiter inbox. State the design question: a quotation can be real while crediting the wrong person.
-2. **0:08–0:38:** Open the saved M02 benchmark. Compare the applicant and director passages. Point to **Quote on the page?** and **Does it credit the applicant?** separately, then the struck-through raw Muse label, final evidence status, and reason.
-3. **0:38–0:48:** Inspect the M02 receipt links and full-replay caveat. Say clearly that 25/25 is the 12-pair replay's citation total, not an M02-only measure or real-CV accuracy estimate.
-4. **0:48–1:04:** Click the dark ET-018 next card. Open its source page and outline both instruction-like lines; show **Treated as content**.
-5. **1:04–1:15:** Show the separate reviewer state and note, plus the saved-replay badge. The demo makes no new Muse call.
+Meta Muse Spark 1.3 provides the semantic interpretation: it reads page-labelled text extracted from a CV alongside job requirements and returns structured requirement-level findings, evidence labels, explanations, and proposed quotations. The original PDF bytes are not attached to the model request. EvidenceTrail independently re-finds quotes on their cited pages and applies applicant-attribution and timeline safeguards, retaining the raw Muse label and final status for inspection. A human reviewer checks the evidence and records the decision.
 
-**Release status:** the judge build is merged into `main` (PR #28, release commit `e529b9e`, which passed backend, browser, browser-smoke and CI checks). Confirm `/build-info` on the hosted demo shows the same commit before recording or submitting. The separate eight-screen prototype in [draft PR #38](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/38) is not part of the submitted UI.
+The public judge path replays saved genuine Muse responses, with provider response IDs and source archives linked from the public JSON receipts. It makes no new Muse calls. The saved 12-pair / 24-request fictional replay records 19/24 raw labels and 24/24 final labels matching the author key, with 25/25 proposed quotes found on the cited pages. This small, author-labelled set is not a real-CV accuracy estimate; a provider receipt proves a call occurred, not that its answer is correct.
 
-The default public service disables new paid Muse calls. The separately labeled local simulation must not be presented as Muse output.
+## Links and final handoff
 
-## Additional judge path: M02 actor-swap replay
+- [Live demo](https://evidencetrail-judge-rc1-2026.onrender.com/)
+- [M02 proof and full 12-pair table](https://evidencetrail-judge-rc1-2026.onrender.com/demo20?view=replay)
+- [Public replay summary](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/twelve-pair-summary.json)
+- [Source code](https://github.com/farhanjamal2002-blip/-evidencetrail)
+- Video URL: pending the entrant's recording and upload; follow [the three-minute script](demo/3_MINUTE_JUDGE_VIDEO.md).
+- Before submission, confirm the deployed `/build-info` commit matches both `main` and the judge release branch.
 
-Open the [recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20), open the Replay benchmark, compare M02 baseline (`supported` → `supported`) with the director-attributed variant (raw Muse `conflicting` → final `not_found`), open the [public M02 case audit JSON](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/m02-case-audit.json) without signing in. The linked GitHub run pages list full archived artifacts; ZIP download may require GitHub sign-in. Then click the encore button to open ET-018. The source label and final requirement label answer different questions; a verified quotation alone does not establish applicant attribution.
+## Entrant's final checklist
 
-**Replay results and limit:** on the 12-pair / 24-request fictional author-labelled set, raw Muse matched 19/24 references and final pipeline labels matched 24/24; 25/25 quote/page checks passed across the full replay. These results describe this frozen test set only. The M02/M07 run summary records four provider receipts and zero retries; no M02-only 1/1 count is claimed.
-
-## Required final deliverables
-
-- [x] Public GitHub project exists and feature branch has recruiter inbox.
-- [x] Source-linked code and frozen synthetic 20-CV fixture generator.
-- [x] **All 20 fictional CVs analyzed by genuine Muse Spark:** 20/20 authentic responses and **76 locally verified quotations** in the [completed recording](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40892660190); no invented outcomes.
-- [x] 143 Python / 13 JS, Chromium (desktop + mobile), Docker acceptance: [action log](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/40888555124).
-- [x] Judge-facing README: [JUDGE_GUIDE.md](JUDGE_GUIDE.md).
-- [ ] **Judges' build:** choose **one commit** after final PR review, pin its SHA and share a working runnable/deployed version.
-- [ ] **Public final-version parity:** [isolated 20-fictional-CV judge reviewer](https://evidencetrail-judge-rc1-2026.onrender.com/demo20) is on a separate free, mock-only Render service. Verify [exact deployed SHA](https://evidencetrail-judge-rc1-2026.onrender.com/build-info) against release PR #28 using the [automated public parity workflow](.github/workflows/public-demo-parity.yml). The older two services are not the final judge target; free hosting may cold-start.
-- [ ] **Video:** record the 75-second M02 → receipt → ET-018 demo *from that same build*. Video length is a recommendation here; entrant must verify organizer's actual field limits.
-- [ ] **Repository landing page:** point judges immediately to demo URL, 75-second video, run instructions and genuine Muse receipts.
-- [ ] **Participant portal:** confirm selected track, rules acceptance, eligibility, required fields, team representative, final submission.
-- [ ] **Signed-out test:** video, GitHub, demo URL all accessible from an anonymous browser.
-- [ ] **Submit before internal Nov 4 IST deadline**, save confirmation receipt. **Submitting a PR is not submitting to the event.**
+- [ ] Record and upload the judge video from the verified deployed build.
+- [ ] Check that the video, public repository, and live demo open while signed out.
+- [ ] Confirm selected track, eligibility, rules acceptance, and required portal fields.
+- [ ] Submit in the participant portal before the deadline and save the confirmation receipt. A merged PR is not an event submission.
 
 ## Freeze scope for the sprint
 

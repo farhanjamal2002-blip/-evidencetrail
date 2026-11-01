@@ -1,0 +1,21 @@
+{
+  "source": "https://evidencetrail-judge-rc1-2026.onrender.com",
+  "build_info": {
+    "application": "EvidenceTrail",
+    "source_commit": "1df6a0bf4aac1ed9931d4be07b78c92f6643388f",
+    "source_provenance_available": true,
+    "source_branch": "release/evidencetrail-judge-rc1-oct30",
+    "judge_demo_mode": "mock_only",
+    "saved_replay_route": "/demo20/recorded-muse"
+  },
+  "duration_seconds": 30,
+  "frames": 60,
+  "new_analysis_requests": [],
+  "path": [
+    "home",
+    "M02 proof",
+    "12-pair table",
+    "ET-018",
+    "outlined source instruction"
+  ]
+}
