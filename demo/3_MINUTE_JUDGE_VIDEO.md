@@ -62,6 +62,8 @@ Muse Spark proposes. EvidenceTrail checks the source and applicant attribution. 
 | Original provider response IDs and source document fingerprint | Public M02 audit above; the linked workflow bundles hold the full saved cases |
 | Actual source outlines, reviewer action, and download; no new Muse analysis calls during recording | [Capture provenance](../docs/img/judge-video-provenance.json) and the actual filmed UI |
 
+The 1:20 scene now explicitly states **all five changes are `conflicting → not_found`: scope clarifications**, not five invented quotes or five false `supported` findings. Captions are punctuated and non-overlapping, and the end card displays the actual judge-path URL.
+
 The set is small, fictional, and author-labelled: these totals are not a real-CV accuracy estimate. “Wrong” at 1:20 means disagreement with that author key. Quote verification establishes document grounding, not real-world truth. The ET-018 footage shows recorded behavior, not proof that a general attack detector fired. Reviewer notes stay in the browser session unless exported; no automated hiring decision is claimed.
 
 The film is ready to link in the participant portal. Uploading or submitting to that portal still belongs to the entrant.

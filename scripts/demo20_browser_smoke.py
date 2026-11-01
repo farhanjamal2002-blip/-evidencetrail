@@ -104,7 +104,10 @@ async def main():
                     assert "conflicting" in replay_text and "not_found" in replay_text
                     assert await page.locator("#benchmark-panel .verification-checks").count()==2
                     assert await page.locator("#benchmark-panel .verification-checks .axis-check").count()==4
-                    assert await page.locator("#benchmark-panel .pipeline-outcome del").count()==2
+                    assert await page.locator("#benchmark-panel .pipeline-outcome del").count()==1
+                    assert await page.locator("#benchmark-panel .raw-unchanged").inner_text()=="supported"
+                    assert await page.locator(".pair-requirement").count()==24
+                    assert await page.locator("#twelve-pair-quote-audit").get_attribute("href")=="/static/replay-artifacts/twelve-pair-quote-audit.json"
                     assert await page.locator("#benchmark-panel .why-line").count()==2
                     assert "quote on the page?" in replay_text.lower()
                     assert "does it credit the applicant?" in replay_text.lower()
@@ -327,6 +330,18 @@ async def main():
                     await page.screenshot(path=str(OUT/"real-muse-recorded-evidence.png"),full_page=True)
                 assert not errors,errors
                 await page.close()
+            # A laptop-sized judge window must not squeeze the PDF into a third column.
+            page=await browser.new_page(viewport={"width":1180,"height":820})
+            await page.goto("http://127.0.0.1:8016/demo20",wait_until="domcontentloaded")
+            await page.wait_for_function("document.querySelector('#ready').textContent==='20'",timeout=25000)
+            assert await page.locator(".review-panel").evaluate("el=>el.getBoundingClientRect().width")>1000
+            await page.locator("#search").fill("ET-008")
+            await page.locator('#list [data-id="ET-008"]').click()
+            await page.locator("#review .matrix .source-snap").first.click()
+            await page.wait_for_function("document.querySelector('#pdf-highlight-layer .pdf-bbox-highlight')",timeout=20000)
+            await page.wait_for_function("(()=>{const r=document.querySelector('#pdf-evidence-viewer').getBoundingClientRect();return r.top>=-1&&r.top<70})()",timeout=10000)
+            await page.screenshot(path=str(OUT/"laptop-readable-source.png"),full_page=False)
+            await page.close()
         finally:
             await browser.close()
     print("PASS: 20-candidate intake, original PDF, search, 4 rubric fields, explicit consent, real mock API, human Hold action, mobile layout and JS console.")
