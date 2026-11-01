@@ -18,24 +18,42 @@
         <div id="model-pill" class="model-pill mode-{{ 'simulation' if mock_mode else ('unavailable' if muse_disabled or not model_ready else 'ready') }}" data-server-mode="{{ 'simulation' if mock_mode else ('unavailable' if muse_disabled or not model_ready else 'ready') }}" data-model-id="{{ model_id }}" aria-live="polite" aria-atomic="true" aria-label="Current analysis mode and availability">
           <span class="model-symbol" aria-hidden="true">✦</span>
           <span class="model-copy">
-            <strong id="model-status-title">{{ 'LOCAL SIMULATION' if mock_mode else ('MUSE DISABLED' if muse_disabled else ('MUSE READY' if model_ready else 'MUSE NOT CONFIGURED')) }}</strong>
-            <small id="model-status-detail">{{ 'Deterministic heuristics · no model calls' if mock_mode else ('Server opt-in is off · no new API calls' if muse_disabled else ('Server key present · API connection not verified' if model_ready else 'server key required · analysis paused')) }}</small>
+            <strong id="model-status-title">{{ 'LOCAL SIMULATION' if mock_mode else ('SAVED MUSE DEMO' if muse_disabled else ('MUSE READY' if model_ready else 'SAVED MUSE DEMO')) }}</strong>
+            <small id="model-status-detail">{{ 'Deterministic heuristics · no model calls' if mock_mode else ('Live calls off · saved Muse runs only' if muse_disabled else ('Server key present · API connection not verified' if model_ready else 'Live calls off · saved Muse runs only')) }}</small>
           </span>
           <span class="config-dot" aria-hidden="true"></span>
         </div>
       </header>
 
       <main id="main-content">
-        <section class="hero">
+        <section class="hero proof-hero" aria-labelledby="hero-title">
           <div class="hero-copy">
-          <div class="eyebrow">JOB REQUIREMENTS → CV EVIDENCE → HUMAN REVIEW</div>
-            <h1>Review the evidence behind every requirement.</h1>
-          <p>{% if mock_mode %}Set one role checklist, then inspect locally retrieved passages and page checks. This mode is a workflow simulation; it does not understand paraphrases or make a hiring assessment.{% elif muse_disabled %}Muse is disabled on this server, so new CV analysis is unavailable. The saved Muse replay is historical and makes no new request.{% else %}Set one role checklist, review one CV or a small batch against it, and inspect the source behind every finding. Muse interprets the evidence; local checks verify quotes and dates; the recruiter makes every decision.{% endif %}</p>
-            <p><a href="/demo20" style="display:inline-block;margin-top:8px;padding:12px 16px;background:#0f625a;color:#fff;border-radius:9px;font-weight:700;text-decoration:none">Explore 20 fictional applicants →</a></p>
+            <div class="eyebrow">BUILT WITH META MUSE SPARK 1.3 · SOURCE-CHECKED CV EVIDENCE</div>
+            <h1 id="hero-title">The quote is real. But who did the work?</h1>
+            <p class="lede">AI can find the right words in a CV and still credit the wrong person. EvidenceTrail checks every quote against the PDF page, then checks separately whether it supports the applicant — and leaves the decision to a person.</p>
+            <div class="proof-ctas">
+              <a class="cta-primary" href="/demo20?view=replay">See the M02 proof →</a>
+              <a class="cta-secondary" href="/demo20">Explore 20 fictional applicants</a>
+            </div>
+            <p class="proof-note">Saved, genuine Muse runs · no sign-in · no new API calls · no scores or rankings.</p>
           </div>
-          <div class="hero-stamp">
-            <span class="stamp-line"></span>
-            <span>Every finding<br>points to its source.</span>
+          <div class="proof-cards" aria-label="M02 actor-swap example">
+            <div class="proof-req">M02 · Requirement: “Personally negotiated supplier agreements”</div>
+            <article class="proof-card">
+              <div class="proof-card-head"><span>Baseline CV · page 1</span><span class="proof-tag ok">Final: supported</span></div>
+              <blockquote>I <mark>personally negotiated</mark> the terms of supplier agreements.</blockquote>
+              <div class="proof-checks"><div>Quote on the page?<strong>Yes · verified</strong></div><div>Credits the applicant?<strong>Yes</strong></div></div>
+            </article>
+            <article class="proof-card swap">
+              <div class="proof-card-head"><span>Actor-swap CV · page 1</span><span class="proof-tag no">Muse: conflicting → Final: not found</span></div>
+              <blockquote>My <mark>procurement director negotiated</mark> the terms of supplier agreements; I <mark>only prepared comparison notes</mark>.</blockquote>
+              <div class="proof-checks"><div>Quote on the page?<strong>Yes · verified</strong></div><div>Credits the applicant?<strong>No — the director</strong></div></div>
+            </article>
+            <div class="proof-stats" aria-label="Saved replay results">
+              <div><strong>19/24 → 24/24</strong><span>Raw Muse vs final labels matching the author key</span></div>
+              <div><strong>25/25</strong><span>Quotes found on the cited PDF page</span></div>
+              <div><strong>12 pairs</strong><span>Fictional, author-labelled — not real-CV accuracy</span></div>
+            </div>
           </div>
         </section>
 

@@ -192,7 +192,7 @@ async def main() -> None:
             await install_network_guards(no_key_page, analysis_attempts, meta_attempts)
             no_key_response = await no_key_page.goto(NO_KEY_URL, wait_until="domcontentloaded")
             assert no_key_response and no_key_response.status == 200
-            assert await no_key_page.locator("#model-status-title").inner_text() == "MUSE NOT CONFIGURED"
+            assert await no_key_page.locator("#model-status-title").inner_text() == "SAVED MUSE DEMO"
             assert await no_key_page.locator("#analyze-button").is_disabled()
 
             replay_button = no_key_page.locator("#load-unified-replay")
@@ -232,7 +232,7 @@ async def main() -> None:
                     "meta_requests": len(meta_attempts),
                 },
                 "no_key_state": {
-                    "badge": "MUSE NOT CONFIGURED",
+                    "badge": "SAVED MUSE DEMO",
                     "analyze_disabled": True,
                     "saved_replay_primary": True,
                     "saved_replay_loads": True,

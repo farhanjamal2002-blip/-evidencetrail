@@ -211,7 +211,7 @@ textarea,.text-input,select{background:#fffdf8;border-color:#d0c9bc;color:#24241
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="/"><span class="logo">ET</span> EvidenceTrail</a><button class="secondary replay-open" type="button" id="open-benchmark">Replay benchmark · 12 pairs / 24 runs</button><span class="demo-label">20 FICTIONAL CVs · DEMONSTRATION ONLY</span></header>
+<header class="top"><a class="brand" href="/"><span class="logo">ET</span> EvidenceTrail</a><button class="secondary replay-open" type="button" id="open-benchmark">See the M02 proof · 12-pair replay</button><span class="demo-label">20 FICTIONAL CVs · DEMONSTRATION ONLY</span></header>
 <main class="app">
 <div class="eyebrow">Recruiter workspace / simulated applicants</div>
 <h1>One job. An organized evidence inbox.</h1>
@@ -786,6 +786,7 @@ $("quickviews").querySelectorAll("[data-view]").forEach(b=>b.addEventListener("c
 $("coverage-summary").querySelectorAll("[data-coverage]").forEach(b=>b.addEventListener("click",()=>{$("filter").value=$("filter").value===b.dataset.coverage?"all":b.dataset.coverage;renderList()}));
 $("next-review").onclick=()=>nextCandidate(1,true);
 $("open-benchmark").onclick=()=>{ $("inbox-layout").classList.add("hidden"); $("benchmark-panel").classList.remove("hidden"); $("benchmark-panel").scrollIntoView({behavior:"smooth",block:"start"}); };
+try{if(new URLSearchParams(location.search).get("view")==="replay"){$("inbox-layout").classList.add("hidden");$("benchmark-panel").classList.remove("hidden");}}catch(e){}
 $("back-to-inbox").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); window.scrollTo({top:0,behavior:"smooth"}); };
 $("injection-encore").onclick=()=>{ $("benchmark-panel").classList.add("hidden"); $("inbox-layout").classList.remove("hidden"); $("search").value="ET-018"; $("filter").value="all"; pickCandidate("ET-018"); window.scrollTo({top:0,behavior:"smooth"}); $("search").focus(); };
 document.addEventListener("keydown",e=>{

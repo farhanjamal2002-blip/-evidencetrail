@@ -1,21 +1,29 @@
 # EvidenceTrail
 
-**Built for the [Meta Global AI Developer Hackathon 2026](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) · Build for Your World**
+**The quote is real. But who did the work?**
 
-[Hackathon showcase and judge path](HACKATHON_SHOWCASE.md) · [Judge release candidate PR #28](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/28)
+EvidenceTrail is a CV evidence reviewer built with **Meta Muse Spark 1.3** for the [Meta Global AI Developer Hackathon 2026](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) · *Build for Your World*. It checks every quoted passage against the PDF page, then checks separately whether that passage credits the applicant — and leaves the decision to a person.
 
+**▶ [Open the live demo](https://evidencetrail-judge-rc1-2026.onrender.com/) · [Jump straight to the M02 proof](https://evidencetrail-judge-rc1-2026.onrender.com/demo20?view=replay)** — no sign-in, saved genuine Muse runs, no new API calls.
 
-> **EvidenceTrail separates two questions: is the quotation on the cited page, and does that passage credit the applicant with the required work?** Muse Spark proposes a structured interpretation. Local PDF/OCR processing, page-level quote checks, and explicit scope safeguards make the evidence inspectable. The recruiter keeps control of the review.
+![EvidenceTrail home: the M02 actor-swap proof](docs/img/judge-home.png)
 
-EvidenceTrail does not score or rank candidates, automate hiring decisions, or establish whether a CV claim is true in the real world. A verified citation shows where text appears in the supplied file; semantic support and the recruiter's assessment remain separate.
+| Saved replay result | |
+|---|---|
+| **19/24 → 24/24** | Raw Muse labels vs final EvidenceTrail labels matching the author key |
+| **25/25** | Proposed quotes found on the cited PDF page |
+| **12 pairs / 24 requests** | Small, fictional, author-labelled set — not a real-CV accuracy estimate |
 
-## Judge path
+## Judge path (about 75 seconds)
 
-1. Open the [fictional recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20).
-2. Open **Replay benchmark** and compare M02: the same requirement and action language, with the actor changed.
-3. Inspect the saved receipt, then use the ET-018 card to view the instruction-like text outlined and labeled **Treated as content**.
+1. Open **[See the M02 proof](https://evidencetrail-judge-rc1-2026.onrender.com/demo20?view=replay)**. Same requirement, same action words — only the person credited changes. Compare **Quote on the page?** with **Does it credit the applicant?**, and the struck-through raw Muse label beside the final status.
+2. Open the [public M02 audit receipt](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/m02-case-audit.json) (no sign-in).
+3. Click the **ET-018** card: a CV with hidden instructions aimed at the AI. The text is outlined on its source page and labelled **Treated as content**.
+4. Back in the inbox, record a reviewer decision and export the evidence pack.
 
-The judge path uses saved results and does not make new Muse calls. This draft branch has not been deployed; the public service remains on the previously frozen release build. See the [judge guide](JUDGE_GUIDE.md), [75-second demo script](demo/75_SECOND_JUDGE_VIDEO.md), and [feature/UI freeze record](docs/HACKATHON_FEATURE_FREEZE.md).
+![M02 replay: same words, different actor, different finding](docs/img/m02-replay.png)
+
+EvidenceTrail does not score or rank candidates, automate hiring decisions, or establish whether a CV claim is true in the real world. More: [judge guide](JUDGE_GUIDE.md) · [75-second demo script](demo/75_SECOND_JUDGE_VIDEO.md) · [hackathon showcase](HACKATHON_SHOWCASE.md).
 
 ## Research replay: a real quote can still support the wrong person
 
@@ -26,7 +34,6 @@ A quotation can be present on the cited page while failing to support the applic
 - **Recorded replay scope:** across 12 fictional pairs / 24 requests, raw Muse labels matched 19/24 author-written references and final labels matched 24/24. Across the full replay, 25/25 proposed citations passed local quote/page checks. These are results on this small, author-labelled set, not general résumé accuracy.
 - **Receipts:** [Public M02 case audit JSON](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/m02-case-audit.json) is directly readable without sign-in. The [M02/M07 workflow run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41030259074) and [remaining-pairs run](https://github.com/farhanjamal2002-blip/-evidencetrail/actions/runs/41031352414) list the archived full artifacts; GitHub may require sign-in to download their ZIPs.
 
-**Quick judge path:** Open the [recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20), open the replay benchmark, compare the two M02 cards, inspect the archived receipts, then use the encore button to open ET-018. The demo uses saved results; it makes no new Muse call.
 
 EvidenceTrail is a recruiter-first, no-score CV review workflow. A recruiter supplies one job description and up to five CVs, reviews a shared job checklist, checks each evidence label against its cited page, records a neutral reviewer state (Not reviewed, Reviewed, or Follow-up needed) with an optional note, and exports an evidence pack. Candidates remain in upload order; EvidenceTrail does not score or rank them.
 

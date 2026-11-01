@@ -38,9 +38,9 @@ function resetModeBadge() {
   } else if (modelReady) {
     setModeBadge("ready", "MUSE READY", "Server key present · API connection not verified");
   } else if (museDisabled) {
-    setModeBadge("unavailable", "MUSE DISABLED", "Server opt-in is off · no new API calls");
+    setModeBadge("unavailable", "SAVED MUSE DEMO", "Live calls off · saved Muse runs only");
   } else {
-    setModeBadge("unavailable", "MUSE NOT CONFIGURED", "server key required · analysis paused");
+    setModeBadge("unavailable", "SAVED MUSE DEMO", "Live calls off · saved Muse runs only");
   }
 }
 

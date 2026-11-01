@@ -269,7 +269,7 @@ class MockScenarioTests(unittest.TestCase):
         self.assertEqual(self.client.get("/health").json(), {"status": "ok"})
         landing = self.client.get("/")
         self.assertEqual(landing.status_code, 200)
-        self.assertIn("Review the evidence behind every requirement.", landing.text)
+        self.assertIn("The quote is real. But who did the work?", landing.text)
         self.assertIn('type="file" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" multiple', landing.text)
         self.assertNotIn("Candidate statement", landing.text)
         self.assertNotIn("Gender Decoder", landing.text)
@@ -1710,14 +1710,14 @@ from fastapi.testclient import TestClient
 app.OpenAI = lambda *a, **k: (_ for _ in ()).throw(AssertionError("API client created"))
 with TestClient(app.app) as client:
     home = client.get("/")
-    assert "server key required · analysis paused" in home.text
+    assert "Live calls off · saved Muse runs only" in home.text
     response = client.post("/api/analyze", files={"cv": ("x.pdf", b"bad", "application/pdf")}, data={"job_description": "- Requirement", "consent": "true"})
     assert response.status_code == 503, response.text
     assert "MODEL_API_KEY" in response.json()["detail"]
     assert "no Meta API call was made" in response.json()["detail"]
     os.environ["MODEL_API_KEY"] = "add_your_meta_model_api_key"
     placeholder_home = client.get("/")
-    assert "server key required · analysis paused" in placeholder_home.text
+    assert "Live calls off · saved Muse runs only" in placeholder_home.text
     placeholder_response = client.post("/api/analyze", files={"cv": ("x.pdf", b"bad", "application/pdf")}, data={"job_description": "- Requirement", "consent": "true"})
     assert placeholder_response.status_code == 503, placeholder_response.text
     assert "MODEL_API_KEY" in placeholder_response.json()["detail"]
