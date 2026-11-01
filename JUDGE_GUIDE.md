@@ -10,7 +10,7 @@
 ## What judges should open
 
 1. **Start with the [isolated judge-release recruiter inbox](https://evidencetrail-judge-rc1-2026.onrender.com/demo20)** (version fingerprint at [`/build-info`](https://evidencetrail-judge-rc1-2026.onrender.com/build-info); check matching release commit before judging). One fictional job, 4 editable criteria, 20 clearly fictional CVs, including 2 image-only PDFs, a contradictory CV and a prompt-injection CV. Clicking the replay control loads the genuine 20-CV recorded Muse results, distinctly labeled as a **saved replay**, not new inference.
-2. **Open Replay benchmark.** Compare the M02 baseline and actor swap. Point to the separate **Quote on the page?** and **Does it credit the applicant?** checks, then the struck-through raw Muse label, final evidence status, and one-line reason. Keep the caveat visible: the 12-pair set is small and fictional; 25/25 quote checks is the full-replay count, not an M02 score.
+2. **Open Replay benchmark.** Compare the M02 baseline and actor swap. Point to the separate **Quote on the page?** and **Does it credit the applicant?** checks, then the struck-through raw Muse label, final evidence status, and one-line reason. Scroll to the **12-pair table directly below the M02 cards**: it shows all 24 saved results, with five highlighted attribution corrections and the author key. Keep the caveat visible: the 12-pair set is small and fictional; 25/25 quote checks is the full-replay count, not an M02 score.
 
 3. **Inspect the saved M02 receipts.** Open the public case audit and workflow records. The replay uses stored provider responses and makes no new Muse call.
 
@@ -22,7 +22,7 @@
 
 
 
-**Release status:** the judge build is merged into `main` (PR #28, release commit `e529b9e`, which passed backend, browser, browser-smoke and CI checks). Confirm `/build-info` on the hosted demo shows the same commit before recording or submitting. The separate eight-screen prototype in [draft PR #38](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/38) is not part of the submitted UI.
+**Release status:** before recording or submitting, confirm `main` and `release/evidencetrail-judge-rc1-oct30` point to the same commit and that the hosted `/build-info` reports it. Auto-deploy is off: every merge requires a manual Render deploy. The separate eight-screen prototype in [draft PR #38](https://github.com/farhanjamal2002-blip/-evidencetrail/pull/38) is not part of the submitted UI.
 
 ## Source quote geometry benchmark — October 29, 2026
 

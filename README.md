@@ -1,5 +1,9 @@
 # EvidenceTrail
 
+![30-second live judge walkthrough: home, M02 proof, all 12 pairs, ET-018 and outlined source instruction](docs/img/judge-path.gif)
+
+*Recorded from the live judge site; fictional documents and saved Muse responses, with no new model calls.*
+
 **The quote is real. But who did the work?**
 
 EvidenceTrail is a CV evidence reviewer built with **Meta Muse Spark 1.3** for the [Meta Global AI Developer Hackathon 2026](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) · *Build for Your World*. It checks every quoted passage against the PDF page, then checks separately whether that passage credits the applicant — and leaves the decision to a person.
@@ -17,13 +21,25 @@ EvidenceTrail is a CV evidence reviewer built with **Meta Muse Spark 1.3** for t
 ## Judge path (about 75 seconds)
 
 1. Open **[See the M02 proof](https://evidencetrail-judge-rc1-2026.onrender.com/demo20?view=replay)**. Same requirement, same action words — only the person credited changes. Compare **Quote on the page?** with **Does it credit the applicant?**, and the struck-through raw Muse label beside the final status.
-2. Open the [public M02 audit receipt](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/m02-case-audit.json) (no sign-in).
+2. Scroll to the **12-pair table directly below the M02 cards**. Compare all 24 saved results and the five highlighted attribution corrections with the author key. Then open the [public M02 audit receipt](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/m02-case-audit.json) (no sign-in).
 3. Click the **ET-018** card: a CV with hidden instructions aimed at the AI. The text is outlined on its source page and labelled **Treated as content**.
 4. Back in the inbox, record a reviewer decision and export the evidence pack.
 
 ![M02 replay: same words, different actor, different finding](docs/img/m02-replay.png)
 
 EvidenceTrail does not score or rank candidates, automate hiring decisions, or establish whether a CV claim is true in the real world. More: [judge guide](JUDGE_GUIDE.md) · [75-second demo script](demo/75_SECOND_JUDGE_VIDEO.md) · [hackathon showcase](HACKATHON_SHOWCASE.md).
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[CV PDF] --> B[Muse Spark]
+    B --> C[Quote-on-page check]
+    C --> D[Applicant-attribution check]
+    D --> E[Human reviewer]
+```
+
+Muse receives page-labelled extracted text and proposes findings. Local checks verify the quoted page and whether the passage credits the applicant; the reviewer checks the source and records a decision. The public judge path uses saved responses.
 
 ## Research replay: a real quote can still support the wrong person
 
