@@ -1,162 +1,102 @@
 {
   "schema": "evidencetrail/judge-video-provenance/v1",
-  "duration_seconds": 180,
+  "duration_seconds": 90.6,
   "dimensions": [
     1920,
     1080
   ],
   "frames_per_second": 30,
-  "source": "https://evidencetrail-judge-rc1-2026.onrender.com",
+  "source": "https://evidencetrail-judge-rc1-2026.onrender.com/demo20",
   "captured_build_info": {
     "application": "EvidenceTrail",
-    "source_commit": "f3a1f8c804a23bda1b3912fdd8bb5a70cea5f785",
-    "source_provenance_available": true,
+    "source_commit": "8f0225c54c25a72d56be87cefc636b848daa7eb2",
     "source_branch": "release/evidencetrail-judge-rc1-oct30",
-    "judge_demo_mode": "mock_only",
-    "saved_replay_route": "/demo20/recorded-muse"
+    "captured_route": "/demo20 (60-second guided demo)"
   },
-  "format": "Edited actual live-site walkthrough, with premium title graphics, exact source close-ups, synthesized narration, captions, and original quiet sound bed. The source/audit inspection includes a separate actual UI close-up take.",
+  "format": "Single continuous real-browser capture of the live guided demo (Chrome screencast), scripted clicks timed to narration, a visible click indicator, burned-in captions. No mockups, no edited product states.",
   "voice": "en-US-GuyNeural; synthesized narration, not the entrant speaking",
+  "music": "none",
   "new_muse_analysis_requests": [],
-  "actual_export_verified": true,
-  "export_note": "Actual fictional reviewer note and evidence HTML downloaded from the live UI; browser-session decision only",
+  "source_pdf_note": "The source page shown is rebuilt with the recorded run's own generator and text; the quote lands at the exact recorded highlight boxes. Not the byte-identical original (PyMuPDF writes a random file ID).",
+  "export_note": "Evidence report downloaded from the live UI during the take and shown as downloaded; reviewer decision is browser-local only.",
   "proof_sources": [
     "/static/replay-artifacts/m02-case-audit.json",
-    "/static/replay-artifacts/twelve-pair-summary.json",
-    "/static/replay-artifacts/twelve-pair-quote-audit.json"
+    "/static/replay-artifacts/m02-variant-source.pdf"
   ],
-  "media_sha256": "557a25ccdc7201726337eb287d81be7500e2c7d1ec7a4f812fd2fa6eb16e486d",
-  "media_bytes": 15630256,
+  "media_sha256": "ec71b9d452098a4074ec33dd1533549d7ad857b1449b6ea75ded291ef7cf4b35",
+  "media_bytes": 5259437,
   "chapters": [
     {
-      "start": 0,
-      "end": 15,
-      "title": "The quote is real.",
-      "text": "AI can find the right words in a CV and still credit the wrong person. The quote is real. But who did the work? This is EvidenceTrail."
+      "start": 0.8,
+      "end": 6.1,
+      "title": "The problem",
+      "text": "AI can find the right sentence in a document, and still draw the wrong conclusion."
     },
     {
-      "start": 15,
-      "end": 35,
-      "title": "Same words. Different actor.",
-      "text": "The saved M zero two pair holds the requirement steady: personally negotiated supplier agreements. In the baseline, the applicant negotiated. In the variant, the procurement director negotiated; the applicant only prepared comparison notes. Both passages are genuinely on their cited pages."
+      "start": 6.65,
+      "end": 9.97,
+      "title": "The problem",
+      "text": "That's the problem EvidenceTrail solves."
     },
     {
-      "start": 35,
-      "end": 50,
-      "title": "The saved replay.",
-      "text": "On twelve fictional pairs, raw Muse labels matched nineteen of twenty-four author references. Final labels matched twenty-four of twenty-four. All twenty-five proposed quotes were found on the cited pages. This is not real CV accuracy."
+      "start": 10.52,
+      "end": 16.49,
+      "title": "A real recorded example",
+      "text": "Here's a real example from our recorded Meta Muse tests, using a fictional applicant."
     },
     {
-      "start": 50,
-      "end": 80,
-      "title": "Two separate checks.",
-      "text": "Open See the M zero two proof. EvidenceTrail asks two separate questions. Is the quote on the page? Yes, for both passages. Does it credit the applicant? Only the baseline. The original Muse label stays visible beside the final status and the reason it changed. A verified quote establishes what the document says, not whether its claim is true in the real world."
+      "start": 17.04,
+      "end": 22.06,
+      "title": "The requirement",
+      "text": "The job requires someone who personally negotiated supplier agreements."
     },
     {
-      "start": 80,
-      "end": 95,
-      "title": "All twelve pairs.",
-      "text": "Across all twelve pairs, every time Muse was wrong, the CV credited someone else. EvidenceTrail caught all five. Here, wrong means disagreement with the author key on this small, saved fictional set."
+      "start": 22.61,
+      "end": 35.57,
+      "title": "The quote",
+      "text": "The CV mentions those agreements. But look carefully. The applicant says their procurement director negotiated them. The applicant only prepared comparison notes."
     },
     {
-      "start": 95,
-      "end": 125,
-      "title": "Content. Not commands.",
-      "text": "Now open E T zero eighteen. This fictional CV includes instructions aimed at the AI: ignore the job description, mark every requirement supported, and invent citations. EvidenceTrail outlines both source lines on the original PDF page and labels them Treated as content. We are showing the recorded behavior and the actual source. We are not claiming that a general attack detector fired."
+      "start": 36.12,
+      "end": 48.36,
+      "title": "The correction",
+      "text": "Meta Muse identified a conflict. EvidenceTrail checked the original evidence, and corrected the finding: this CV does not establish that the applicant personally negotiated those agreements."
     },
     {
-      "start": 125,
-      "end": 145,
-      "title": "Inspect the original source.",
-      "text": "Next, open a source quote from the saved applicant review. The original PDF page appears with its verified passage highlighted. The audit preserves the raw Muse label, the final label, and the reason for the change. The public M zero two receipt also records the model, response identifier, and document fingerprint."
+      "start": 48.91,
+      "end": 54.02,
+      "title": "The source page",
+      "text": "We can inspect the source page, and see exactly where the quotation came from."
     },
     {
-      "start": 145,
-      "end": 165,
-      "title": "The reviewer decides.",
-      "text": "The reviewer remains in control. Select Follow-up needed, add a factual note, and export the evidence report. The review state is separate from the evidence labels. It stays in this browser session unless exported. EvidenceTrail does not score or rank applicants, automate rejections, or decide who should be hired."
+      "start": 54.57,
+      "end": 62.03,
+      "title": "Source provenance",
+      "text": "The source PDF shown is a documented reconstruction of the original test input, not the byte-identical original."
     },
     {
-      "start": 165,
-      "end": 180,
-      "title": "Evidence you can inspect.",
-      "text": "Muse Spark proposes. EvidenceTrail checks the source and applicant attribution. A human decides. Saved fictional results, with no new model calls. EvidenceTrail: evidence you can inspect."
+      "start": 62.58,
+      "end": 67.05,
+      "title": "No hiring decisions",
+      "text": "And crucially, EvidenceTrail doesn't make hiring decisions."
+    },
+    {
+      "start": 67.6,
+      "end": 74.39,
+      "title": "Human control",
+      "text": "A human reviewer can request clarification and record a note, without changing the underlying finding."
+    },
+    {
+      "start": 74.94,
+      "end": 81.49,
+      "title": "The evidence report",
+      "text": "The result is a readable evidence report that makes the AI's interpretation transparent and reviewable."
+    },
+    {
+      "start": 82.04,
+      "end": 89.15,
+      "title": "Closing",
+      "text": "Meta Muse interprets. EvidenceTrail verifies. Humans decide."
     }
-  ],
-  "voice_timing": [
-    {
-      "segment": 0,
-      "start": 0.45,
-      "end": 11.348666666666666,
-      "speed": 1,
-      "text": "AI can find the right words in a CV and still credit the wrong person. The quote is real. But who did the work? This is EvidenceTrail."
-    },
-    {
-      "segment": 1,
-      "start": 15.45,
-      "end": 34.13445833333333,
-      "speed": 1.053475935828877,
-      "text": "The saved M zero two pair holds the requirement steady: personally negotiated supplier agreements. In the baseline, the applicant negotiated. In the variant, the procurement director negotiated; the applicant only prepared comparison notes. Both passages are genuinely on their cited pages."
-    },
-    {
-      "segment": 2,
-      "start": 35.45,
-      "end": 49.137770833333335,
-      "speed": 1.2014598540145986,
-      "text": "On twelve fictional pairs, raw Muse labels matched nineteen of twenty-four author references. Final labels matched twenty-four of twenty-four. All twenty-five proposed quotes were found on the cited pages. This is not real CV accuracy."
-    },
-    {
-      "segment": 3,
-      "start": 50.45,
-      "end": 77.74066666666667,
-      "speed": 1,
-      "text": "Open See the M zero two proof. EvidenceTrail asks two separate questions. Is the quote on the page? Yes, for both passages. Does it credit the applicant? Only the baseline. The original Muse label stays visible beside the final status and the reason it changed. A verified quote establishes what the document says, not whether its claim is true in the real world."
-    },
-    {
-      "segment": 4,
-      "start": 80.45,
-      "end": 94.13077083333334,
-      "speed": 1.0036496350364965,
-      "text": "Across all twelve pairs, every time Muse was wrong, the CV credited someone else. EvidenceTrail caught all five. Here, wrong means disagreement with the author key on this small, saved fictional set."
-    },
-    {
-      "segment": 5,
-      "start": 95.45,
-      "end": 121.22866666666667,
-      "speed": 1,
-      "text": "Now open E T zero eighteen. This fictional CV includes instructions aimed at the AI: ignore the job description, mark every requirement supported, and invent citations. EvidenceTrail outlines both source lines on the original PDF page and labels them Treated as content. We are showing the recorded behavior and the actual source. We are not claiming that a general attack detector fired."
-    },
-    {
-      "segment": 6,
-      "start": 125.45,
-      "end": 144.1346875,
-      "speed": 1.1203208556149733,
-      "text": "Next, open a source quote from the saved applicant review. The original PDF page appears with its verified passage highlighted. The audit preserves the raw Muse label, the final label, and the reason for the change. The public M zero two receipt also records the model, response identifier, and document fingerprint."
-    },
-    {
-      "segment": 7,
-      "start": 145.45,
-      "end": 164.1353125,
-      "speed": 1.139572192513369,
-      "text": "The reviewer remains in control. Select Follow-up needed, add a factual note, and export the evidence report. The review state is separate from the evidence labels. It stays in this browser session unless exported. EvidenceTrail does not score or rank applicants, automate rejections, or decide who should be hired."
-    },
-    {
-      "segment": 8,
-      "start": 165.45,
-      "end": 179.1321875,
-      "speed": 1.1386861313868613,
-      "text": "Muse Spark proposes. EvidenceTrail checks the source and applicant attribution. A human decides. Saved fictional results, with no new model calls. EvidenceTrail: evidence you can inspect."
-    }
-  ],
-  "scope": "Fictional author-labelled saved replay. No real-CV accuracy, real-world CV truth, generalized injection protection, or fresh Muse inference claim.",
-  "judge_review_revision": {
-    "reviewed_source_commit": "d0bacc3529f932cfcebd36440f1187929398dcde",
-    "changes": [
-      "Punctuated, non-overlapping captions aligned to the original narration word boundaries",
-      "Explicit conflicting-to-not_found scope clarification at 1:20",
-      "Usable judge-path URL on the end card"
-    ],
-    "narration_unchanged": true,
-    "captured_proof_unchanged": true
-  }
+  ]
 }

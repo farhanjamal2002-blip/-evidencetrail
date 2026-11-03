@@ -3,7 +3,7 @@
 **Meta Global AI Developer Hackathon · Build for Your World · Indie-track candidate**
 **Submission cutoff:** November 4, 2026, 9:00 PM US Eastern = **November 5, 2026, 7:30 AM IST**. Aim to submit on November 4 IST. Track must match the entrant's selected registration.
 
-**[Watch the full three-minute judge film](https://evidencetrail-judge-rc1-2026.onrender.com/static/evidencetrail-judge.mp4)** · [Transcript and saved proof](demo/3_MINUTE_JUDGE_VIDEO.md). Actual live-site footage with synthesized narration and captions.
+**[Watch the 90-second judge film](https://evidencetrail-judge-rc1-2026.onrender.com/static/evidencetrail-judge.mp4)** · [Transcript and saved proof](demo/3_MINUTE_JUDGE_VIDEO.md). Actual live-site footage with synthesized narration and captions.
 
 ## 20-second explanation
 
