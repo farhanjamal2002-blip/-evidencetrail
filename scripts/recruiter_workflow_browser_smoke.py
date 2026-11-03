@@ -18,7 +18,7 @@ with sync_playwright() as engine:
     page = browser.new_page(accept_downloads=True, viewport={"width":1440,"height":1000})
     calls = []
     page.on("request", lambda req: calls.append(req.url) if "/api/analyze" in req.url else None)
-    response = page.goto(BASE+"/demo20", wait_until="domcontentloaded")
+    response = page.goto(BASE+"/demo20?view=workspace", wait_until="domcontentloaded")
     assert response and response.status == 200
     page.wait_for_function("document.getElementById('ready').textContent === '20'", timeout=30000)
     assert page.locator("#visual-consent").is_disabled()
@@ -89,7 +89,7 @@ with sync_playwright() as engine:
     # The reviewer must be able to inspect the saved source without sideways page scroll.
     phone = browser.new_page(viewport={"width":390,"height":844},device_scale_factor=2)
     phone.on("request", lambda req: calls.append(req.url) if "/api/analyze" in req.url else None)
-    phone.goto(BASE+"/demo20", wait_until="domcontentloaded")
+    phone.goto(BASE+"/demo20?view=workspace", wait_until="domcontentloaded")
     phone.wait_for_function("document.getElementById('ready').textContent === '20'", timeout=30000)
     phone.locator('#list [data-id="ET-003"]').click()
     assert phone.locator("#verification-banner").is_visible()
