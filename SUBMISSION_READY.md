@@ -30,7 +30,7 @@ The public judge path replays saved genuine Muse responses, with provider respon
 - [Per-case quote checks and source context](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/twelve-pair-quote-audit.json)
 - [Public replay summary](https://evidencetrail-judge-rc1-2026.onrender.com/static/replay-artifacts/twelve-pair-summary.json)
 - [Source code](https://github.com/farhanjamal2002-blip/-evidencetrail)
-- Video URL: [finished three-minute judge film](https://evidencetrail-judge-rc1-2026.onrender.com/static/evidencetrail-judge.mp4), with synthesized narration and actual live-site footage. [Transcript and proof map](demo/3_MINUTE_JUDGE_VIDEO.md).
+- Video URL: [finished 90-second judge film](https://evidencetrail-judge-rc1-2026.onrender.com/static/evidencetrail-judge.mp4), with synthesized narration and actual live-site footage. [Transcript and proof map](demo/3_MINUTE_JUDGE_VIDEO.md).
 - Before submission, confirm the deployed `/build-info` commit matches both `main` and the judge release branch.
 
 ## Entrant's final checklist

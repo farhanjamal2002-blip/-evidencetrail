@@ -4,7 +4,7 @@
 
 *20-second launch film · actual proof cropped from the live saved replay · fictional CVs · no new model calls.*
 
-**[Watch the full 3-minute judge video](https://evidencetrail-judge-rc1-2026.onrender.com/static/evidencetrail-judge.mp4)** · [Transcript and saved proof](demo/3_MINUTE_JUDGE_VIDEO.md).
+**[Watch the 90-second judge video](https://evidencetrail-judge-rc1-2026.onrender.com/static/evidencetrail-judge.mp4)** · [Transcript and saved proof](demo/3_MINUTE_JUDGE_VIDEO.md).
 
 **[Watch the launch film with sound](https://evidencetrail-judge-rc1-2026.onrender.com/static/evidencetrail-launch.mp4)** · [Continuous judge walkthrough](https://evidencetrail-judge-rc1-2026.onrender.com/static/judge-path.mp4) · [Film sources and scope](demo/20_SECOND_LAUNCH.md).
 

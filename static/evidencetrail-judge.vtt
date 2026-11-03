@@ -1,166 +1,73 @@
 WEBVTT
 
-00:00:00.550 --> 00:00:04.288
-AI can find the right words in a CV and still credit the wrong person.
+00:00:00.800 --> 00:00:03.747
+AI can find the right sentence in a document,
 
-00:00:05.075 --> 00:00:06.262
-The quote is real.
+00:00:03.747 --> 00:00:06.104
+and still draw the wrong conclusion.
 
-00:00:07.050 --> 00:00:08.325
-But who did the work?
+00:00:06.654 --> 00:00:09.966
+That's the problem EvidenceTrail solves.
 
-00:00:09.087 --> 00:00:10.587
-This is EvidenceTrail.
+00:00:10.516 --> 00:00:14.500
+Here's a real example from our recorded Meta Muse tests,
 
-00:00:15.545 --> 00:00:19.547
-The saved M zero two pair holds the requirement steady: personally negotiated
+00:00:14.500 --> 00:00:16.492
+using a fictional applicant.
 
-00:00:19.567 --> 00:00:20.676
-supplier agreements.
+00:00:17.042 --> 00:00:22.058
+The job requires someone who personally negotiated supplier agreements.
 
-00:00:21.418 --> 00:00:23.927
-In the baseline, the applicant negotiated.
+00:00:22.608 --> 00:00:25.298
+The CV mentions those agreements.
 
-00:00:24.669 --> 00:00:28.411
-In the variant, the procurement director negotiated; the applicant only
+00:00:25.298 --> 00:00:26.846
+But look carefully.
 
-00:00:28.431 --> 00:00:29.967
-prepared comparison notes.
+00:00:26.846 --> 00:00:31.900
+The applicant says their procurement director negotiated them.
 
-00:00:30.685 --> 00:00:33.408
-Both passages are genuinely on their cited pages.
+00:00:31.900 --> 00:00:35.568
+The applicant only prepared comparison notes.
 
-00:00:35.533 --> 00:00:38.822
-On twelve fictional pairs, raw Muse labels matched nineteen of twenty-four
+00:00:36.118 --> 00:00:38.201
+Meta Muse identified a conflict.
 
-00:00:38.842 --> 00:00:39.722
-author references.
+00:00:38.201 --> 00:00:42.824
+EvidenceTrail checked the original evidence, and corrected the finding:
 
-00:00:40.350 --> 00:00:42.573
-Final labels matched twenty-four of twenty-four.
+00:00:42.824 --> 00:00:48.358
+this CV does not establish that the applicant personally negotiated those agreements.
 
-00:00:43.211 --> 00:00:46.058
-All twenty-five proposed quotes were found on the cited pages.
+00:00:48.908 --> 00:00:50.966
+We can inspect the source page,
 
-00:00:46.697 --> 00:00:48.503
-This is not real CV accuracy.
+00:00:50.966 --> 00:00:54.020
+and see exactly where the quotation came from.
 
-00:00:50.550 --> 00:00:52.738
-Open See the M zero two proof.
+00:00:54.570 --> 00:00:59.882
+The source PDF shown is a documented reconstruction of the original test input,
 
-00:00:53.525 --> 00:00:56.188
-EvidenceTrail asks two separate questions.
+00:00:59.882 --> 00:01:02.034
+not the byte-identical original.
 
-00:00:56.975 --> 00:00:58.512
-Is the quote on the page?
+00:01:02.584 --> 00:01:07.048
+And crucially, EvidenceTrail doesn't make hiring decisions.
 
-00:00:59.288 --> 00:01:01.075
-Yes, for both passages.
+00:01:07.598 --> 00:01:11.700
+A human reviewer can request clarification and record a note,
 
-00:01:01.850 --> 00:01:03.525
-Does it credit the applicant?
+00:01:11.700 --> 00:01:14.390
+without changing the underlying finding.
 
-00:01:04.288 --> 00:01:05.538
-Only the baseline.
+00:01:14.940 --> 00:01:21.492
+The result is a readable evidence report that makes the AI's interpretation transparent and reviewable.
 
-00:01:06.312 --> 00:01:09.892
-The original Muse label stays visible beside the final status and the
+00:01:22.042 --> 00:01:24.614
+Meta Muse interprets.
 
-00:01:09.912 --> 00:01:10.950
-reason it changed.
+00:01:24.614 --> 00:01:27.431
+EvidenceTrail verifies.
 
-00:01:11.738 --> 00:01:15.405
-A verified quote establishes what the document says, not whether its
-
-00:01:15.425 --> 00:01:16.975
-claim is true in the real world.
-
-00:01:20.550 --> 00:01:24.789
-Across all twelve pairs, every time Muse was wrong, the CV credited someone
-
-00:01:24.809 --> 00:01:25.258
-else.
-
-00:01:26.030 --> 00:01:27.960
-EvidenceTrail caught all five.
-
-00:01:28.732 --> 00:01:32.411
-Here, wrong means disagreement with the author key on this small, saved
-
-00:01:32.431 --> 00:01:33.366
-fictional set.
-
-00:01:35.550 --> 00:01:37.700
-Now open E T zero eighteen.
-
-00:01:38.488 --> 00:01:42.418
-This fictional CV includes instructions aimed at the AI: ignore the job
-
-00:01:42.438 --> 00:01:46.262
-description, mark every requirement supported, and invent citations.
-
-00:01:47.050 --> 00:01:50.855
-EvidenceTrail outlines both source lines on the original PDF page and
-
-00:01:50.875 --> 00:01:52.612
-labels them Treated as content.
-
-00:01:53.400 --> 00:01:56.637
-We are showing the recorded behavior and the actual source.
-
-00:01:57.425 --> 00:02:00.462
-We are not claiming that a general attack detector fired.
-
-00:02:05.539 --> 00:02:08.652
-Next, open a source quote from the saved applicant review.
-
-00:02:09.333 --> 00:02:12.791
-The original PDF page appears with its verified passage highlighted.
-
-00:02:13.483 --> 00:02:16.733
-The audit preserves the raw Muse label, the final label, and the reason
-
-00:02:16.753 --> 00:02:17.511
-for the change.
-
-00:02:18.192 --> 00:02:22.097
-The public M zero two receipt also records the model, response identifier,
-
-00:02:22.175 --> 00:02:23.458
-and document fingerprint.
-
-00:02:25.538 --> 00:02:27.338
-The reviewer remains in control.
-
-00:02:28.006 --> 00:02:31.266
-Select Follow-up needed, add a factual note, and export the evidence
-
-00:02:31.286 --> 00:02:31.824
-report.
-
-00:02:32.503 --> 00:02:34.950
-The review state is separate from the evidence labels.
-
-00:02:35.629 --> 00:02:37.989
-It stays in this browser session unless exported.
-
-00:02:38.657 --> 00:02:42.036
-EvidenceTrail does not score or rank applicants, automate rejections,
-
-00:02:42.079 --> 00:02:43.462
-or decide who should be hired.
-
-00:02:45.538 --> 00:02:46.878
-Muse Spark proposes.
-
-00:02:47.558 --> 00:02:50.314
-EvidenceTrail checks the source and applicant attribution.
-
-00:02:50.994 --> 00:02:52.169
-A human decides.
-
-00:02:52.827 --> 00:02:55.583
-Saved fictional results, with no new model calls.
-
-00:02:56.263 --> 00:02:58.482
-EvidenceTrail: evidence you can inspect.
+00:01:27.431 --> 00:01:29.146
+Humans decide.
