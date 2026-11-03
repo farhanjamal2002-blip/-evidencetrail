@@ -16,12 +16,20 @@ class TwentyApplicantDemoTests(unittest.TestCase):
         self.client.close()
 
     def test_inbox_route_and_noindex(self):
-        response=self.client.get("/demo20")
+        response=self.client.get("/demo20?view=workspace")
         self.assertEqual(response.status_code,200)
         self.assertIn('noindex',response.headers["x-robots-tag"])
         self.assertIn("20 FICTIONAL CVs",response.text)
         self.assertIn('id="analyze-five"',response.text)
         self.assertIn('id="consent"',response.text)
+
+    def test_bare_demo20_opens_guided_judge_demo(self):
+        for path in ("/demo20","/judge"):
+            response=self.client.get(path)
+            self.assertEqual(response.status_code,200)
+            self.assertIn("But who did the work?",response.text)
+            self.assertIn("m02-case-audit.json",response.text)
+        self.assertIn("20 FICTIONAL CVs",self.client.get("/demo20?view=replay").text)
 
     def test_fixture_manifest_exactly_twenty_and_not_real_results(self):
         response=self.client.get("/demo20/manifest")

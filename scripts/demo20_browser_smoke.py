@@ -16,7 +16,7 @@ async def main():
                 page.on("pageerror",lambda err: errors.append(str(err)))
                 paid_calls=[]
                 page.on("request",lambda req: paid_calls.append(req.url) if "/api/analyze" in req.url else None)
-                res=await page.goto("http://127.0.0.1:8016/demo20",wait_until="domcontentloaded")
+                res=await page.goto("http://127.0.0.1:8016/demo20?view=workspace",wait_until="domcontentloaded")
                 assert res.status==200
                 await page.locator("#total").get_by_text("20",exact=True).wait_for()
                 await page.wait_for_function("document.querySelector('#ready').textContent==='20'",timeout=25000)
@@ -332,7 +332,7 @@ async def main():
                 await page.close()
             # A laptop-sized judge window must not squeeze the PDF into a third column.
             page=await browser.new_page(viewport={"width":1180,"height":820})
-            await page.goto("http://127.0.0.1:8016/demo20",wait_until="domcontentloaded")
+            await page.goto("http://127.0.0.1:8016/demo20?view=workspace",wait_until="domcontentloaded")
             await page.wait_for_function("document.querySelector('#ready').textContent==='20'",timeout=25000)
             assert await page.locator(".review-panel").evaluate("el=>el.getBoundingClientRect().width")>1000
             await page.locator("#search").fill("ET-008")

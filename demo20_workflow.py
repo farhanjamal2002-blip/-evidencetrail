@@ -20,7 +20,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import fitz
-from fastapi import APIRouter, HTTPException
+from fastapi import Request, APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, Response
 from PIL import Image, ImageDraw, ImageFont
 
@@ -116,9 +116,20 @@ def make_cv_pdf(candidate_id: str) -> bytes:
     return result
 
 @router.get("/demo20")
-def recruiter_inbox():
+def recruiter_inbox(request: Request):
+    # Bare /demo20 (the submitted judge link) opens the 60-second guided demo.
+    # Any query (?view=workspace, ?view=replay, ...) opens the full workspace, so old deep links keep working.
+    page="demo20.html" if request.query_params else "judge.html"
     return FileResponse(
-        BASE/"static"/"demo20.html",media_type="text/html",
+        BASE/"static"/page,media_type="text/html",
+        headers={"Cache-Control":"no-store","X-Robots-Tag":"noindex, nofollow"},
+    )
+
+@router.get("/judge")
+def judge_guided_demo():
+    """60-second guided demo over the recorded M02 actor-swap evidence. Presentation only."""
+    return FileResponse(
+        BASE/"static"/"judge.html",media_type="text/html",
         headers={"Cache-Control":"no-store","X-Robots-Tag":"noindex, nofollow"},
     )
 
