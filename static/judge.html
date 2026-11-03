@@ -122,6 +122,23 @@ textarea{width:100%;min-height:84px;border:1px solid var(--line);border-radius:1
 
 .provenance{max-width:760px;margin:22px auto 0;text-align:center;font-size:12.5px;line-height:1.6;color:var(--ink-3)}
 
+/* Source viewer */
+.srcbtn{border:1px solid #cfe0da;background:#fff;color:var(--brand);font-weight:600;font-size:12.5px;padding:7px 11px;border-radius:9px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;min-height:36px}
+.srcbtn:hover{background:#f2f8f6}
+dialog.src{border:0;padding:0;border-radius:18px;max-width:min(760px,calc(100vw - 24px));width:100%;box-shadow:0 30px 80px -20px rgba(16,48,47,.45)}
+dialog.src::backdrop{background:rgba(16,48,47,.45);backdrop-filter:blur(2px)}
+.src-h{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.src-h b{font-size:15px}
+.x{border:0;background:#f1f5f4;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:18px;color:var(--ink-2)}
+.page{position:relative;margin:18px 20px 0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.page img{display:block;width:100%;height:auto}
+.hl{position:absolute;background:rgba(255,214,77,.42);border-radius:3px;outline:2px solid rgba(214,160,0,.75)}
+.src-b{padding:14px 20px 20px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.src-b .actions{margin-top:14px}
+.savedpill{display:inline-flex;align-items:center;gap:6px;background:var(--ok-soft);color:var(--ok);border:1px solid #cbe7d9;font-weight:600;font-size:13px;padding:7px 11px;border-radius:999px;opacity:0;transform:translateY(4px);transition:opacity .25s,transform .25s}
+.savedpill.show{opacity:1;transform:none}
+.small-link{font-size:13px;color:var(--ink-3);text-decoration:underline;text-underline-offset:3px}
+
 /* Footer */
 footer{border-top:1px solid var(--line);margin-top:48px}
 .foot{max-width:1080px;margin:auto;padding:22px 20px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ink-3)}
@@ -202,7 +219,7 @@ footer{border-top:1px solid var(--line);margin-top:48px}
       <p class="kicker">Step 2 of 3 · The check</p>
       <h2>The sentence is real. It just proves someone else did the work.</h2>
       <div class="doc reveal">
-        <div class="doc-head"><span>Fictional applicant CV</span><span data-f="page">Page 1</span></div>
+        <div class="doc-head"><span>Fictional applicant CV · <span data-f="page">Page 1</span></span><button class="srcbtn" type="button" id="open-src"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>View original document</button></div>
         <blockquote data-f="quote-marked">—</blockquote>
       </div>
       <div class="checks">
@@ -218,9 +235,9 @@ footer{border-top:1px solid var(--line);margin-top:48px}
 
       <div class="split" aria-label="AI result versus EvidenceTrail result">
         <div class="res">
-          <small>Meta Muse said</small>
+          <small>Meta Muse, the AI that read the CV, said</small>
           <div class="v" data-f="raw-label">—</div>
-          <p>Treated the sentence as a contradiction in the CV.</p>
+          <p>It saw a clash in the CV and labelled it a contradiction.</p>
         </div>
         <div class="arrow" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
         <div class="res final">
@@ -266,7 +283,7 @@ footer{border-top:1px solid var(--line);margin-top:48px}
           </div>
           <label for="note" class="hint">Note (saved in this browser only)</label>
           <textarea id="note" placeholder="e.g. Ask whether they led any negotiations themselves."></textarea>
-          <div class="saved" id="saved"></div>
+          <div class="saved"><span class="savedpill" id="saved" role="status"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span id="saved-t">Saved</span></span></div>
         </div>
         <div class="box frozen">
           <h3>Evidence record <span class="lock"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Locked</span></h3>
@@ -279,14 +296,26 @@ footer{border-top:1px solid var(--line);margin-top:48px}
       <p class="tagline">Meta Muse interprets. EvidenceTrail verifies. <span>Humans decide.</span></p>
       <div class="actions" style="justify-content:center">
         <a class="btn" href="/demo20?view=workspace">Explore 20 more examples</a>
-        <a class="btn ghost" href="/static/replay-artifacts/m02-case-audit.json" download="evidencetrail-m02-evidence.json">Download evidence report</a>
+        <button class="btn ghost" type="button" id="report">Download evidence report</button>
         <button class="btn ghost" type="button" data-go="0">Start over</button>
       </div>
+      <p style="text-align:center;margin:14px 0 0"><a class="small-link" href="/static/replay-artifacts/m02-case-audit.json" download="evidencetrail-m02-evidence.json">Technical record (JSON)</a></p>
     </section>
   </div>
 
   <p class="provenance" data-f="prov">This demo replays a real, previously recorded Meta Muse Spark response on a fictional CV. No live AI calls are made, and nothing here judges a real person.</p>
 </main>
+
+<dialog class="src" id="src" aria-labelledby="src-title">
+  <div class="src-h"><b id="src-title">Original document · Page 1 (top)</b><button class="x" type="button" id="close-src" aria-label="Close">×</button></div>
+  <div class="page" id="page"><img src="/static/replay-artifacts/m02-variant-page1-top.png" width="1224" height="520" alt="Top of page 1 of the fictional CV, with the cited sentence highlighted"></div>
+  <div class="src-b">
+    <p style="margin:0">Yellow marks the exact spot the evidence check matched, drawn from the recorded highlight coordinates.</p>
+    <details class="tech" style="margin-top:10px"><summary>About this file</summary>
+      <p style="margin:10px 0 0">Rebuilt with the same generator and text used for the recorded run. The sentence lands at exactly the recorded coordinates. The file's fingerprint differs from the recorded one only because the PDF library stamps a random ID into every file.</p></details>
+    <div class="actions"><a class="btn ghost" href="/static/replay-artifacts/m02-variant-source.pdf" target="_blank" rel="noopener">Open full PDF</a></div>
+  </div>
+</dialog>
 
 <footer>
   <div class="foot">
@@ -307,7 +336,7 @@ footer{border-top:1px solid var(--line);margin-top:48px}
     not_found:"Not shown by this CV",
     conflicting:"Contradiction in the CV",
   };
-  const KEY="et-judge-review-v1";
+  const KEY="et-judge-review-v1";let DATA=null;
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
   const set=(f,v)=>$$('[data-f="'+f+'"]').forEach(e=>e.textContent=v);
   let step=0;
@@ -355,6 +384,9 @@ footer{border-top:1px solid var(--line);margin-top:48px}
      set("rid",c.provider_response_id);
      set("recorded",d.source.recorded_utc);
      set("sha",c.input_pdf_sha256);
+     DATA={d,c,req,cit,ev};
+     const pageEl=$("#page");(ev.boxes||[]).forEach(b=>{const h=document.createElement("span");h.className="hl";
+       h.style.left=(b[0]/612*100)+"%";h.style.top=(b[1]/260*100)+"%";h.style.width=((b[2]-b[0])/612*100)+"%";h.style.height=((b[3]-b[1])/260*100)+"%";pageEl.appendChild(h)});
      $("#loading").remove();
      const h=(location.hash.match(/step-(\d)/)||[])[1];
      go(h?Math.min(2,Math.max(0,h-1)):0);
@@ -370,10 +402,33 @@ footer{border-top:1px solid var(--line);margin-top:48px}
     $("#mine").textContent=st.decision?LABEL[st.decision]:"None yet";
     $("#note").value=st.note||"";
   }
-  function save(msg){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){} $("#saved").textContent=msg}
-  $$(".seg button").forEach(b=>b.addEventListener("click",()=>{st.decision=st.decision===b.dataset.d?null:b.dataset.d;paint();save("Saved in this browser. The evidence record is unchanged.")}));
-  let t;$("#note").addEventListener("input",e=>{st.note=e.target.value;clearTimeout(t);t=setTimeout(()=>save("Note saved in this browser."),400)});
+  let pt;function save(msg){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){} $("#saved-t").textContent=msg;const el=$("#saved");el.classList.add("show");clearTimeout(pt);pt=setTimeout(()=>el.classList.remove("show"),3200)}
+  $$(".seg button").forEach(b=>b.addEventListener("click",()=>{st.decision=st.decision===b.dataset.d?null:b.dataset.d;paint();save(st.decision?"Saved: "+LABEL[st.decision]+". Evidence unchanged.":"Decision cleared. Evidence unchanged.")}));
+  let t;$("#note").addEventListener("input",e=>{st.note=e.target.value;clearTimeout(t);t=setTimeout(()=>save("Note saved. Evidence unchanged."),400)});
   paint();
+
+  const dlg=$("#src");
+  $("#open-src").addEventListener("click",()=>{if(dlg.showModal)dlg.showModal();else dlg.setAttribute("open","")});
+  $("#close-src").addEventListener("click",()=>dlg.close());
+  dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close()});
+
+  const esc=t=>String(t??"").replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+  $("#report").addEventListener("click",()=>{
+    if(!DATA)return;const {d,c,req,cit}=DATA;
+    const html='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EvidenceTrail evidence report · M02</title><style>body{font:15px/1.6 Inter,system-ui,sans-serif;color:#10302f;max-width:760px;margin:40px auto;padding:0 20px}h1{font-size:26px;letter-spacing:-.6px;margin:0 0 4px}.sub{color:#7f938f;margin:0 0 28px}h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#0b6059;margin:28px 0 8px}blockquote{margin:0;padding:14px 18px;border-left:4px solid #ffd64d;background:#fffbea;font-size:17px;border-radius:0 10px 10px 0}.row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #e2eae7}.row b{min-width:220px}table{width:100%;border-collapse:collapse;font-size:12.5px}td{padding:6px 0;border-bottom:1px solid #eef2f1;vertical-align:top}td:first-child{color:#7f938f;width:40%}code{font-family:ui-monospace,Menlo,monospace;word-break:break-all}.note{color:#4d6764;font-size:13px}</style></head><body>'
+     +'<h1>Evidence report</h1><p class="sub">EvidenceTrail · fictional CV · recorded Meta Muse result</p>'
+     +'<h2>Job requirement</h2><p><b>'+esc(req.requirement)+'</b></p>'
+     +'<h2>What the CV says · page '+esc(cit.page)+'</h2><blockquote>“'+esc(cit.quote)+'”</blockquote>'
+     +'<h2>What the check found</h2><div class="row"><b>Quote is in the CV</b><span>'+(cit.source_verified?"Yes, matched on the original page":"Not verified")+'</span></div>'
+     +'<div class="row"><b>Applicant personally did this work</b><span>Not shown. The director negotiated; the applicant prepared notes.</span></div>'
+     +'<div class="row"><b>Meta Muse said</b><span>'+esc(HUMAN[req.raw_muse_status]||req.raw_muse_status)+'</span></div>'
+     +'<div class="row"><b>EvidenceTrail final finding</b><span>'+esc(HUMAN[req.verified_status]||req.verified_status)+'</span></div>'
+     +'<h2>Reviewer</h2><div class="row"><b>Decision</b><span>'+esc(st.decision?LABEL[st.decision]:"None recorded")+'</span></div><div class="row"><b>Note</b><span>'+esc(st.note||"—")+'</span></div>'
+     +'<p class="note">The reviewer\'s decision is recorded separately and does not change the evidence. This checks what the document says, not whether it is true, and it is not a hiring decision.</p>'
+     +'<h2>Technical details</h2><table><tr><td>Raw Muse status</td><td><code>'+esc(req.raw_muse_status)+'</code></td></tr><tr><td>Final status</td><td><code>'+esc(req.verified_status)+'</code></td></tr><tr><td>Correction rule</td><td><code>'+esc(req.override_reason_code)+'</code></td></tr><tr><td>Model</td><td><code>'+esc(c.model)+'</code></td></tr><tr><td>Muse response ID</td><td><code>'+esc(c.provider_response_id)+'</code></td></tr><tr><td>Recorded</td><td><code>'+esc(d.source.recorded_utc)+'</code></td></tr><tr><td>Input PDF SHA-256</td><td><code>'+esc(c.input_pdf_sha256)+'</code></td></tr></table>'
+     +'</body></html>';
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));a.download="evidencetrail-m02-evidence-report.html";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+  });
 })();
 </script>
 </body>
