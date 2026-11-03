@@ -122,6 +122,14 @@ def recruiter_inbox():
         headers={"Cache-Control":"no-store","X-Robots-Tag":"noindex, nofollow"},
     )
 
+@router.get("/judge")
+def judge_guided_demo():
+    """60-second guided demo over the recorded M02 actor-swap evidence. Presentation only."""
+    return FileResponse(
+        BASE/"static"/"judge.html",media_type="text/html",
+        headers={"Cache-Control":"no-store","X-Robots-Tag":"noindex, nofollow"},
+    )
+
 @router.get("/demo20/manifest")
 def fictional_manifest():
     # This is a fixed test dataset. Never describe its expected labels as Muse output.
